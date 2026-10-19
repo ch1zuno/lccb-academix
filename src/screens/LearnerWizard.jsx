@@ -5,8 +5,6 @@ import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { ArrowRight, ArrowLeft, Loader2, Star, CheckCircle2, Shield, Clock, BookOpen } from 'lucide-react';
 import api from '../api';
-import { SUBJECTS, TUTORS } from '../data';
-
 const steps = [
   { id: 'goal', title: 'Academic Goal' },
   { id: 'timeline', title: 'Timeline' },
@@ -17,9 +15,6 @@ const steps = [
   { id: 'match', title: 'Matching' }
 ];
 
-// Course codes for the wizard step
-const COURSE_OPTIONS = SUBJECTS.filter(s => s.dept === 'BSIT' || s.dept === 'General').map(s => s.code);
-
 export default function LearnerWizard({ showToast }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState({});
@@ -29,15 +24,15 @@ export default function LearnerWizard({ showToast }) {
   const [matchError, setMatchError] = useState(null);
   const [requesting, setRequesting] = useState(null);     // tutorId in flight
 
-  // Subject pills come from /subjects when reachable; fall back to mock otherwise.
+  // Subject pills come from /subjects (live)
   useEffect(() => {
     api.get('/subjects')
       .then(({ subjects }) => setLiveSubjects(subjects.filter(s => s.department === 'BSIT' || s.department === 'General')))
-      .catch(() => setLiveSubjects(null));
+      .catch(() => setLiveSubjects([]));
   }, []);
 
   const subjectOptions = useMemo(
-    () => (liveSubjects ?? SUBJECTS.filter(s => s.dept === 'BSIT' || s.dept === 'General')).map(s => ({
+    () => (liveSubjects ?? []).map(s => ({
       code: s.code, id: s.id,
     })),
     [liveSubjects],
@@ -75,8 +70,8 @@ export default function LearnerWizard({ showToast }) {
     setData(prev => ({ ...prev, [key]: value }));
   };
 
-  // Live matches first, mock directory only while offline.
-  const getMatches = () => (matches ?? TUTORS.filter(t => t.verified && t.available).slice(0, 4));
+  // Live matches only — an empty result is a real empty state, not mock data.
+  const getMatches = () => (matches ?? []);
 
   const OptionCard = ({ label, selected, onClick, icon: Icon, description }) => (
     <Card 

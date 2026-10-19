@@ -16,11 +16,11 @@ const login = (loginId) => request('/auth/login', { method: 'POST', body: { logi
   const sa = (await login('l.betita.admin@lccbacolod.edu.ph')).data;
   const learner = (await login('TE-128')).data;
 
-  const learners = (await request('/analytics', { token: sa.token })).status;
-  const banned = (await request('/analytics', { token: learner.token })).status;
+  const asAdmin = (await request('/analytics', { token: sa.token })).status;
+  const asLearner = (await request('/analytics', { token: learner.token })).status;
   const stats = (await request('/analytics', { token: sa.token })).data;
-  console.log('analytics learner ->', learners === 200 ? '200 (BUG: learner allowed)' : learners);
-  console.log('analytics superadmin ->', sa && banned);
+  console.log('analytics as superadmin ->', asAdmin);
+  console.log('analytics as learner ->', asLearner, asLearner === 403 ? '(correctly rejected)' : '(ERROR: learner allowed)');
   console.log(JSON.stringify(stats, null, 1).slice(0, 700));
 
   const notif = (await request('/notifications', { token: learner.token })).data;

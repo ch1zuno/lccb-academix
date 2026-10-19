@@ -6,7 +6,6 @@ import { Users, Clock, Award, TrendingUp, AlertTriangle, Star, BookOpen, ArrowUp
 import { Progress } from '../components/ui/progress';
 import { motion } from 'framer-motion';
 import api from '../api';
-import { REFERRALS, SESSIONS, TUTORS, LEADERBOARD, FACULTY, PLATFORM_STATS, ACTIVITY_FEED, CHART_DATA_HOURS, CHART_DATA_BY_DEPT } from '../data';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -35,19 +34,36 @@ export function useReferrals(role) {
 export default function Dashboard({ role, user, showToast }) {
   const { referrals: liveReferrals, error: referralsError, loading: referralsLoading } = useReferrals(role);
   const scopedByName = (name) => !user || !user?.name || name === user.name;
+  const fmtDate = (d) => {
+    if (!d) return '';
+    const dt = new Date(d);
+    return Number.isNaN(dt.getTime()) ? String(d) : dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  };
 
-  // Superadmin analytics (live aggregates)
+  // Superadmin analytics (live aggregates) + tutor/learner own sessions
   const [analytics, setAnalytics] = useState(null);
   const [analyticsError, setAnalyticsError] = useState(null);
   const [analyticTutors, setAnalyticTutors] = useState(null); // leaderboard: all tutors sorted by points
+  const [sessionsMine, setSessionsMine] = useState(null);     // tutor & learner: /sessions/mine rows
+  const [walletBalance, setWalletBalance] = useState(null);   // tutor hero card
   useEffect(() => {
-    api.get('/analytics')
-      .then(setAnalytics)
-      .catch((e) => setAnalyticsError(e.message));
-    api.get('/tutors')
-      .then(({ tutors: rows }) => setAnalyticTutors([...rows].sort((a, b) => (b.points ?? 0) - (a.points ?? 0))))
-      .catch(() => setAnalyticTutors([]));
-  }, []);
+    if (role === 'superadmin') {
+      api.get('/analytics')
+        .then(setAnalytics)
+        .catch((e) => setAnalyticsError(e.message));
+      api.get('/tutors')
+        .then(({ tutors: rows }) => setAnalyticTutors([...rows].sort((a, b) => (b.points ?? 0) - (a.points ?? 0))))
+        .catch(() => setAnalyticTutors([]));
+    }
+    if (role === 'tutor' || role === 'learner') {
+      api.get('/sessions/mine')
+        .then(({ sessions }) => setSessionsMine(sessions))
+        .catch(() => setSessionsMine([]));
+    }
+    if (role === 'tutor') {
+      api.get('/wallet').then(({ balance }) => setWalletBalance(balance)).catch(() => {});
+    }
+  }, [role]);
 
   // ═══════════════════════════════════════════════════
   // SUPERADMIN DASHBOARD
@@ -353,9 +369,12 @@ export default function Dashboard({ role, user, showToast }) {
   // TUTOR DASHBOARD — Wallet, Badges & Sessions
   // ═══════════════════════════════════════════════════
   if (role === 'tutor') {
-    const myUpcoming = SESSIONS.filter(s => s.status === 'upcoming' && s.tutor === 'Mark Antipo');
-    const myCompleted = SESSIONS.filter(s => s.status === 'completed' && s.tutor === 'Mark Antipo');
-    const myRank = LEADERBOARD.find(l => l.name === 'Mark Antipo');
+    const mine = sessionsMine ?? [];
+    const myUpcoming = mine.filter(s => s.status === 'upcoming');
+    const myCompleted = mine.filter(s => s.status === 'completed');
+    const avgRating = myCompleted.length
+      ? (myCompleted.reduce((a, s) => a + (Number(s.rating) || 0), 0) / myCompleted.length).toFixed(1)
+      : '—';
 
     return (
       <div className="space-y-6">
@@ -370,11 +389,13 @@ export default function Dashboard({ role, user, showToast }) {
               <CardTitle className="text-white text-lg font-medium opacity-80">Community Points Balance</CardTitle>
             </CardHeader>
             <CardContent className="relative z-10">
-              <div className="text-5xl font-bold text-secondary mb-2">2,450 <span className="text-xl font-normal text-white/60">pts</span></div>
+              <div className="text-5xl font-bold text-secondary mb-2">
+                {walletBalance === null ? '…' : walletBalance.toLocaleString()} <span className="text-xl font-normal text-white/60">pts</span>
+              </div>
               <div className="flex items-center gap-6 mt-4 text-white/80">
-                <p className="text-sm flex items-center gap-2"><Clock className="w-4 h-4" /> 67 Sessions Completed</p>
-                <p className="text-sm flex items-center gap-2"><Star className="w-4 h-4 fill-secondary text-secondary" /> 4.8 Avg Rating</p>
-                <p className="text-sm flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Rank #{myRank?.rank || 4}</p>
+                <p className="text-sm flex items-center gap-2"><Clock className="w-4 h-4" /> {myCompleted.length} Sessions Completed</p>
+                <p className="text-sm flex items-center gap-2"><Star className="w-4 h-4 fill-secondary text-secondary" /> {avgRating} Avg Rating</p>
+                <p className="text-sm flex items-center gap-2"><TrendingUp className="w-4 h-4" /> +50 pts per session</p>
               </div>
             </CardContent>
           </Card>
@@ -414,15 +435,15 @@ export default function Dashboard({ role, user, showToast }) {
                     <div className="flex flex-col sm:flex-row items-center justify-between p-5">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                          {s.learner.split(' ').map(n => n[0]).join('')}
+                          {s.learner_name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div>
-                          <h4 className="font-semibold text-charcoal">{s.learner}</h4>
+                          <h4 className="font-semibold text-charcoal">{s.learner_name}</h4>
                           <p className="text-sm text-muted-foreground">{s.subject} • {s.topic}</p>
                         </div>
                       </div>
                       <div className="text-right mt-3 sm:mt-0">
-                        <p className="font-semibold text-primary">{s.date === '2026-09-30' ? 'Today' : s.date}, {s.time}</p>
+                        <p className="font-semibold text-primary">{fmtDate(s.date)}, {s.time}</p>
                         <p className="text-sm text-muted-foreground">{s.location} • {s.duration}</p>
                       </div>
                     </div>
@@ -433,7 +454,7 @@ export default function Dashboard({ role, user, showToast }) {
           ) : (
             <Card className="shadow-sm border-dashed">
               <CardContent className="p-8 text-center text-muted-foreground">
-                No upcoming sessions scheduled. Check back soon!
+                {sessionsMine === null ? 'Loading sessions…' : 'No upcoming sessions scheduled. Check back soon!'}
               </CardContent>
             </Card>
           )}
@@ -444,27 +465,35 @@ export default function Dashboard({ role, user, showToast }) {
           <h3 className="text-xl font-bold text-primary mb-4 flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5" /> Recently Completed
           </h3>
-          <div className="grid md:grid-cols-2 gap-3">
-            {myCompleted.map(s => (
-              <Card key={s.id} className="shadow-sm border-border opacity-85 hover:opacity-100 transition-opacity">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-charcoal text-sm">{s.learner}</p>
-                    <p className="text-xs text-muted-foreground">{s.subject} • {s.topic}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{s.date} • {s.duration}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center gap-1 justify-end">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`w-3.5 h-3.5 ${i < s.rating ? 'fill-secondary text-secondary' : 'text-slate-200'}`} />
-                      ))}
+          {myCompleted.length === 0 ? (
+            <Card className="shadow-sm border-dashed">
+              <CardContent className="p-6 text-center text-sm text-muted-foreground">
+                {sessionsMine === null ? 'Loading…' : 'Completed sessions appear here after wrap-up.'}
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-3">
+              {myCompleted.map(s => (
+                <Card key={s.id} className="shadow-sm border-border opacity-85 hover:opacity-100 transition-opacity">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-charcoal text-sm">{s.learner_name}</p>
+                      <p className="text-xs text-muted-foreground">{s.subject} • {s.topic}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{fmtDate(s.date)} • {s.duration}</p>
+      </div>
+                    <div className="text-right">
+                      <div className="flex items-center gap-1 justify-end">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`w-3.5 h-3.5 ${i < (Number(s.rating) || 0) ? 'fill-secondary text-secondary' : 'text-slate-200'}`} />
+                        ))}
+                      </div>
+                      <p className="text-xs text-emerald font-semibold mt-1">+50 pts</p>
                     </div>
-                    <p className="text-xs text-emerald font-semibold mt-1">+{s.pointsAwarded} pts</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -477,9 +506,10 @@ export default function Dashboard({ role, user, showToast }) {
   const myReferral = myLiveReferral
     ? myLiveReferral
     : null;
-  const mySessions = SESSIONS.filter(s => s.learner === (user?.name || 'Julian Gemelo'));
-  const myUpcomingSessions = mySessions.filter(s => s.status === 'upcoming');
-  const myCompletedSessions = mySessions.filter(s => s.status === 'completed');
+  const mine = sessionsMine ?? [];
+  const mySessions = [...mine].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 6);
+  const myUpcomingSessions = mine.filter(s => s.status === 'upcoming');
+  const myCompletedSessions = mine.filter(s => s.status === 'completed');
 
   return (
     <div className="space-y-6">
@@ -543,12 +573,12 @@ export default function Dashboard({ role, user, showToast }) {
               <CardDescription>Upcoming and completed tutoring sessions</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {myUpcomingSessions.length > 0 && myUpcomingSessions.map(s => (
+              {myUpcomingSessions.length > 0 && myUpcomingSessions.slice(0, 3).map(s => (
                 <div key={s.id} className="flex items-center justify-between border-b pb-3">
                   <div>
-                    <p className="font-semibold text-charcoal text-sm">{s.tutor}</p>
+                    <p className="font-semibold text-charcoal text-sm">{s.tutor_name}</p>
                     <p className="text-xs text-muted-foreground">{s.subject} • {s.topic}</p>
-                    <p className="text-xs text-primary font-medium mt-0.5">{s.date === '2026-09-30' ? 'Today' : s.date}, {s.time}</p>
+                    <p className="text-xs text-primary font-medium mt-0.5">{fmtDate(s.date)}, {s.time}</p>
                   </div>
                   <Badge className="bg-blue-100 text-blue-700 border border-blue-200">Upcoming</Badge>
                 </div>
@@ -556,16 +586,16 @@ export default function Dashboard({ role, user, showToast }) {
               {myCompletedSessions.length > 0 && myCompletedSessions.slice(0, 3).map(s => (
                 <div key={s.id} className="flex items-center justify-between border-b pb-3 last:border-0">
                   <div>
-                    <p className="font-semibold text-charcoal text-sm">{s.tutor}</p>
+                    <p className="font-semibold text-charcoal text-sm">{s.tutor_name}</p>
                     <p className="text-xs text-muted-foreground">{s.subject} • {s.topic}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{s.date}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{fmtDate(s.date)}</p>
                   </div>
                   <Badge className="bg-emerald/10 text-emerald border border-emerald/20">Completed</Badge>
                 </div>
               ))}
               {mySessions.length === 0 && (
                 <div className="text-center text-muted-foreground py-4 text-sm">
-                  No sessions yet. Find a tutor to get started!
+                  {sessionsMine === null ? 'Loading sessions…' : 'No sessions yet. Find a tutor to get started!'}
                 </div>
               )}
             </CardContent>

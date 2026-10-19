@@ -1,0 +1,101 @@
+# LCCB Academix
+
+A near-products peer-tutoring platform for La Consolacion College Bacolod: faculty flag
+at-risk learners, accredited tutors pick up and run sessions (OTP/QR/fingerprint
+check-in), sessions are wrapped up with notes + rating, students earn community points
+they can redeem, and superadmins watch the whole campus in one dashboard.
+
+React (Vite) frontend, plain Node/Express API, and **PostgreSQL only** — raw
+parameterized SQL through `pg`, no ORM.
+
+## Quick start
+
+```bash
+# 1. install
+npm install
+
+# 2. configure (no system Postgres needed — the server boots an embedded one)
+copy .env.example .env   # or create .env as below
+
+# 3. reset the database (drop -> schema -> migrations marks -> seed)
+npm run db:reset
+
+# 4. run API + frontend together
+npm run start            # API on :4000, Vite dev server on :5173 (proxy /api)
+```
+
+`.env` contents:
+
+```
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/lccb_academix
+JWT_SECRET=dev-secret-change-me
+PORT=4000
+DEVICE_API_KEY=dev-device-key
+```
+
+Embedded Postgres (`embedded-postgres`) starts automatically on port 5432 with data in
+`.pgdata/` whenever localhost:5432 is unreachable. If you run your own Postgres, point
+`DATABASE_URL` at it and the embedded boot is skipped.
+
+## Demo accounts
+
+All seeded users share the password **`demo1234`**. Sign in with the `custom_id` or email.
+
+| Role       | Login ID  | Email                              |
+| ---------- | --------- | ---------------------------------- |
+| Learner    | `TE-128`  | (Julian Gemelo)                    |
+| Learner    | `TE-092`  | (Maria Luisa Tan)                  |
+| Tutor      | `TU-042`  | m.antipo@lccbacolod.edu.ph         |
+| Faculty    | `FA-017`  | b.tisuela@lccbacolod.edu.ph        |
+| Superadmin | —         | l.betita.admin@lccbacolod.edu.ph   |
+
+`GET /api/auth/dev-accounts` lists all demo accounts (dev only).
+
+## End-to-end demo flow
+
+1. **Faculty** (FA-017) — New Referral: search a learner, pick subject/urgency → referral is *flagged*, learner notified.
+2. **Tutor** (TU-042) *or Learner* (TE-128) — matching wizard `/tutors?subject=…&available=1`, accept a request → a real session exists.
+3. **Check-in** — tutor stages an OTP/QR token, both Confirm via `/checkins/:code`, 2 confirmations → session `in-progress`. Physical check-ins: `POST /device/import-roster` + `POST /device/verify` (header `X-Device-Key`).
+4. **Wrap-up** — either participant submits rating (+ tutor notes) in one transaction: hours debited from the referral (auto-resolve at 0), tutor +50 & learner +25 attendance credits, badges awarded.
+5. **Rewards** — learner redeems points (stock decremented atomically, voucher issued).
+6. **Accreditation** — learner applies, takes the exam (graded server-side, one-shot), superadmin approves → `is_verified` + `certified_by_id`.
+
+## API routes (mounted under `/api`)
+
+| Route | Method(s) | Role | Purpose |
+| --- | --- | --- | --- |
+| `/auth/login` · `/auth/me` · `/auth/dev-accounts` | POST · GET | public / authed | JWT auth (bcrypt), metadata survival |
+| `/referrals` · `/referrals/assign` · `/referrals/:id/status` · `/referrals/search-students` | GET POST PATCH | faculty/superadmin · scoped | referral lifecycle: flagged → assigned → in-progress → resolved |
+| `/subjects` · `/tutors` · `/session-requests` | GET POST | authed · accept/decline | matching: accreditation-gated requests, double-accept blocked |
+| `/sessions/mine` · `/sessions/:id/stage-token` · `/sessions/:id/check-in` | GET POST | tutor/participant | check-in tokens (10-min TTL, one-shot), 2 confirmations start session |
+| `/sessions/:id/wrap-up` | POST | participant | **one transaction**: end, notes, rating, hours-debit, auto-resolve, points, badges |
+| `/device/import-roster` · `/device/roster` · `/device/verify` | POST GET | `X-Device-Key` | physical check-in via device fingerprint |
+| `/rewards` · `/rewards/:id/redeem` · `/wallet` | GET POST | authed | catalog, server-side grading redemption (`FOR UPDATE` stock, ledger debit, voucher) |
+| `/notifications` | GET PATCH | authed | per-user feed + mark-all-read |
+| `/accreditation/apply` · `/accreditation/exam` · `/accreditation/mine` | GET POST | learner/authed | exam questions never expose answers; grading is one-shot |
+| `/accreditation/applications` · `/:id/approve` · `/:id/reject` | GET POST | superadmin | sets `is_verified` + `certified_by_id` |
+| `/analytics` | GET | superadmin | CTE aggregates: KPIs, 6-week trend, dept breakdown |
+
+## Scripts
+
+| Command | What it does |
+| --- | --- |
+| `npm run db:reset` | drop schema → `db/schema.sql` → mark migrations → `db/seed.sql` |
+| `npm run server` | Express API on `PORT` (embedded PG auto-boot) |
+| `npm run dev` | Vite only |
+| `npm run start` | both servers together |
+| `node server/scripts/e2e-*.js` | end-to-end checks per feature (referrals, matching, check-in, wrap-up, rewards, accreditation, analytics) |
+
+## Project layout
+
+```
+db/schema.sql          source-of-truth DDL (incl. platform tables, triggers, views)
+db/seed.sql            demo data (39 users; password demo1234; UTF-8)
+db/migrations/         numbered migration files (marked applied on reset)
+server/                Express app, one pg Pool (`server/db.js`), routes, middleware
+server/scripts/        db-reset + embedded-PG boot + e2e scripts
+src/                   React app; `src/api.js` is the only API client
+```
+
+Design-consistent UI (dark saffron/green theme) preserved from the prototype; keep the
+`:root` block of `src/index.css` frozen.

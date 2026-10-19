@@ -203,7 +203,7 @@ export default function SessionCheckIn({ role, showToast }) {
         <>
           <div className="text-center mb-6">
             <p className="text-sm text-muted-foreground">
-              {target.session_code} • {target.subject} • {target.date} {target.time} •
+              {target.session_code} • {target.subject} • {new Date(target.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} {target.time} •{' '}
               <span className={`ml-2 font-semibold ${target.status === 'in-progress' ? 'text-emerald' : 'text-amber'}`}>
                 {target.status === 'in-progress' ? 'In Progress' : 'Awaiting Check-in'}
               </span>

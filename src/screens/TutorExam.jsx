@@ -6,8 +6,8 @@ import { Bookmark, Clock, CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
 
-export default function TutorExam({ showToast }) {
-  const [status, setStatus] = useState('loading'); // loading | no-application | ready | submitted
+export default function TutorExam({ showToast, user }) {
+  const [status, setStatus] = useState('loading'); // loading | verified | no-application | ready | submitted
   const [application, setApplication] = useState(null);
   const [questions, setQuestions] = useState(null);
   const [answers, setAnswers] = useState({});
@@ -23,6 +23,7 @@ export default function TutorExam({ showToast }) {
   /* Load the caller's accreditation state */
   useEffect(() => {
     let cancelled = false;
+    if (user?.is_verified) { setStatus('verified'); return () => { cancelled = true; }; }
     api.get('/accreditation/mine')
       .then(({ application: app }) => {
         if (cancelled) return;
@@ -95,6 +96,24 @@ export default function TutorExam({ showToast }) {
       setGrading(false);
     }
   };
+
+  /* ---- Already certified: nothing to do here ---- */
+  if (status === 'verified') {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <CheckCircle2 className="w-24 h-24 text-secondary mb-6" />
+        <h2 className="text-3xl font-bold text-primary mb-2">You're Verified</h2>
+        <p className="text-muted-foreground mb-8">
+          {user?.name} is an accredited tutor{user?.certified_by_id ? ' — certification on record.' : '.'}
+        </p>
+        {Array.isArray(application?.subjects) && application.subjects.length > 0 && (
+          <p className="text-sm text-muted-foreground">
+            Accredited for: {application.subjects.map(s => s.code || s).join(', ')}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   /* ---- Result state (graded; superadmin decision pending) ---- */
   if (status === 'submitted') {

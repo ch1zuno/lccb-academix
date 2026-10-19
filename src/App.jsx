@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { BookOpen, Calendar, Award, LayoutDashboard, Search, Bell, Users, Clock, ShieldCheck, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,7 +20,6 @@ import SessionCheckIn from './screens/SessionCheckIn';
 import RewardCatalog from './screens/RewardCatalog';
 import Login from './screens/Login';
 
-import { NOTIFICATIONS } from './data';
 
 export const ROLE_LABELS = {
   superadmin: 'Superadmin (Dean)',
@@ -59,7 +58,18 @@ export default function App() {
   const currentProfile = user
     ? { name: user.name, initials: initialsOf(user.name), subtitle: user.program ? `${user.program} • ${ROLE_LABELS[user.role] || user.role}` : (user.department || user.title || ROLE_LABELS[user.role] || user.role) }
     : null;
-  const unreadNotifications = NOTIFICATIONS.filter(n => !n.read).length;
+  const [notifications, setNotifications] = useState([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  const refreshNotifications = () => {
+    api.get('/notifications')
+      .then(({ notifications: rows, unread }) => { setNotifications(rows ?? []); setUnreadNotifications(unread ?? 0); })
+      .catch(() => {});
+  };
+  useEffect(() => { if (user) refreshNotifications(); }, [user?.id]);
+  const markAllRead = () => {
+    api.patch('/notifications', {}).then(refreshNotifications).catch(() => {});
+  };
 
   const getNavItems = () => {
     switch (role) {
@@ -175,7 +185,7 @@ export default function App() {
                 variant="ghost"
                 size="icon"
                 className="relative text-charcoal hover:bg-slate-100"
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={() => { setShowNotifications(!showNotifications); refreshNotifications(); }}
               >
                 <Bell className="w-5 h-5" />
                 {unreadNotifications > 0 && (
@@ -199,20 +209,23 @@ export default function App() {
                       <p className="text-xs text-muted-foreground">{unreadNotifications} unread</p>
                     </div>
                     <div className="max-h-80 overflow-auto divide-y divide-border">
-                      {NOTIFICATIONS.slice(0, 6).map(n => (
-                        <div key={n.id} className={`p-3 text-sm hover:bg-slate-50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}>
+                      {notifications.length === 0 && (
+                        <div className="p-6 text-center text-sm text-muted-foreground">No notifications yet.</div>
+                      )}
+                      {notifications.slice(0, 6).map(n => (
+                        <div key={n.id} className={`p-3 text-sm hover:bg-slate-50 transition-colors ${!n.is_read ? 'bg-primary/5' : ''}`}>
                           <div className="flex items-start gap-2">
                             <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.type === 'warning' ? 'bg-crimson' : n.type === 'success' ? 'bg-emerald' : 'bg-blue-400'}`} />
                             <div>
-                              <p className={`text-charcoal ${!n.read ? 'font-medium' : ''}`}>{n.message}</p>
-                              <p className="text-xs text-muted-foreground mt-1">{n.time}</p>
+                              <p className={`text-charcoal ${!n.is_read ? 'font-medium' : ''}`}>{n.title && n.title !== n.message ? `${n.title} — ` : ''}{n.message}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString()}</p>
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
                     <div className="p-2 border-t border-border bg-slate-50 text-center">
-                      <Button variant="ghost" size="sm" className="text-xs text-primary" onClick={() => setShowNotifications(false)}>View All</Button>
+                      <Button variant="ghost" size="sm" className="text-xs text-primary" onClick={markAllRead}>Mark all read</Button>
                     </div>
                   </motion.div>
                 )}
@@ -235,17 +248,33 @@ export default function App() {
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Switch Role (Demo)</p>
                   </div>
                   <div className="p-1">
-                    {Object.entries(ROLE_LABELS).map(([rId, rLabel]) => (
+                    {[
+                      { rId: 'superadmin', loginId: 'l.betita.admin@lccbacolod.edu.ph' },
+                      { rId: 'faculty', loginId: 'b.tisuela@lccbacolod.edu.ph' },
+                      { rId: 'tutor', loginId: 'TU-042' },
+                      { rId: 'learner', loginId: 'TE-128' },
+                    ].map(({ rId, loginId }) => (
                       <button
                         key={rId}
-                        onClick={() => { setRole(rId); navigate('/dashboard'); }}
+                        onClick={async () => {
+                          try {
+                            const { token, user: fresh } = await api.post('/auth/login', { loginId, password: 'demo1234' });
+                            saveSession(token, fresh);
+                            setUser(fresh);
+                            setRole(fresh.role);
+                            navigate('/dashboard');
+                            showToast(`Switched to ${ROLE_LABELS[fresh.role] || fresh.role} (${fresh.name})`);
+                          } catch (e) {
+                            showToast(e.message || 'Switch failed', 'error');
+                          }
+                        }}
                         className={cn(
                           "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
                           role === rId ? "bg-primary/10 text-primary font-medium" : "hover:bg-slate-100 text-charcoal"
                         )}
                       >
                         <div className="text-left">
-                          <p>{rLabel}</p>
+                          <p>{ROLE_LABELS[rId]}</p>
                         </div>
                         {role === rId && <CheckCircle2 className="w-4 h-4 ml-auto text-primary" />}
                       </button>
@@ -279,8 +308,8 @@ export default function App() {
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/wizard" element={<LearnerWizard showToast={showToast} />} />
                 <Route path="/dashboard" element={<Dashboard role={role} user={user} showToast={showToast} />} />
-                <Route path="/exam" element={<TutorExam showToast={showToast} />} />
-                <Route path="/referral" element={<FacultyReferral showToast={showToast} />} />
+                <Route path="/exam" element={<TutorExam showToast={showToast} user={user} />} />
+                <Route path="/referral" element={<FacultyReferral showToast={showToast} user={user} />} />
                 <Route path="/checkin" element={<SessionCheckIn role={role} user={user} showToast={showToast} />} />
                 <Route path="/rewards" element={<RewardCatalog showToast={showToast} />} />
                 <Route path="/approvals" element={<SuperadminApprovals showToast={showToast} />} />

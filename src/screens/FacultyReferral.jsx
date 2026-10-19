@@ -1,34 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
-import { Search, UserPlus, AlertTriangle, CheckCircle2, Shield } from 'lucide-react';
+import { Search, UserPlus, AlertTriangle, CheckCircle2, Shield, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { STUDENTS, SUBJECTS, FACULTY } from '../data';
+import api from '../api';
 
-export default function FacultyReferral({ showToast }) {
+export default function FacultyReferral({ showToast, user }) {
   const [step, setStep] = useState(1);
   const [student, setStudent] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedSubject, setSelectedSubject] = useState('');
+  const [topic, setTopic] = useState('');
   const [selectedUrgency, setSelectedUrgency] = useState('');
   const [hours, setHours] = useState(4);
   const [notes, setNotes] = useState('');
+  const [subjects, setSubjects] = useState([]);
+  const [results, setResults] = useState([]); // live student search
+  const [everyone, setEveryone] = useState([]); // quick-pick chips
+  const [searching, setSearching] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const filteredStudents = student.length > 2 
-    ? STUDENTS.filter(s => s.name.toLowerCase().includes(student.toLowerCase()) || s.id.toLowerCase().includes(student.toLowerCase()))
-    : [];
+  // subject dropdown lives in Postgres
+  useEffect(() => {
+    api.get('/subjects').then(({ subjects: rows }) => setSubjects(rows)).catch(() => setSubjects([]));
+    api.get('/referrals/search-students', { q: 'a' }).then(({ students }) => setEveryone(students)).catch(() => {});
+  }, []);
 
-  const handleRefer = () => {
-    showToast(`${selectedStudent?.name || student} successfully referred for peer tutoring.`, 'success');
-    setStep(1);
-    setStudent('');
-    setSelectedStudent(null);
-    setSelectedSubject('');
-    setSelectedUrgency('');
-    setHours(4);
-    setNotes('');
+  // debounced live student search
+  useEffect(() => {
+    if (student.trim().length <= 2 || selectedStudent) return;
+    const t = setTimeout(() => {
+      setSearching(true);
+      api.get('/referrals/search-students', { q: student.trim() })
+        .then(({ students }) => setResults(students))
+        .catch(() => setResults([]))
+        .finally(() => setSearching(false));
+    }, 300);
+    return () => clearTimeout(t);
+  }, [student, selectedStudent]);
+
+  const filteredStudents = student.length > 2 ? results : [];
+
+  const handleRefer = async () => {
+    if (!selectedStudent || !selectedSubject) return;
+    setSubmitting(true);
+    try {
+      await api.post('/referrals', {
+        learnerId: selectedStudent.id,
+        subjectId: selectedSubject,
+        topic: topic.trim() || 'General review',
+        urgency: selectedUrgency || 'medium',
+        hoursRequired: Number(hours) || 4,
+        notes: notes || null,
+      });
+      showToast(`${selectedStudent.name} successfully referred for peer tutoring.`, 'success');
+      setStep(1);
+      setStudent('');
+      setSelectedStudent(null);
+      setSelectedSubject('');
+      setTopic('');
+      setSelectedUrgency('');
+      setHours(4);
+      setNotes('');
+    } catch (e) {
+      showToast(e.message || 'Referral failed', 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const selectStudent = (s) => {
@@ -78,7 +118,7 @@ export default function FacultyReferral({ showToast }) {
                         </div>
                         <div>
                           <p className="font-semibold text-charcoal">{s.name}</p>
-                          <p className="text-sm text-muted-foreground">ID: {s.id} • {s.program}</p>
+                          <p className="text-sm text-muted-foreground">ID: {s.custom_id} • {s.program}</p>
                         </div>
                       </div>
                       <Button variant="ghost" size="sm">Select</Button>
@@ -97,7 +137,7 @@ export default function FacultyReferral({ showToast }) {
                 <div className="text-center py-4">
                   <p className="text-sm text-muted-foreground">Start typing at least 3 characters to search</p>
                   <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                    {STUDENTS.slice(0, 6).map(s => (
+                    {everyone.slice(0, 6).map(s => (
                       <button key={s.id} onClick={() => selectStudent(s)} className="px-3 py-1.5 rounded-full text-xs font-medium border border-border hover:border-primary hover:bg-primary/5 transition-colors text-charcoal">
                         {s.name}
                       </button>
@@ -116,7 +156,7 @@ export default function FacultyReferral({ showToast }) {
                 </div>
                 <div>
                   <p className="font-semibold text-charcoal">{selectedStudent?.name || student}</p>
-                  <p className="text-sm text-muted-foreground">{selectedStudent?.program || 'Student'} • {selectedStudent?.id || ''}</p>
+                  <p className="text-sm text-muted-foreground">{selectedStudent?.program || 'Student'} • {selectedStudent?.custom_id || ''}</p>
                 </div>
               </div>
 
@@ -129,10 +169,19 @@ export default function FacultyReferral({ showToast }) {
                     onChange={(e) => setSelectedSubject(e.target.value)}
                   >
                     <option value="">— Select a subject —</option>
-                    {SUBJECTS.map(s => (
-                      <option key={s.code} value={s.code}>{s.code} — {s.name}</option>
+                    {subjects.map(s => (
+                      <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-charcoal mb-1">Topic / Focus Area</label>
+                  <Input
+                    placeholder="e.g. Struggling with linked lists"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                  />
                 </div>
 
                 <div>
@@ -169,7 +218,7 @@ export default function FacultyReferral({ showToast }) {
 
               <div className="flex justify-between pt-4 border-t">
                 <Button variant="ghost" onClick={() => setStep(1)}>Back</Button>
-                <Button onClick={() => setStep(3)} disabled={!selectedSubject || !selectedUrgency}>Review Referral</Button>
+                <Button onClick={() => setStep(3)} disabled={!selectedSubject || !selectedUrgency || !selectedStudent}>Review Referral</Button>
               </div>
             </div>
           )}
@@ -196,7 +245,9 @@ export default function FacultyReferral({ showToast }) {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subject:</span>
-                    <span className="font-medium text-charcoal">{selectedSubject}</span>
+                    <span className="font-medium text-charcoal">
+                      {subjects.find(s => s.id === selectedSubject)?.code ?? selectedSubject}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Urgency:</span>
@@ -213,7 +264,7 @@ export default function FacultyReferral({ showToast }) {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Referring Faculty:</span>
-                    <span className="font-medium text-charcoal">Mrs. Bethel Tisuela</span>
+                    <span className="font-medium text-charcoal">{user?.name ?? 'Faculty'}</span>
                   </div>
                   {notes && (
                     <div className="pt-2 border-t">
@@ -226,8 +277,9 @@ export default function FacultyReferral({ showToast }) {
 
               <div className="flex justify-between pt-4 border-t">
                 <Button variant="ghost" onClick={() => setStep(2)}>Back</Button>
-                <Button onClick={handleRefer} className="bg-primary hover:bg-primary/90">
-                  <CheckCircle2 className="w-4 h-4 mr-2" /> Submit Referral
+                <Button onClick={handleRefer} disabled={submitting || !selectedStudent || !selectedSubject} className="bg-primary hover:bg-primary/90">
+                  {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                  {submitting ? 'Submitting…' : 'Submit Referral'}
                 </Button>
               </div>
             </motion.div>

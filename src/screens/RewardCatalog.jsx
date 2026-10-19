@@ -5,7 +5,6 @@ import { Badge } from '../components/ui/badge';
 import { Award, ShoppingBag, Coffee, Printer, Ticket, CheckCircle2, Gift, BookOpen, Star, Sparkles, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
-import { REWARDS } from '../data';
 
 const CATEGORY_ICONS = {
   'Campus Perks': Coffee,
@@ -32,7 +31,7 @@ export default function RewardCatalog({ showToast }) {
   const loadCatalog = () => {
     api.get('/rewards')
       .then(({ rewards: rows }) => { setRewards(rows); setBalance(rows[0]?.my_balance ?? 0); })
-      .catch((e) => { setError(e.message); setRewards(REWARDS); });
+      .catch((e) => { setError(e.message); });
     api.get('/wallet')
       .then(({ balance: b }) => setBalance(b))
       .catch(() => {});
@@ -108,7 +107,12 @@ export default function RewardCatalog({ showToast }) {
 
       {/* Category Filter */}
       {error && (
-        <Card><CardContent className="p-4 text-center text-crimson">Catalog loaded from cache — live sync failed: {error}</CardContent></Card>
+        <Card>
+          <CardContent className="p-4 text-center text-crimson flex items-center justify-center gap-3">
+            <span>Failed to load the live catalog: {error}</span>
+            <Button size="sm" variant="outline" onClick={() => { setError(null); loadCatalog(); }}>Retry</Button>
+          </CardContent>
+        </Card>
       )}
       <div className="flex gap-2 mb-6 flex-wrap">
         {categories.map(cat => (
