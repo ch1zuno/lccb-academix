@@ -37,6 +37,22 @@ Embedded Postgres (`embedded-postgres`) starts automatically on port 5432 with d
 `.pgdata/` whenever localhost:5432 is unreachable. If you run your own Postgres, point
 `DATABASE_URL` at it and the embedded boot is skipped.
 
+### Using Supabase (or any hosted Postgres)
+
+Point `DATABASE_URL` at your project's **Session pooler** URI (Dashboard → Connect →
+"Session pooler" — the direct `db.<ref>.supabase.co` host is IPv6-only and unreachable
+from IPv4-only networks):
+
+```
+DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
+```
+
+Remote hosts get SSL automatically (localhost stays plain). `npm run db:reset` works
+against Supabase too — it wipes the `public` schema and loads the demo data there.
+Handy utilities: `node server/scripts/pooler-verify.js` (checks the connection) and
+`node server/scripts/pooler-probe.js` (discovers which pooler region hosts the project
+when you only know the direct hostname).
+
 ## Demo accounts
 
 All seeded users share the password **`demo1234`**. Sign in with the `custom_id` or email.

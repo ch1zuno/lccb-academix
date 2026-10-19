@@ -27,19 +27,22 @@ function read(file) {
 async function main() {
   await ensurePostgres();
   const url = new URL(process.env.DATABASE_URL);
+  const local = /^(localhost|127\.0\.0\.1|::1)$/.test(url.hostname);
+  const ssl = local ? undefined : { rejectUnauthorized: false }; // remote providers (e.g. Supabase) enforce SSL
   const admin = new pg.Client({
     host: url.hostname,
     port: url.port || 5432,
     user: url.username,
     password: decodeURIComponent(url.password),
     database: 'postgres',
+    ...(ssl ? { ssl } : {}),
   });
   const dbName = url.pathname.replace('/', '');
   await admin.connect();
   await admin.query(`CREATE DATABASE ${quoteIdent(dbName)}`).catch(() => { /* already exists */ });
   await admin.end();
 
-  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, ...(ssl ? { ssl } : {}) });
   const run = async (sql, label) => {
     process.stdout.write(`• ${label} ... `);
     try { await pool.query(sql); console.log('ok'); }

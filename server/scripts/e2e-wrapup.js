@@ -1,4 +1,5 @@
 /* Wrap-up e2e: validates single-transaction session wrap (notes + rating + hours + points). */
+import 'dotenv/config';
 const BASE = 'http://localhost:4000/api';
 
 async function request(path, { method = 'GET', token, body } = {}) {
@@ -12,7 +13,7 @@ async function request(path, { method = 'GET', token, body } = {}) {
 }
 const login = (loginId) => request('/auth/login', { method: 'POST', body: { loginId, password: 'demo1234' } });
 const pg = await import('pg');
-const psql = new pg.default.Client({ connectionString: 'postgres://postgres:postgres@localhost:5432/lccb_academix' });
+const psql = new pg.default.Client({ connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/lccb_academix' });
 await psql.connect();
 
 (async () => {

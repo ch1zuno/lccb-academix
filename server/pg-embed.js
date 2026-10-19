@@ -11,18 +11,21 @@ const DATA_DIR = path.join(root, '.pgdata');
 
 function urlParts() {
   const u = new URL(process.env.DATABASE_URL);
+  const local = /^(localhost|127\.0\.0\.1|::1)$/.test(u.hostname);
   return {
     host: u.hostname,
     port: +(u.port || 5432),
     user: u.username || 'postgres',
     password: decodeURIComponent(u.password || 'postgres'),
     database: u.pathname.replace('/', '') || 'postgres',
+    // Remote providers (e.g. Supabase) enforce SSL.
+    ...(local ? {} : { ssl: { rejectUnauthorized: false } }),
   };
 }
 
 export async function postgisReachable() {
-  const { host, port, user, password, database } = urlParts();
-  const c = new pgPkg.Client({ host, port, user, password, database, connectionTimeoutMillis: 2000 });
+  const { host, port, user, password, database, ssl } = urlParts();
+  const c = new pgPkg.Client({ host, port, user, password, database, ...(ssl ? { ssl } : {}), connectionTimeoutMillis: 2000 });
   try { await c.connect(); await c.end(); return true; }
   catch (e) {
     await c.end().catch(() => {});

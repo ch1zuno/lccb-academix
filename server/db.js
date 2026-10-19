@@ -6,7 +6,12 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-export const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  // Remote hosts (e.g. Supabase) require SSL; localhost stays unencrypted.
+  ...(/^(localhost|127\.0\.0\.1|::1)$/.test(new URL(process.env.DATABASE_URL).hostname)
+    ? {} : { ssl: { rejectUnauthorized: false } }),
+});
 
 export async function query(text, params = []) {
   const start = Date.now();

@@ -1,4 +1,5 @@
 /* Minimal API e2e: faculty assigns a tutor to REF-001, tutor accepts progress; learner must NOT be able to change status. */
+import 'dotenv/config';
 const BASE = 'http://localhost:4000/api';
 
 async function request(path, { method = 'GET', token, body } = {}) {
@@ -23,7 +24,7 @@ const login = (loginId) => request('/auth/login', { method: 'POST', body: { logi
   // faculty picks the flagged one and assigns TU-056 (learner-only referral probes follow)
   // faculty assigns a real tutor to the flagged referral
   const pg = await import('pg');
-  const psql = new pg.default.Client({ connectionString: 'postgres://postgres:postgres@localhost:5432/lccb_academix' });
+  const psql = new pg.default.Client({ connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/lccb_academix' });
   await psql.connect();
   const tutorRow = (await psql.query(`SELECT id FROM users WHERE custom_id = 'TU-056'`)).rows[0];
   await psql.end();
