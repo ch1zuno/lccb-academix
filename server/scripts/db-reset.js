@@ -5,7 +5,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
 import pg from 'pg';
-import { ensurePostgres } from '../pg-embed.js';
+import { ensurePostgres, stopEmbeddedPostgres } from '../pg-embed.js';
+
+/* The force-stopped postmaster makes in-flight sockets emit ECONNRESET /
+ * "Connection terminated unexpectedly" AFTER the work is done — treat that
+ * post-completion noise as success, surface anything else. */
+process.on('uncaughtException', (err) => {
+  if (/ECONNRESET|Connection terminated unexpectedly|EPIPE/i.test(String(err?.message ?? err))) process.exit(0);
+  console.error(err);
+  process.exit(1);
+});
 
 const here = path.dirname(url.fileURLToPath(import.meta.url));
 const dbDir = path.resolve(here, '..', '..', 'db');
@@ -55,6 +64,7 @@ async function main() {
   const { rows: [{ count }] } = await pool.query('SELECT count(*) FROM users');
   console.log(`\nReset complete — ${count} users, database "${dbName}".`);
   await pool.end();
+  await stopEmbeddedPostgres(); // one-shot script: never outlive the postmaster
 }
 
 function quoteIdent(name) { return `"${name.replace(/"/g, '""')}"`; }

@@ -207,8 +207,6 @@ SELECT a.id, s.id FROM tutor_applications a, subjects s WHERE a.application_code
 SELECT a.id, s.id FROM tutor_applications a, subjects s WHERE a.application_code = 'APP-002' AND s.code IN ('ACCT 102', 'MGMT 301') UNION ALL
 SELECT a.id, s.id FROM tutor_applications a, subjects s WHERE a.application_code = 'APP-003' AND s.code IN ('ENGL 101');
 
-COMMIT;
-
 -- 001: hours remaining starts equal to hours required
 UPDATE referrals SET hours_remaining = hours_required;
 
