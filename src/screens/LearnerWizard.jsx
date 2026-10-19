@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { ArrowRight, ArrowLeft, Loader2, Star, CheckCircle2, Shield, Clock, BookOpen } from 'lucide-react';
+import api from '../api';
 import { SUBJECTS, TUTORS } from '../data';
 
 const steps = [
@@ -23,15 +24,45 @@ export default function LearnerWizard({ showToast }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState({});
   const [matching, setMatching] = useState(false);
+  const [liveSubjects, setLiveSubjects] = useState(null); // [{id,code,name,department}]
+  const [matches, setMatches] = useState(null);           // live tutors for step 7
+  const [matchError, setMatchError] = useState(null);
+  const [requesting, setRequesting] = useState(null);     // tutorId in flight
 
-  const nextStep = () => {
-    if (currentStep === steps.length - 2) {
+  // Subject pills come from /subjects when reachable; fall back to mock otherwise.
+  useEffect(() => {
+    api.get('/subjects')
+      .then(({ subjects }) => setLiveSubjects(subjects.filter(s => s.department === 'BSIT' || s.department === 'General')))
+      .catch(() => setLiveSubjects(null));
+  }, []);
+
+  const subjectOptions = useMemo(
+    () => (liveSubjects ?? SUBJECTS.filter(s => s.dept === 'BSIT' || s.dept === 'General')).map(s => ({
+      code: s.code, id: s.id,
+    })),
+    [liveSubjects],
+  );
+
+  const nextStep = async () => {
+    if (currentStep === steps.length - 2 && !matches) {
       setMatching(true);
-      setTimeout(() => {
-        setMatching(false);
+      setMatchError(null);
+      try {
+        const apiCall = data.course && data.course !== 'Any'
+          ? api.get('/tutors', { subject: data.course, available: '1' })
+          : api.get('/tutors', { available: '1' });
+        const [{ tutors }] = [await apiCall];
+        // give the snack animation a beat; waiting is part of the UX
+        await new Promise(r => setTimeout(r, 1200));
+        setMatches(tutors);
         setCurrentStep(s => s + 1);
-        showToast(`Found ${getMatches().length} perfect matches!`, 'success');
-      }, 2500);
+        showToast(`Found ${tutors.length} accredited ${data.course || '*/'} matches!`, 'success');
+      } catch (e) {
+        setMatchError(e.message);
+        showToast('Matching failed — please retry.', 'error');
+      } finally {
+        setMatching(false);
+      }
     } else {
       setCurrentStep(s => Math.min(steps.length - 1, s + 1));
     }
@@ -39,21 +70,13 @@ export default function LearnerWizard({ showToast }) {
   const prevStep = () => setCurrentStep(s => Math.max(0, s - 1));
 
   const selectOption = (key, value) => {
+    // changing course invalidates cached matches
+    if (key === 'course') setMatches(null);
     setData(prev => ({ ...prev, [key]: value }));
   };
 
-  // Get matched tutors based on selected course
-  const getMatches = () => {
-    const selectedCourse = data.course;
-    if (!selectedCourse) return TUTORS.filter(t => t.verified && t.available).slice(0, 4);
-    const matched = TUTORS.filter(t => t.subjects.includes(selectedCourse) && t.verified && t.available);
-    // If not enough exact matches, pad with other available tutors
-    if (matched.length < 3) {
-      const others = TUTORS.filter(t => !matched.includes(t) && t.verified && t.available).slice(0, 3 - matched.length);
-      return [...matched, ...others];
-    }
-    return matched;
-  };
+  // Live matches first, mock directory only while offline.
+  const getMatches = () => (matches ?? TUTORS.filter(t => t.verified && t.available).slice(0, 4));
 
   const OptionCard = ({ label, selected, onClick, icon: Icon, description }) => (
     <Card 
@@ -160,8 +183,8 @@ export default function LearnerWizard({ showToast }) {
 
               {steps[currentStep].id === 'course' && (
                 <div className="flex flex-wrap justify-center gap-3">
-                  {COURSE_OPTIONS.map(opt => (
-                    <CoursePill key={opt} label={opt} selected={data.course === opt} onClick={() => selectOption('course', opt)} />
+                  {subjectOptions.map(opt => (
+                    <CoursePill key={opt.code} label={opt.code} selected={data.course === opt.code} onClick={() => selectOption('course', opt.code)} />
                   ))}
                 </div>
               )}
@@ -192,47 +215,86 @@ export default function LearnerWizard({ showToast }) {
 
               {steps[currentStep].id === 'match' && (
                 <div className="space-y-6">
-                  <div className="text-center mb-8">
-                    <CheckCircle2 className="w-16 h-16 text-emerald mx-auto mb-4" />
-                    <h2 className="text-3xl font-bold text-primary">Your Matches are Ready!</h2>
-                    <p className="text-muted-foreground">Select a tutor to schedule your first session.</p>
-                  </div>
-                  
-                  {getMatches().map((tutor, i) => (
-                    <motion.div
-                      key={tutor.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.15 }}
-                    >
-                      <Card className="hover:border-primary/50 transition-all cursor-pointer group hover:shadow-lg">
-                        <CardContent className="p-6 flex items-center gap-6">
-                          <div className="w-16 h-16 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center text-xl font-bold shadow-inner shrink-0">
-                            {tutor.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <h3 className="text-lg font-bold text-primary group-hover:text-secondary transition-colors">{tutor.name}</h3>
-                              {tutor.verified && <Shield className="w-4 h-4 text-emerald" />}
+                  {matchError && (
+                    <Card><CardContent className="p-6 text-center text-crimson">
+                      Matching failed: {matchError}
+                      <div className="mt-3"><Button variant="outline" size="sm" onClick={() => setMatches(null)}>Try again</Button></div>
+                    </CardContent></Card>
+                  )}
+                  {matches === null && !matchError ? (
+                    <Card><CardContent className="p-8 text-center text-muted-foreground">No matches loaded yet — go back and continue.</CardContent></Card>
+                  ) : matches !== null && matches.length === 0 && !matchError ? (
+                    <Card><CardContent className="p-8 text-center text-muted-foreground">
+                      No tutors match this filter. Try another subject.
+                    </CardContent></Card>
+                  ) : (
+                    getMatches().map((tutor, i) => (
+                      <motion.div
+                        key={tutor.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.15 }}
+                      >
+                        <Card className="hover:border-primary/50 transition-all cursor-pointer group hover:shadow-lg">
+                          <CardContent className="p-6 flex items-center gap-6">
+                            <div className="w-16 h-16 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center text-xl font-bold shadow-inner shrink-0">
+                              {tutor.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">{tutor.program} • Certified by {tutor.certifiedBy}</p>
-                            <div className="flex items-center gap-2 mt-1.5 text-sm text-muted-foreground">
-                              <Star className="w-4 h-4 fill-secondary text-secondary" /> {tutor.rating}
-                              <span className="mx-1">•</span>
-                              <span>{tutor.sessions} sessions</span>
-                              <span className="mx-1">•</span>
-                              <span className="font-semibold text-charcoal">{tutor.subjects.join(', ')}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-lg font-bold text-primary group-hover:text-secondary transition-colors">{tutor.name}</h3>
+                                {(tutor.is_verified ?? tutor.verified) && <Shield className="w-4 h-4 text-emerald" />}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">{tutor.program}</p>
+                              <div className="flex items-center gap-2 mt-1.5 text-sm text-muted-foreground">
+                                <Star className="w-4 h-4 fill-secondary text-secondary" /> {tutor.stats ? tutor.stats.rating : tutor.rating}
+                                <span className="mx-1">•</span>
+                                <span>{tutor.stats ? tutor.stats.sessions : tutor.sessions} sessions</span>
+                                <span className="mx-1">•</span>
+                                <span className="font-semibold text-charcoal">
+                                  {tutor.subjects ? tutor.subjects.map(s => s.code).join(', ') : tutor.subjects.join(', ')}
+                                </span>
+                              </div>
+                              <div className="flex gap-2 mt-2">
+                                <Badge variant="secondary" className="bg-secondary/20 text-secondary-foreground hover:bg-secondary/30 text-xs">
+                                  {(tutor.stats ? tutor.stats.sessions : tutor.sessions) > 50 ? '🏆 Experienced' : '🌟 Rising'}
+                                </Badge>
+                                <Badge variant="secondary" className="bg-secondary/20 text-secondary-foreground hover:bg-secondary/30 text-xs">
+                                  {(tutor.stats ? tutor.stats.rating : tutor.rating) >= 4.8 ? '⭐ Top Rated' : '👍 Well Reviewed'}
+                                </Badge>
+                              </div>
                             </div>
-                            <div className="flex gap-2 mt-2">
-                              <Badge variant="secondary" className="bg-secondary/20 text-secondary-foreground hover:bg-secondary/30 text-xs">{tutor.sessions > 50 ? '🏆 Experienced' : '🌟 Rising'}</Badge>
-                              <Badge variant="secondary" className="bg-secondary/20 text-secondary-foreground hover:bg-secondary/30 text-xs">{tutor.rating >= 4.8 ? '⭐ Top Rated' : '👍 Well Reviewed'}</Badge>
-                            </div>
-                          </div>
-                          <Button className="shrink-0" onClick={(e) => { e.stopPropagation(); showToast(`Session requested with ${tutor.name}!`); }}>Request Session</Button>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
+                            <Button
+                              className="shrink-0"
+                              disabled={requesting === tutor.id}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setRequesting(tutor.id);
+                                const fallbackDate = new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10);
+                                try {
+                                  await api.post('/session-requests', {
+                                    tutorId: tutor.id,
+                                    subjectId: (subjectOptions.find(s => s.code === data.course) || {}).id,
+                                    topic: data.goal || 'General review',
+                                    preferredDate: fallbackDate,
+                                    preferredTime: '3:30 PM',
+                                    note: data.level ? `Level: ${data.level} • Language: ${data.language || 'English'} • Preview: ${data.availability || ''}` : null,
+                                  });
+                                  showToast(`Session requested with ${tutor.name}!`, 'success');
+                                } catch (err) {
+                                  showToast(err.message || 'Request failed', 'error');
+                                } finally {
+                                  setRequesting(null);
+                                }
+                              }}
+                            >
+                              {requesting === tutor.id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Request Session'}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))
+                  )}
                 </div>
               )}
             </motion.div>

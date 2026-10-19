@@ -165,8 +165,9 @@ async function nextReferralNumber() {
 }
 
 function insertNotification(userId, kind, message, code) {
+  const title = kind === 'referral' ? 'New referral assigned' : 'Update';
   return query(
-    `INSERT INTO notifications (user_id, kind, message) VALUES ($1, $2, $3)`,
-    [userId, kind, `${message} ${code || ''}`.trim()],
+    `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, $2, $3, 'info')`,
+    [userId, title, `${message} ${code || ''}`.trim()],
   ).catch(e => console.error('notify', e.message));
 }
