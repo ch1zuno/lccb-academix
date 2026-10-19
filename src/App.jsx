@@ -8,6 +8,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from './components/ui/badge';
 import { Input } from './components/ui/input';
 
+import api from './api';
+import { loadSession, saveSession, clearSession } from './authToken';
+
 import SuperadminApprovals from './screens/SuperadminApprovals';
 import LearnerWizard from './screens/LearnerWizard';
 import Dashboard from './screens/Dashboard';
@@ -19,26 +22,21 @@ import Login from './screens/Login';
 
 import { NOTIFICATIONS } from './data';
 
-export const roles = [
-  { id: 'superadmin', label: 'Superadmin (Dean)', icon: ShieldCheck },
-  { id: 'faculty', label: 'Faculty / Advisor', icon: BookOpen },
-  { id: 'tutor', label: 'Accredited Tutor', icon: Award },
-  { id: 'learner', label: 'Student (Learner)', icon: Users },
-];
-
-export const roleProfiles = {
-  superadmin: { name: 'Sir Lenuel Betita', initials: 'LB', subtitle: 'IT Department Head' },
-  faculty: { name: 'Mrs. Bethel Tisuela', initials: 'BT', subtitle: 'IT Department — Program Head' },
-  tutor: { name: 'Mark Antipo', initials: 'MA', subtitle: 'BSIT 3-A • Accredited Tutor' },
-  learner: { name: 'Julian Gemelo', initials: 'JG', subtitle: 'BSIT 2-B • Student' },
+export const ROLE_LABELS = {
+  superadmin: 'Superadmin (Dean)',
+  faculty: 'Faculty / Advisor',
+  tutor: 'Accredited Tutor',
+  learner: 'Student (Learner)',
 };
 
+const initialsOf = (name = '') => name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [role, setRole] = useState('learner');
+  const [user, setUser] = useState(() => loadSession()?.user ?? null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [toast, setToast] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [role, setRole] = useState(user?.role ?? 'learner'); // demo role switch target
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -49,8 +47,18 @@ export default function App() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const currentRole = roles.find(r => r.id === role);
-  const currentProfile = roleProfiles[role];
+  // Revalidate the persisted session against the API on boot.
+  useEffect(() => {
+    const stored = loadSession();
+    if (!stored?.token) return;
+    api.get('/auth/me')
+      .then(({ user: fresh }) => { setUser(fresh); setRole(fresh.role); saveSession(stored.token, fresh); })
+      .catch(() => { clearSession(); setUser(null); });
+  }, []);
+
+  const currentProfile = user
+    ? { name: user.name, initials: initialsOf(user.name), subtitle: user.program ? `${user.program} • ${ROLE_LABELS[user.role] || user.role}` : (user.department || user.title || ROLE_LABELS[user.role] || user.role) }
+    : null;
   const unreadNotifications = NOTIFICATIONS.filter(n => !n.read).length;
 
   const getNavItems = () => {
@@ -85,8 +93,8 @@ export default function App() {
 
   const navItems = getNavItems();
 
-  if (!isLoggedIn) {
-    return <Login onLogin={(r) => { setRole(r); setIsLoggedIn(true); showToast(`Welcome back, ${roleProfiles[r].name}!`); }} />;
+  if (!user) {
+    return <Login onLogin={(freshUser) => { setUser(freshUser); setRole(freshUser.role); showToast(`Welcome back, ${freshUser.name}!`); }} />;
   }
 
   return (
@@ -214,7 +222,7 @@ export default function App() {
             <div className="flex items-center gap-3 pl-4 border-l border-border">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-semibold text-charcoal">{currentProfile.name}</p>
-                <p className="text-xs text-muted-foreground">{currentRole.label}</p>
+                <p className="text-xs text-muted-foreground">{ROLE_LABELS[user.role]}</p>
               </div>
               <div className="relative group cursor-pointer">
                 <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground font-bold border-2 border-white shadow-sm ring-2 ring-transparent group-hover:ring-primary transition-all">
@@ -227,26 +235,24 @@ export default function App() {
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Switch Role (Demo)</p>
                   </div>
                   <div className="p-1">
-                    {roles.map(r => (
+                    {Object.entries(ROLE_LABELS).map(([rId, rLabel]) => (
                       <button
-                        key={r.id}
-                        onClick={() => { setRole(r.id); navigate('/dashboard'); }}
+                        key={rId}
+                        onClick={() => { setRole(rId); navigate('/dashboard'); }}
                         className={cn(
                           "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
-                          role === r.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-slate-100 text-charcoal"
+                          role === rId ? "bg-primary/10 text-primary font-medium" : "hover:bg-slate-100 text-charcoal"
                         )}
                       >
-                        <r.icon className="w-4 h-4" />
                         <div className="text-left">
-                          <p>{r.label}</p>
-                          <p className="text-xs text-muted-foreground">{roleProfiles[r.id].name}</p>
+                          <p>{rLabel}</p>
                         </div>
-                        {role === r.id && <CheckCircle2 className="w-4 h-4 ml-auto text-primary" />}
+                        {role === rId && <CheckCircle2 className="w-4 h-4 ml-auto text-primary" />}
                       </button>
                     ))}
                     <div className="my-1 border-t border-border"></div>
                     <button
-                      onClick={() => { setIsLoggedIn(false); navigate('/dashboard'); }}
+                      onClick={() => { clearSession(); setUser(null); navigate('/dashboard'); }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors hover:bg-crimson/10 text-crimson font-medium"
                     >
                       Sign Out

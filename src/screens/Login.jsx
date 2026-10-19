@@ -8,11 +8,18 @@ import {
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
+import api from '../api';
+import { saveSession } from '../authToken';
 
-const VALID_USERS = {
-  '20-1102': 'tutor',
-  '22-0941': 'learner'
-};
+const DEV = import.meta.env.DEV;
+
+/** Demo accounts for the role quick-switch. Only used in development. */
+const DEMO_ACCOUNTS = DEV ? [
+  { role: 'superadmin', loginId: 'l.betita.admin@lccbacolod.edu.ph', label: 'Sir Lenuel Betita' },
+  { role: 'faculty',    loginId: 'b.tisuela@lccbacolod.edu.ph', label: 'Mrs. Bethel Tisuela' },
+  { role: 'tutor',      loginId: 'TU-042', label: 'Mark Antipo' },
+  { role: 'learner',    loginId: 'TE-128', label: 'Julian Gemelo' },
+] : [];
 
 const ARTICLES = [
   { id: 1, category: 'Study Tips', title: 'Top 5 Study Habits for IT Students', date: 'Sept 25, 2026', readTime: '5 min read', img: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80' },
@@ -22,9 +29,9 @@ const ARTICLES = [
 
 export default function LandingPage({ onLogin }) {
   const [showLogin, setShowLogin] = useState(false);
-  const [loginRole, setLoginRole] = useState(''); 
+  const [loginRole, setLoginRole] = useState('');
   const [loading, setLoading] = useState(false);
-  const [schoolId, setSchoolId] = useState('');
+  const [schoolId, setSchoolId] = useState(''); // school ID (e.g. TE-128) or email
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [scrolled, setScrolled] = useState(false);
@@ -38,35 +45,33 @@ export default function LandingPage({ onLogin }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const openLogin = (role) => {
-    setLoginRole(role);
+  const openLogin = (role, loginId) => {
+    setLoginRole(role || '');
     setShowLogin(true);
     setError('');
-    setSchoolId(role === 'tutor' ? '20-1102' : '22-0941'); 
-    setPassword('password123');
+    setPassword('');
+    if (loginId) setSchoolId(loginId); else setSchoolId('');
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    
-    if (!schoolId || !password) {
-      setError('Please enter your School ID and password.');
-      return;
-    }
 
-    const role = VALID_USERS[schoolId.trim()];
-    
-    if (!role || role !== loginRole) {
-      setError(`Invalid credentials for ${loginRole}.`);
+    if (!schoolId || !password) {
+      setError('Please enter your School ID (or email) and password.');
       return;
     }
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const { token, user } = await api.post('/auth/login', { loginId: schoolId.trim(), password });
+      saveSession(token, user);
+      onLogin(user);
+    } catch (err) {
+      setError(err.message || 'Login failed.');
+    } finally {
       setLoading(false);
-      onLogin(role);
-    }, 1500);
+    }
   };
 
   // Animation Variants
@@ -454,7 +459,7 @@ export default function LandingPage({ onLogin }) {
                       {loginRole === 'tutor' ? <GraduationCap className="w-8 h-8" /> : <Users className="w-8 h-8" />}
                     </div>
                     <h2 className="text-2xl font-extrabold text-slate-900">
-                      {loginRole === 'tutor' ? 'Tutor Portal' : 'Student Login'}
+                      {loginRole === 'tutor' ? 'Tutor Portal' : loginRole === 'superadmin' ? 'Superadmin Portal' : loginRole === 'faculty' ? 'Faculty Portal' : 'Student Login'}
                     </h2>
                     <p className="text-slate-500 mt-1.5 text-sm font-medium">Please enter your LCCB credentials.</p>
                   </div>
@@ -471,11 +476,12 @@ export default function LandingPage({ onLogin }) {
                     </AnimatePresence>
                     
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">School ID Number</label>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">School ID or Email</label>
                       <div className="relative">
                         <User className="absolute left-3.5 top-3.5 h-5 w-5 text-slate-400" />
-                        <Input 
-                          placeholder="e.g. 22-0941" 
+                        <Input
+                          placeholder="e.g. TE-128 or email"
+                          autoComplete="username"
                           className="pl-11 bg-slate-50 border-slate-200 h-12 text-lg focus-visible:ring-primary/20 focus-visible:border-primary transition-all"
                           value={schoolId}
                           onChange={(e) => setSchoolId(e.target.value)}
@@ -510,11 +516,23 @@ export default function LandingPage({ onLogin }) {
                   </form>
                   
                   <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Testing Credentials</p>
-                    <div className="inline-flex flex-col gap-1 items-center bg-slate-50 px-4 py-2 rounded-lg border border-slate-100 text-xs text-slate-600">
-                      <span>ID: <strong className="text-slate-900 font-mono text-sm">{loginRole === 'tutor' ? '20-1102' : '22-0941'}</strong></span>
-                      <span>Password: <strong className="text-slate-900 font-mono text-sm">any</strong></span>
-                    </div>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Demo Accounts</p>
+                    {DEMO_ACCOUNTS.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {DEMO_ACCOUNTS.map(d => (
+                          <button
+                            key={d.role}
+                            type="button"
+                            className="text-xs border border-slate-200 rounded-lg px-2 py-2 hover:bg-slate-50 transition-colors"
+                            onClick={() => { setLoginRole(d.role); setSchoolId(d.loginId); setPassword('demo1234'); }}
+                          >
+                            <span className="block font-bold text-slate-700 capitalize">{d.role}</span>
+                            <span className="block text-slate-400">{d.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-slate-400 mt-3"><strong className="text-slate-600">Password for all demo users:</strong> demo1234</p>
                   </div>
                 </CardContent>
               </Card>

@@ -35,3 +35,6 @@ build/
 *.sln
 *.sw?
 
+# Embedded postgres data
+.pgdata/
+
