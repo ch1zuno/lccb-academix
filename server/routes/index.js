@@ -6,6 +6,8 @@ import sessionRoutes from './sessions.js';
 import wrapUpRoutes from './wrapup.js';
 import rewardsRoutes from './rewards.js';
 import accreditationRoutes from './accreditation.js';
+import analyticsRoutes from './analytics.js';
+import notificationRoutes from './notifications.js';
 
 const router = Router();
 
@@ -22,5 +24,9 @@ router.use(rewardsRoutes);
 router.use(accreditationRoutes);
 // matching.js registers /tutors, /subjects, /session-requests — no prefix needed
 router.use(matchingRoutes);
+// superadmin analytics aggregates
+router.use(analyticsRoutes);
+// user notifications (list + mark all read)
+router.use(notificationRoutes);
 
 export default router;

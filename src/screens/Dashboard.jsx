@@ -36,13 +36,38 @@ export default function Dashboard({ role, user, showToast }) {
   const { referrals: liveReferrals, error: referralsError, loading: referralsLoading } = useReferrals(role);
   const scopedByName = (name) => !user || !user?.name || name === user.name;
 
+  // Superadmin analytics (live aggregates)
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsError, setAnalyticsError] = useState(null);
+  const [analyticTutors, setAnalyticTutors] = useState(null); // leaderboard: all tutors sorted by points
+  useEffect(() => {
+    api.get('/analytics')
+      .then(setAnalytics)
+      .catch((e) => setAnalyticsError(e.message));
+    api.get('/tutors')
+      .then(({ tutors: rows }) => setAnalyticTutors([...rows].sort((a, b) => (b.points ?? 0) - (a.points ?? 0))))
+      .catch(() => setAnalyticTutors([]));
+  }, []);
+
   // ═══════════════════════════════════════════════════
   // SUPERADMIN DASHBOARD
   // ═══════════════════════════════════════════════════
   if (role === 'superadmin') {
-    const stats = PLATFORM_STATS;
-    const recentActivity = ACTIVITY_FEED.slice(0, 6);
-    const topTutors = LEADERBOARD.slice(0, 5);
+    const weeklyTrend = (analytics?.trends ?? [{ week: 0, sessions: 0 }]).map(t => ({
+      label: t.week ? new Date(t.week).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '…',
+      sessions: t.sessions ?? 0,
+    }));
+    const maxTrend = Math.max(1, ...weeklyTrend.map(t => t.sessions));
+    const kpis = analytics ? [
+      { title: 'Active Tutors', value: analytics.activeTutors, sub: `${analytics.totalLearners} learners enrolled`, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
+      { title: 'Sessions This Month', value: analytics.monthlySessions, sub: `${analytics.monthlyPrev} previous month`, icon: Calendar, color: 'text-emerald', bg: 'bg-emerald/10' },
+      { title: 'Recovery Rate', value: `${analytics.recoveryRate}%`, sub: `${analytics.resolvedReferrals}/${analytics.totalReferrals} referrals resolved`, icon: Target, color: 'text-purple-600', bg: 'bg-purple-50' },
+      { title: 'Points Issued', value: (analytics.pointsIssued ?? 0).toLocaleString(), sub: `${analytics.avgRating ?? '—'}★ average rating`, icon: Zap, color: 'text-amber', bg: 'bg-amber/10' },
+    ] : null;
+    const deptRows = analytics?.byDept ?? [];
+    const maxDept = Math.max(1, ...deptRows.map(d => d.completed + 1));
+    const topTutors = analyticTutors?.slice(0, 5) ?? [];
+    const feed = (liveReferrals ?? []).slice(0, 5);
 
     return (
       <div className="space-y-6">
@@ -52,89 +77,96 @@ export default function Dashboard({ role, user, showToast }) {
             <p className="section-subtitle">Monitor the health and activity of the LCCB Academix platform.</p>
           </div>
           <Badge variant="secondary" className="bg-emerald/10 text-emerald border border-emerald/20 px-3 py-1 text-sm font-semibold">
-            <Activity className="w-3.5 h-3.5 mr-1.5" /> System Healthy
+            <Activity className="w-3.5 h-3.5 mr-1.5" /> Live Data
           </Badge>
         </div>
 
+        {analyticsError && (
+          <Card><CardContent className="p-4 text-center text-crimson">Failed to load analytics: {analyticsError}</CardContent></Card>
+        )}
+        {kpis === null && !analyticsError && (
+          <Card><CardContent className="p-8 text-center text-muted-foreground">Loading platform analytics…</CardContent></Card>
+        )}
+
         {/* KPI Row */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[
-            { title: 'Active Tutors', value: stats.activeTutors, sub: `${stats.pendingVerification} pending verification`, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-            { title: 'Sessions This Month', value: stats.sessionsThisMonth, sub: `${stats.hoursThisMonth} hours logged`, icon: Calendar, color: 'text-emerald', bg: 'bg-emerald/10' },
-            { title: 'Recovery Rate', value: `${stats.recoveryRate}%`, sub: 'Referred students passing midterms', icon: Target, color: 'text-purple-600', bg: 'bg-purple-50' },
-            { title: 'Points Issued', value: stats.pointsThisMonth.toLocaleString(), sub: `${stats.totalPointsIssued.toLocaleString()} total lifetime`, icon: Zap, color: 'text-amber', bg: 'bg-amber/10' },
-          ].map((kpi, i) => (
-            <motion.div key={kpi.title} {...fadeInUp} transition={{ delay: i * 0.1 }}>
-              <Card className="hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
-                  <div className={`p-2 rounded-lg ${kpi.bg}`}>
-                    <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-charcoal">{kpi.value}</div>
-                  <p className="text-xs text-muted-foreground mt-1">{kpi.sub}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+        {kpis && (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {kpis.map((kpi, i) => (
+              <motion.div key={kpi.title} {...fadeInUp} transition={{ delay: i * 0.1 }}>
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
+                    <div className={`p-2 rounded-lg ${kpi.bg}`}>
+                      <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-charcoal">{kpi.value}</div>
+                    <p className="text-xs text-muted-foreground mt-1">{kpi.sub}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {/* Charts Row */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Tutoring Hours Area Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Tutoring Hours Trend</CardTitle>
-              <CardDescription>Monthly hours logged across all departments</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-end gap-3 h-[180px] pt-4">
-                {CHART_DATA_HOURS.map((d, i) => (
-                  <div key={d.month} className="flex-1 flex flex-col items-center gap-2">
-                    <span className="text-xs font-bold text-primary">{d.hours}</span>
-                    <motion.div
-                      className="w-full bg-gradient-to-t from-primary to-primary/60 rounded-t-md"
-                      initial={{ height: 0 }}
-                      animate={{ height: `${(d.hours / 340) * 140}px` }}
-                      transition={{ delay: i * 0.1, duration: 0.5 }}
-                    />
-                    <span className="text-xs text-muted-foreground font-medium">{d.month}</span>
+        {kpis && (
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Weekly sessions trend */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Weekly Sessions Trend</CardTitle>
+                <CardDescription>Completed sessions over the last 6 weeks</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-end gap-3 h-[180px] pt-4">
+                  {weeklyTrend.map((d, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                      <span className="text-xs font-bold text-primary">{d.sessions}</span>
+                      <motion.div
+                        className="w-full bg-gradient-to-t from-primary to-primary/60 rounded-t-md"
+                        initial={{ height: 0 }}
+                        animate={{ height: `${(d.sessions / maxTrend) * 140}px` }}
+                        transition={{ delay: i * 0.08, duration: 0.5 }}
+                      />
+                      <span className="text-xs text-muted-foreground font-medium">{d.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Sessions by Department */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Activity by Department</CardTitle>
+                <CardDescription>Completed sessions per program</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {deptRows.length === 0 && <p className="text-sm text-muted-foreground">No department data.</p>}
+                {deptRows.map((d, i) => (
+                  <div key={d.department} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-charcoal">{d.department}</span>
+                      <span className="text-muted-foreground">{d.completed} sessions • {d.learners} learners • {d.tutors} tutors</span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <motion.div
+                        className={`h-full rounded-full ${i === 0 ? 'bg-primary' : i === 1 ? 'bg-secondary' : i === 2 ? 'bg-emerald' : i === 3 ? 'bg-purple-500' : 'bg-amber'}`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(d.completed / maxDept) * 100}%` }}
+                        transition={{ delay: i * 0.15, duration: 0.6 }}
+                      />
+                    </div>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-          {/* Sessions by Department */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Sessions by Department</CardTitle>
-              <CardDescription>Distribution across programs</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {CHART_DATA_BY_DEPT.map((d, i) => (
-                <div key={d.dept} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-charcoal">{d.dept}</span>
-                    <span className="text-muted-foreground">{d.sessions} sessions • {d.students} students</span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <motion.div
-                      className={`h-full rounded-full ${i === 0 ? 'bg-primary' : i === 1 ? 'bg-secondary' : i === 2 ? 'bg-emerald' : i === 3 ? 'bg-purple-500' : 'bg-amber'}`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(d.sessions / 145) * 100}%` }}
-                      transition={{ delay: i * 0.15, duration: 0.6 }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Bottom Row: Leaderboard + Faculty + Activity */}
+        {/* Bottom Row: Leaderboard + Referral pipeline + Activity */}
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Top Tutors Leaderboard */}
           <Card>
@@ -142,17 +174,18 @@ export default function Dashboard({ role, user, showToast }) {
               <CardTitle className="text-lg flex items-center gap-2">🏆 Top Tutors</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              {topTutors.length === 0 && <p className="text-sm text-muted-foreground">{analyticTutors === null ? 'Loading…' : 'No tutors registered yet.'}</p>}
               {topTutors.map((t, i) => (
-                <div key={t.name} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                <div key={t.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${i === 0 ? 'bg-secondary text-primary' : i === 1 ? 'bg-slate-300 text-slate-700' : i === 2 ? 'bg-amber/30 text-amber-800' : 'bg-slate-100 text-charcoal'}`}>
-                    {t.rank}
+                    {i + 1}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-charcoal truncate">{t.name}</p>
                     <p className="text-xs text-muted-foreground">{t.program}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-primary">{t.points.toLocaleString()}</p>
+                    <p className="text-sm font-bold text-primary">{(t.points ?? 0).toLocaleString()}</p>
                     <p className="text-xs text-muted-foreground">pts</p>
                   </div>
                 </div>
@@ -160,43 +193,47 @@ export default function Dashboard({ role, user, showToast }) {
             </CardContent>
           </Card>
 
-          {/* Faculty Referral Stats */}
+          {/* Referral Pipeline (live counts) */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">📋 Faculty Activity</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">📋 Referral Pipeline</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {FACULTY.filter(f => f.dept === 'BSIT').map(f => (
-                <div key={f.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors">
-                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-sm">
-                    {f.avatar}
+              {referralsLoading && <p className="text-sm text-muted-foreground">Loading referrals…</p>}
+              {(liveReferrals ?? []).length === 0 && !referralsLoading && (
+                <p className="text-sm text-muted-foreground">No referrals yet.</p>
+              )}
+              {['flagged', 'assigned', 'in-progress', 'resolved'].map((key, i) => {
+                const n = (liveReferrals ?? []).filter(r => r.status === key).length;
+                return (
+                  <div key={key} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                    <div className="flex-1 min-w-0 capitalize">
+                      <p className="font-semibold text-sm text-charcoal">{key.replace('-', ' ')}</p>
+                      <p className="text-xs text-muted-foreground">{n} referral{n === 1 ? '' : 's'}</p>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">{n}</Badge>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-charcoal truncate">{f.name}</p>
-                    <p className="text-xs text-muted-foreground">{f.subjects.length} subjects</p>
-                  </div>
-                  <Badge variant="secondary" className="text-xs">{f.referrals} referrals</Badge>
-                </div>
-              ))}
+                );
+              })}
             </CardContent>
           </Card>
 
           {/* Recent Activity Feed */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">⚡ Recent Activity</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">⚡ Recent Referrals</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {recentActivity.slice(0, 5).map(a => (
-                <div key={a.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors">
-                  <span className="text-lg mt-0.5">{a.icon}</span>
+              {feed.length === 0 && <p className="text-sm text-muted-foreground">No recent activity.</p>}
+              {feed.map(r => (
+                <div key={r.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                  <Badge variant="secondary" className="text-[10px] uppercase mt-0.5 shrink-0">{r.urgency}</Badge>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-charcoal">
-                      <span className="font-semibold">{a.actor}</span>{' '}
-                      <span className="text-muted-foreground">{a.action}</span>{' '}
-                      <span className="font-semibold">{a.target}</span>
+                    <p className="text-sm text-charcoal truncate">
+                      <span className="font-semibold">{r.learner}</span>
+                      <span className="text-muted-foreground"> — {r.topic}</span>
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{a.time}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{r.subject_code} • {r.status}</p>
                   </div>
                 </div>
               ))}
