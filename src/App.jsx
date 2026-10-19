@@ -116,8 +116,8 @@ export default function App() {
               key={item.id}
               onClick={() => navigate(`/${item.id}`)}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors whitespace-nowrap overflow-hidden",
-                activeTab === item.id ? "bg-secondary text-secondary-foreground font-semibold" : "hover:bg-primary-foreground/10 text-primary-foreground/80 hover:text-primary-foreground"
+                "nav-item whitespace-nowrap overflow-hidden",
+                activeTab === item.id ? "nav-item.active" : "text-primary-foreground/80"
               )}
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />

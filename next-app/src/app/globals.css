@@ -64,8 +64,147 @@
   * {
     border-color: var(--color-border);
   }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+
+  /* Smooth page scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Text selection accented with primary */
+  ::selection {
+    background-color: hsl(222.2 84% 4.9% / 0.2);
+    color: hsl(var(--foreground));
+  }
+
+  /* Focus ring for keyboard navigation */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring)), 0 0 0 4px hsl(var(--background));
+  }
+
+  /* Typography scale */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  h1 { font-size: 2rem; line-height: 1.1; }
+  h2 { font-size: 1.75rem; line-height: 1.2; }
+  h3 { font-size: 1.25rem; line-height: 1.25; }
+  h4 { font-size: 1.1rem; line-height: 1.3; }
+
+  p {
+    line-height: 1.6;
+  }
+
+  a {
+    color: #0F2942;
+    text-decoration-offset: 4px;
+    transition: color 0.2s ease;
+  }
+  a:hover {
+    color: rgba(15, 41, 66, 0.85);
+  }
+
+  /* Refined scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.35);
+  }
+}
+
+@layer components {
+  /* Elevated card with subtle hover lift */
+  .panel {
+    @apply rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  .panel:focus-within {
+    @apply shadow-md;
+  }
+
+  /* Glassmorphism card */
+  .panel-glass {
+    @apply rounded-xl border border-white/40 bg-white/60 backdrop-blur-md shadow-lg;
+  }
+
+  /* Section header pattern */
+  .section-head {
+    @apply flex items-center justify-between mb-6;
+  }
+  .section-title {
+    @apply text-2xl font-bold text-charcoal tracking-tight;
+  }
+  .section-subtitle {
+    @apply text-sm text-muted-foreground mt-1;
+  }
+
+  /* Soft button variant */
+  .btn-soft {
+    @apply inline-flex items-center justify-center rounded-md border-transparent bg-accent text-accent-foreground text-sm font-medium px-4 py-2 hover:bg-accent/80 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+
+  /* Softer input base */
+  .input-field {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+
+  /* Soft badge */
+  .badge-soft {
+    @apply inline-flex items-center rounded-full border-transparent bg-accent text-accent-foreground px-2.5 py-0.5 text-xs font-semibold hover:bg-accent/80 transition-colors duration-200;
+  }
+
+  /* Navigation item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-200 hover:bg-primary-foreground/10;
+  }
+  .nav-item.active {
+    @apply bg-secondary text-secondary-foreground font-semibold;
+  }
+
+  /* KPI / stat card */
+  .stat-card {
+    @apply rounded-xl border border-border bg-card p-4 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+
+  /* Skeleton loading state */
+  .skeleton {
+    @apply animate-pulse rounded-md bg-muted;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .glass {
+    @apply bg-white/60 backdrop-blur-md border border-white/40;
+  }
+  .blob {
+    @apply rounded-full blur-3xl opacity-40 pointer-events-none;
+  }
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+  .fade-in {
+    animation: fadeIn 0.4s ease-out both;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }

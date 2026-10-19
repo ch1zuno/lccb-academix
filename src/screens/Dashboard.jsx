@@ -25,10 +25,10 @@ export default function Dashboard({ role, showToast }) {
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="section-head">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-primary">Institution Overview</h2>
-            <p className="text-muted-foreground">Monitor the health and activity of the LCCB Academix platform.</p>
+            <h2 className="section-title text-primary">Institution Overview</h2>
+            <p className="section-subtitle">Monitor the health and activity of the LCCB Academix platform.</p>
           </div>
           <Badge variant="secondary" className="bg-emerald/10 text-emerald border border-emerald/20 px-3 py-1 text-sm font-semibold">
             <Activity className="w-3.5 h-3.5 mr-1.5" /> System Healthy
@@ -199,10 +199,10 @@ export default function Dashboard({ role, showToast }) {
 
     return (
       <div className="space-y-6 h-full flex flex-col">
-        <div className="flex items-center justify-between">
+        <div className="section-head">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-primary">Early-Warning Referral Board</h2>
-            <p className="text-muted-foreground">Manage and track student interventions — Logged in as <span className="font-semibold text-charcoal">Mrs. Bethel Tisuela</span></p>
+            <h2 className="section-title text-primary">Early-Warning Referral Board</h2>
+            <p className="section-subtitle">Manage and track student interventions — Logged in as <span className="font-semibold text-charcoal">Mrs. Bethel Tisuela</span></p>
           </div>
           <Button onClick={() => showToast('Opening Nominate Student Modal', 'info')}>+ Nominate Student</Button>
         </div>
