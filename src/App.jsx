@@ -281,7 +281,7 @@ export default function App() {
                 <Route path="/dashboard" element={<Dashboard role={role} user={user} showToast={showToast} />} />
                 <Route path="/exam" element={<TutorExam showToast={showToast} />} />
                 <Route path="/referral" element={<FacultyReferral showToast={showToast} />} />
-                <Route path="/checkin" element={<SessionCheckIn role={role} showToast={showToast} />} />
+                <Route path="/checkin" element={<SessionCheckIn role={role} user={user} showToast={showToast} />} />
                 <Route path="/rewards" element={<RewardCatalog showToast={showToast} />} />
                 <Route path="/approvals" element={<SuperadminApprovals showToast={showToast} />} />
               </Routes>
