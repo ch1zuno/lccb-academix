@@ -3,6 +3,7 @@ import authRoutes from './auth.js';
 import referralRoutes from './referrals.js';
 import matchingRoutes from './matching.js';
 import sessionRoutes from './sessions.js';
+import wrapUpRoutes from './wrapup.js';
 
 const router = Router();
 
@@ -11,6 +12,8 @@ router.use('/auth', authRoutes);
 router.use(referralRoutes);
 // sessions.js registers /sessions/... and /device/... — no prefix needed
 router.use(sessionRoutes);
+// wrap-up endpoints registered on /sessions/:id/wrap-up — no prefix needed
+router.use(wrapUpRoutes);
 // matching.js registers /tutors, /subjects, /session-requests — no prefix needed
 router.use(matchingRoutes);
 

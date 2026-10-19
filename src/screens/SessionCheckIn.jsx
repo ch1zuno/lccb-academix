@@ -24,6 +24,10 @@ export default function SessionCheckIn({ role, showToast }) {
   const [checkingIn, setCheckingIn] = useState(false);
   const [confirmations, setConfirmations] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [wrapRating, setWrapRating] = useState(0);
+  const [wrapNotes, setWrapNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [wrapResult, setWrapResult] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,7 +101,26 @@ export default function SessionCheckIn({ role, showToast }) {
   const handleEnd = () => {
     setFinished(true);
     setActive(false);
-    showToast('Session ended. Wrap-up flow ready.', 'success');
+    showToast(`Session ended (${formatTime(seconds)}). Complete the wrap-up.`, 'success');
+  };
+
+  const handleSubmitWrap = async () => {
+    if (!target || wrapRating < 1) return;
+    setSubmitting(true);
+    try {
+      const res = await api.post(`/sessions/${target.id}/wrap-up`, {
+        notes: role === 'tutor' ? wrapNotes : undefined,
+        rating: wrapRating,
+      });
+      setWrapResult(res);
+      showToast(res.referralResolved
+        ? 'Session wrapped — referral fully resolved! 🎉'
+        : `Session wrapped. +${res.points} points recorded.`, 'success');
+    } catch (e) {
+      showToast(e.message || 'Wrap-up failed', 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (finished) {
@@ -107,19 +130,53 @@ export default function SessionCheckIn({ role, showToast }) {
         <p className="text-muted-foreground mb-8 text-lg">Total Time: <span className="font-mono font-bold text-charcoal">{formatTime(seconds)}</span></p>
         <Card className="w-full max-w-md shadow-lg border-border">
           <CardContent className="p-8 text-center space-y-6">
-            <h3 className="text-xl font-semibold text-charcoal">Rate this session</h3>
+            <h3 className="text-xl font-semibold text-charcoal">
+              {role === 'tutor' ? 'Leave session notes & rate' : 'Rate this session'}
+            </h3>
             <div className="flex justify-center gap-2">
               {[1, 2, 3, 4, 5].map(star => (
-                <Star key={star} className="w-10 h-10 text-slate-300 hover:text-secondary hover:fill-secondary cursor-pointer transition-colors" />
+                <Star
+                  key={star}
+                  className={`w-10 h-10 cursor-pointer transition-colors ${(wrapRating >= star) ? 'text-secondary fill-secondary' : 'text-slate-300 hover:text-secondary'}`}
+                  onClick={() => setWrapRating(star)}
+                />
               ))}
             </div>
             {role === 'tutor' && (
-              <div className="bg-secondary/10 text-secondary-foreground p-4 rounded-lg border border-secondary/20 mt-6">
-                <p className="font-bold text-lg">+50 Community Points</p>
-                <p className="text-sm">Will be added to your wallet at submit</p>
+              <textarea
+                className="input-field w-full min-h-[80px] text-sm"
+                placeholder="Session notes for the student record…"
+                value={wrapNotes}
+                onChange={(e) => setWrapNotes(e.target.value)}
+              />
+            )}
+            {Array.isArray(wrapResult?.badges) && wrapResult.badges.length > 0 && (
+              <div className="bg-secondary/10 text-secondary-foreground p-3 rounded-lg border border-secondary/20 text-sm">
+                🏅 Badge unlocked: <strong>{wrapResult.badges.join(', ')}</strong>
               </div>
             )}
-            <Button className="w-full mt-4" size="lg" disabled>Submit Feedback</Button>
+            {role === 'tutor' && !wrapResult && (
+              <div className="bg-secondary/10 text-secondary-foreground p-4 rounded-lg border border-secondary/20 mt-2">
+                <p className="font-bold text-lg">+50 Community Points</p>
+                <p className="text-sm">Added to your wallet on submit</p>
+              </div>
+            )}
+            {wrapResult ? (
+              <div className="text-sm text-emerald font-semibold pt-2">
+                ✅ Wrap-up saved{wrapResult.referralResolved ? ' — referral resolved' : ''}
+                {role === 'tutor' ? ` • wallet balance ${wrapResult.tutorBalance} pts` : ''}
+              </div>
+            ) : (
+              <Button
+                className="w-full mt-4"
+                size="lg"
+                disabled={submitting || wrapRating < 1}
+                onClick={handleSubmitWrap}
+              >
+                {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                {submitting ? 'Submitting…' : 'Submit Feedback'}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
