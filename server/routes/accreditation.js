@@ -10,7 +10,7 @@ import { httpError } from '../middleware/errors.js';
 const router = express.Router();
 
 const APP_SQL = `
-  SELECT a.id, a.application_code, a.exam_score, a.status, a.date_applied,
+  SELECT a.id, a.application_code, a.exam_score, a.status, a.date_applied, a.achievements,
          u.name, u.custom_id, u.email, u.program, u.department,
          COALESCE((SELECT json_agg(json_build_object('code', s.code, 'name', s.name))
                    FROM application_subjects asx JOIN subjects s ON s.id = asx.subject_id
@@ -24,7 +24,9 @@ router.get('/accreditation/mine', requireAuth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-/** POST /accreditation/apply  { subjectIds: [uuid] } — only learners apply */
+/** POST /accreditation/apply  { subjectIds: [uuid], achievements?: [{title, detail?, link?}] }
+ *  — only learners apply; achievements are the supporting documents of
+ *  academic achievement shown to both the applicant and the superadmin. */
 router.post('/accreditation/apply', requireAuth, requireRole('learner'), async (req, res, next) => {
   try {
     const subjectIds = Array.isArray(req.body?.subjectIds) ? req.body.subjectIds : [];
@@ -35,6 +37,23 @@ router.post('/accreditation/apply', requireAuth, requireRole('learner'), async (
     const known = await query(`SELECT count(*)::int AS n FROM subjects WHERE id = ANY($1::uuid[])`, [subjectIds]);
     if (known.rows[0].n !== subjectIds.length) throw httpError(400, 'Unknown subject in list');
 
+    // supporting documents: max 8; title required, link must be a real URL
+    const rawDocs = Array.isArray(req.body?.achievements) ? req.body.achievements : [];
+    if (rawDocs.length > 8) throw httpError(400, 'Up to 8 supporting documents allowed');
+    const badDoc = rawDocs.some(
+      (d) => !String(d?.title ?? '').trim() && (String(d?.detail ?? '').trim() || String(d?.link ?? '').trim()));
+    if (badDoc) throw httpError(400, 'Every supporting document needs a title');
+    const documents = rawDocs
+      .map((d) => ({
+        title: String(d?.title ?? '').trim().slice(0, 120),
+        detail: String(d?.detail ?? '').trim().slice(0, 300),
+        link: String(d?.link ?? '').trim().slice(0, 400),
+      }))
+      .filter((d) => d.title);
+    for (const d of documents) {
+      if (d.link && !/^https?:\/\//i.test(d.link)) throw httpError(400, 'Document links must start with http:// or https://');
+    }
+
     const existing = await query(
       `SELECT id, status FROM tutor_applications WHERE user_id = $1 AND status = 'pending'`, [req.user.id]);
     if (existing.rows[0]) throw httpError(409, 'You already have a pending application');
@@ -42,9 +61,9 @@ router.post('/accreditation/apply', requireAuth, requireRole('learner'), async (
     const n = (await query(`SELECT count(*)::int AS n FROM tutor_applications`)).rows[0].n;
     const code = `APP-${String(n + 1).padStart(3, '0')}`;
     const { rows } = await query(
-      `INSERT INTO tutor_applications (application_code, user_id, date_applied)
-       VALUES ($1, $2, CURRENT_DATE) RETURNING id, application_code, status`,
-      [code, req.user.id]);
+      `INSERT INTO tutor_applications (application_code, user_id, date_applied, achievements)
+       VALUES ($1, $2, CURRENT_DATE, $3::jsonb) RETURNING id, application_code, status`,
+      [code, req.user.id, documents.length ? JSON.stringify(documents) : null]);
     await query(
       `INSERT INTO application_subjects (application_id, subject_id)
        SELECT $1, uuid FROM (SELECT id AS uuid FROM subjects WHERE id = ANY($2::uuid[])) x`,

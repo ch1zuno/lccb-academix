@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { FileText, CheckCircle, XCircle, Award, BookOpen, GraduationCap, Clock, Loader2 } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Award, BookOpen, GraduationCap, Clock, Loader2, ExternalLink } from 'lucide-react';
 import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -145,7 +145,7 @@ export default function SuperadminApprovals({ showToast }) {
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold">{selectedApp.name}</h2>
-                    <p className="text-primary-foreground/80">{selectedApp.program || selectedApp.department} • Applied {selectedApp.date_applied}</p>
+                    <p className="text-primary-foreground/80">{selectedApp.program || selectedApp.department} • Applied {(() => { const dt = selectedApp.date_applied instanceof Date ? selectedApp.date_applied : new Date(selectedApp.date_applied ?? ''); return Number.isNaN(dt.getTime()) ? String(selectedApp.date_applied ?? '') : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); })()}</p>
                   </div>
                 </div>
                 <div className="text-center">
@@ -188,12 +188,23 @@ export default function SuperadminApprovals({ showToast }) {
                   </h3>
                   {Array.isArray(selectedApp.achievements) && selectedApp.achievements.length > 0 ? (
                     <ul className="space-y-3">
-                      {selectedApp.achievements.map((ach, i) => (
-                        <li key={i} className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-emerald shrink-0 mt-0.5" />
-                          <span className="text-slate-700">{typeof ach === 'string' ? ach : (ach.title ?? JSON.stringify(ach))}</span>
-                        </li>
-                      ))}
+                      {selectedApp.achievements.map((ach, i) => {
+                        const entry = typeof ach === 'string' ? { title: ach } : ach;
+                        return (
+                          <li key={i} className="flex items-start gap-3">
+                            <CheckCircle className="w-5 h-5 text-emerald shrink-0 mt-0.5" />
+                            <div className="min-w-0">
+                              <span className="text-slate-700 font-medium">{entry.title}</span>
+                              {entry.detail && <p className="text-xs text-muted-foreground">{entry.detail}</p>}
+                              {entry.link && (
+                                <a href={entry.link} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-0.5">
+                                  View document <ExternalLink className="w-3 h-3" />
+                                </a>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
                     </ul>
                   ) : (
                     <p className="text-sm text-muted-foreground">No achievements submitted.</p>

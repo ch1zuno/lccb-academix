@@ -29,8 +29,19 @@ const CORRECT = {};
   console.log('exam before apply:', rejected.status, rejected.data.error);
 
   const subs = (await request('/subjects', { token: learner.token })).data.subjects.slice(0, 2);
-  const apply = await request('/accreditation/apply', { method: 'POST', token: learner.token, body: { subjectIds: subs.map(s => s.id) } });
+  const docs = [
+    { title: "Dean's Lister — 1st Sem AY 2025-2026", detail: 'GWA 1.32', link: 'https://drive.example.com/scan-maria' },
+    { title: 'LCCB Coding Cup 2025 — Champion', detail: 'Programming competition certificate' },
+  ];
+  const apply = await request('/accreditation/apply', { method: 'POST', token: learner.token, body: { subjectIds: subs.map(s => s.id), achievements: docs } });
   console.log('apply:', apply.status, apply.data.application ?? apply.data.error);
+  if (apply.status !== 201) { console.log('ABORT — apply failed'); process.exit(1); }
+
+  const mine0 = (await request('/accreditation/mine', { token: learner.token })).data.application;
+  console.log('documents on application:', mine0.achievements?.length, '(expected 2) | code:', mine0.application_code);
+
+  const badLink = await request('/accreditation/apply', { method: 'POST', token: (await login('TE-128')).data.token, body: { subjectIds: subs.map(s => s.id), achievements: [{ title: 'x', link: 'javascript:alert(1)' }] } });
+  console.log('bad document link rejected:', badLink.status, badLink.data.error);
 
   const again = await request('/accreditation/apply', { method: 'POST', token: learner.token, body: { subjectIds: subs.map(s => s.id) } });
   console.log('duplicate apply:', again.status, again.data.error);
@@ -50,6 +61,8 @@ const CORRECT = {};
 
   const list = (await request('/accreditation/applications', { token: sa.token })).data.applications;
   console.log('superadmin sees:', list.map(a => `${a.application_code}:${a.name}:${a.exam_score}:${a.status}`).join(' '));
+  const withDocs = list.find(a => a.application_code === mine0.application_code);
+  console.log('superadmin sees documents:', withDocs?.achievements?.length === 2 ? '2 (ok)' : `got ${JSON.stringify(withDocs?.achievements)}`);
 
   const mine = list.find(a => a.exam_score === 100);
   const approve = await request(`/accreditation/:id/approve`.replace(':id', mine.id), { method: 'POST', token: sa.token });

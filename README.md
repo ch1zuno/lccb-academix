@@ -58,7 +58,7 @@ All seeded users share the password **`demo1234`**. Sign in with the `custom_id`
 3. **Check-in** — tutor stages an OTP/QR token, both Confirm via `/checkins/:code`, 2 confirmations → session `in-progress`. Physical check-ins: `POST /device/import-roster` + `POST /device/verify` (header `X-Device-Key`).
 4. **Wrap-up** — either participant submits rating (+ tutor notes) in one transaction: hours debited from the referral (auto-resolve at 0), tutor +50 & learner +25 attendance credits, badges awarded.
 5. **Rewards** — learner redeems points (stock decremented atomically, voucher issued).
-6. **Accreditation** — learner applies, takes the exam (graded server-side, one-shot), superadmin approves → `is_verified` + `certified_by_id`.
+6. **Accreditation** — learner opens **Become a Tutor** (`/exam`): picks subjects and attaches supporting documents of academic achievement. Submitting lands on the pending-applicant page (`/tutor-pending`) with the qualification exam (one-shot, server-graded) and their documents; after the exam the applicant waits for the superadmin decision (page polls live) with shortcut buttons to go home or find a tutor. Superadmin approves → `is_verified` + `certified_by_id`.
 
 ## API routes (mounted under `/api`)
 
@@ -72,7 +72,7 @@ All seeded users share the password **`demo1234`**. Sign in with the `custom_id`
 | `/device/import-roster` · `/device/roster` · `/device/verify` | POST GET | `X-Device-Key` | physical check-in via device fingerprint |
 | `/rewards` · `/rewards/:id/redeem` · `/wallet` | GET POST | authed | catalog, server-side grading redemption (`FOR UPDATE` stock, ledger debit, voucher) |
 | `/notifications` | GET PATCH | authed | per-user feed + mark-all-read |
-| `/accreditation/apply` · `/accreditation/exam` · `/accreditation/mine` | GET POST | learner/authed | exam questions never expose answers; grading is one-shot |
+| `/accreditation/apply` · `/accreditation/exam` · `/accreditation/mine` | GET POST | learner/authed | apply with subjects + supporting-document entries (`achievements` jsonb); exam questions never expose answers; grading is one-shot |
 | `/accreditation/applications` · `/:id/approve` · `/:id/reject` | GET POST | superadmin | sets `is_verified` + `certified_by_id` |
 | `/analytics` | GET | superadmin | CTE aggregates: KPIs, 6-week trend, dept breakdown |
 

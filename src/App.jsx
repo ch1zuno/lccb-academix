@@ -15,6 +15,7 @@ import SuperadminApprovals from './screens/SuperadminApprovals';
 import LearnerWizard from './screens/LearnerWizard';
 import Dashboard from './screens/Dashboard';
 import TutorExam from './screens/TutorExam';
+import TutorApplicant from './screens/TutorApplicant';
 import FacultyReferral from './screens/FacultyReferral';
 import SessionCheckIn from './screens/SessionCheckIn';
 import RewardCatalog from './screens/RewardCatalog';
@@ -94,7 +95,8 @@ export default function App() {
         return [
           { id: 'wizard', label: 'Find a Tutor', icon: Search },
           { id: 'dashboard', label: 'My Progress', icon: LayoutDashboard },
-          { id: 'checkin', label: 'Session Check-In', icon: Clock }
+          { id: 'checkin', label: 'Session Check-In', icon: Clock },
+          { id: 'exam', label: 'Become a Tutor', icon: Award }
         ];
       default:
         return [];
@@ -309,6 +311,7 @@ export default function App() {
                 <Route path="/wizard" element={<LearnerWizard showToast={showToast} />} />
                 <Route path="/dashboard" element={<Dashboard role={role} user={user} showToast={showToast} />} />
                 <Route path="/exam" element={<TutorExam showToast={showToast} user={user} />} />
+                <Route path="/tutor-pending" element={<TutorApplicant showToast={showToast} user={user} />} />
                 <Route path="/referral" element={<FacultyReferral showToast={showToast} user={user} />} />
                 <Route path="/checkin" element={<SessionCheckIn role={role} user={user} showToast={showToast} />} />
                 <Route path="/rewards" element={<RewardCatalog showToast={showToast} />} />
