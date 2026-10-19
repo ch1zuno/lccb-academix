@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Users, Clock, Award, TrendingUp, AlertTriangle, Star, BookOpen, ArrowUpRight, Activity, BarChart3, Zap, Target, CheckCircle2, XCircle, Calendar } from 'lucide-react';
 import { Progress } from '../components/ui/progress';
 import { motion } from 'framer-motion';
+import api from '../api';
 import { REFERRALS, SESSIONS, TUTORS, LEADERBOARD, FACULTY, PLATFORM_STATS, ACTIVITY_FEED, CHART_DATA_HOURS, CHART_DATA_BY_DEPT } from '../data';
 
 const fadeInUp = {
@@ -13,7 +14,27 @@ const fadeInUp = {
   transition: { duration: 0.4 }
 };
 
-export default function Dashboard({ role, showToast }) {
+/**
+ * Live referrals for the signed-in user.
+ * Server enforces per-role scoping. Falls back to mock data while
+ * a screen still expects records the API doesn't provide yet.
+ */
+export function useReferrals(role) {
+  const [referrals, setReferrals] = useState(null);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    api.get('/referrals')
+      .then(({ referrals: rows }) => { if (!cancelled) setReferrals(rows); })
+      .catch((e) => { if (!cancelled) setError(e.message); });
+    return () => { cancelled = true; };
+  }, [role]);
+  return { referrals, error, loading: referrals === null && !error };
+}
+
+export default function Dashboard({ role, user, showToast }) {
+  const { referrals: liveReferrals, error: referralsError, loading: referralsLoading } = useReferrals(role);
+  const scopedByName = (name) => !user || !user?.name || name === user.name;
 
   // ═══════════════════════════════════════════════════
   // SUPERADMIN DASHBOARD
@@ -190,11 +211,12 @@ export default function Dashboard({ role, showToast }) {
   // FACULTY DASHBOARD — Kanban Referral Board
   // ═══════════════════════════════════════════════════
   if (role === 'faculty') {
+    const board = (liveReferrals ?? []);
     const columns = [
-      { key: 'flagged', label: 'Flagged', color: 'bg-crimson', items: REFERRALS.filter(r => r.status === 'flagged') },
-      { key: 'assigned', label: 'Assigned', color: 'bg-amber', items: REFERRALS.filter(r => r.status === 'assigned') },
-      { key: 'in-progress', label: 'In Progress', color: 'bg-blue-500', items: REFERRALS.filter(r => r.status === 'in-progress') },
-      { key: 'resolved', label: 'Resolved', color: 'bg-emerald', items: REFERRALS.filter(r => r.status === 'resolved') },
+      { key: 'flagged', label: 'Flagged', color: 'bg-crimson', items: board.filter(r => r.status === 'flagged') },
+      { key: 'assigned', label: 'Assigned', color: 'bg-amber', items: board.filter(r => r.status === 'assigned') },
+      { key: 'in-progress', label: 'In Progress', color: 'bg-blue-500', items: board.filter(r => r.status === 'in-progress') },
+      { key: 'resolved', label: 'Resolved', color: 'bg-emerald', items: board.filter(r => r.status === 'resolved') },
     ];
 
     return (
@@ -202,10 +224,20 @@ export default function Dashboard({ role, showToast }) {
         <div className="section-head">
           <div>
             <h2 className="section-title text-primary">Early-Warning Referral Board</h2>
-            <p className="section-subtitle">Manage and track student interventions — Logged in as <span className="font-semibold text-charcoal">Mrs. Bethel Tisuela</span></p>
+            <p className="section-subtitle">Manage and track student interventions — Logged in as <span className="font-semibold text-charcoal">{user?.name ?? '…'}</span></p>
           </div>
-          <Button onClick={() => showToast('Opening Nominate Student Modal', 'info')}>+ Nominate Student</Button>
+          <Button onClick={() => showToast('Opening New Referral Wizard', 'info')}>+ Nominate Student</Button>
         </div>
+
+        {referralsLoading && (
+          <Card><CardContent className="p-8 text-center text-muted-foreground">Loading referral board…</CardContent></Card>
+        )}
+        {referralsError && (
+          <Card><CardContent className="p-8 text-center text-crimson">Failed to load referrals: {referralsError}</CardContent></Card>
+        )}
+        {!referralsLoading && !referralsError && board.length === 0 && (
+          <Card><CardContent className="p-8 text-center text-muted-foreground">No referrals yet. Create one with “Nominate Student”.</CardContent></Card>
+        )}
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -249,17 +281,17 @@ export default function Dashboard({ role, showToast }) {
                         </Badge>
                         <span className="text-[10px] text-muted-foreground">{ref.hoursRequired}h req</span>
                       </div>
-                      {ref.assignedTutor && (
+                      {ref.assigned_tutor && (
                         <p className="text-xs text-muted-foreground">
-                          → <span className="font-medium text-charcoal">{ref.assignedTutor}</span>
+                          → <span className="font-medium text-charcoal">{ref.assigned_tutor}</span>
                         </p>
                       )}
-                      {ref.hoursCompleted !== undefined && (
+                      {ref.hours_completed !== undefined && (
                         <div className="space-y-1">
                           <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald rounded-full" style={{ width: `${(ref.hoursCompleted / ref.hoursRequired) * 100}%` }} />
+                            <div className="h-full bg-emerald rounded-full" style={{ width: `${Math.min(100, (ref.hours_completed / ref.hours_required) * 100)}%` }} />
                           </div>
-                          <p className="text-[10px] text-muted-foreground">{ref.hoursCompleted}/{ref.hoursRequired} hrs</p>
+                          <p className="text-[10px] text-muted-foreground">{ref.hours_completed}/{ref.hours_required} hrs</p>
                         </div>
                       )}
                       <p className="text-[10px] text-muted-foreground italic line-clamp-2">{ref.notes}</p>
@@ -404,8 +436,11 @@ export default function Dashboard({ role, showToast }) {
   // ═══════════════════════════════════════════════════
   // LEARNER DASHBOARD — Progress & History
   // ═══════════════════════════════════════════════════
-  const myReferral = REFERRALS.find(r => r.student === 'Julian Gemelo' && r.status !== 'resolved');
-  const mySessions = SESSIONS.filter(s => s.learner === 'Julian Gemelo');
+  const myLiveReferral = (liveReferrals ?? []).find(r => r.status !== 'resolved');
+  const myReferral = myLiveReferral
+    ? myLiveReferral
+    : null;
+  const mySessions = SESSIONS.filter(s => s.learner === (user?.name || 'Julian Gemelo'));
   const myUpcomingSessions = mySessions.filter(s => s.status === 'upcoming');
   const myCompletedSessions = mySessions.filter(s => s.status === 'completed');
 
@@ -419,7 +454,7 @@ export default function Dashboard({ role, showToast }) {
             <div>
               <h3 className="font-semibold text-amber-800">Active Faculty Referral — {myReferral.subject}</h3>
               <p className="text-sm text-amber-700/80 mt-1">
-                {myReferral.faculty} has recommended {myReferral.hoursRequired} hours of peer tutoring. Topic: <span className="font-medium">{myReferral.topic}</span>
+                {myReferral.faculty} has recommended {myReferral.hours_required} hours of peer tutoring. Topic: <span className="font-medium">{myReferral.topic}</span>
               </p>
               <p className="text-xs text-amber-600/70 mt-1 italic">"{myReferral.notes}"</p>
               <Button variant="outline" size="sm" className="mt-3 border-amber text-amber-800 hover:bg-amber/20">Find a Tutor Now</Button>
@@ -434,23 +469,31 @@ export default function Dashboard({ role, showToast }) {
           <Card className="shadow-md">
             <CardHeader>
               <CardTitle>Mandatory Hours Progress</CardTitle>
-              <CardDescription>{myReferral?.subject || 'PROG 201'} Referral • by {myReferral?.faculty || 'Mrs. Bethel Tisuela'}</CardDescription>
+              <CardDescription>{myReferral?.subject || 'No active referral'} • {myReferral?.faculty || ''}</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center py-6">
               <div className="relative w-40 h-40 flex items-center justify-center mb-4">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="45" fill="none" stroke="#f1f5f9" strokeWidth="10" />
                   <circle cx="50" cy="50" r="45" fill="none" stroke="#0F2942" strokeWidth="10"
-                    strokeDasharray={`${(1.5 / (myReferral?.hoursRequired || 6)) * 283} 283`}
+                    strokeDasharray={`${((myReferral?.hours_completed ?? 0) / (myReferral?.hours_required || 6)) * 283} 283`}
                     strokeLinecap="round" className="transition-all duration-1000" />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-bold text-primary">1.5</span>
-                  <span className="text-xs text-muted-foreground">/ {myReferral?.hoursRequired || 6} hrs</span>
+                  <span className="text-3xl font-bold text-primary">{myReferral ? myReferral.hours_completed : '0'}</span>
+                  <span className="text-xs text-muted-foreground">/ {myReferral?.hours_required || '?'} hrs</span>
                 </div>
               </div>
-              <p className="text-sm font-medium text-charcoal">Keep going! Every session counts.</p>
-              <p className="text-xs text-muted-foreground mt-1">{myReferral?.hoursRequired ? myReferral.hoursRequired - 1.5 : 4.5} hours remaining</p>
+              {myReferral ? (
+                <>
+                  <p className="text-sm font-medium text-charcoal">Keep going! Every session counts.</p>
+                  <p className="text-xs text-muted-foreground mt-1">{myReferral.hours_required - myReferral.hours_completed} hours remaining</p>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {referralsLoading ? 'Loading referral…' : 'No active referral on file.'}
+                </p>
+              )}
             </CardContent>
           </Card>
         </motion.div>

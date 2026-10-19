@@ -278,7 +278,7 @@ export default function App() {
               <Routes location={location} key={location.pathname}>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/wizard" element={<LearnerWizard showToast={showToast} />} />
-                <Route path="/dashboard" element={<Dashboard role={role} showToast={showToast} />} />
+                <Route path="/dashboard" element={<Dashboard role={role} user={user} showToast={showToast} />} />
                 <Route path="/exam" element={<TutorExam showToast={showToast} />} />
                 <Route path="/referral" element={<FacultyReferral showToast={showToast} />} />
                 <Route path="/checkin" element={<SessionCheckIn role={role} showToast={showToast} />} />
