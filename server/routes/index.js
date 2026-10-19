@@ -4,6 +4,7 @@ import referralRoutes from './referrals.js';
 import matchingRoutes from './matching.js';
 import sessionRoutes from './sessions.js';
 import wrapUpRoutes from './wrapup.js';
+import rewardsRoutes from './rewards.js';
 
 const router = Router();
 
@@ -14,6 +15,8 @@ router.use(referralRoutes);
 router.use(sessionRoutes);
 // wrap-up endpoints registered on /sessions/:id/wrap-up — no prefix needed
 router.use(wrapUpRoutes);
+// rewards catalog/wallet/redemption — no prefix needed
+router.use(rewardsRoutes);
 // matching.js registers /tutors, /subjects, /session-requests — no prefix needed
 router.use(matchingRoutes);
 

@@ -76,6 +76,12 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
          VALUES ($1, $2, $3) RETURNING amount`,
         [req.user.id, pointsToAward, `Session wrap-up — ${session.id.slice(0, 8)} (${rating}★)`]);
 
+      // learner attendance credit (same transaction)
+      await client.query(
+        `INSERT INTO points_ledger (user_id, amount, description)
+         VALUES ($1, $2, $3)`,
+        [session.learner_id, 25, `Attendance credit — ${session.id.slice(0, 8)}`]);
+
       // badge unlocks (safe idempotent)
       const { rows: completedCount } = await client.query(
         `SELECT count(*)::int AS n FROM sessions WHERE tutor_id = $1 AND status = 'completed'`, [req.user.id]);

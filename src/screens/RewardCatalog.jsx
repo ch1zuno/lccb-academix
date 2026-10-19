@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Award, ShoppingBag, Coffee, Printer, Ticket, CheckCircle2, Gift, BookOpen, Star, Sparkles } from 'lucide-react';
+import { Award, ShoppingBag, Coffee, Printer, Ticket, CheckCircle2, Gift, BookOpen, Star, Sparkles, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import api from '../api';
 import { REWARDS } from '../data';
 
 const CATEGORY_ICONS = {
@@ -21,20 +22,40 @@ const CATEGORY_COLORS = {
 };
 
 export default function RewardCatalog({ showToast }) {
-  const [balance, setBalance] = useState(2450);
-  const [voucher, setVoucher] = useState(null);
+  const [rewards, setRewards] = useState(null); // live catalog
+  const [error, setError] = useState(null);
+  const [balance, setBalance] = useState(0);
+  const [voucher, setVoucher] = useState(null); // {name, description, cost, voucher_code, stock}
+  const [busyId, setBusyId] = useState(null);
   const [filter, setFilter] = useState('All');
 
-  const categories = ['All', ...new Set(REWARDS.map(r => r.category))];
-  const filteredRewards = filter === 'All' ? REWARDS : REWARDS.filter(r => r.category === filter);
+  const loadCatalog = () => {
+    api.get('/rewards')
+      .then(({ rewards: rows }) => { setRewards(rows); setBalance(rows[0]?.my_balance ?? 0); })
+      .catch((e) => { setError(e.message); setRewards(REWARDS); });
+    api.get('/wallet')
+      .then(({ balance: b }) => setBalance(b))
+      .catch(() => {});
+  };
 
-  const handleRedeem = (item) => {
-    if (balance >= item.cost) {
-      setBalance(b => b - item.cost);
-      setVoucher(item);
-      showToast(`Successfully redeemed ${item.name}!`, 'success');
-    } else {
-      showToast('Insufficient points.', 'error');
+  useEffect(loadCatalog, []);
+
+  const categories = ['All', ...new Set((rewards ?? []).map(r => r.category))];
+  const filteredRewards = filter === 'All' ? (rewards ?? []) : (rewards ?? []).filter(r => r.category === filter);
+
+  const handleRedeem = async (item) => {
+    setBusyId(item.id);
+    try {
+      const res = await api.post(`/rewards/${item.id}/redeem`);
+      setBalance(res.balance);
+      setVoucher({ ...item, voucher_code: res.voucher, stock: res.stock });
+      // refresh stock display without refetch
+      setRewards(rows => rows.map(r => (r.id === item.id ? { ...r, stock: res.stock } : r)));
+      showToast(`Redeemed ${item.name} — voucher ${res.voucher}`, 'success');
+    } catch (e) {
+      showToast(e.message || 'Redemption failed.', 'error');
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -59,9 +80,9 @@ export default function RewardCatalog({ showToast }) {
                     <div key={i} className="bg-charcoal" style={{ width: `${Math.random() * 4 + 1}px`, height: '100%' }} />
                   ))}
                 </div>
-                <span className="font-mono text-xs tracking-widest">LCCB-ACDX-{String(Math.floor(Math.random() * 999)).padStart(3, '0')}</span>
+                <span className="font-mono text-xs tracking-widest">{voucher.voucher_code}</span>
               </div>
-              
+
               <div className="bg-emerald/10 text-emerald border border-emerald/20 rounded-lg p-3 w-full mb-4">
                 <p className="text-sm font-semibold">−{voucher.cost} pts deducted</p>
                 <p className="text-xs">Remaining balance: {balance} pts</p>
@@ -71,7 +92,7 @@ export default function RewardCatalog({ showToast }) {
             </CardContent>
           </Card>
           <div className="mt-8 text-center">
-            <Button onClick={() => setVoucher(null)}>Back to Catalog</Button>
+            <Button onClick={() => { setVoucher(null); loadCatalog(); }}>Back to Catalog</Button>
           </div>
         </motion.div>
       </div>
@@ -86,6 +107,9 @@ export default function RewardCatalog({ showToast }) {
       </div>
 
       {/* Category Filter */}
+      {error && (
+        <Card><CardContent className="p-4 text-center text-crimson">Catalog loaded from cache — live sync failed: {error}</CardContent></Card>
+      )}
       <div className="flex gap-2 mb-6 flex-wrap">
         {categories.map(cat => (
           <button
@@ -132,13 +156,14 @@ export default function RewardCatalog({ showToast }) {
                   <Badge variant="outline" className="text-xs text-muted-foreground">{item.category}</Badge>
                 </CardContent>
                 <CardFooter className="mt-auto pt-4 border-t border-border bg-slate-50">
-                  <Button 
-                    className="w-full" 
-                    variant={balance >= item.cost ? 'default' : 'secondary'}
-                    disabled={balance < item.cost}
+                  <Button
+                    className="w-full"
+                    variant={balance >= item.cost && item.stock > 0 ? 'default' : 'secondary'}
+                    disabled={balance < item.cost || item.stock <= 0 || busyId === item.id}
                     onClick={() => handleRedeem(item)}
                   >
-                    {balance >= item.cost ? 'Redeem Reward' : `Need ${item.cost - balance} more pts`}
+                    {busyId === item.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    {item.stock <= 0 ? 'Out of stock' : (balance >= item.cost ? 'Redeem Reward' : `Need ${item.cost - balance} more pts`)}
                   </Button>
                 </CardFooter>
               </Card>
@@ -147,7 +172,9 @@ export default function RewardCatalog({ showToast }) {
         })}
       </div>
 
-      {/* Sticky Wallet Footer */}
+      {rewards !== null && filteredRewards.length === 0 && (
+        <Card><CardContent className="p-8 text-center text-muted-foreground">No rewards in this category yet.</CardContent></Card>
+      )}
       <motion.div 
         initial={{ y: 100 }}
         animate={{ y: 0 }}

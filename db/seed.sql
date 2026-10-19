@@ -212,4 +212,8 @@ COMMIT;
 -- 001: hours remaining starts equal to hours required
 UPDATE referrals SET hours_remaining = hours_required;
 
+-- Learner joining bonus so the earn → redeem demo flow works right after reset
+INSERT INTO points_ledger (user_id, amount, description)
+SELECT id, 100, 'Academix joining bonus' FROM users WHERE role = 'learner';
+
 COMMIT;
