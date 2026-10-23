@@ -399,12 +399,19 @@ export default function LandingPage({ onLogin }) {
               <div className="ledger-wordmark">
                 <Logo3D
                   className="ledger-monogram-3d"
-                  fallback={<span className="ledger-monogram">LCCB</span>}
+                  label="Academix — La Consolacion College Bacolod"
+                  rows={[{ text: 'LCCB', size: 0.34 }, { text: 'ACADEMIX', size: 1 }]}
+                  fallback={(
+                    <>
+                      <span className="ledger-monogram">LCCB</span>
+                      <span>
+                        <strong>Academix</strong>
+                        <small>La Consolacion College Bacolod</small>
+                      </span>
+                    </>
+                  )}
                 />
-                <span>
-                  <strong>Academix</strong>
-                  <small>La Consolacion College Bacolod</small>
-                </span>
+                <small>La Consolacion College Bacolod</small>
               </div>
               <h1 id="hero-title">Peer tutoring<br />that <span className="ledger-mark">counts.</span></h1>
               <p className="ledger-summary">

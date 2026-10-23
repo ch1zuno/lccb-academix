@@ -129,12 +129,13 @@
   letter-spacing: 0.02em;
 }
 
-/* three.js wordmark box (toon block letters). Same slot as the tile above. */
+/* three.js wordmark box (toon block letters). "ACADEMIX" is the hero row;
+ * "LCCB" sits as a small stamp above it. */
 .ledger-monogram-3d {
   display: block;
   flex-shrink: 0;
-  width: 122px;
-  height: 46px;
+  width: 216px;
+  height: 52px;
 }
 
 .ledger-monogram-3d canvas {
@@ -1883,8 +1884,8 @@
   }
 
   .ledger-monogram-3d {
-    width: 104px;
-    height: 42px;
+    width: 172px;
+    height: 44px;
   }
 
   .ledger-wordmark strong {
@@ -2218,6 +2219,19 @@
   .hs-clock,
   .hs-chip-role {
     display: none;
+  }
+
+  .ledger-monogram-3d {
+    width: 150px;
+    height: 40px;
+  }
+
+  .ledger-wordmark {
+    gap: 8px;
+  }
+
+  .ledger-wordmark > small {
+    max-width: 92px;
   }
 
   .hs-book1 {

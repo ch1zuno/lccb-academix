@@ -137,7 +137,8 @@ src/                   React app; `src/api.js` is the only API client
 - **Logo (`src/components/Logo3D.jsx`)**: the brandmark is rendered by **three.js**
   (`three`, r186) as toon/cel-shaded block letters — navy caps, gold extrude sides,
   cartoon contour outlines (`OutlineEffect`), staggered pop-in, idle bob, pointer
-  tilt. Font: `public/fonts/helvetiker_bold.typeface.json` (from the three.js
+  tilt. "ACADEMIX" (the app's name) is the dominant row; "LCCB" sits above it as a
+  small stamp. Font: `public/fonts/helvetiker_bold.typeface.json` (from the three.js
   examples, MIT). The flat DOM monogram is the automatic fallback when WebGL or the
   font is unavailable.
 - **Illustrations**: section artwork uses free flat illustrations from
