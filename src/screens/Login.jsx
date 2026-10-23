@@ -392,9 +392,9 @@ export default function LandingPage({ onLogin }) {
             <span className="ledger-sticker" aria-hidden="true">Peer<br />verified</span>
             <motion.div
               className="ledger-card-inner"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
+              initial={{ y: 12 }}
+              animate={{ y: 0 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
             >
               <div className="ledger-wordmark">
                 <Logo3D

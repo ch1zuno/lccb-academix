@@ -65,14 +65,14 @@ export default function Logo3D({
       const aspect = host.clientWidth / host.clientHeight || 1;
       const camera = new THREE.PerspectiveCamera(26, aspect, 0.1, 40);
 
-      scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-      const key = new THREE.DirectionalLight(0xfff2c9, 0.85); // slightly warm, gold-friendly
+      scene.add(new THREE.AmbientLight(0xffffff, 0.32));
+      const key = new THREE.DirectionalLight(0xfff2c9, 0.55); // solved for ~#1e3d5c front faces in sRGB
       key.position.set(-2.4, 3.4, 5);
       scene.add(key);
 
-      const capTex = bandTexture([110, 255]); /* navy caps: two flat bands */
+      const capTex = bandTexture([55, 255]); /* navy caps: two flat bands */
       const sideTex = bandTexture([80, 150, 255]); /* gold sides: three flat bands */
-      const capMat = new THREE.MeshToonMaterial({ color: '#24466b', gradientMap: capTex });
+      const capMat = new THREE.MeshToonMaterial({ color: '#224366', gradientMap: capTex });
       const sideMat = new THREE.MeshToonMaterial({ color: GOLD, gradientMap: sideTex });
       const outlineOf = (t) => ({ color: OUTLINE_RGB, alpha: 1, thickness: t });
       capMat.userData.outlineParameters = outlineOf(0.08);

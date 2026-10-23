@@ -105,13 +105,9 @@
 .ledger-wordmark {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   max-width: 100%;
-  padding: 6px 11px 6px 6px;
-  background: var(--lg-gold);
-  border: 2px solid var(--lg-navy);
-  box-shadow: 4px 4px 0 var(--lg-navy);
-  transform: rotate(-1.2deg);
+  /* frameless — the three.js wordmark stands bare on the cream card */
 }
 
 .ledger-monogram {
@@ -134,8 +130,8 @@
 .ledger-monogram-3d {
   display: block;
   flex-shrink: 0;
-  width: 216px;
-  height: 52px;
+  width: 318px;
+  height: 86px;
 }
 
 .ledger-monogram-3d canvas {
@@ -153,7 +149,7 @@
 
 .ledger-wordmark small {
   display: block;
-  margin-top: 4px;
+  margin-top: 0;
   font-size: 10px;
   font-weight: 600;
   line-height: 1.2;
@@ -1873,8 +1869,7 @@
   }
 
   .ledger-wordmark {
-    transform: rotate(-0.8deg);
-    box-shadow: 3px 3px 0 var(--lg-navy);
+    gap: 12px;
   }
 
   .ledger-monogram {
@@ -1884,8 +1879,8 @@
   }
 
   .ledger-monogram-3d {
-    width: 172px;
-    height: 44px;
+    width: 248px;
+    height: 66px;
   }
 
   .ledger-wordmark strong {
@@ -2222,16 +2217,18 @@
   }
 
   .ledger-monogram-3d {
-    width: 150px;
-    height: 40px;
+    width: 232px;
+    height: 62px;
   }
 
   .ledger-wordmark {
-    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 
   .ledger-wordmark > small {
-    max-width: 92px;
+    max-width: none;
   }
 
   .hs-book1 {
