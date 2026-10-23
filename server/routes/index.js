@@ -8,9 +8,12 @@ import rewardsRoutes from './rewards.js';
 import accreditationRoutes from './accreditation.js';
 import analyticsRoutes from './analytics.js';
 import notificationRoutes from './notifications.js';
+import publicRoutes from './public.js';
 
 const router = Router();
 
+// Anonymous landing-page numbers. Mount before the authenticated routes.
+router.use(publicRoutes);
 router.use('/auth', authRoutes);
 // referrals.js registers full /referrals/... paths itself — mount WITHOUT a prefix
 router.use(referralRoutes);

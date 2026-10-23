@@ -19,7 +19,7 @@ INSERT INTO subjects (code, name, department) VALUES
 ('STAT 101', 'Probability & Statistics', 'General'),
 ('MGMT 301', 'Principles of Management', 'BSBA'),
 ('MKT 201', 'Marketing Management', 'BSBA'),
-('FIL 102', 'Filipino sa IbaNULLt Ibang Disiplina', 'General'),
+('FIL 102', 'Filipino sa Iba''t Ibang Disiplina', 'General'),
 ('STS 101', 'Science, Technology & Society', 'General');
 
 INSERT INTO users (custom_id, name, email, role, avatar, title, department, program, is_available, is_verified, bio, hourly_rate, password_hash)
@@ -39,7 +39,7 @@ VALUES
 ('FA-049', 'Prof. Antonio Lacson', 'a.lacson@lccbacolod.edu.ph', 'faculty', '👨‍🏫', 'Business Administration Dept.', 'BSBA', NULL, true, true, NULL, NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu');
 
 INSERT INTO users (custom_id, name, email, role, avatar, program, is_available, is_verified, bio, hourly_rate, password_hash) VALUES
-('TU-042', 'Mark Antipo', 'm.antipo@lccbacolod.edu.ph', 'tutor', '🧑‍🎓', 'BSIT 3-A', true, true, 'DeanNULLs Lister | Passionate about helping fellow Consolacionians excel in Computing.', 15, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('TU-042', 'Mark Antipo', 'm.antipo@lccbacolod.edu.ph', 'tutor', '🧑‍🎓', 'BSIT 3-A', true, true, 'Dean''s Lister | Passionate about helping fellow Consolacionians excel in Computing.', 15, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
 ('TU-015', 'Angela Delos Santos', 'a.delossantos@lccbacolod.edu.ph', 'tutor', '👩‍🎓', 'BSIT 4-A', true, true, 'Best in Programming awardee. Specializes in Python, Java & Web Dev tutoring.', 20, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
 ('TU-023', 'Carlos Villanueva', 'c.villanueva.tutor@lccbacolod.edu.ph', 'tutor', '👨‍🎓', 'BSIT 3-B', false, true, 'Math Olympiad semi-finalist. Makes Calculus understandable.', 15, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
 ('TU-031', 'Patricia Reyes', 'p.reyes@lccbacolod.edu.ph', 'tutor', '👩‍🎓', 'BSED 3-A', true, true, 'Published poet and campus journalist. Can help you write anything.', 12, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
@@ -48,7 +48,7 @@ INSERT INTO users (custom_id, name, email, role, avatar, program, is_available, 
 ('TU-050', 'Renzo Gabriel Tan', 'r.tan@lccbacolod.edu.ph', 'tutor', '👨‍🎓', 'BSIT 4-B', true, true, 'Database enthusiast. Oracle & MySQL certified. Networking nerd.', 18, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
 ('TU-053', 'Kimberly Anne Flores', 'k.flores@lccbacolod.edu.ph', 'tutor', '👩‍🎓', 'BSIT 3-A', true, true, 'Full-stack web developer. React & Node.js specialist.', 18, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
 ('TU-056', 'Miguel Angelo Cruz', 'm.cruz.tutor@lccbacolod.edu.ph', 'tutor', '🧑‍🎓', 'BSIT 2-A', true, true, 'Rising sophomore tutor. Patient with beginners.', 12, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
-('TU-059', 'Jasmine Lim', 'j.lim@lccbacolod.edu.ph', 'tutor', '👩‍🎓', 'BSA 3-B', false, true, 'Financial analysis whiz. DeanNULLs Lister for 4 consecutive terms.', 15, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('TU-059', 'Jasmine Lim', 'j.lim@lccbacolod.edu.ph', 'tutor', '👩‍🎓', 'BSA 3-B', false, true, 'Financial analysis whiz. Dean''s Lister for 4 consecutive terms.', 15, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
 ('TU-062', 'John Patrick Navarro', 'jp.navarro@lccbacolod.edu.ph', 'tutor', '👨‍🎓', 'BSIT 4-A', true, true, 'Systems analyst intern at a local tech company. Capstone mentor.', 22, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
 ('TU-065', 'Maria Cecilia Santos', 'mc.santos@lccbacolod.edu.ph', 'tutor', '👩‍🎓', 'BSBA 3-A', true, true, 'Business plan competition winner. Loves strategic management.', 12, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
 ('TU-068', 'Francis Dela Peña', 'f.delapena@lccbacolod.edu.ph', 'tutor', '🧑‍🎓', 'BSIT 3-B', true, false, 'Cisco Networking Academy student. Passionate about infrastructure.', 12, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu');
@@ -127,6 +127,11 @@ VALUES
 ('SES-014', (SELECT id FROM users WHERE custom_id = 'TU-068'), (SELECT id FROM users WHERE custom_id = 'TE-245'), (SELECT id FROM subjects WHERE code = 'IT 101'), 'Hardware Components', '2026-09-20', '9:00 AM', '1 hr', 'completed', 'Library Study Room A', (SELECT id FROM users WHERE custom_id = 'FA-017'), 5, NULL),
 ('SES-015', (SELECT id FROM users WHERE custom_id = 'TU-038'), (SELECT id FROM users WHERE custom_id = 'TE-230'), (SELECT id FROM subjects WHERE code = 'MGMT 301'), 'Strategic Planning', '2026-09-21', '3:00 PM', '1 hr', 'cancelled', 'Study Hall A', (SELECT id FROM users WHERE custom_id = 'FA-049'), NULL, 'Learner conflict with exam schedule');
 
+-- Numeric duration is what the ledger sums; keep it in step with the label.
+UPDATE sessions
+SET duration_hours = NULLIF(regexp_replace(duration, '[^0-9.]', '', 'g'), '')::numeric
+WHERE duration_hours IS NULL AND duration IS NOT NULL;
+
 INSERT INTO session_check_ins (session_id, user_id, method)
 VALUES
 ((SELECT id FROM sessions WHERE session_code = 'SES-007'), (SELECT id FROM users WHERE custom_id = 'TU-031'), 'qr'),
@@ -137,18 +142,18 @@ VALUES
 INSERT INTO exam_questions (question_number, question, options, answer) VALUES
 (1, 'What is the primary purpose of a peer tutoring program in an academic institution?', '["To replace faculty instruction", "To supplement learning through collaborative peer support", "To reduce the number of classes needed", "To evaluate faculty performance"]', 1),
 (2, 'When a learner is struggling with a concept, the best approach is to:', '["Give them the answer directly", "Use guided questions to help them discover the answer", "Skip the topic and move on", "Tell them to read the textbook"]', 1),
-(3, 'Which of the following best describes "active listening" in a tutoring context?', '["Waiting for your turn to speak", "Fully concentrating on the learnerNULLs words, understanding, and responding thoughtfully", "Taking notes silently", "Repeating everything the learner says"]', 1),
+(3, 'Which of the following best describes "active listening" in a tutoring context?', '["Waiting for your turn to speak", "Fully concentrating on the learner''s words, understanding, and responding thoughtfully", "Taking notes silently", "Repeating everything the learner says"]', 1),
 (4, 'If a learner reveals personal or emotional struggles during a session, you should:', '["Ignore it and continue tutoring", "Provide counseling advice", "Listen empathetically and refer them to the appropriate campus resource", "Post about it on social media"]', 2),
 (5, 'The concept of "scaffolding" in education refers to:', '["Building a physical structure", "Providing temporary support that is gradually removed as the learner gains competence", "Giving increasingly difficult tasks without support", "Creating a strict curriculum"]', 1),
-(6, 'What is the La Consolacion College BacolodNULLs core value that aligns with peer tutoring?', '["Competition", "Community and Service", "Isolation", "Profit"]', 1),
+(6, 'What is the La Consolacion College Bacolod''s core value that aligns with peer tutoring?', '["Competition", "Community and Service", "Isolation", "Profit"]', 1),
 (7, 'When preparing for a tutoring session, a tutor should:', '["Wait for the learner to bring all materials", "Review the topic beforehand and prepare examples", "Only focus on topics they are comfortable with", "Cancel if they feel slightly unprepared"]', 1),
 (8, 'A "growth mindset" in the context of tutoring means:', '["Believing intelligence is fixed", "Understanding that abilities can be developed through effort and strategies", "Focusing only on grades", "Avoiding challenges"]', 1),
 (9, 'How should confidential student information be handled by an accredited tutor?', '["Shared freely with classmates", "Protected under FERPA/DPA and only discussed with authorized faculty", "Posted online for reference", "Discussed in group chats"]', 1),
 (10, 'The incentive ledger system at LCCB rewards tutors with Community Points. What is the primary motivation behind this system?', '["To create competition among tutors", "To recognize and encourage sustained, high-quality peer mentorship", "To replace monetary compensation", "To track attendance only"]', 1),
 (11, 'What is the recommended session length for effective peer tutoring at LCCB?', '["15 minutes", "30 minutes", "1 to 1.5 hours", "4 hours"]', 2),
-(12, 'Which of the following is NOT an appropriate tutoring strategy?', '["Breaking problems into smaller steps", "Using analogies relevant to the learner", "Doing the learnerNULLs homework for them", "Encouraging the learner to practice independently"]', 2),
+(12, 'Which of the following is NOT an appropriate tutoring strategy?', '["Breaking problems into smaller steps", "Using analogies relevant to the learner", "Doing the learner''s homework for them", "Encouraging the learner to practice independently"]', 2),
 (13, 'When a learner is repeatedly late or absent to sessions, the tutor should:', '["Cancel all future sessions immediately", "Document the issue and report to the referring faculty member", "Complain to other students", "Ignore it and wait"]', 1),
-(14, 'What does "differentiated instruction" mean in peer tutoring?', '["Teaching the same way regardless of the learner", "Adapting teaching methods to match the learnerNULLs learning style and pace", "Only tutoring advanced students", "Using textbooks exclusively"]', 1),
+(14, 'What does "differentiated instruction" mean in peer tutoring?', '["Teaching the same way regardless of the learner", "Adapting teaching methods to match the learner''s learning style and pace", "Only tutoring advanced students", "Using textbooks exclusively"]', 1),
 (15, 'The LCCB Academix platform uses a dual-confirmation check-in system. This ensures:', '["That the tutor gets paid", "That both tutor and learner verify session attendance for accurate records", "That the session happens online only", "That the faculty member is present"]', 1);
 
 INSERT INTO rewards (reward_code, name, cost, category, icon, stock, description) VALUES
@@ -163,7 +168,7 @@ INSERT INTO rewards (reward_code, name, cost, category, icon, stock, description
 ('RW-009', 'Free Photocopying (100 pages)', 120, 'Campus Perks', '📄', 60, 'Redeemable at the Campus Bookstore copier.'),
 ('RW-010', 'Tech Symposium VIP Pass', 600, 'Events', '🎟️', 25, 'VIP seating and networking access at the annual LCCB Tech Symposium.'),
 ('RW-011', 'LCCB Laptop Sleeve', 700, 'Merchandise', '💼', 18, 'Neoprene laptop sleeve with embroidered college crest.'),
-('RW-012', 'DeanNULLs List Nomination Letter', 2000, 'Exclusive', '🏅', 3, 'Official commendation letter co-signed by the Dean for your portfolio.');
+('RW-012', 'Dean''s List Nomination Letter', 2000, 'Exclusive', '🏅', 3, 'Official commendation letter co-signed by the Dean for your portfolio.');
 
 INSERT INTO badges (badge_code, name, icon, description) VALUES
 ('BG-001', 'First Session', '🌟', 'Completed your first tutoring session'),
@@ -193,7 +198,7 @@ INSERT INTO points_ledger (user_id, amount, description) VALUES
 ((SELECT id FROM users WHERE custom_id = 'TU-068'), 760, 'Historical ledger entry');
 
 INSERT INTO tutor_applications (application_code, user_id, exam_score, grades, achievements, status, date_applied) VALUES
-('APP-001', (SELECT id FROM users WHERE custom_id = 'TU-068'), 92, '{"prelim": 90, "midterm": 93, "preFinal": 94, "final": 95}', '["DeanNULLs Lister (3 Consecutive Semesters)", "1st Place - Campus Cisco Networking Competition"]', 'pending', '2026-10-01'),
+('APP-001', (SELECT id FROM users WHERE custom_id = 'TU-068'), 92, '{"prelim": 90, "midterm": 93, "preFinal": 94, "final": 95}', '["Dean''s Lister (3 Consecutive Semesters)", "1st Place - Campus Cisco Networking Competition"]', 'pending', '2026-10-01'),
 ('APP-002', (SELECT id FROM users WHERE custom_id = 'TU-038'), 88, '{"prelim": 88, "midterm": 89, "preFinal": 90, "final": 91}', '["President, Junior Philippine Institute of Accountants (LCCB Chapter)", "Academic Scholar 2025-2026"]', 'pending', '2026-10-02');
 
 INSERT INTO users (name, email, role, avatar, program, password_hash)

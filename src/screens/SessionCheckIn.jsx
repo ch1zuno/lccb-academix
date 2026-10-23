@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { QrCode, Smartphone, Play, Square, Star, Loader2, ClipboardCopy, CheckCircle2 } from 'lucide-react';
+import { Copy, Check, Loader2, Star } from 'lucide-react';
+import { cn } from '../lib/utils';
 import api from '../api';
 
 const formatTime = (totalSeconds) => {
@@ -12,12 +12,30 @@ const formatTime = (totalSeconds) => {
   return `${h > 0 ? `${h}:` : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 };
 
+const fmtDate = (value) => {
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? String(value)
+    : date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const SessionStatus = ({ status, active }) => {
+  const label = active ? 'in progress' : status === 'in-progress' ? 'in progress' : 'awaiting check-in';
+  return (
+    <span className="status-pill capitalize">
+      <span className={cn('status-dot', active || status === 'in-progress' ? 'bg-emerald' : 'bg-amber')} />
+      {label}
+    </span>
+  );
+};
+
 export default function SessionCheckIn({ role, showToast }) {
   const [active, setActive] = useState(false);
   const [seconds, setSeconds] = useState(0);
-  const [sessions, setSessions] = useState(null); // from /sessions/mine
+  const [sessions, setSessions] = useState(null);
   const [sessionsError, setSessionsError] = useState(null);
-  const [target, setTarget] = useState(null);     // picked upcoming session
+  const [target, setTarget] = useState(null);
   const [stagedToken, setStagedToken] = useState(null);
   const [staging, setStaging] = useState(false);
   const [otp, setOtp] = useState('');
@@ -32,11 +50,11 @@ export default function SessionCheckIn({ role, showToast }) {
   useEffect(() => {
     let cancelled = false;
     api.get('/sessions/mine')
-      .then(({ sessions }) => {
+      .then(({ sessions: rows }) => {
         if (cancelled) return;
-        setSessions(sessions);
-        const upcoming = sessions.find(s => s.status === 'upcoming');
-        if (upcoming) setTarget(upcoming);
+        setSessions(rows);
+        const next = rows.find(s => s.status === 'upcoming') || rows.find(s => s.status === 'in-progress');
+        if (next) setTarget(next);
       })
       .catch((e) => { if (!cancelled) setSessionsError(e.message || 'Failed to load sessions'); });
     return () => { cancelled = true; };
@@ -48,13 +66,7 @@ export default function SessionCheckIn({ role, showToast }) {
     return () => clearInterval(interval);
   }, [active]);
 
-  const reset = () => {
-    setActive(false);
-    setSeconds(0);
-    setConfirmations(0);
-    setStagedToken(null);
-    setOtp('');
-  };
+  const eligible = (sessions ?? []).filter(s => s.status === 'upcoming' || s.status === 'in-progress');
 
   const handleStage = async () => {
     if (!target) return;
@@ -63,9 +75,9 @@ export default function SessionCheckIn({ role, showToast }) {
       const res = await api.post(`/sessions/${target.id}/stage-token`, { method: 'otp' });
       setStagedToken(res.token);
       setConfirmations(res.confirmations ?? 0);
-      showToast('Session token issued — share it with the learner', 'success');
+      showToast('Code issued. Share it with the learner.', 'success');
     } catch (e) {
-      showToast(e.message || 'Could not issue token', 'error');
+      showToast(e.message || 'Could not issue a code', 'error');
     } finally {
       setStaging(false);
     }
@@ -75,33 +87,30 @@ export default function SessionCheckIn({ role, showToast }) {
     if (!target || !otp.trim()) return;
     setCheckingIn(true);
     try {
-      const cleaned = otp.trim();
-      const res = await api.post(`/sessions/${target.id}/check-in`, { token: cleaned, method: 'otp' });
+      const res = await api.post(`/sessions/${target.id}/check-in`, { token: otp.trim(), method: 'otp' });
       setConfirmations(res.confirmations);
       if (res.sessionStarted) {
         setActive(true);
-        showToast('Both parties verified — session started!', 'success');
+        showToast('Both devices verified. The session timer has started.', 'success');
       } else {
-        showToast(`Verified. Waiting for other party (${res.confirmations}/2).`, 'info');
+        showToast(`Verified. Waiting for the other device (${res.confirmations}/2).`, 'info');
       }
     } catch (e) {
       showToast(e.message || 'Invalid code', 'error');
     } finally {
       setCheckingIn(false);
-      setTarget(t => t); // refresh visual state; counts come from API
-      setSessions(null);
       api.get('/sessions/mine').then(({ sessions: rows }) => {
         setSessions(rows);
         const fresh = rows.find(s => s.id === target.id);
         if (fresh) setTarget(fresh);
-      });
+      }).catch(() => {});
     }
   };
 
   const handleEnd = () => {
     setFinished(true);
     setActive(false);
-    showToast(`Session ended (${formatTime(seconds)}). Complete the wrap-up.`, 'success');
+    showToast(`Session ended at ${formatTime(seconds)}. Complete the wrap-up.`, 'success');
   };
 
   const handleSubmitWrap = async () => {
@@ -113,9 +122,7 @@ export default function SessionCheckIn({ role, showToast }) {
         rating: wrapRating,
       });
       setWrapResult(res);
-      showToast(res.referralResolved
-        ? 'Session wrapped — referral fully resolved! 🎉'
-        : `Session wrapped. +${res.points} points recorded.`, 'success');
+      showToast(res.referralResolved ? 'Session wrapped — the referral is now resolved.' : 'Session wrapped. The ledger is updated.', 'success');
     } catch (e) {
       showToast(e.message || 'Wrap-up failed', 'error');
     } finally {
@@ -125,179 +132,284 @@ export default function SessionCheckIn({ role, showToast }) {
 
   if (finished) {
     return (
-      <div className="flex flex-col items-center justify-center h-full py-12">
-        <h2 className="text-3xl font-bold text-primary mb-2">Session Completed!</h2>
-        <p className="text-muted-foreground mb-8 text-lg">Total Time: <span className="font-mono font-bold text-charcoal">{formatTime(seconds)}</span></p>
-        <Card className="w-full max-w-md shadow-lg border-border">
-          <CardContent className="p-8 text-center space-y-6">
-            <h3 className="text-xl font-semibold text-charcoal">
-              {role === 'tutor' ? 'Leave session notes & rate' : 'Rate this session'}
-            </h3>
-            <div className="flex justify-center gap-2">
-              {[1, 2, 3, 4, 5].map(star => (
-                <Star
-                  key={star}
-                  className={`w-10 h-10 cursor-pointer transition-colors ${(wrapRating >= star) ? 'text-secondary fill-secondary' : 'text-slate-300 hover:text-secondary'}`}
-                  onClick={() => setWrapRating(star)}
-                />
-              ))}
+      <div className="mx-auto w-full max-w-[760px]">
+        <div className="section-head">
+          <div>
+            <h1 className="section-title">Session wrap-up</h1>
+            <p className="section-subtitle">Close the record, rate the hour, and post the points.</p>
+          </div>
+          <span className="status-pill"><span className="status-dot bg-emerald" /> Ended</span>
+        </div>
+
+        <div className="panel p-6">
+          <div className="flex flex-wrap items-baseline justify-between gap-3 border-b-2 border-ink pb-6">
+            <div>
+              <p className="text-[13px] font-semibold text-muted-foreground">Total time</p>
+              <p className="num mt-1 text-[44px] leading-none text-ink">{formatTime(seconds)}</p>
             </div>
-            {role === 'tutor' && (
+            <div className="text-right">
+              <p className="text-[13px] text-muted-foreground">{target?.session_code}</p>
+              <p className="mt-1 text-[14px] text-ink">{target?.subject} · {target?.topic}</p>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <p className="field-label">How was the session?</p>
+            <div className="flex items-center gap-1.5" role="radiogroup" aria-label="Session rating">
+              {[1, 2, 3, 4, 5].map(star => (
+                <button
+                  key={star}
+                  type="button"
+                  role="radio"
+                  aria-checked={wrapRating === star}
+                  aria-label={`${star} out of 5`}
+                  className={cn(
+                    'grid h-10 w-10 place-items-center border-2 border-ink transition-colors',
+                    wrapRating >= star ? 'bg-gold' : 'bg-paper hover:bg-[#fff7d6]'
+                  )}
+                  onClick={() => setWrapRating(star)}
+                >
+                  <Star
+                    className={cn('h-6 w-6', wrapRating >= star ? 'fill-ink text-ink' : 'text-ink/30')}
+                    strokeWidth={1.8}
+                  />
+                </button>
+              ))}
+              <span className="num ml-2 text-[13px] text-muted-foreground">{wrapRating ? `${wrapRating} / 5` : 'Not rated'}</span>
+            </div>
+            <p className="mt-1 text-[13px] text-muted-foreground">1 = not yet clear, 5 = clear and useful.</p>
+          </div>
+
+          {role === 'tutor' && (
+            <div className="mt-5">
+              <label className="field-label" htmlFor="wrap-notes">Session notes (optional)</label>
               <textarea
-                className="input-field w-full min-h-[80px] text-sm"
-                placeholder="Session notes for the student record…"
+                id="wrap-notes"
+                className="textarea-field"
+                placeholder="What was covered, and what should the learner review next?"
                 value={wrapNotes}
                 onChange={(e) => setWrapNotes(e.target.value)}
               />
-            )}
-            {Array.isArray(wrapResult?.badges) && wrapResult.badges.length > 0 && (
-              <div className="bg-secondary/10 text-secondary-foreground p-3 rounded-lg border border-secondary/20 text-sm">
-                🏅 Badge unlocked: <strong>{wrapResult.badges.join(', ')}</strong>
-              </div>
-            )}
-            {role === 'tutor' && !wrapResult && (
-              <div className="bg-secondary/10 text-secondary-foreground p-4 rounded-lg border border-secondary/20 mt-2">
-                <p className="font-bold text-lg">+50 Community Points</p>
-                <p className="text-sm">Added to your wallet on submit</p>
-              </div>
-            )}
-            {wrapResult ? (
-              <div className="text-sm text-emerald font-semibold pt-2">
-                ✅ Wrap-up saved{wrapResult.referralResolved ? ' — referral resolved' : ''}
-                {role === 'tutor' ? ` • wallet balance ${wrapResult.tutorBalance} pts` : ''}
-              </div>
-            ) : (
-              <Button
-                className="w-full mt-4"
-                size="lg"
-                disabled={submitting || wrapRating < 1}
-                onClick={handleSubmitWrap}
-              >
-                {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                {submitting ? 'Submitting…' : 'Submit Feedback'}
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          )}
+
+          {Array.isArray(wrapResult?.badges) && wrapResult.badges.length > 0 && (
+            <div className="mt-5 flex items-start gap-2.5 border-2 border-ink bg-[#f8f1e2] px-4 py-3 text-[13px] text-ink shadow-[3px_3px_0_#0f2942]">
+              <span className="mt-1 h-2 w-2 shrink-0 border border-ink bg-gold" />
+              Badge unlocked — {wrapResult.badges.join(', ')}.
+            </div>
+          )}
+
+          {!wrapResult && (
+            <div className="mt-5 flex flex-wrap items-baseline justify-between gap-2 border-2 border-ink bg-gold px-4 py-3">
+              <p className="text-[13px] font-semibold text-ink">On submit: <span className="num">+50</span> points to the tutor, <span className="num">+25</span> attendance points to the learner.</p>
+              <p className="text-[13px] text-ink/70">Entries are append-only.</p>
+            </div>
+          )}
+
+          {wrapResult ? (
+            <div className="mt-5 flex items-center gap-2 text-[14px] text-ink">
+              <Check className="h-4 w-4" strokeWidth={2} />
+              Wrap-up saved{wrapResult.referralResolved ? ' — the referral is resolved' : ''}.
+              {role === 'tutor' && wrapResult.tutorBalance != null ? <span className="num text-muted-foreground">Balance {wrapResult.tutorBalance} pts.</span> : null}
+            </div>
+          ) : (
+            <Button
+              size="lg"
+              className="mt-6 w-full"
+              disabled={submitting || wrapRating < 1}
+              onClick={handleSubmitWrap}
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : null}
+              {submitting ? 'Saving…' : 'Save wrap-up'}
+            </Button>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 flex flex-col h-full">
-      <h2 className="text-3xl font-bold text-primary mb-8 text-center">Dual-Confirmation Check-In</h2>
+    <div className="mx-auto w-full max-w-[980px]">
+      <div className="section-head">
+        <div>
+          <h1 className="section-title">Session check-in</h1>
+          <p className="section-subtitle">Two devices, one code. The hour starts only when both match.</p>
+        </div>
+        {target && <SessionStatus status={target.status} active={active} />}
+      </div>
 
-      {sessionsError && (
-        <Card><CardContent className="p-6 text-center text-crimson">Failed to load sessions: {sessionsError}</CardContent></Card>
-      )}
-      {sessions === null && !sessionsError && (
-        <Card><CardContent className="p-6 text-center text-muted-foreground">Loading sessions…</CardContent></Card>
-      )}
+      {sessionsError && <div className="panel px-5 py-4 text-[14px] text-crimson">Sessions could not be read: {sessionsError}</div>}
+      {sessions === null && !sessionsError && <div className="panel empty">Reading your sessions…</div>}
       {sessions !== null && !target && (
-        <Card><CardContent className="p-6 text-center text-muted-foreground">
-          No upcoming sessions. {role === 'learner' ? 'Book one in “Find a Tutor”.' : 'Accepted bookings will appear here.'}
-        </CardContent></Card>
+        <div className="panel empty">
+          No upcoming sessions. {role === 'learner' ? 'Book one from Find a tutor.' : 'Confirmed bookings will appear here.'}
+        </div>
       )}
 
       {target && (
         <>
-          <div className="text-center mb-6">
-            <p className="text-sm text-muted-foreground">
-              {target.session_code} • {target.subject} • {new Date(target.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} {target.time} •{' '}
-              <span className={`ml-2 font-semibold ${target.status === 'in-progress' ? 'text-emerald' : 'text-amber'}`}>
-                {target.status === 'in-progress' ? 'In Progress' : 'Awaiting Check-in'}
-              </span>
-            </p>
+          <div className="panel mb-4 border-t-8 border-t-gold p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-[13px] font-semibold text-muted-foreground">{target.session_code}</p>
+                <h2 className="mt-1 font-display text-[22px] font-extrabold leading-tight tracking-[-0.03em]">{target.subject} — {target.topic}</h2>
+                <p className="mt-1 text-[13px] text-muted-foreground">
+                  {fmtDate(target.date)} · {target.time} · {target.location} · {target.duration}
+                </p>
+              </div>
+              {eligible.length > 1 ? (
+                <label className="text-[13px] text-muted-foreground">
+                  Session
+                  <select
+                    className="select-field mt-1 min-w-[240px]"
+                    value={target.id}
+                    onChange={(event) => {
+                      const next = eligible.find(s => s.id === event.target.value);
+                      if (next) {
+                        setTarget(next);
+                        setStagedToken(null);
+                        setOtp('');
+                        setConfirmations(0);
+                        setActive(false);
+                        setSeconds(0);
+                      }
+                    }}
+                  >
+                    {eligible.map(session => (
+                      <option key={session.id} value={session.id}>
+                        {session.subject_code || session.subject} · {fmtDate(session.date)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <div className="text-right">
+                  <p className="text-[13px] text-muted-foreground">{target.learner_name && role === 'tutor' ? target.learner_name : target.tutor_name}</p>
+                  <p className="mt-1 text-[13px] text-muted-foreground">Both parties must confirm</p>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex-1 grid md:grid-cols-2 gap-8 items-start">
-            {/* Tutor Side */}
-            <Card className={`shadow-md border-2 transition-all ${role === 'tutor' ? 'border-primary shadow-xl ring-4 ring-primary/10' : 'border-border opacity-60 pointer-events-none'}`}>
-              <CardContent className="p-8 text-center flex flex-col items-center h-full min-h-[400px]">
-                <h3 className="text-xl font-bold text-charcoal mb-2">Tutor Device</h3>
-                <p className="text-sm text-muted-foreground mb-8">Generate Code for Learner</p>
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Tutor device */}
+            <div className={cn('panel p-5', role !== 'tutor' && 'bg-[#f4eedf]')}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-[18px] font-extrabold tracking-[-0.03em]">Tutor device</h2>
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">Generate the shared code.</p>
+                </div>
+                <span className="status-pill">{role === 'tutor' ? 'This device' : 'Other device'}</span>
+              </div>
 
+              <div className="mt-6">
                 {active ? (
-                  <div className="flex-1 flex flex-col items-center justify-center space-y-6 w-full">
-                    <div className="w-48 h-48 rounded-full border-8 border-emerald/20 flex items-center justify-center">
-                      <span className="text-4xl font-mono font-bold text-emerald">{formatTime(seconds)}</span>
+                  <div className="py-4 text-center">
+                    <p className="text-[13px] font-semibold text-muted-foreground">Elapsed</p>
+                    <p className="num mt-2 text-[52px] leading-none text-ink">{formatTime(seconds)}</p>
+                    <p className="mt-3 flex items-center justify-center gap-2 text-[13px] font-semibold text-muted-foreground">
+                      <span className="h-2 w-2 border border-ink bg-emerald" /> Session in progress
+                    </p>
+                    <Button variant="outline" className="mt-6 w-full" onClick={handleEnd}>End session</Button>
+                  </div>
+                ) : role !== 'tutor' ? (
+                  <div className="flex min-h-[200px] flex-col items-center justify-center text-center">
+                    <p className="max-w-[30ch] text-[14px] text-muted-foreground">
+                      The tutor opens this screen and generates a one-time code. It expires after ten minutes.
+                    </p>
+                  </div>
+                ) : stagedToken ? (
+                  <div className="text-center">
+                    <p className="text-[13px] font-semibold text-muted-foreground">Learner code</p>
+                    <div className="mt-2 flex items-center justify-center gap-2">
+                      <p className="num border-2 border-ink bg-gold px-5 py-3 text-[28px] tracking-[0.16em] text-ink shadow-[3px_3px_0_#0f2942]">{stagedToken}</p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Copy code"
+                        onClick={() => { navigator.clipboard?.writeText(stagedToken); showToast('Code copied.', 'info'); }}
+                      >
+                        <Copy className="h-4 w-4" strokeWidth={1.6} />
+                      </Button>
                     </div>
-                    <p className="text-emerald font-semibold animate-pulse">Session Active</p>
-                    <Button variant="destructive" size="lg" className="w-full" onClick={handleEnd}>
-                      <Square className="w-4 h-4 mr-2 fill-current" /> End Session
+                    <p className="mt-3 text-[13px] text-muted-foreground" aria-live="polite">
+                      {confirmations}/2 confirmed · waiting for the learner
+                    </p>
+                    <Button className="mt-5 w-full" variant="outline" onClick={handleStage} disabled={staging}>
+                      {staging ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : null}
+                      Issue a new code
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-6 flex flex-col items-center">
-                    <div className="bg-white p-4 border border-border shadow-sm rounded-xl inline-block">
-                      <QrCode className="w-32 h-32 text-primary" />
-                    </div>
-                    {stagedToken ? (
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Learner OTP Code</p>
-                        <div className="flex items-center gap-2">
-                          <p className="text-4xl font-mono font-bold tracking-widest text-primary bg-slate-100 py-3 px-6 rounded-lg border border-border inline-block shadow-inner">
-                            {stagedToken}
-                          </p>
-                          <Button variant="ghost" size="icon" aria-label="copy" onClick={() => { navigator.clipboard?.writeText(stagedToken); }}>
-                            <ClipboardCopy className="w-5 h-5" />
-                          </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-2 flex items-center justify-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald" />
-                          {confirmations}/2 verified — waiting for learner
-                          <span className="mx-1">•</span>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        </p>
-                      </div>
-                    ) : (
-                      <Button className="w-full mt-4" disabled={staging} onClick={handleStage}>
-                        {staging ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
-                        {staging ? 'Generating…' : 'Generate Code'}
-                      </Button>
+                  <div className="flex min-h-[200px] flex-col items-center justify-center">
+                    <p className="max-w-[30ch] text-center text-[14px] text-muted-foreground">
+                      Issue a one-time code, show it to the learner, and both devices confirm before the clock starts.
+                    </p>
+                    <Button className="mt-5 w-full" onClick={handleStage} disabled={staging}>
+                      {staging ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : null}
+                      Generate code
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Learner device */}
+            <div className={cn('panel p-5', role !== 'learner' && 'bg-[#f4eedf]')}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-[18px] font-extrabold tracking-[-0.03em]">Learner device</h2>
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">Enter the code from the tutor.</p>
+                </div>
+                <span className="status-pill">{role === 'learner' ? 'This device' : 'Other device'}</span>
+              </div>
+
+              <div className="mt-6">
+                {active ? (
+                  <div className="py-4 text-center">
+                    <p className="text-[13px] font-semibold text-muted-foreground">Elapsed</p>
+                    <p className="num mt-2 text-[52px] leading-none text-ink">{formatTime(seconds)}</p>
+                    <p className="mt-3 flex items-center justify-center gap-2 text-[13px] font-semibold text-muted-foreground">
+                      <span className="h-2 w-2 border border-ink bg-emerald" /> Learning in progress
+                    </p>
+                    <Button variant="outline" className="mt-6 w-full" onClick={handleEnd}>End session</Button>
+                  </div>
+                ) : role !== 'learner' ? (
+                  <div className="flex min-h-[200px] flex-col items-center justify-center text-center">
+                    <p className="max-w-[30ch] text-[14px] text-muted-foreground">
+                      The learner enters the six-digit code on their own device. Both confirmations must land.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex min-h-[200px] flex-col justify-center">
+                    <label className="field-label" htmlFor="otp">One-time code</label>
+                    <Input
+                      id="otp"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="000 000"
+                      className="num h-14 text-center text-[24px] tracking-[0.22em]"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/[^0-9-]/g, '').slice(0, 13))}
+                    />
+                    <p className="mt-2 text-[13px] text-muted-foreground">Ask your tutor for the code. It expires after ten minutes.</p>
+                    <Button className="mt-5 w-full" disabled={checkingIn || !otp.trim()} onClick={handleCheckIn}>
+                      {checkingIn ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : <Check className="h-4 w-4" strokeWidth={2} />}
+                      {checkingIn ? 'Verifying…' : 'Verify check-in'}
+                    </Button>
+                    {confirmations > 0 && (
+                      <p className="mt-2 text-[13px] text-muted-foreground" aria-live="polite">{confirmations}/2 confirmed.</p>
                     )}
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Learner Side */}
-            <Card className={`shadow-md border-2 transition-all ${role === 'learner' ? 'border-primary shadow-xl ring-4 ring-primary/10' : 'border-border opacity-60 pointer-events-none'}`}>
-              <CardContent className="p-8 text-center flex flex-col items-center h-full min-h-[400px]">
-                <h3 className="text-xl font-bold text-charcoal mb-2">Learner Device</h3>
-                <p className="text-sm text-muted-foreground mb-8">Enter Code from Tutor</p>
-
-                {active ? (
-                  <div className="flex-1 flex flex-col items-center justify-center space-y-6 w-full">
-                    <div className="w-48 h-48 rounded-full border-8 border-primary/10 flex items-center justify-center">
-                      <span className="text-4xl font-mono font-bold text-primary">{formatTime(seconds)}</span>
-                    </div>
-                    <p className="text-primary font-semibold">Learning in Progress...</p>
-                    <Button variant="outline" size="lg" className="w-full border-crimson text-crimson hover:bg-crimson/10" onClick={handleEnd}>
-                      Leave Session
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center space-y-8 w-full max-w-[250px]">
-                    <Smartphone className="w-16 h-16 text-muted-foreground" />
-                    <div className="w-full">
-                      <Input
-                        type="text"
-                        placeholder="6-6 digits"
-                        className="text-center text-2xl font-mono tracking-widest h-16 shadow-inner bg-slate-50 border-2 focus-visible:border-primary focus-visible:ring-primary/20"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/[^0-9-]/g, '').slice(0, 13))}
-                      />
-                    </div>
-                    <Button className="w-full" disabled={checkingIn || !otp.trim() || role !== 'learner'} onClick={handleCheckIn}>
-                      {checkingIn ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                      {checkingIn ? 'Verifying…' : 'Verify Check-In'}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
+
+          <p className="mt-4 text-[13px] text-muted-foreground">
+            The timer is shared. Either participant can end the session; the wrap-up posts the points.
+          </p>
         </>
       )}
     </div>

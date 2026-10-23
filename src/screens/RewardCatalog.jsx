@@ -1,56 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Award, ShoppingBag, Coffee, Printer, Ticket, CheckCircle2, Gift, BookOpen, Star, Sparkles, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2, Check } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { cn } from '../lib/utils';
 import api from '../api';
 
-const CATEGORY_ICONS = {
-  'Campus Perks': Coffee,
-  'Merchandise': Gift,
-  'Exclusive': Star,
-  'Events': Ticket,
-};
-
-const CATEGORY_COLORS = {
-  'Campus Perks': 'bg-blue-100 text-blue-600',
-  'Merchandise': 'bg-purple-100 text-purple-600',
-  'Exclusive': 'bg-secondary/20 text-secondary-foreground',
-  'Events': 'bg-orange-100 text-orange-600',
-};
+const fmt = (value) => new Intl.NumberFormat('en-US').format(Number(value) || 0);
 
 export default function RewardCatalog({ showToast }) {
-  const [rewards, setRewards] = useState(null); // live catalog
+  const [rewards, setRewards] = useState(null);
   const [error, setError] = useState(null);
   const [balance, setBalance] = useState(0);
-  const [voucher, setVoucher] = useState(null); // {name, description, cost, voucher_code, stock}
+  const [voucher, setVoucher] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [filter, setFilter] = useState('All');
 
   const loadCatalog = () => {
+    setError(null);
     api.get('/rewards')
-      .then(({ rewards: rows }) => { setRewards(rows); setBalance(rows[0]?.my_balance ?? 0); })
-      .catch((e) => { setError(e.message); });
+      .then(({ rewards: rows }) => {
+        setRewards(rows);
+        setBalance(Number(rows[0]?.my_balance ?? 0));
+      })
+      .catch((e) => setError(e.message));
     api.get('/wallet')
-      .then(({ balance: b }) => setBalance(b))
+      .then(({ balance: value }) => setBalance(Number(value) || 0))
       .catch(() => {});
   };
 
   useEffect(loadCatalog, []);
 
-  const categories = ['All', ...new Set((rewards ?? []).map(r => r.category))];
-  const filteredRewards = filter === 'All' ? (rewards ?? []) : (rewards ?? []).filter(r => r.category === filter);
+  const categories = ['All', ...new Set((rewards ?? []).map(reward => reward.category))];
+  const filteredRewards = filter === 'All' ? (rewards ?? []) : (rewards ?? []).filter(reward => reward.category === filter);
 
   const handleRedeem = async (item) => {
     setBusyId(item.id);
     try {
       const res = await api.post(`/rewards/${item.id}/redeem`);
-      setBalance(res.balance);
+      setBalance(Number(res.balance) || 0);
       setVoucher({ ...item, voucher_code: res.voucher, stock: res.stock });
-      // refresh stock display without refetch
-      setRewards(rows => rows.map(r => (r.id === item.id ? { ...r, stock: res.stock } : r)));
-      showToast(`Redeemed ${item.name} — voucher ${res.voucher}`, 'success');
+      setRewards(rows => rows.map(row => (row.id === item.id ? { ...row, stock: res.stock } : row)));
+      showToast(`Redeemed ${item.name}. Voucher ${res.voucher}.`, 'success');
     } catch (e) {
       showToast(e.message || 'Redemption failed.', 'error');
     } finally {
@@ -60,146 +50,146 @@ export default function RewardCatalog({ showToast }) {
 
   if (voucher) {
     return (
-      <div className="flex flex-col items-center justify-center h-full py-12">
-        <h2 className="text-3xl font-bold text-primary mb-8">Redemption Successful!</h2>
-        
-        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="w-full max-w-sm">
-          <Card className="border-2 border-dashed border-primary bg-slate-50 relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 left-0 w-full h-4 bg-primary" />
-            <CardContent className="p-8 text-center flex flex-col items-center">
-              <CheckCircle2 className="w-16 h-16 text-emerald mb-4" />
-              <h3 className="text-2xl font-bold text-charcoal mb-2">Digital Claim Voucher</h3>
-              <p className="font-semibold text-primary text-lg mb-2">{voucher.name}</p>
-              <p className="text-sm text-muted-foreground mb-6">{voucher.description}</p>
-              
-              <div className="w-48 h-24 bg-white border border-border flex flex-col items-center justify-center mb-6 shadow-inner rounded-md">
-                {/* Barcode Mock */}
-                <div className="flex gap-1 h-12 items-end justify-center mb-2">
-                  {[...Array(20)].map((_, i) => (
-                    <div key={i} className="bg-charcoal" style={{ width: `${Math.random() * 4 + 1}px`, height: '100%' }} />
-                  ))}
-                </div>
-                <span className="font-mono text-xs tracking-widest">{voucher.voucher_code}</span>
-              </div>
+      <div className="mx-auto w-full max-w-[560px]">
+        <div className="section-head">
+          <div>
+            <h1 className="section-title">Claim voucher</h1>
+            <p className="section-subtitle">Show this at the designated counter. Each code is issued once.</p>
+          </div>
+        </div>
 
-              <div className="bg-emerald/10 text-emerald border border-emerald/20 rounded-lg p-3 w-full mb-4">
-                <p className="text-sm font-semibold">−{voucher.cost} pts deducted</p>
-                <p className="text-xs">Remaining balance: {balance} pts</p>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="panel overflow-hidden">
+          <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-gold px-5 py-3 text-ink">
+            <span className="text-[13px] font-bold uppercase tracking-[0.02em]">LCCB Academix · claim slip</span>
+            <span className="text-[13px] font-semibold">Redeemed</span>
+          </div>
+          <div className="p-6">
+            <p className="text-[13px] font-semibold text-muted-foreground">Voucher code</p>
+            <p className="num mt-1 inline-block border-2 border-ink bg-[#fff7d6] px-2 py-1 text-[28px] leading-tight tracking-[0.08em] text-ink shadow-[3px_3px_0_#0f2942]">{voucher.voucher_code}</p>
+
+            <div className="mt-6 border-t-2 border-ink pt-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">{voucher.name}</h2>
+                  <p className="mt-1 max-w-[42ch] text-[13px] leading-snug text-muted-foreground">{voucher.description}</p>
+                </div>
+                <span className="status-pill shrink-0"><span className="status-dot bg-emerald" /> Active</span>
               </div>
-              
-              <p className="text-sm text-muted-foreground">Present this voucher to the designated claim counter.</p>
-            </CardContent>
-          </Card>
-          <div className="mt-8 text-center">
-            <Button onClick={() => { setVoucher(null); loadCatalog(); }}>Back to Catalog</Button>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-4 border-t-2 border-ink pt-4">
+              <div>
+                <p className="text-[13px] text-muted-foreground">Points spent</p>
+                <p className="num mt-1 text-[16px]">−{fmt(voucher.cost)} pts</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[13px] text-muted-foreground">Remaining balance</p>
+                <p className="num mt-1 text-[16px]">{fmt(balance)} pts</p>
+              </div>
+            </div>
+
+            <p className="mt-5 flex items-start gap-2 text-[13px] leading-snug text-muted-foreground">
+              <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+              Present this code to the designated claim counter. The deduction is already on the ledger.
+            </p>
           </div>
         </motion.div>
+
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <Button variant="ghost" onClick={() => { setVoucher(null); loadCatalog(); }}>Back to catalog</Button>
+          <p className="text-[13px] text-muted-foreground">Keep this code until claimed.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="pb-24">
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold text-primary">Community Reward Catalog</h2>
-        <p className="text-muted-foreground">Exchange your earned points for campus perks and exclusive merchandise.</p>
+    <div>
+      <div className="section-head">
+        <div>
+          <h1 className="section-title">Rewards catalog</h1>
+          <p className="section-subtitle">Exchange earned points for campus perks, merchandise, and event passes.</p>
+        </div>
+        <div className="border-2 border-ink bg-gold px-4 py-2.5 text-right shadow-[3px_3px_0_#0f2942]">
+          <p className="text-[13px] font-semibold text-ink/70">Available balance</p>
+          <p className="num mt-0.5 text-[24px] leading-tight text-ink">
+            {fmt(balance)} <span className="text-[13px] font-normal text-muted-foreground">pts</span>
+          </p>
+        </div>
       </div>
 
-      {/* Category Filter */}
       {error && (
-        <Card>
-          <CardContent className="p-4 text-center text-crimson flex items-center justify-center gap-3">
-            <span>Failed to load the live catalog: {error}</span>
-            <Button size="sm" variant="outline" onClick={() => { setError(null); loadCatalog(); }}>Retry</Button>
-          </CardContent>
-        </Card>
+        <div className="panel mb-4 flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+          <p className="text-[14px] text-crimson">The catalog could not be read: {error}</p>
+          <Button size="sm" variant="outline" onClick={loadCatalog}>Retry</Button>
+        </div>
       )}
-      <div className="flex gap-2 mb-6 flex-wrap">
-        {categories.map(cat => (
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {categories.map(category => (
           <button
-            key={cat}
-            onClick={() => setFilter(cat)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${filter === cat ? 'bg-primary text-white shadow-md' : 'bg-white border border-border text-charcoal hover:border-primary'}`}
+            key={category}
+            type="button"
+            onClick={() => setFilter(category)}
+            className={cn(
+              'h-9 border-2 border-ink px-3 text-[13px] font-bold shadow-[2px_2px_0_#0f2942] transition-[background-color,transform]',
+              filter === category ? 'bg-gold text-ink' : 'bg-paper text-ink hover:-translate-y-0.5 hover:bg-[#fff7d6]',
+            )}
           >
-            {cat}
+            {category}
           </button>
         ))}
+        <p className="ml-auto text-[13px] text-muted-foreground">Points post after each completed session.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredRewards.map((item, i) => {
-          const IconComp = CATEGORY_ICONS[item.category] || Gift;
-          const colorClass = CATEGORY_COLORS[item.category] || 'bg-slate-100 text-slate-600';
-          
-          return (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-            >
-              <Card className="group hover:border-primary hover:shadow-lg transition-all flex flex-col relative overflow-hidden h-full">
-                {item.stock <= 5 && (
-                  <div className="absolute top-3 right-3 z-10">
-                    <Badge variant="destructive" className="bg-crimson text-xs">Only {item.stock} left</Badge>
-                  </div>
-                )}
-                <div className="p-6 pb-0 mb-4 flex justify-between items-start">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${colorClass} shadow-sm group-hover:scale-110 transition-transform`}>
-                    <span className="text-2xl">{item.icon}</span>
-                  </div>
-                  <Badge variant="secondary" className="font-bold text-sm px-3 py-1 bg-secondary text-secondary-foreground">
-                    {item.cost} pts
-                  </Badge>
-                </div>
-                <CardHeader className="pt-0">
-                  <CardTitle className="text-lg group-hover:text-primary transition-colors">{item.name}</CardTitle>
-                  <CardDescription className="text-xs">{item.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0 pb-2">
-                  <Badge variant="outline" className="text-xs text-muted-foreground">{item.category}</Badge>
-                </CardContent>
-                <CardFooter className="mt-auto pt-4 border-t border-border bg-slate-50">
-                  <Button
-                    className="w-full"
-                    variant={balance >= item.cost && item.stock > 0 ? 'default' : 'secondary'}
-                    disabled={balance < item.cost || item.stock <= 0 || busyId === item.id}
-                    onClick={() => handleRedeem(item)}
-                  >
-                    {busyId === item.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    {item.stock <= 0 ? 'Out of stock' : (balance >= item.cost ? 'Redeem Reward' : `Need ${item.cost - balance} more pts`)}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
+      {rewards === null && !error && <div className="panel empty">Reading the catalog…</div>}
 
       {rewards !== null && filteredRewards.length === 0 && (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">No rewards in this category yet.</CardContent></Card>
+        <div className="panel empty">No rewards in this category yet.</div>
       )}
-      <motion.div 
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        className="fixed bottom-0 left-0 right-0 bg-white border-t border-border shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] p-4 md:left-[260px] z-30"
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-2">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary p-2 rounded-lg text-primary-foreground">
-              <ShoppingBag className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Available Balance</p>
-              <p className="text-2xl font-bold text-charcoal">{balance.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">pts</span></p>
-            </div>
-          </div>
-          <div className="hidden sm:block text-right">
-            <p className="text-sm text-muted-foreground">Keep tutoring to earn more points!</p>
-            <p className="text-xs text-primary font-medium mt-1">+50 pts per completed session • +25 bonus for 5★ rating</p>
-          </div>
+
+      {filteredRewards.length > 0 && (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {filteredRewards.map((item, index) => {
+            const canRedeem = balance >= item.cost && item.stock > 0;
+            return (
+              <motion.article
+                key={item.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: Math.min(index * 0.03, 0.15) }}
+                className="panel flex flex-col p-5 transition-transform hover:-translate-y-1"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="border-2 border-ink bg-[#f8f1e2] px-1.5 py-0.5 text-[13px] font-semibold text-ink">{item.category}</span>
+                  <span className="num border-2 border-ink bg-gold px-1.5 py-0.5 text-[13px] text-ink">{fmt(item.cost)} pts</span>
+                </div>
+                <h2 className="mt-3 font-display text-[19px] font-extrabold leading-tight tracking-[-0.03em]">{item.name}</h2>
+                <p className="mt-1 text-[13px] leading-snug text-muted-foreground">{item.description}</p>
+
+                <div className="mt-auto flex items-end justify-between gap-3 pt-5">
+                  <span className="text-[13px] text-muted-foreground">
+                    {item.stock <= 0
+                      ? 'Out of stock'
+                      : item.stock <= 5
+                        ? `Only ${item.stock} left`
+                        : `${item.stock} in stock`}
+                  </span>
+                  <Button
+                    variant={canRedeem ? 'default' : 'secondary'}
+                    size="sm"
+                    disabled={!canRedeem || busyId === item.id}
+                    onClick={() => handleRedeem(item)}
+                  >
+                    {busyId === item.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.8} /> : null}
+                    {item.stock <= 0 ? 'Out of stock' : canRedeem ? 'Redeem' : `Need ${fmt(item.cost - balance)} pts`}
+                  </Button>
+                </div>
+              </motion.article>
+            );
+          })}
         </div>
-      </motion.div>
+      )}
     </div>
   );
 }

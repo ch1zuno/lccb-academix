@@ -31,7 +31,7 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
     const wrap = await withTransaction(async (client) => {
       // lock row for safe transitions
       const { rows: live } = await client.query(
-        `SELECT id, tutor_id, learner_id, subject_id, referral_id, status
+        `SELECT id, tutor_id, learner_id, subject_id, referral_id, status, COALESCE(duration_hours, 1) AS duration_hours
          FROM sessions WHERE id = $1 FOR UPDATE`,
         [sessionId]);
       const session = live[0];
@@ -51,9 +51,9 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
       if (session.referral_id) {
         const { rows: dec } = await client.query(
           `UPDATE referrals
-             SET hours_remaining = GREATEST(COALESCE(hours_remaining, hours_required) - 1.5, 0)
+             SET hours_remaining = GREATEST(COALESCE(hours_remaining, hours_required) - $2, 0)
            WHERE id = $1 RETURNING id, status, hours_remaining, hours_required`,
-          [session.referral_id]);
+          [session.referral_id, session.duration_hours]);
         const ref = dec[0];
         if (ref && ref.hours_remaining <= 0 && ref.status !== 'resolved') {
           const { rows: resolved } = await client.query(
@@ -74,7 +74,7 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
       const { rows: ledgerRow } = await client.query(
         `INSERT INTO points_ledger (user_id, amount, description)
          VALUES ($1, $2, $3) RETURNING amount`,
-        [req.user.id, pointsToAward, `Session wrap-up — ${session.id.slice(0, 8)} (${rating}★)`]);
+        [session.tutor_id, pointsToAward, `Session wrap-up — ${session.id.slice(0, 8)} (${rating}★)`]);
 
       // learner attendance credit (same transaction)
       await client.query(
@@ -84,7 +84,7 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
 
       // badge unlocks (safe idempotent)
       const { rows: completedCount } = await client.query(
-        `SELECT count(*)::int AS n FROM sessions WHERE tutor_id = $1 AND status = 'completed'`, [req.user.id]);
+        `SELECT count(*)::int AS n FROM sessions WHERE tutor_id = $1 AND status = 'completed'`, [session.tutor_id]);
       const totalDone = completedCount[0].n;
       const unlocks = [];
       const pushBadge = async (code) => {
@@ -93,7 +93,7 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
            SELECT $1, id FROM badges WHERE badge_code = $2
            ON CONFLICT (user_id, badge_id) DO NOTHING
            RETURNING (SELECT name FROM badges WHERE badge_code = $2) AS name`,
-          [req.user.id, code]);
+          [session.tutor_id, code]);
         if (b[0]) unlocks.push(b[0].name);
       };
       if (totalDone >= 1) await pushBadge('BG-001');
@@ -102,7 +102,7 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
         session: { id: sessionId, status: 'completed', notes },
         tutorBalance: (await client.query(
           `SELECT COALESCE(SUM(amount),0)::int AS balance FROM points_ledger WHERE user_id = $1`,
-        [req.user.id])).rows[0].balance,
+        [session.tutor_id])).rows[0].balance,
         referralResolved, points: ledgerRow.amount, badges: unlocks,
       };
     });

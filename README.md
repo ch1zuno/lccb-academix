@@ -48,7 +48,12 @@ DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-0-<region>.poole
 ```
 
 Remote hosts get SSL automatically (localhost stays plain). `npm run db:reset` works
-against Supabase too — it wipes the `public` schema and loads the demo data there.
+against any Postgres — **it wipes the `public` schema first**, so only run it on a
+database that may be destroyed. Never run `db:reset` against a hosted database that
+holds real or live-demo data. To validate `db/schema.sql` + `db/seed.sql` safely, do it
+on a scratch database: the embedded local Postgres (point `DATABASE_URL` at
+`postgres://postgres:postgres@localhost:5432/<scratch-name>`) runs schema → migrations
+→ seed in seconds without touching anything remote.
 Handy utilities: `node server/scripts/pooler-verify.js` (checks the connection) and
 `node server/scripts/pooler-probe.js` (discovers which pooler region hosts the project
 when you only know the direct hostname).
@@ -80,6 +85,7 @@ All seeded users share the password **`demo1234`**. Sign in with the `custom_id`
 
 | Route | Method(s) | Role | Purpose |
 | --- | --- | --- | --- |
+| `/public/overview` | GET | public | anonymous landing stats: tutor count, hours, points, active subjects, honour roll |
 | `/auth/login` · `/auth/me` · `/auth/dev-accounts` | POST · GET | public / authed | JWT auth (bcrypt), metadata survival |
 | `/referrals` · `/referrals/assign` · `/referrals/:id/status` · `/referrals/search-students` | GET POST PATCH | faculty/superadmin · scoped | referral lifecycle: flagged → assigned → in-progress → resolved |
 | `/subjects` · `/tutors` · `/session-requests` | GET POST | authed · accept/decline | matching: accreditation-gated requests, double-accept blocked |
@@ -96,22 +102,49 @@ All seeded users share the password **`demo1234`**. Sign in with the `custom_id`
 
 | Command | What it does |
 | --- | --- |
-| `npm run db:reset` | drop schema → `db/schema.sql` → mark migrations → `db/seed.sql` |
+| `npm run db:reset` | drop schema → `db/schema.sql` → mark migrations → `db/seed.sql` (destructive — see the warning above) |
 | `npm run server` | Express API on `PORT` (embedded PG auto-boot) |
 | `npm run dev` | Vite only |
 | `npm run start` | both servers together |
-| `node server/scripts/e2e-*.js` | end-to-end checks per feature (referrals, matching, check-in, wrap-up, rewards, accreditation, analytics) |
+| `node server/scripts/e2e-all.js` | runs every end-to-end check (referrals, matching, check-in, wrap-up, rewards, accreditation, analytics) — best against a scratch local database |
 
 ## Project layout
 
 ```
-db/schema.sql          source-of-truth DDL (incl. platform tables, triggers, views)
+db/schema.sql          source-of-truth DDL (incl. platform tables, triggers, views);
+                       sessions.duration_hours is the numeric hour source of truth (DEFAULT 1)
 db/seed.sql            demo data (39 users; password demo1234; UTF-8)
-db/migrations/         numbered migration files (marked applied on reset)
+db/migrations/         numbered migration files (marked applied on reset);
+                       002_session_duration_and_seed_repair.sql backfills numeric durations
 server/                Express app, one pg Pool (`server/db.js`), routes, middleware
 server/scripts/        db-reset + embedded-PG boot + e2e scripts
 src/                   React app; `src/api.js` is the only API client
 ```
 
-Design-consistent UI (dark saffron/green theme) preserved from the prototype; keep the
-`:root` block of `src/index.css` frozen.
+## Design system (neo-brutalist, 2026 relaunch)
+
+- **Palette**: LCCB Navy `#0F2942` (ink) + Institutional Gold `#D4AC0D`, ground
+  `#F2EDE1`, cards `#FFFDF6`, muted `#E9E1D1`. Kept from the college identity.
+- **Type**: Bricolage Grotesque (display, 800) + Geist (body).
+- **Language**: flat colour fields, thick 3px ink borders, hard offset shadows
+  (e.g. `10px 10px 0`), slight rotations, uppercase stamps. These are intentional —
+  the design-quality inspector flags them and they are expected.
+- **Landing (`src/screens/Login.jsx` + `src/screens/Landing.css`)**: the hero is an
+  **interactive pure-CSS 3D scene** — cartoonish brutalist cube objects (graduation
+  cap with swinging tassel, "A+" ledger stack, subject letter tiles, session clock,
+  point coins, flat chips) over a blueprint grid floor; it tilts with the pointer and
+  every object pops on hover. No photographs are used in the hero.
+- **Logo (`src/components/Logo3D.jsx`)**: the brandmark is rendered by **three.js**
+  (`three`, r186) as toon/cel-shaded block letters — navy caps, gold extrude sides,
+  cartoon contour outlines (`OutlineEffect`), staggered pop-in, idle bob, pointer
+  tilt. Font: `public/fonts/helvetiker_bold.typeface.json` (from the three.js
+  examples, MIT). The flat DOM monogram is the automatic fallback when WebGL or the
+  font is unavailable.
+- **Illustrations**: section artwork uses free flat illustrations from
+  [Storyset (Freepik Labs)](https://storyset.com/education) (`public/illustrations/`),
+  credited in the landing footer.
+- **App screens** keep the same system: navy sidebar, white card panels, gold accents,
+  hard-edge tables and badges. The signed-in shell lives in `src/App.jsx`, role
+  dashboards in `src/screens/Dashboard.jsx`.
+- `src/index.css` still defines the shared tokens in its `:root` block — keep in sync
+  with `Landing.css`.

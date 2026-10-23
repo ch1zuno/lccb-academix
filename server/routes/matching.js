@@ -109,8 +109,8 @@ router.post('/session-requests/:id/accept', requireAuth, requireRole('tutor'), a
 
     const sessionCode = `SES-${String(Date.now()).slice(-6)}`;
     const { rows: created } = await query(
-      `INSERT INTO sessions (session_code, tutor_id, learner_id, subject_id, topic, date, time, duration, status, location)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,'1 hr','upcoming',$8) RETURNING *`,
+      `INSERT INTO sessions (session_code, tutor_id, learner_id, subject_id, topic, date, time, duration, duration_hours, status, location)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'1 hr',1,'upcoming',$8) RETURNING *`,
       [sessionCode, run.tutor_id, run.learner_id, run.subject_id, run.topic, run.preferred_date, run.preferred_time, run.location],
     );
     await query(`UPDATE session_requests SET status = 'accepted', session_id = $1 WHERE id = $2`, [created[0].id, req.params.id]);

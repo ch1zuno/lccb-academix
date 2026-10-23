@@ -84,7 +84,7 @@ CREATE TABLE sessions (
   date date NOT NULL,
   time text NOT NULL,
   duration text,
-  duration_hours numeric,
+  duration_hours numeric DEFAULT 1,
   notes text,
   referral_id uuid REFERENCES referrals(id) ON DELETE SET NULL,
   status session_status NOT NULL DEFAULT 'upcoming',

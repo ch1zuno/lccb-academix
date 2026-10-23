@@ -1,554 +1,1007 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { 
-  BookOpen, User, Lock, Loader2, ArrowRight, GraduationCap, 
-  Users, Target, BookMarked, ChevronRight, X, Sparkles, 
-  ShieldCheck, TrendingUp, Calendar, CheckCircle2, Search
-} from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
-import { Input } from '../components/ui/input';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { animate } from 'animejs';
+import { ArrowRight, ArrowLeft, Loader2, X } from 'lucide-react';
 import api from '../api';
 import { saveSession } from '../authToken';
+import Logo3D from '../components/Logo3D';
+import './Landing.css';
 
 const DEV = import.meta.env.DEV;
 
-/** Demo accounts for the role quick-switch. Only used in development. */
 const DEMO_ACCOUNTS = DEV ? [
   { role: 'superadmin', loginId: 'l.betita.admin@lccbacolod.edu.ph', label: 'Sir Lenuel Betita' },
-  { role: 'faculty',    loginId: 'b.tisuela@lccbacolod.edu.ph', label: 'Mrs. Bethel Tisuela' },
-  { role: 'tutor',      loginId: 'TU-042', label: 'Mark Antipo' },
-  { role: 'learner',    loginId: 'TE-128', label: 'Julian Gemelo' },
+  { role: 'faculty', loginId: 'b.tisuela@lccbacolod.edu.ph', label: 'Mrs. Bethel Tisuela' },
+  { role: 'tutor', loginId: 'TU-042', label: 'Mark Antipo' },
+  { role: 'learner', loginId: 'TE-128', label: 'Julian Gemelo' },
 ] : [];
 
-const ARTICLES = [
-  { id: 1, category: 'Study Tips', title: 'Top 5 Study Habits for IT Students', date: 'Sept 25, 2026', readTime: '5 min read', img: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80' },
-  { id: 2, category: 'Success Story', title: 'How Peer Tutoring Boosts Confidence', date: 'Sept 20, 2026', readTime: '3 min read', img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80' },
-  { id: 3, category: 'Platform News', title: 'LCCB Academix Reaches 500 Sessions!', date: 'Sept 15, 2026', readTime: '2 min read', img: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80' },
+const ROLE_TITLES = {
+  learner: 'Student sign in',
+  tutor: 'Tutor sign in',
+  faculty: 'Faculty sign in',
+  superadmin: 'Admin sign in',
+};
+
+/* ── Hero 3D scene: cartoonish brutalist cubes built from six faces ──── */
+function HsCube({ name = '', float = '', bare = false, style, w, h, d, cF, cS, cT, label }) {
+  const vars = {
+    '--w': `${w}px`,
+    '--h': `${h}px`,
+    '--d': `${d}px`,
+  };
+  if (cF) vars['--cF'] = cF;
+  if (cS) vars['--cS'] = cS;
+  if (cT) vars['--cT'] = cT;
+  const cube = (
+    <div
+      className={`hs-cube ${float}`.trim()}
+      style={style ? { ...vars, ...style } : vars}
+    >
+      <i className="f f-front">{label ? <span className="hs-face-label" data-ch={label} /> : null}</i>
+      <i className="f f-back" />
+      <i className="f f-right" />
+      <i className="f f-left" />
+      <i className="f f-top" />
+      <i className="f f-bottom" />
+    </div>
+  );
+  if (bare) return cube;
+  return (
+    <div className={`hs-w ${name}`.trim()}>
+      {cube}
+    </div>
+  );
+}
+
+const MENU_GROUPS = [
+  {
+    name: 'For learners',
+    items: [
+      { name: 'Find a tutor', value: 'Free', desc: 'Verified students who passed the qualification exam and were approved by the dean.' },
+      { name: 'Book a session', value: '3 steps', desc: 'Pick a subject, a focus, and a time that fits between classes.' },
+      { name: 'Attendance credit', value: '+25 pts', desc: 'Posted to the learner’s ledger when a checked-in session is wrapped up.' },
+    ],
+  },
+  {
+    name: 'For tutors',
+    items: [
+      { name: 'Accreditation', value: 'Exam + review', desc: 'One exam attempt and a document review, then the dean signs off.' },
+      { name: 'Session credit', value: '50 pts', desc: 'Posted to your ledger after a completed, double-confirmed session.' },
+      { name: 'Check in', value: '2 devices', desc: 'Tutor and learner confirm the same one-time code before the hour starts.' },
+    ],
+  },
+  {
+    name: 'For the college',
+    items: [
+      { name: 'Referrals', value: 'Live board', desc: 'Faculty flag a student early; the board tracks the hours to resolution.' },
+      { name: 'Rewards', value: 'Catalog', desc: 'Campus perks, merchandise, and event passes, priced in community points.' },
+      { name: 'Records', value: 'Permanent', desc: 'An append-only ledger of sessions, hours, points, and approvals.' },
+    ],
+  },
 ];
+
+const STEPS = [
+  {
+    title: 'The nudge',
+    text: 'A faculty member flags a student who needs help. The referral lands on the board with a topic and hours.',
+    image: '/illustrations/elearning.svg',
+    alt: 'Students studying at laptops',
+    position: 'center 40%',
+    credit: 'E-learning · Storyset',
+  },
+  {
+    title: 'The match',
+    text: 'The student picks a subject and an available window. The matcher returns accredited, available peers.',
+    image: '/illustrations/college-students.svg',
+    alt: 'Two students walking together with books',
+    position: 'center 50%',
+    credit: 'College students · Storyset',
+  },
+  {
+    title: 'The booking',
+    text: 'A session request carries the topic, date, time, and room. The tutor accepts; both dashboards update.',
+    image: '/illustrations/back-to-school.svg',
+    alt: 'Students with books and a backpack',
+    position: 'center 50%',
+    credit: 'Back to school · Storyset',
+  },
+  {
+    title: 'The check-in',
+    text: 'The tutor generates a one-time code. Both devices confirm it; the timer only starts after both parties match.',
+    image: '/illustrations/classroom.svg',
+    alt: 'Students working in a classroom',
+    position: 'center 50%',
+    credit: 'Classroom · Storyset',
+  },
+  {
+    title: 'The hour',
+    text: 'The session runs on the clock. Ending it opens the wrap-up: notes for the record, a rating from the learner.',
+    image: '/illustrations/learning-bro.svg',
+    alt: 'A student studying at a desk with a laptop',
+    position: 'center 50%',
+    credit: 'Learning · Storyset',
+  },
+  {
+    title: 'The entry',
+    text: 'Fifty points post to the tutor’s ledger; the learner earns 25 attendance points. Referral hours burn down by the hour.',
+    image: '/illustrations/graduation.svg',
+    alt: 'A graduate in cap and gown holding a diploma',
+    position: 'center 30%',
+    credit: 'Graduation · Storyset',
+  },
+];
+
+const FAQS = [
+  {
+    q: 'Who can become a tutor?',
+    a: 'Currently enrolled students who pass the qualification exam and are approved by the superadmin. Supporting documents — grades, honors, certificates — are part of the application and stay attached to the record.',
+  },
+  {
+    q: 'How is a session verified?',
+    a: 'The tutor generates a one-time code. The learner enters it on their device, and the tutor confirms on theirs. The timer starts only after both confirmations, so a session cannot be logged from one side alone.',
+  },
+  {
+    q: 'How do points work?',
+    a: 'A wrapped-up session credits 50 community points to the tutor’s ledger and 25 attendance points to the learner’s. The ledger is append-only: entries are never quietly edited or deleted.',
+  },
+  {
+    q: 'What can points buy?',
+    a: 'Campus perks, merchandise, and event passes from the rewards catalog. Stock and balances are live, and every redemption issues a claim voucher with a unique code.',
+  },
+  {
+    q: 'What happens to a faculty referral?',
+    a: 'It moves from flagged, to assigned, to in progress, to resolved as tutoring hours are completed. The learner sees the remaining hours on their dashboard; the faculty board follows the same record.',
+  },
+  {
+    q: 'Who can see my record?',
+    a: 'Learners see their own sessions, referrals, and progress. Tutors see their own sessions and ledger. Faculty see the referrals they create; the superadmin sees institution totals and pending applications.',
+  },
+];
+
+const ILLUSTRATION_CREDITS = [
+  {
+    title: 'Teacher · Student',
+    by: 'Storyset (Freepik Labs)',
+    licence: 'free illustration',
+    href: 'https://storyset.com/education',
+  },
+  {
+    title: 'College students',
+    by: 'Storyset (Freepik Labs)',
+    licence: 'free illustration',
+    href: 'https://storyset.com/education',
+  },
+  {
+    title: 'Classroom',
+    by: 'Storyset (Freepik Labs)',
+    licence: 'free illustration',
+    href: 'https://storyset.com/education',
+  },
+  {
+    title: 'E-learning',
+    by: 'Storyset (Freepik Labs)',
+    licence: 'free illustration',
+    href: 'https://storyset.com/education',
+  },
+  {
+    title: 'Back to school',
+    by: 'Storyset (Freepik Labs)',
+    licence: 'free illustration',
+    href: 'https://storyset.com/education',
+  },
+  {
+    title: 'Learning',
+    by: 'Storyset (Freepik Labs)',
+    licence: 'free illustration',
+    href: 'https://storyset.com/education',
+  },
+  {
+    title: 'Graduation',
+    by: 'Storyset (Freepik Labs)',
+    licence: 'free illustration',
+    href: 'https://storyset.com/education',
+  },
+];
+
+const fmt = (value) => new Intl.NumberFormat('en-US').format(Number(value) || 0);
+const fmtHours = (value) => {
+  const hours = Number(value) || 0;
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(hours);
+};
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
 export default function LandingPage({ onLogin }) {
   const [showLogin, setShowLogin] = useState(false);
-  const [loginRole, setLoginRole] = useState('');
+  const [loginRole, setLoginRole] = useState('learner');
   const [loading, setLoading] = useState(false);
-  const [schoolId, setSchoolId] = useState(''); // school ID (e.g. TE-128) or email
+  const [schoolId, setSchoolId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [scrolled, setScrolled] = useState(false);
+  const [overview, setOverview] = useState(null);
+  const [overviewFailed, setOverviewFailed] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [railProgress, setRailProgress] = useState(0);
+  const railRef = useRef(null);
+  const tickerRef = useRef(null);
+  const stageRef = useRef(null);
 
-  const { scrollYProgress } = useScroll();
-  const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
+  const totals = overview?.totals ?? null;
+  const subjects = overview?.subjects ?? [];
+  const honorRoll = overview?.tutors ?? [];
+  const chosenSubject = subjects.find(s => s.code === selectedSubject) ?? null;
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    let cancelled = false;
+    api.get('/public/overview')
+      .then(data => { if (!cancelled) setOverview(data); })
+      .catch(() => { if (!cancelled) setOverviewFailed(true); });
+    return () => { cancelled = true; };
   }, []);
 
-  const openLogin = (role, loginId) => {
-    setLoginRole(role || '');
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return undefined;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return undefined;
+    const onMove = (event) => {
+      const rect = stage.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const x = (event.clientX - rect.left) / rect.width - 0.5;
+      const y = (event.clientY - rect.top) / rect.height - 0.5;
+      stage.style.setProperty('--tilt-x', `${(-x * 24).toFixed(2)}deg`);
+      stage.style.setProperty('--tilt-y', `${(9 + y * 16).toFixed(2)}deg`);
+    };
+    const onLeave = () => {
+      stage.style.setProperty('--tilt-x', '-17deg');
+      stage.style.setProperty('--tilt-y', '9deg');
+    };
+    stage.addEventListener('pointermove', onMove);
+    stage.addEventListener('pointerleave', onLeave);
+    return () => {
+      stage.removeEventListener('pointermove', onMove);
+      stage.removeEventListener('pointerleave', onLeave);
+    };
+  }, []);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return undefined;
+    const update = () => {
+      const max = rail.scrollWidth - rail.clientWidth;
+      setRailProgress(max > 8 ? Math.round((rail.scrollLeft / max) * 100) : 100);
+    };
+    update();
+    rail.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      rail.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+
+  useEffect(() => {
+    const track = tickerRef.current;
+    if (!track) return undefined;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const distance = track.scrollWidth / 2;
+    if (!distance) return undefined;
+    const anim = animate(track, {
+      x: [0, -distance],
+      duration: Math.max(22000, distance * 26),
+      ease: 'linear',
+      loop: true,
+    });
+    return () => anim.pause();
+  }, [overview]);
+
+  useEffect(() => {
+    if (!showLogin) return undefined;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (event) => { if (event.key === 'Escape') closeLogin(); };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [showLogin]);
+
+  const openLogin = (role = 'learner') => {
+    setLoginRole(role);
     setShowLogin(true);
     setError('');
     setPassword('');
-    if (loginId) setSchoolId(loginId); else setSchoolId('');
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const closeLogin = () => {
+    setShowLogin(false);
     setError('');
+    setPassword('');
+  };
 
-    if (!schoolId || !password) {
-      setError('Please enter your School ID (or email) and password.');
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    setError('');
+    if (!schoolId.trim() || !password) {
+      setError('Enter your LCCB school ID (or email) and password.');
       return;
     }
-
     setLoading(true);
     try {
       const { token, user } = await api.post('/auth/login', { loginId: schoolId.trim(), password });
       saveSession(token, user);
       onLogin(user);
+      setShowLogin(false);
     } catch (err) {
-      setError(err.message || 'Login failed.');
+      setError(err.message || 'Sign in failed. Check your credentials.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Animation Variants
-  const fadeUp = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+  const scrollRail = (direction) => {
+    railRef.current?.scrollBy({ left: direction * 312, behavior: 'smooth' });
   };
 
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
+  const jumpTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  const tickerItems = [
+    'Live community ledger',
+    `${fmt(totals?.tutors)} verified tutors`,
+    `${fmtHours(totals?.hours)} hours on the record`,
+    `${fmt(totals?.points_issued)} points issued`,
+    'Every session double-confirmed',
+    'Referrals tracked to resolution',
+  ];
+
+  const reveal = {
+    initial: { opacity: 0, y: 16 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: '-60px' },
+    transition: { duration: 0.55, ease: 'easeOut' },
+  };
+
+  const subjectResult = (() => {
+    if (overviewFailed) return 'The ledger is offline. Sign in to read the course entries.';
+    if (!chosenSubject) return 'Pick a course to read its entry.';
+    const tutorCount = chosenSubject.tutors ?? 0;
+    const sessionCount = chosenSubject.sessions ?? 0;
+    return (
+      <>
+        <strong>{plural(tutorCount, 'accredited tutor', 'accredited tutors')}</strong> on file
+        <span className="sep"> · </span>
+        <strong>{plural(sessionCount, 'completed session', 'completed sessions')}</strong> logged
+        <span className="sep"> · </span>
+        {chosenSubject.department}
+      </>
+    );
+  })();
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-sans selection:bg-primary/20 selection:text-primary">
-      {/* Navbar */}
-      <motion.header 
-        className={`fixed top-0 w-full z-40 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-lg shadow-sm py-3' : 'bg-transparent py-5'}`}
-      >
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-black text-2xl tracking-tight text-primary">
-            <div className="bg-primary text-white p-1.5 rounded-lg shadow-md">
-              <BookOpen className="w-6 h-6" />
+    <div className="ledger-page">
+      {/* ── First screen: the ledger as an object ─────────────────────────── */}
+      <section className="ledger-hero" aria-labelledby="hero-title">
+        <div className="ledger-hero-grid">
+          <div className="ledger-card">
+            <div className="ledger-band" aria-hidden="true">
+              {Array.from({ length: 48 }).map((_, i) => <span key={i} />)}
             </div>
-            LCCB Academix
+            <span className="ledger-sticker" aria-hidden="true">Peer<br />verified</span>
+            <motion.div
+              className="ledger-card-inner"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+            >
+              <div className="ledger-wordmark">
+                <Logo3D
+                  className="ledger-monogram-3d"
+                  fallback={<span className="ledger-monogram">LCCB</span>}
+                />
+                <span>
+                  <strong>Academix</strong>
+                  <small>La Consolacion College Bacolod</small>
+                </span>
+              </div>
+              <h1 id="hero-title">Peer tutoring<br />that <span className="ledger-mark">counts.</span></h1>
+              <p className="ledger-summary">
+                Book a verified student tutor, check in together, and watch every hour
+                land on the official LCCB community ledger.
+              </p>
+              <button className="ledger-action" type="button" onClick={() => openLogin('learner')}>
+                Find a tutor <ArrowRight size={18} strokeWidth={2.2} />
+              </button>
+            </motion.div>
+            <motion.div
+              className="ledger-card-foot"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.25 }}
+            >
+              <p className="ledger-live">
+                <span className="ledger-live-dot" aria-hidden="true" />
+                {totals ? (
+                  <>
+                    Live ledger · <b>{fmt(totals.tutors)}</b> tutors
+                    <span className="sep">·</span> <b>{fmtHours(totals.hours)}</b> hours
+                    <span className="sep">·</span> <b>{fmt(totals.points_issued)}</b> points
+                  </>
+                ) : (
+                  <>Live ledger · reading the record…</>
+                )}
+              </p>
+              <div className="ledger-links">
+                <button className="ledger-link" type="button" onClick={() => openLogin('learner')}>Student sign in</button>
+                <button className="ledger-link" type="button" onClick={() => openLogin('tutor')}>Tutor portal</button>
+                <button className="ledger-link" type="button" onClick={() => openLogin('faculty')}>Faculty &amp; admin</button>
+              </div>
+            </motion.div>
           </div>
-          <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
-            <a href="#how-it-works" className="hover:text-primary transition-colors">How it Works</a>
-            <a href="#vision" className="hover:text-primary transition-colors">Vision</a>
-            <a href="#articles" className="hover:text-primary transition-colors">Articles</a>
-          </nav>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" className="hidden sm:flex text-slate-600 hover:text-primary font-semibold" onClick={() => openLogin('learner')}>
-              Student Login
-            </Button>
-            <Button className="rounded-full shadow-lg shadow-primary/20 font-bold px-6" onClick={() => openLogin('tutor')}>
-              Tutor Portal
-            </Button>
+
+          <div
+            className="ledger-hero-stage"
+            ref={stageRef}
+            aria-label="Interactive peer-tutoring scene: move your pointer to tilt the blocks"
+          >
+            <div className="hs-floor" aria-hidden="true" />
+            <div className="hs-sun" aria-hidden="true" />
+            <div className="hs-shadow hs-shadow-a" aria-hidden="true" />
+            <div className="hs-shadow hs-shadow-b" aria-hidden="true" />
+            <div className="hs-scene" aria-hidden="true">
+              {/* graduation cap with a swinging tassel */}
+              <div className="hs-w hs-cap">
+                <HsCube
+                  bare
+                  float="hs-bob-a"
+                  style={{ left: 5, top: 44 }}
+                  w={150}
+                  h={20}
+                  d={150}
+                  cF="#1E3D5C"
+                  cS="#1E3D5C"
+                  cT="var(--lg-gold)"
+                />
+                <HsCube
+                  bare
+                  float="hs-bob-a"
+                  style={{ left: 62, top: 20 }}
+                  w={26}
+                  h={26}
+                  d={26}
+                  cF="var(--lg-gold)"
+                  cS="var(--lg-gold)"
+                  cT="var(--lg-gold)"
+                />
+                <div className="hs-cap-tassel">
+                  <div className="hs-cap-swing">
+                    <HsCube
+                      bare
+                      style={{ left: 7, top: 0 }}
+                      w={12}
+                      h={52}
+                      d={12}
+                      cF="var(--lg-gold)"
+                      cS="var(--lg-gold)"
+                      cT="var(--lg-gold)"
+                    />
+                    <HsCube
+                      bare
+                      style={{ left: 0, top: 54 }}
+                      w={24}
+                      h={24}
+                      d={24}
+                      cF="var(--lg-gold)"
+                      cS="var(--lg-gold)"
+                      cT="var(--lg-gold)"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* the record: a stack of ledgers */}
+              <HsCube
+                name="hs-book1"
+                float="hs-bob-a"
+                w={168}
+                h={212}
+                d={74}
+                cF="var(--lg-gold)"
+                cS="var(--lg-navy)"
+                cT="var(--lg-paper)"
+                label="A+"
+              />
+              <HsCube
+                name="hs-book2"
+                float="hs-bob-b"
+                w={124}
+                h={44}
+                d={102}
+                cF="var(--lg-paper)"
+                cS="var(--lg-gold)"
+                cT="var(--lg-navy)"
+                label="LCCB"
+              />
+
+              {/* one-on-one, on the clock */}
+              <HsCube
+                name="hs-clock"
+                float="hs-bob-b"
+                w={112}
+                h={112}
+                d={34}
+                cF="var(--lg-paper)"
+                cS="var(--lg-gold)"
+                cT="var(--lg-navy)"
+                label="1:1"
+              />
+
+              {/* honor-roll star */}
+              <HsCube
+                name="hs-star"
+                float="hs-bob-a"
+                w={82}
+                h={82}
+                d={28}
+                cF="var(--lg-gold)"
+                cS="var(--lg-paper)"
+                cT="var(--lg-navy)"
+              />
+
+              {/* session points in coins */}
+              <div className="hs-w hs-coins">
+                <HsCube
+                  bare
+                  float="hs-bob-b"
+                  style={{ left: -4, top: -26, '--rx': '0deg', '--ry': '0deg' }}
+                  w={96}
+                  h={28}
+                  d={96}
+                  cF="var(--lg-gold)"
+                  cS="var(--lg-navy)"
+                  cT="var(--lg-gold)"
+                />
+                <HsCube
+                  bare
+                  float="hs-bob-b"
+                  style={{ left: 2, top: 0, animationDelay: '0.45s', '--rx': '0deg', '--ry': '0deg' }}
+                  w={96}
+                  h={28}
+                  d={96}
+                  cF="var(--lg-gold)"
+                  cS="var(--lg-navy)"
+                  cT="var(--lg-paper)"
+                />
+                <HsCube
+                  bare
+                  float="hs-bob-b"
+                  style={{ left: -2, top: 26, animationDelay: '0.9s', '--rx': '0deg', '--ry': '0deg' }}
+                  w={96}
+                  h={28}
+                  d={96}
+                  cF="var(--lg-gold)"
+                  cS="var(--lg-navy)"
+                  cT="var(--lg-paper)"
+                />
+              </div>
+
+              {/* subject letter tiles, stacked like a stairway */}
+              <div className="hs-w hs-math">
+                {['M', 'A', 'T', 'H'].map((ch, i) => (
+                  <HsCube
+                    key={ch}
+                    bare
+                    float="hs-bob-b"
+                    style={{
+                      left: i * 57,
+                      top: i * 27,
+                      animationDelay: `${i * 0.5}s`,
+                      '--rx': '-10deg',
+                      '--ry': '-24deg',
+                      '--tz': '26px',
+                    }}
+                    w={54}
+                    h={54}
+                    d={18}
+                    cF="var(--lg-paper)"
+                    cS="var(--lg-gold)"
+                    cT="var(--lg-navy)"
+                    label={ch}
+                  />
+                ))}
+              </div>
+
+              <div className="hs-chip hs-chip-pts">+50 pts</div>
+              <div className="hs-chip hs-chip-role">TUTOR</div>
+            </div>
+            <div className="ledger-photo-stamp">
+              LCCB, on the record.
+              <span>Move your pointer — the blocks tilt. No photos, just brutalist 3D.</span>
+            </div>
           </div>
         </div>
-      </motion.header>
+      </section>
 
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-        {/* Background Blobs */}
-        <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-            
-            {/* Hero Content */}
-            <motion.div 
-              initial="hidden" 
-              animate="visible" 
-              variants={staggerContainer}
-              className="max-w-2xl"
-            >
-              <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-sm text-sm font-semibold text-slate-600 mb-6">
-                <Sparkles className="w-4 h-4 text-secondary" />
-                <span>The Official Peer Tutoring Platform of LCCB</span>
-              </motion.div>
-              
-              <motion.h1 variants={fadeUp} className="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight mb-6">
-                Master your subjects <br className="hidden lg:block" />
-                with <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">Peer Learning.</span>
-              </motion.h1>
-              
-              <motion.p variants={fadeUp} className="text-lg lg:text-xl text-slate-600 mb-8 leading-relaxed max-w-lg">
-                Connect with verified, top-performing student tutors. Get the help you need, exactly when you need it, and achieve your academic goals together.
-              </motion.p>
-              
-              <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/25" onClick={() => openLogin('learner')}>
-                  Find a Tutor <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-                <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full bg-white hover:bg-slate-50" onClick={() => openLogin('tutor')}>
-                  Apply as Tutor
-                </Button>
-              </motion.div>
+      <div className="ledger-ticker" aria-hidden="true">
+        <div className="ledger-ticker-track" ref={tickerRef}>
+          {[0, 1].map(run => (
+            <div className="ledger-ticker-run" key={run}>
+              {tickerItems.map(item => (
+                <span className="ledger-ticker-item" key={item}>
+                  {item}<i>/</i>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
 
-              <motion.div variants={fadeUp} className="mt-10 flex items-center gap-6 text-sm font-medium text-slate-500">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3, 4].map(i => (
-                    <img key={i} src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="Student" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
+      {/* ── 1. Capabilities as a printed menu ─────────────────────────────── */}
+      <section id="ledger" className="ledger-section ledger-field-navy">
+        <motion.div {...reveal}>
+          <div className="ledger-menu-sheet">
+            <h2>What’s on the ledger</h2>
+            <div className="ledger-menu-groups">
+              {MENU_GROUPS.map(group => (
+                <div className="ledger-menu-group" key={group.name}>
+                  <h3>{group.name}</h3>
+                  {group.items.map(item => (
+                    <div className="ledger-menu-row" key={item.name}>
+                      <span className="name">{item.name}</span>
+                      <span className="leader" aria-hidden="true" />
+                      <span className="value">{item.value}</span>
+                      <span className="desc">{item.desc}</span>
+                    </div>
                   ))}
                 </div>
-                <div>
-                  <div className="flex items-center gap-1 text-secondary mb-0.5">
-                    {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-4 h-4 fill-current" />)}
-                  </div>
-                  <p>Trusted by 500+ LCCB Students</p>
-                </div>
-              </motion.div>
-            </motion.div>
+              ))}
+            </div>
 
-            {/* Hero Image / Visuals */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative lg:ml-auto"
-            >
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border-8 border-white bg-white w-full max-w-lg mx-auto">
-                <img 
-                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
-                  alt="Students studying together" 
-                  className="w-full aspect-[4/5] object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
-                
-                {/* Overlay Text */}
-                <div className="absolute bottom-0 left-0 p-8 w-full">
-                  <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl text-white">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center shrink-0">
-                        <CheckCircle2 className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm">Session Completed</p>
-                        <p className="text-xs text-white/80">Intro to Programming</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating Stat Card */}
-              <motion.div 
-                animate={{ y: [-10, 10, -10] }} 
-                transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }} 
-                className="absolute -right-6 top-1/4 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-4 z-20"
+            <div className="ledger-lookup">
+              <label htmlFor="course-lookup">Check a course</label>
+              <select
+                id="course-lookup"
+                value={selectedSubject}
+                onChange={(event) => setSelectedSubject(event.target.value)}
+                disabled={!overview}
               >
-                <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="font-extrabold text-2xl text-slate-900">98%</p>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pass Rate</p>
-                </div>
-              </motion.div>
-            </motion.div>
+                <option value="">
+                  {overviewFailed ? 'Ledger unavailable' : overview ? 'Choose a course code' : 'Reading the ledger…'}
+                </option>
+                {subjects.map(subject => (
+                  <option key={subject.code} value={subject.code}>
+                    {subject.code} — {subject.name}
+                  </option>
+                ))}
+              </select>
+              <p className="ledger-lookup-result" aria-live="polite">{subjectResult}</p>
+            </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-10 border-y border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-slate-100">
-            {[
-              { label: 'Active Students', value: '500+' },
-              { label: 'Certified Tutors', value: '45+' },
-              { label: 'Subjects Covered', value: '24' },
-              { label: 'Hours Tutored', value: '1,200+' },
-            ].map((stat, i) => (
-              <div key={i} className="text-center px-4">
-                <p className="text-3xl lg:text-4xl font-extrabold text-primary mb-1">{stat.value}</p>
-                <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section id="how-it-works" className="py-24 bg-[#F8FAFC]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">How Academix Works</h2>
-            <p className="text-lg text-slate-600">A seamless process designed to get you the academic support you need quickly and securely.</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 relative">
-            {/* Connecting line for desktop */}
-            <div className="hidden md:block absolute top-12 left-1/6 right-1/6 h-0.5 bg-slate-200 -z-10" />
-            
-            {[
-              { icon: Search, title: '1. Request a Session', desc: 'Tell us what subject you need help with and your availability.' },
-              { icon: Users, title: '2. Get Matched', desc: 'Our algorithm pairs you with a verified, top-performing student tutor.' },
-              { icon: GraduationCap, title: '3. Learn & Grow', desc: 'Meet in-person at the library or online. Improve your grades together.' },
-            ].map((step, i) => (
-              <motion.div 
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-50px" }}
-                variants={fadeUp}
-                key={i} 
-                className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 relative group hover:shadow-md transition-shadow"
-              >
-                <div className="w-16 h-16 bg-primary text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-                  <step.icon className="w-8 h-8" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">{step.title}</h3>
-                <p className="text-slate-600 leading-relaxed">{step.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Vision & Mission */}
-      <section id="vision" className="py-24 bg-white relative overflow-hidden">
-        <div className="absolute right-0 top-0 w-1/3 h-full bg-slate-50 -skew-x-12 translate-x-20 -z-10" />
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+      {/* ── 2. How it’s filed — a horizontal row of moments ───────────────── */}
+      <section id="how-it-works" className="ledger-section ledger-field-paper" aria-labelledby="how-title">
+        <motion.div {...reveal}>
+          <div className="ledger-row-head">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">Our Core Philosophy</h2>
-              <p className="text-lg text-slate-600 mb-10 leading-relaxed">
-                Guided by the values of La Consolacion College Bacolod, we strive for academic excellence through community support and shared responsibility.
+              <h2 id="how-title">How it’s filed</h2>
+              <p style={{ color: 'var(--lg-muted)', fontSize: 16, margin: '10px 0 0', maxWidth: '38ch' }}>
+                Six moments, one record. Drag the row or use the arrows.
               </p>
-              
-              <div className="space-y-8">
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0 mt-1">
-                    <Target className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">Our Vision</h3>
-                    <p className="text-slate-600 leading-relaxed">A collaborative and thriving academic community where every student has the peer guidance needed to excel in their chosen fields.</p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shrink-0 mt-1">
-                    <ShieldCheck className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">Our Mission</h3>
-                    <p className="text-slate-600 leading-relaxed">To provide an accessible, high-quality peer tutoring platform that connects struggling students with verified, top-performing peers.</p>
-                  </div>
-                </div>
-              </div>
             </div>
-            
-            <div className="relative">
-              <div className="grid grid-cols-2 gap-4">
-                <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80" alt="Students" className="rounded-2xl w-full h-64 object-cover mt-12 shadow-lg" />
-                <img src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=600&q=80" alt="Library" className="rounded-2xl w-full h-64 object-cover shadow-lg" />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent rounded-2xl pointer-events-none mix-blend-overlay" />
+            <div className="ledger-row-buttons">
+              <button className="ledger-square-btn" type="button" aria-label="Previous moments" onClick={() => scrollRail(-1)}>
+                <ArrowLeft size={20} strokeWidth={1.7} />
+              </button>
+              <button className="ledger-square-btn" type="button" aria-label="Next moments" onClick={() => scrollRail(1)}>
+                <ArrowRight size={20} strokeWidth={1.7} />
+              </button>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Articles */}
-      <section id="articles" className="py-24 bg-[#F8FAFC]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
-            <div className="max-w-2xl">
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Latest Campus Articles</h2>
-              <p className="text-lg text-slate-600">Tips, news, and success stories from the LCCB Academix community.</p>
-            </div>
-            <Button variant="outline" className="shrink-0 bg-white hover:bg-slate-50">
-              View All Articles <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
+          <div className="ledger-progress" aria-hidden="true">
+            <span style={{ width: `${Math.max(6, railProgress)}%` }} />
           </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {ARTICLES.map((article, i) => (
-              <motion.div 
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-50px" }}
-                variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { delay: i * 0.1 } } }}
-                key={article.id} 
-              >
-                <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-none bg-white overflow-hidden h-full flex flex-col">
-                  <div className="h-52 bg-slate-200 overflow-hidden relative">
-                    <img 
-                      src={article.img} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                      alt={article.title}
-                    />
-                    <div className="absolute top-4 left-4">
-                      <span className="bg-white/90 backdrop-blur text-slate-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
-                        {article.category}
-                      </span>
-                    </div>
-                  </div>
-                  <CardContent className="p-6 flex-1 flex flex-col">
-                    <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-3">
-                      <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {article.date}</span>
-                      <span className="flex items-center gap-1.5"><BookMarked className="w-3.5 h-3.5" /> {article.readTime}</span>
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-primary transition-colors leading-snug mb-4">
-                      {article.title}
-                    </h3>
-                    <div className="mt-auto flex items-center text-primary font-semibold text-sm group-hover:gap-2 transition-all">
-                      Read Article <ArrowRight className="w-4 h-4 ml-1" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+          <div className="ledger-rail" ref={railRef}>
+            {STEPS.map(step => (
+              <article className="ledger-step" key={step.title}>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+                <figure>
+                  <img
+                    src={step.image}
+                    alt={step.alt}
+                    loading="lazy"
+                    style={{ objectPosition: step.position }}
+                  />
+                  <figcaption>{step.credit}</figcaption>
+                </figure>
+              </article>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-primary" />
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=2000&q=80')] opacity-10 mix-blend-overlay bg-cover bg-center" />
-        <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
-          <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6">Ready to improve your grades?</h2>
-          <p className="text-primary-foreground/80 text-lg md:text-xl mb-10 max-w-2xl mx-auto">
-            Join hundreds of LCCB students who are already learning together. Registration is free for all officially enrolled students.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button size="lg" variant="secondary" className="h-14 px-8 text-lg font-bold" onClick={() => openLogin('learner')}>
-              Find a Tutor Now
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-slate-900 py-12 text-slate-400">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 grid md:grid-cols-4 gap-8">
-          <div className="col-span-2">
-            <div className="flex items-center gap-2 font-bold text-xl text-white mb-4">
-              <BookOpen className="w-6 h-6 text-primary" />
-              LCCB Academix
+      {/* ── 3. Proof as a printed honor roll ──────────────────────────────── */}
+      <section id="proof" className="ledger-proof" aria-labelledby="proof-title">
+        <motion.div {...reveal}>
+          <div className="ledger-section-head">
+            <div>
+              <h2 id="proof-title">On the record</h2>
+              <p>This term’s tutor balances, read live from the ledger.</p>
             </div>
-            <p className="text-sm max-w-sm leading-relaxed mb-6">
-              The official peer tutoring platform of La Consolacion College Bacolod. Empowering students through collaborative learning.
+          </div>
+          <div className="ledger-proof-stage">
+            <article className="ledger-proof-card">
+              <h2>This term’s honor roll</h2>
+              <img
+                className="ledger-proof-photo"
+                src="/illustrations/graduation.svg"
+                alt="An LCCB graduate receives a diploma at commencement"
+                loading="lazy"
+                width="1600"
+                height="900"
+              />
+              <div className="ledger-proof-names">
+                {honorRoll.length === 0 ? (
+                  <p className="ledger-proof-row">{overviewFailed ? 'The ledger is offline.' : 'Reading the ledger…'}</p>
+                ) : honorRoll.map(tutor => (
+                  <span className="ledger-proof-row" key={tutor.name}>
+                    {tutor.name}
+                    <span className="dot">·</span>
+                    {tutor.program || 'LCCB'}
+                    <span className="dot">·</span>
+                    <span className="pts">{fmt(tutor.points)} pts</span>
+                  </span>
+                ))}
+              </div>
+              <p className="ledger-proof-note">
+                {totals
+                  ? `${fmt(totals.tutors)} verified tutors · ${plural(totals.sessions, 'completed session', 'completed sessions')}`
+                  : 'Balances post after each wrap-up.'}
+              </p>
+            </article>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ── 4. Questions beside a tall photograph ─────────────────────────── */}
+      <section id="faq" className="ledger-section ledger-field-paper" aria-labelledby="faq-title">
+        <div className="ledger-faq-grid">
+          <motion.div {...reveal}>
+            <div className="ledger-faq-left">
+              <h2 id="faq-title">Before you book</h2>
+              <div className="ledger-faq-facts">
+                <p><span>Where · </span>Library study rooms</p>
+                <p><span>When · </span>By appointment, set at booking</p>
+                <p><span>Cost · </span>Free for enrolled students</p>
+              </div>
+            </div>
+
+            <div className="ledger-faq-list">
+              {FAQS.map((item, index) => (
+                <details className="ledger-faq-item" key={item.q} open={index === 0}>
+                  <summary>
+                    {item.q}
+                    <span className="ledger-faq-chevron" aria-hidden="true" />
+                  </summary>
+                  <p>{item.a}</p>
+                </details>
+              ))}
+            </div>
+
+            <div className="ledger-faq-actions">
+              <button className="ledger-action" type="button" onClick={() => openLogin('learner')} style={{ marginTop: 0, height: 52 }}>
+                Find a tutor <ArrowRight size={18} strokeWidth={1.7} />
+              </button>
+              <button className="ledger-link" type="button" onClick={() => jumpTo('ledger')}>
+                Read the ledger again
+              </button>
+            </div>
+          </motion.div>
+
+          <motion.div {...reveal} className="ledger-faq-photos">
+            <img
+              className="ledger-faq-tall"
+              src="/illustrations/classroom.svg"
+              alt="Students working in a classroom"
+              loading="lazy"
+              width="800"
+              height="1066"
+            />
+            <img
+              className="ledger-faq-square"
+              src="/illustrations/back-to-school.svg"
+              alt="Students with books and a backpack"
+              loading="lazy"
+              width="600"
+              height="600"
+            />
+            <p className="ledger-photo-credit">
+              Flat illustrations from Storyset (freepik labs), free for personal and commercial use.
             </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── 5. The reply card ─────────────────────────────────────────────── */}
+      <section id="sign-in" className="ledger-cta" aria-labelledby="cta-title">
+        <motion.div {...reveal} className="ledger-cta-grid">
+          <p className="ledger-cta-note">
+            Help becomes a record.
+          </p>
+          <div className="ledger-reply-card">
+            <h2 id="cta-title">Start your first entry.</h2>
+            <p>Sign in with your LCCB school ID. Booking, check-in, and points are already wired.</p>
+            <button className="ledger-action" type="button" onClick={() => openLogin('learner')}>
+              Go to sign in <ArrowRight size={18} strokeWidth={1.7} />
+            </button>
+            <p className="ledger-reply-small">Official use · La Consolacion College Bacolod</p>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ── Back of the object ────────────────────────────────────────────── */}
+      <footer className="ledger-footer">
+        <div className="ledger-footer-grid">
+          <div>
+            <h3>LCCB Academix</h3>
+            <p>
+              The official faculty-guided peer tutoring and incentive ledger of
+              La Consolacion College Bacolod.
+            </p>
+            <p style={{ marginTop: 12 }}>Bacolod City, Negros Occidental, Philippines</p>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-4">Platform</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-white transition-colors">Find a Tutor</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Become a Tutor</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">How it Works</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Rewards Catalog</a></li>
-            </ul>
+            <p className="footer-label">The object</p>
+            <div className="ledger-footer-links">
+              <button type="button" onClick={() => jumpTo('ledger')}>What’s on the ledger</button>
+              <button type="button" onClick={() => jumpTo('how-it-works')}>How it’s filed</button>
+              <button type="button" onClick={() => jumpTo('proof')}>On the record</button>
+              <button type="button" onClick={() => jumpTo('faq')}>Before you book</button>
+              <button type="button" onClick={() => openLogin('learner')}>Sign in</button>
+            </div>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-4">Support</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Guidelines</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Contact IT Dept</a></li>
-            </ul>
+            <p className="footer-label">Illustrations</p>
+            <div className="ledger-credits">
+              {ILLUSTRATION_CREDITS.map(credit => (
+                <p className="ledger-credit" key={credit.title}>
+                  <a href={credit.href} target="_blank" rel="noreferrer">{credit.title}</a>
+                  {' '}— {credit.by}, {credit.licence}.
+                </p>
+              ))}
+              <p className="ledger-credit" style={{ marginTop: 4 }}>
+                Flat illustrations from Storyset (freepik labs), free for personal and commercial use.
+              </p>
+            </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-12 pt-8 border-t border-slate-800 text-sm flex flex-col md:flex-row justify-between items-center gap-4">
-          <p>© 2026 La Consolacion College Bacolod. All rights reserved.</p>
-          <div className="flex gap-4">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-          </div>
+        <div className="ledger-fineprint">
+          <span>© 2026 La Consolacion College Bacolod. All rights reserved.</span>
+          <span>Ledger live · built for the LCCB community</span>
         </div>
       </footer>
 
-      {/* Login Modal */}
+      {/* ── Sign-in slip ──────────────────────────────────────────────────── */}
       <AnimatePresence>
         {showLogin && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
-              onClick={() => setShowLogin(false)}
-            />
+          <motion.div
+            className="login-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeLogin}
+          >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative z-10 w-full max-w-md"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="login-title"
+              className="login-sheet"
+              initial={{ opacity: 0, y: 16, scale: 0.985 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.985 }}
+              transition={{ duration: 0.18 }}
+              onClick={(event) => event.stopPropagation()}
             >
-              <Card className="shadow-2xl border-none overflow-hidden rounded-2xl">
-                <div className={`h-2 w-full ${loginRole === 'tutor' ? 'bg-secondary' : 'bg-primary'}`} />
-                <CardContent className="p-8 bg-white">
-                  <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-slate-400 hover:bg-slate-100 hover:text-slate-900 rounded-full" onClick={() => setShowLogin(false)}>
-                    <X className="w-5 h-5" />
-                  </Button>
-                  
-                  <div className="text-center mb-8">
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${loginRole === 'tutor' ? 'bg-secondary/10 text-secondary' : 'bg-primary/10 text-primary'}`}>
-                      {loginRole === 'tutor' ? <GraduationCap className="w-8 h-8" /> : <Users className="w-8 h-8" />}
-                    </div>
-                    <h2 className="text-2xl font-extrabold text-slate-900">
-                      {loginRole === 'tutor' ? 'Tutor Portal' : loginRole === 'superadmin' ? 'Superadmin Portal' : loginRole === 'faculty' ? 'Faculty Portal' : 'Student Login'}
-                    </h2>
-                    <p className="text-slate-500 mt-1.5 text-sm font-medium">Please enter your LCCB credentials.</p>
-                  </div>
+              <div className="login-sheet-band" aria-hidden="true">
+                {Array.from({ length: 20 }).map((_, i) => <span key={i} />)}
+              </div>
+              <div className="login-sheet-body">
+                <button className="login-close" type="button" onClick={closeLogin} aria-label="Close sign in">
+                  <X size={20} strokeWidth={1.6} />
+                </button>
+                <p className="login-wordmark">LCCB Academix</p>
+                <h2 id="login-title">{ROLE_TITLES[loginRole]}</h2>
+                <p className="login-sub">Use your LCCB school ID or email.</p>
 
-                  <form onSubmit={handleLogin} className="space-y-5">
-                    <AnimatePresence>
-                      {error && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                          <div className="p-3 bg-red-50 text-red-600 text-sm font-medium rounded-xl text-center border border-red-100">
-                            {error}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">School ID or Email</label>
-                      <div className="relative">
-                        <User className="absolute left-3.5 top-3.5 h-5 w-5 text-slate-400" />
-                        <Input
-                          placeholder="e.g. TE-128 or email"
-                          autoComplete="username"
-                          className="pl-11 bg-slate-50 border-slate-200 h-12 text-lg focus-visible:ring-primary/20 focus-visible:border-primary transition-all"
-                          value={schoolId}
-                          onChange={(e) => setSchoolId(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="flex justify-between mb-2">
-                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Password</label>
-                        <a href="#" className="text-xs font-semibold text-primary hover:underline">Forgot?</a>
-                      </div>
-                      <div className="relative">
-                        <Lock className="absolute left-3.5 top-3.5 h-5 w-5 text-slate-400" />
-                        <Input 
-                          type="password" 
-                          placeholder="••••••••" 
-                          className="pl-11 bg-slate-50 border-slate-200 h-12 text-lg focus-visible:ring-primary/20 focus-visible:border-primary transition-all"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <Button 
-                      type="submit" 
-                      className={`w-full h-12 text-lg font-bold shadow-lg transition-all ${loginRole === 'tutor' ? 'bg-secondary hover:bg-secondary/90 shadow-secondary/20 text-secondary-foreground' : 'shadow-primary/20'}`} 
-                      disabled={loading}
+                <div className="login-roles" role="group" aria-label="Sign-in type">
+                  {Object.entries(ROLE_TITLES).map(([role, title]) => (
+                    <button
+                      key={role}
+                      type="button"
+                      className={`login-role${loginRole === role ? ' active' : ''}`}
+                      onClick={() => setLoginRole(role)}
                     >
-                      {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
-                    </Button>
-                  </form>
-                  
-                  <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Demo Accounts</p>
-                    {DEMO_ACCOUNTS.length > 0 && (
-                      <div className="grid grid-cols-2 gap-2">
-                        {DEMO_ACCOUNTS.map(d => (
-                          <button
-                            key={d.role}
-                            type="button"
-                            className="text-xs border border-slate-200 rounded-lg px-2 py-2 hover:bg-slate-50 transition-colors"
-                            onClick={() => { setLoginRole(d.role); setSchoolId(d.loginId); setPassword('demo1234'); }}
-                          >
-                            <span className="block font-bold text-slate-700 capitalize">{d.role}</span>
-                            <span className="block text-slate-400">{d.label}</span>
-                          </button>
-                        ))}
-                      </div>
+                      {title.replace(' sign in', '')}
+                    </button>
+                  ))}
+                </div>
+
+                <form className="login-form" onSubmit={handleLogin}>
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="login-error">{error}</div>
+                      </motion.div>
                     )}
-                    <p className="text-xs text-slate-400 mt-3"><strong className="text-slate-600">Password for all demo users:</strong> demo1234</p>
+                  </AnimatePresence>
+
+                  <div className="login-field">
+                    <label htmlFor="school-id">School ID or email</label>
+                    <input
+                      id="school-id"
+                      className="login-input"
+                      placeholder="TE-128 or name@lccbacolod.edu.ph"
+                      autoComplete="username"
+                      value={schoolId}
+                      onChange={(event) => setSchoolId(event.target.value)}
+                    />
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="login-field">
+                    <label htmlFor="password">Password</label>
+                    <input
+                      id="password"
+                      className="login-input"
+                      type="password"
+                      placeholder="Your password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                    />
+                  </div>
+
+                  <button className="login-submit" type="submit" disabled={loading}>
+                    {loading ? <Loader2 size={18} className="animate-spin" /> : null}
+                    {loading ? 'Signing in…' : 'Sign in'}
+                  </button>
+                </form>
+
+                {DEMO_ACCOUNTS.length > 0 && (
+                  <div className="login-demo">
+                    <p>Demo accounts — tap to fill</p>
+                    <div className="login-demo-grid">
+                      {DEMO_ACCOUNTS.map(account => (
+                        <button
+                          key={account.role}
+                          type="button"
+                          onClick={() => {
+                            setLoginRole(account.role);
+                            setSchoolId(account.loginId);
+                            setPassword('demo1234');
+                            setError('');
+                          }}
+                        >
+                          <span>{account.role}</span>
+                          <small>{account.label}</small>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="login-hint">Password for all demo users: demo1234</p>
+                  </div>
+                )}
+              </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-// Custom Star component since it wasn't imported from lucide-react in the previous iteration
-function Star({ className }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
   );
 }

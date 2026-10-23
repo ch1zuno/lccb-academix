@@ -1,11 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Badge } from '../components/ui/badge';
-import { Search, UserPlus, AlertTriangle, CheckCircle2, Shield, Loader2 } from 'lucide-react';
+import { Search, Loader2, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cn } from '../lib/utils';
 import api from '../api';
+
+const URGENCIES = [
+  { value: 'low', label: 'Low', desc: 'Watch it for now.', dot: 'bg-ink/30' },
+  { value: 'medium', label: 'Medium', desc: 'Needs a plan this month.', dot: 'bg-amber' },
+  { value: 'high', label: 'High', desc: 'Falling behind now.', dot: 'bg-crimson' },
+];
+
+const initials = (name = '') => name.split(' ').filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase();
+
+const STEP_LABELS = { 1: 'Student', 2: 'Referral details', 3: 'Review' };
+
+function StudentRow({ student, onSelect }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(student)}
+      className="flex w-full items-center gap-3 border-b border-ink/15 px-1 py-3 text-left transition-colors last:border-0 hover:bg-gold/25"
+    >
+      <span className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-[#fff7d6] text-[13px] font-bold text-ink">
+        {initials(student.name)}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[14px] font-bold text-ink">{student.name}</span>
+        <span className="block truncate text-[13px] text-muted-foreground">{student.custom_id} · {student.program}</span>
+      </span>
+      <span className="border-2 border-ink bg-paper px-1.5 py-0.5 text-[13px] font-semibold text-ink">Select</span>
+    </button>
+  );
+}
 
 export default function FacultyReferral({ showToast, user }) {
   const [step, setStep] = useState(1);
@@ -17,31 +45,37 @@ export default function FacultyReferral({ showToast, user }) {
   const [hours, setHours] = useState(4);
   const [notes, setNotes] = useState('');
   const [subjects, setSubjects] = useState([]);
-  const [results, setResults] = useState([]); // live student search
-  const [everyone, setEveryone] = useState([]); // quick-pick chips
+  const [results, setResults] = useState([]);
+  const [everyone, setEveryone] = useState([]);
   const [searching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // subject dropdown lives in Postgres
   useEffect(() => {
     api.get('/subjects').then(({ subjects: rows }) => setSubjects(rows)).catch(() => setSubjects([]));
     api.get('/referrals/search-students', { q: 'a' }).then(({ students }) => setEveryone(students)).catch(() => {});
   }, []);
 
-  // debounced live student search
   useEffect(() => {
-    if (student.trim().length <= 2 || selectedStudent) return;
-    const t = setTimeout(() => {
+    if (student.trim().length <= 2 || selectedStudent) return undefined;
+    const timer = setTimeout(() => {
       setSearching(true);
       api.get('/referrals/search-students', { q: student.trim() })
         .then(({ students }) => setResults(students))
         .catch(() => setResults([]))
         .finally(() => setSearching(false));
     }, 300);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [student, selectedStudent]);
 
   const filteredStudents = student.length > 2 ? results : [];
+  const subjectLabel = subjects.find(s => s.id === selectedSubject)?.code ?? '—';
+  const selectedUrgencyLabel = URGENCIES.find(u => u.value === selectedUrgency)?.label;
+
+  const selectStudent = (value) => {
+    setSelectedStudent(value);
+    setStudent(value.name);
+    setStep(2);
+  };
 
   const handleRefer = async () => {
     if (!selectedStudent || !selectedSubject) return;
@@ -55,7 +89,7 @@ export default function FacultyReferral({ showToast, user }) {
         hoursRequired: Number(hours) || 4,
         notes: notes || null,
       });
-      showToast(`${selectedStudent.name} successfully referred for peer tutoring.`, 'success');
+      showToast(`${selectedStudent.name} was referred for peer tutoring.`, 'success');
       setStep(1);
       setStudent('');
       setSelectedStudent(null);
@@ -71,221 +105,224 @@ export default function FacultyReferral({ showToast, user }) {
     }
   };
 
-  const selectStudent = (s) => {
-    setSelectedStudent(s);
-    setStudent(s.name);
-    setStep(2);
-  };
-
   return (
-    <div className="max-w-2xl mx-auto py-8">
-      <div className="mb-8 flex items-center justify-between">
+    <div className="mx-auto w-full max-w-[780px]">
+      <div className="section-head">
         <div>
-          <h2 className="text-3xl font-bold text-primary">New Student Referral</h2>
-          <p className="text-sm text-muted-foreground mt-1">Referring as <span className="font-semibold text-charcoal">Mrs. Bethel Tisuela</span> — IT Department</p>
+          <h1 className="section-title">New referral</h1>
+          <p className="section-subtitle">
+            Nominate a student for peer tutoring. {user?.name ? `Signed in as ${user.name}.` : ''}
+          </p>
         </div>
-        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <span className={step >= 1 ? 'text-primary font-semibold' : ''}>1. Student</span>
-          <span className="text-border">/</span>
-          <span className={step >= 2 ? 'text-primary font-semibold' : ''}>2. Details</span>
-          <span className="text-border">/</span>
-          <span className={step >= 3 ? 'text-primary font-semibold' : ''}>3. Review</span>
-        </div>
+        <span className="border-2 border-ink bg-paper px-2 py-1 text-[13px] font-semibold text-ink">
+          Step <span className="num">{step}</span> of 3 · {STEP_LABELS[step]}
+        </span>
       </div>
 
-      <Card className="shadow-lg border-border">
-        <CardContent className="p-6">
-          {step === 1 && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-charcoal">Search Student</h3>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-                <Input 
-                  placeholder="Type student name or ID..." 
-                  className="pl-10 h-12 text-lg"
-                  value={student}
-                  onChange={(e) => { setStudent(e.target.value); setSelectedStudent(null); }}
+      <div className="mb-6 h-3 w-full border-2 border-ink bg-paper">
+        <motion.div
+          className="h-full bg-gold"
+          initial={false}
+          animate={{ width: `${(step / 3) * 100}%` }}
+          transition={{ duration: 0.25 }}
+        />
+      </div>
+
+      <div className="panel p-6">
+        {step === 1 && (
+          <div>
+            <h2 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Find the student</h2>
+            <p className="mt-1 text-[13px] text-muted-foreground">Search by name or school ID. At least three characters.</p>
+
+            <div className="relative mt-4">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.6} />
+              <Input
+                placeholder="e.g. Julian or TE-128"
+                className="pl-9"
+                value={student}
+                onChange={(event) => { setStudent(event.target.value); setSelectedStudent(null); }}
+              />
+            </div>
+
+            {searching && <p className="mt-3 text-[13px] text-muted-foreground">Searching the student file…</p>}
+
+            {filteredStudents.length > 0 && (
+              <div className="mt-3 border-t-2 border-ink">
+                {filteredStudents.map(row => <StudentRow key={row.id} student={row} onSelect={selectStudent} />)}
+              </div>
+            )}
+
+            {student.length > 2 && !searching && filteredStudents.length === 0 && (
+              <p className="mt-4 text-[13px] text-muted-foreground">No student matches “{student}”.</p>
+            )}
+
+            {student.length <= 2 && (
+              <div className="mt-6">
+                <p className="text-[13px] text-muted-foreground">Or pick from the current list</p>
+                <div className="mt-1 border-t-2 border-ink">
+                  {everyone.slice(0, 6).map(row => <StudentRow key={row.id} student={row} onSelect={selectStudent} />)}
+                  {everyone.length === 0 && <p className="py-6 text-[13px] text-muted-foreground">The student list is empty.</p>}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {step === 2 && (
+          <div>
+            <div className="flex items-center gap-3 border-b-2 border-ink pb-5">
+              <span className="grid h-10 w-10 place-items-center border-2 border-ink bg-gold text-[13px] font-bold shadow-[2px_2px_0_#0f2942]">
+                {initials(selectedStudent?.name || student)}
+              </span>
+              <div className="min-w-0">
+                <p className="truncate font-display text-[16px] font-bold text-ink">{selectedStudent?.name || student}</p>
+                <p className="text-[13px] text-muted-foreground">{selectedStudent?.program} · {selectedStudent?.custom_id}</p>
+              </div>
+              <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setStep(1)}>Change</Button>
+            </div>
+
+            <div className="mt-5 grid gap-4">
+              <div>
+                <label className="field-label" htmlFor="referral-subject">Subject</label>
+                <select
+                  id="referral-subject"
+                  className="select-field"
+                  value={selectedSubject}
+                  onChange={(event) => setSelectedSubject(event.target.value)}
+                >
+                  <option value="">Choose a course</option>
+                  {subjects.map(subject => (
+                    <option key={subject.id} value={subject.id}>{subject.code} — {subject.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="field-label" htmlFor="referral-topic">Topic or focus area</label>
+                <Input
+                  id="referral-topic"
+                  placeholder="e.g. Linked lists and recursion"
+                  value={topic}
+                  onChange={(event) => setTopic(event.target.value)}
                 />
               </div>
-              
-              {filteredStudents.length > 0 && (
-                <div className="border rounded-md divide-y divide-border max-h-[320px] overflow-auto">
-                  {filteredStudents.map(s => (
-                    <div key={s.id} className="p-4 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors" onClick={() => selectStudent(s)}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-sm">
-                          {s.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-charcoal">{s.name}</p>
-                          <p className="text-sm text-muted-foreground">ID: {s.custom_id} • {s.program}</p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm">Select</Button>
-                    </div>
+
+              <div>
+                <span className="field-label">Urgency</span>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {URGENCIES.map(option => (
+                    <label
+                      key={option.value}
+                      className={cn(
+                        'flex cursor-pointer items-start gap-2.5 border-2 border-ink p-3 transition-[background-color,box-shadow]',
+                        selectedUrgency === option.value ? 'bg-gold shadow-[3px_3px_0_#0f2942]' : 'bg-paper hover:bg-[#fff7d6]',
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="urgency"
+                        value={option.value}
+                        checked={selectedUrgency === option.value}
+                        onChange={() => setSelectedUrgency(option.value)}
+                        className="sr-only"
+                      />
+                      <span className={cn('mt-1 h-2 w-2 shrink-0 border border-ink', option.dot)} />
+                      <span>
+                        <span className="block text-[14px] font-bold text-ink">{option.label}</span>
+                        <span className="mt-0.5 block text-[13px] leading-snug text-muted-foreground">{option.desc}</span>
+                      </span>
+                      {selectedUrgency === option.value && <Check className="ml-auto h-3.5 w-3.5 shrink-0" strokeWidth={2} />}
+                    </label>
                   ))}
                 </div>
-              )}
-
-              {student.length > 2 && filteredStudents.length === 0 && (
-                <div className="text-center py-6 text-muted-foreground text-sm">
-                  No students found matching "{student}"
-                </div>
-              )}
-
-              {student.length <= 2 && (
-                <div className="text-center py-4">
-                  <p className="text-sm text-muted-foreground">Start typing at least 3 characters to search</p>
-                  <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                    {everyone.slice(0, 6).map(s => (
-                      <button key={s.id} onClick={() => selectStudent(s)} className="px-3 py-1.5 rounded-full text-xs font-medium border border-border hover:border-primary hover:bg-primary/5 transition-colors text-charcoal">
-                        {s.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-border">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
-                  {selectedStudent?.name.split(' ').map(n => n[0]).join('').slice(0, 2) || 'ST'}
-                </div>
-                <div>
-                  <p className="font-semibold text-charcoal">{selectedStudent?.name || student}</p>
-                  <p className="text-sm text-muted-foreground">{selectedStudent?.program || 'Student'} • {selectedStudent?.custom_id || ''}</p>
-                </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Subject / Course</label>
-                  <select 
-                    className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={selectedSubject}
-                    onChange={(e) => setSelectedSubject(e.target.value)}
-                  >
-                    <option value="">— Select a subject —</option>
-                    {subjects.map(s => (
-                      <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Topic / Focus Area</label>
+                  <label className="field-label" htmlFor="referral-hours">Recommended hours</label>
                   <Input
-                    placeholder="e.g. Struggling with linked lists"
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
+                    id="referral-hours"
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={hours}
+                    onChange={(event) => setHours(event.target.value)}
                   />
+                  <p className="mt-1 text-[13px] text-muted-foreground">One session is 1.5 hours.</p>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Urgency Level</label>
-                  <div className="flex gap-4">
-                    {[
-                      { value: 'low', label: 'Low', color: 'primary', hoverColor: 'primary' },
-                      { value: 'medium', label: 'Medium', color: 'amber', hoverColor: 'amber' },
-                      { value: 'high', label: 'High', color: 'crimson', hoverColor: 'crimson' },
-                    ].map(u => (
-                      <label key={u.value} className={`flex-1 border rounded-md p-3 flex items-center gap-2 cursor-pointer transition-all ${selectedUrgency === u.value ? `border-${u.color} bg-${u.color}/5 ring-1 ring-${u.color}/30` : `hover:border-${u.hoverColor}`}`}>
-                        <input type="radio" name="urgency" value={u.value} checked={selectedUrgency === u.value} onChange={() => setSelectedUrgency(u.value)} className="text-primary" />
-                        {u.label}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Mandatory Hours Recommended</label>
-                  <Input type="number" value={hours} onChange={(e) => setHours(e.target.value)} min={1} max={10} />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1">Notes for Tutor (Optional)</label>
-                  <textarea 
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary min-h-[100px]" 
-                    placeholder="Describe the student's specific struggles, missed topics, or recommended focus areas..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  />
+                <div className="flex items-end pb-1">
+                  <p className="text-[13px] text-muted-foreground">The board tracks hours completed against this target.</p>
                 </div>
               </div>
 
-              <div className="flex justify-between pt-4 border-t">
-                <Button variant="ghost" onClick={() => setStep(1)}>Back</Button>
-                <Button onClick={() => setStep(3)} disabled={!selectedSubject || !selectedUrgency || !selectedStudent}>Review Referral</Button>
+              <div>
+                <label className="field-label" htmlFor="referral-notes">Notes for the tutor (optional)</label>
+                <textarea
+                  id="referral-notes"
+                  className="textarea-field"
+                  placeholder="What is the student struggling with? What should the tutor focus on?"
+                  value={notes}
+                  onChange={(event) => setNotes(event.target.value)}
+                />
               </div>
             </div>
-          )}
 
-          {step === 3 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-              <div className="bg-amber/10 border border-amber/20 rounded-lg p-4 flex gap-3 text-amber-800">
-                <AlertTriangle className="w-5 h-5 shrink-0" />
-                <p className="text-sm font-medium">This will notify the student and add this referral to the centralized dashboard. An academic advisor will monitor the progress.</p>
-              </div>
+            <div className="mt-6 flex items-center justify-between gap-3 border-t-2 border-ink pt-5">
+              <Button variant="ghost" onClick={() => setStep(1)}>Back</Button>
+              <Button onClick={() => setStep(3)} disabled={!selectedSubject || !selectedUrgency || !selectedStudent}>
+                Review referral
+              </Button>
+            </div>
+          </div>
+        )}
 
-              <div className="border rounded-lg overflow-hidden">
-                <div className="bg-slate-50 p-4 border-b">
-                  <h4 className="font-semibold text-charcoal">Referral Summary</h4>
-                </div>
-                <div className="p-4 space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Student:</span>
-                    <span className="font-medium text-charcoal">{selectedStudent?.name || student}</span>
+        {step === 3 && (
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
+            <h2 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Check the entry</h2>
+            <p className="mt-1 text-[13px] text-muted-foreground">This will appear on the referral board and notify the student.</p>
+
+            <div className="mt-5 border-2 border-ink bg-[#f8f1e2] p-4 shadow-[3px_3px_0_#0f2942]">
+              <div className="space-y-3">
+                {[
+                  ['Student', selectedStudent?.name || student],
+                  ['Program', selectedStudent?.program || '—'],
+                  ['Student ID', selectedStudent?.custom_id || '—'],
+                  ['Subject', subjectLabel],
+                  ['Topic', topic || 'General review'],
+                  ['Required hours', `${hours} hours`],
+                  ['Referring faculty', user?.name || 'Faculty'],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex items-baseline justify-between gap-4 border-b border-line pb-2.5 last:border-0 last:pb-0">
+                    <span className="text-[13px] text-muted-foreground">{label}</span>
+                    <span className="text-right text-[14px] font-bold text-ink">{value}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Program:</span>
-                    <span className="font-medium text-charcoal">{selectedStudent?.program || 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subject:</span>
-                    <span className="font-medium text-charcoal">
-                      {subjects.find(s => s.id === selectedSubject)?.code ?? selectedSubject}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Urgency:</span>
-                    <Badge 
-                      variant={selectedUrgency === 'high' ? 'destructive' : 'secondary'} 
-                      className={selectedUrgency === 'high' ? 'bg-crimson' : selectedUrgency === 'medium' ? 'bg-amber/20 text-amber-800' : ''}
-                    >
-                      {selectedUrgency.charAt(0).toUpperCase() + selectedUrgency.slice(1)}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Required Hours:</span>
-                    <span className="font-medium text-charcoal">{hours} Hours</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Referring Faculty:</span>
-                    <span className="font-medium text-charcoal">{user?.name ?? 'Faculty'}</span>
-                  </div>
-                  {notes && (
-                    <div className="pt-2 border-t">
-                      <span className="text-muted-foreground block mb-1">Notes:</span>
-                      <p className="text-charcoal italic text-xs bg-slate-50 p-2 rounded">{notes}</p>
-                    </div>
-                  )}
+                ))}
+                <div className="flex items-baseline justify-between gap-4">
+                  <span className="text-[13px] text-muted-foreground">Urgency</span>
+                  <span className="status-pill capitalize">
+                    <span className={cn('status-dot', URGENCIES.find(u => u.value === selectedUrgency)?.dot)} />
+                    {selectedUrgencyLabel}
+                  </span>
                 </div>
               </div>
+              {notes && (
+                <div className="mt-4 border-t border-line pt-3">
+                  <p className="text-[13px] text-muted-foreground">Notes</p>
+                  <p className="mt-1 text-[13px] leading-snug text-ink">“{notes}”</p>
+                </div>
+              )}
+            </div>
 
-              <div className="flex justify-between pt-4 border-t">
-                <Button variant="ghost" onClick={() => setStep(2)}>Back</Button>
-                <Button onClick={handleRefer} disabled={submitting || !selectedStudent || !selectedSubject} className="bg-primary hover:bg-primary/90">
-                  {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                  {submitting ? 'Submitting…' : 'Submit Referral'}
-                </Button>
-              </div>
-            </motion.div>
-          )}
-        </CardContent>
-      </Card>
+            <div className="mt-6 flex items-center justify-between gap-3 border-t-2 border-ink pt-5">
+              <Button variant="ghost" onClick={() => setStep(2)}>Back</Button>
+              <Button onClick={handleRefer} disabled={submitting || !selectedStudent || !selectedSubject}>
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : null}
+                {submitting ? 'Submitting…' : 'Submit referral'}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </div>
   );
 }

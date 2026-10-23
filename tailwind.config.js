@@ -6,60 +6,50 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Bricolage Grotesque"', 'Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        ink: '#0f2942',
+        'ink-soft': '#5b5a52',
+        line: '#d4cbbb',
+        stone: '#f2ede1',
+        paper: '#fffdf6',
+        gold: '#d4ac0d',
+        'gold-ink': '#6b5200',
+        charcoal: '#0f2942',
         primary: {
-          DEFAULT: "#0F2942", // LCCB Navy Blue
-          foreground: "#ffffff",
+          DEFAULT: '#0f2942',
+          foreground: '#fff9e9',
         },
         secondary: {
-          DEFAULT: "#D4AC0D", // Institutional Gold
-          foreground: "#000000",
+          DEFAULT: '#d4ac0d',
+          foreground: '#0f2942',
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: '#b43122',
+          foreground: '#fff9ee',
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: '#e9e1d1',
+          foreground: '#5b5a52',
         },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
+        border: '#d4cbbb',
+        input: '#0f2942',
+        ring: '#d4ac0d',
+        background: '#f2ede1',
+        foreground: '#0f2942',
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-        slate: {
-          DEFAULT: "#F8FAFC", // Light Slate Neutral
-        },
-        charcoal: {
-          DEFAULT: "#1E293B", // Deep Charcoal Text
-        },
-        emerald: {
-          DEFAULT: "#10B981", // Success
-        },
-        amber: {
-          DEFAULT: "#F59E0B", // Warning
-        },
-        crimson: {
-          DEFAULT: "#EF4444", // Danger/Error
+          DEFAULT: '#fffdf6',
+          foreground: '#0f2942',
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: '0px',
+        md: '0px',
+        sm: '0px',
       },
     },
   },

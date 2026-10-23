@@ -1,30 +1,91 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { ArrowRight, ArrowLeft, Loader2, Star, CheckCircle2, Shield, Clock, BookOpen } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Loader2, Star, Check } from 'lucide-react';
+import { cn } from '../lib/utils';
 import api from '../api';
+
 const steps = [
-  { id: 'goal', title: 'Academic Goal' },
+  { id: 'goal', title: 'Academic goal' },
   { id: 'timeline', title: 'Timeline' },
-  { id: 'course', title: 'Course Selection' },
-  { id: 'level', title: 'Current Level' },
+  { id: 'course', title: 'Course' },
+  { id: 'level', title: 'Current level' },
   { id: 'language', title: 'Language' },
   { id: 'availability', title: 'Availability' },
-  { id: 'match', title: 'Matching' }
+  { id: 'match', title: 'Matching' },
 ];
+
+const GOALS = [
+  { value: 'Prepare for Exams', label: 'Prepare for exams', desc: 'A focused pass over the topics most likely to appear.' },
+  { value: 'Understand a specific topic', label: 'Understand a topic', desc: 'Slow down on one idea until it clicks.' },
+  { value: 'Catch up on missed lessons', label: 'Catch up', desc: 'Cover what you missed and rebuild the foundation.' },
+];
+
+const TIMELINES = [
+  { value: 'Within this week', label: 'This week', desc: 'The deadline is close; book the earliest window.' },
+  { value: 'Before Midterms', label: 'Before midterms', desc: 'A steady block of sessions ahead of the exams.' },
+  { value: 'Before Finals', label: 'Before finals', desc: 'Time to review broadly and close the gaps.' },
+];
+
+const LEVELS = [
+  { value: 'Completely lost', label: 'Completely lost', desc: 'Start from the beginning; no question is too basic.' },
+  { value: 'I know the basics', label: 'I know the basics', desc: 'Build on what you already understand.' },
+  { value: 'I just need advanced review', label: 'Advanced review', desc: 'Push past the comfortable material.' },
+];
+
+const LANGUAGES = [
+  { value: 'English', label: 'English', desc: 'Most sessions run in English.' },
+  { value: 'Tagalog', label: 'Tagalog', desc: 'Explain the material in Tagalog.' },
+  { value: 'Hiligaynon', label: 'Hiligaynon', desc: 'Explain the material in Hiligaynon.' },
+];
+
+const AVAILABILITY = [
+  { value: 'Mon Morning', label: 'Mon morning' },
+  { value: 'Tue Afternoon', label: 'Tue afternoon' },
+  { value: 'Wed Evening', label: 'Wed evening' },
+  { value: 'Thu Morning', label: 'Thu morning' },
+  { value: 'Fri Afternoon', label: 'Fri afternoon' },
+  { value: 'Sat Morning', label: 'Sat morning' },
+];
+
+function OptionRow({ label, desc, selected, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={cn(
+        'flex min-h-[96px] w-full items-start justify-between gap-4 border-2 border-ink p-4 text-left transition-[background-color,box-shadow,transform]',
+        selected
+          ? 'bg-gold shadow-[4px_4px_0_#0f2942]'
+          : 'bg-paper hover:-translate-y-0.5 hover:bg-[#fff7d6] hover:shadow-[3px_3px_0_#0f2942]',
+      )}
+    >
+      <span>
+        <span className="font-display block text-[15px] font-bold leading-tight text-ink">{label}</span>
+        {desc && <span className="mt-1 block text-[13px] leading-snug text-ink/70">{desc}</span>}
+      </span>
+      <span
+        className={cn(
+          'mt-0.5 grid h-5 w-5 shrink-0 place-items-center border-2 border-ink',
+          selected ? 'bg-ink text-paper' : 'bg-paper',
+        )}
+      >
+        {selected && <Check className="h-3 w-3" strokeWidth={2.2} />}
+      </span>
+    </button>
+  );
+}
 
 export default function LearnerWizard({ showToast }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState({});
   const [matching, setMatching] = useState(false);
-  const [liveSubjects, setLiveSubjects] = useState(null); // [{id,code,name,department}]
-  const [matches, setMatches] = useState(null);           // live tutors for step 7
+  const [liveSubjects, setLiveSubjects] = useState(null);
+  const [matches, setMatches] = useState(null);
   const [matchError, setMatchError] = useState(null);
-  const [requesting, setRequesting] = useState(null);     // tutorId in flight
+  const [requesting, setRequesting] = useState(null);
 
-  // Subject pills come from /subjects (live)
   useEffect(() => {
     api.get('/subjects')
       .then(({ subjects }) => setLiveSubjects(subjects.filter(s => s.department === 'BSIT' || s.department === 'General')))
@@ -32,9 +93,7 @@ export default function LearnerWizard({ showToast }) {
   }, []);
 
   const subjectOptions = useMemo(
-    () => (liveSubjects ?? []).map(s => ({
-      code: s.code, id: s.id,
-    })),
+    () => (liveSubjects ?? []).map(s => ({ code: s.code, id: s.id })),
     [liveSubjects],
   );
 
@@ -47,11 +106,10 @@ export default function LearnerWizard({ showToast }) {
           ? api.get('/tutors', { subject: data.course, available: '1' })
           : api.get('/tutors', { available: '1' });
         const [{ tutors }] = [await apiCall];
-        // give the snack animation a beat; waiting is part of the UX
-        await new Promise(r => setTimeout(r, 1200));
+        await new Promise(resolve => setTimeout(resolve, 700));
         setMatches(tutors);
         setCurrentStep(s => s + 1);
-        showToast(`Found ${tutors.length} accredited ${data.course || '*/'} matches!`, 'success');
+        showToast(`Found ${tutors.length} accredited ${data.course || ''} matches.`, 'success');
       } catch (e) {
         setMatchError(e.message);
         showToast('Matching failed — please retry.', 'error');
@@ -62,245 +120,255 @@ export default function LearnerWizard({ showToast }) {
       setCurrentStep(s => Math.min(steps.length - 1, s + 1));
     }
   };
+
   const prevStep = () => setCurrentStep(s => Math.max(0, s - 1));
 
   const selectOption = (key, value) => {
-    // changing course invalidates cached matches
     if (key === 'course') setMatches(null);
     setData(prev => ({ ...prev, [key]: value }));
   };
 
-  // Live matches only — an empty result is a real empty state, not mock data.
-  const getMatches = () => (matches ?? []);
+  const getMatches = () => matches ?? [];
+  const isQuestionStep = currentStep < steps.length - 1;
 
-  const OptionCard = ({ label, selected, onClick, icon: Icon, description }) => (
-    <Card 
-      className={`cursor-pointer transition-all hover:scale-[1.03] hover:shadow-md ${selected ? 'border-primary ring-2 ring-primary/20 bg-primary/5' : 'hover:border-primary/50'}`}
-      onClick={onClick}
-    >
-      <CardContent className="flex flex-col items-center justify-center p-6 text-center gap-3 h-full">
-        {Icon && <Icon className={`w-8 h-8 ${selected ? 'text-primary' : 'text-muted-foreground'}`} />}
-        <span className={`font-medium ${selected ? 'text-primary' : 'text-charcoal'}`}>{label}</span>
-        {description && <span className="text-xs text-muted-foreground">{description}</span>}
-      </CardContent>
-    </Card>
-  );
+  const questionTitle = {
+    goal: 'What do you need help with?',
+    timeline: 'When is your deadline?',
+    course: 'Which course is this for?',
+    level: 'How well do you know it now?',
+    language: 'Which language should the session use?',
+    availability: 'When can you meet?',
+  }[steps[currentStep].id];
 
-  const CoursePill = ({ label, selected, onClick }) => (
-    <button
-      onClick={onClick}
-      className={`px-5 py-2.5 rounded-full font-semibold transition-all hover:scale-105 text-sm ${selected ? 'bg-primary text-white shadow-md' : 'bg-white border border-border text-charcoal hover:border-primary'}`}
-    >
-      {label}
-    </button>
-  );
+  const questionDetail = {
+    goal: 'One sentence is enough. The matcher uses it to set the session topic.',
+    timeline: 'This decides how the session is framed, not how many you can book.',
+    course: 'Only BSIT and general subjects currently have accredited tutors.',
+    level: 'Be honest here — the tutor will meet you where you are.',
+    language: 'The tutor may not speak all three; the matcher shows availability.',
+    availability: 'A preferred window, not a confirmed booking. The tutor confirms.',
+  }[steps[currentStep].id];
 
   return (
-    <div className="flex flex-col h-full max-w-3xl mx-auto py-8">
-      {currentStep < steps.length - 1 && (
+    <div className="mx-auto w-full max-w-[880px]">
+      <div className="section-head">
+        <div>
+          <h1 className="section-title">Find a tutor</h1>
+          <p className="section-subtitle">Six questions, then a live list of accredited peers.</p>
+        </div>
+        {isQuestionStep && (
+          <span className="num text-[13px] text-muted-foreground">
+            {currentStep + 1} / {steps.length - 1}
+          </span>
+        )}
+      </div>
+
+      {isQuestionStep && (
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <Button variant="ghost" size="sm" onClick={prevStep} disabled={currentStep === 0 || matching}>
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back
-            </Button>
-            <span className="text-sm font-medium text-muted-foreground">
-              Step {currentStep + 1} of {steps.length - 1}
-            </span>
-            <Button variant="ghost" size="sm" onClick={nextStep} disabled={matching || !data[steps[currentStep].id]}>
-              Next <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-          <div className="h-2 w-full bg-secondary/20 rounded-full overflow-hidden">
-            <motion.div 
-              className="h-full bg-primary"
-              initial={{ width: 0 }}
-              animate={{ width: `${((currentStep) / (steps.length - 2)) * 100}%` }}
+          <div className="h-3 w-full border-2 border-ink bg-paper">
+            <motion.div
+              className="h-full bg-gold"
+              initial={false}
+              animate={{ width: `${((currentStep) / (steps.length - 1)) * 100}%` }}
               transition={{ duration: 0.3 }}
             />
           </div>
         </div>
       )}
 
-      <div className="flex-1 flex flex-col justify-center min-h-[400px]">
-        <AnimatePresence mode="wait">
-          {matching ? (
-            <motion.div 
-              key="matching"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="flex flex-col items-center justify-center text-center space-y-6"
-            >
-              <div className="relative">
-                <Loader2 className="w-16 h-16 text-primary animate-spin" />
-                <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+      <AnimatePresence mode="wait">
+        {matching ? (
+          <motion.div
+            key="matching"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="panel p-8 text-center"
+          >
+            <Loader2 className="mx-auto h-5 w-5 animate-spin text-ink" strokeWidth={1.6} />
+            <h2 className="mt-4 font-display text-[22px] font-extrabold tracking-[-0.03em]">Reading the tutor file…</h2>
+            <p className="mt-1 text-[14px] text-muted-foreground">
+              Checking verified peers for {data.course || 'any subject'} and your availability.
+            </p>
+          </motion.div>
+        ) : (
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -8 }}
+            transition={{ duration: 0.18 }}
+          >
+            {isQuestionStep && (
+              <>
+                <div className="mb-6">
+                  <p className="inline-block border-2 border-ink bg-ink px-2 py-0.5 text-[13px] font-bold text-paper">{steps[currentStep].title}</p>
+                  <h2 className="mt-3 font-display text-[26px] font-extrabold leading-tight tracking-[-0.035em]">{questionTitle}</h2>
+                  <p className="mt-2 max-w-[58ch] text-[14px] text-muted-foreground">{questionDetail}</p>
+                </div>
+
+                {steps[currentStep].id === 'goal' && (
+                  <div className="grid gap-2.5 md:grid-cols-3">
+                    {GOALS.map(option => (
+                      <OptionRow key={option.value} {...option} selected={data.goal === option.value} onClick={() => selectOption('goal', option.value)} />
+                    ))}
+                  </div>
+                )}
+
+                {steps[currentStep].id === 'timeline' && (
+                  <div className="grid gap-2.5 md:grid-cols-3">
+                    {TIMELINES.map(option => (
+                      <OptionRow key={option.value} {...option} selected={data.timeline === option.value} onClick={() => selectOption('timeline', option.value)} />
+                    ))}
+                  </div>
+                )}
+
+                {steps[currentStep].id === 'course' && (
+                  <div>
+                    {liveSubjects === null && <p className="text-[14px] text-muted-foreground">Reading subjects…</p>}
+                    {liveSubjects !== null && subjectOptions.length === 0 && (
+                      <div className="panel empty">No subjects are available to match right now.</div>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {subjectOptions.map(option => (
+                        <button
+                          key={option.code}
+                          type="button"
+                          onClick={() => selectOption('course', option.code)}
+                          aria-pressed={data.course === option.code}
+                          className={cn(
+                            'h-10 border-2 border-ink px-4 text-[14px] font-bold shadow-[2px_2px_0_#0f2942] transition-[background-color,transform,box-shadow]',
+                            data.course === option.code
+                              ? 'bg-gold text-ink'
+                              : 'bg-paper text-ink hover:-translate-y-0.5 hover:bg-[#fff7d6]',
+                          )}
+                        >
+                          {option.code}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {steps[currentStep].id === 'level' && (
+                  <div className="grid gap-2.5 md:grid-cols-3">
+                    {LEVELS.map(option => (
+                      <OptionRow key={option.value} {...option} selected={data.level === option.value} onClick={() => selectOption('level', option.value)} />
+                    ))}
+                  </div>
+                )}
+
+                {steps[currentStep].id === 'language' && (
+                  <div className="grid gap-2.5 md:grid-cols-3">
+                    {LANGUAGES.map(option => (
+                      <OptionRow key={option.value} {...option} selected={data.language === option.value} onClick={() => selectOption('language', option.value)} />
+                    ))}
+                  </div>
+                )}
+
+                {steps[currentStep].id === 'availability' && (
+                  <div className="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3">
+                    {AVAILABILITY.map(option => (
+                      <OptionRow key={option.value} {...option} selected={data.availability === option.value} onClick={() => selectOption('availability', option.value)} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {steps[currentStep].id === 'match' && (
+              <div>
+                <div className="mb-6">
+                  <p className="inline-block border-2 border-ink bg-ink px-2 py-0.5 text-[13px] font-bold text-paper">Matching</p>
+                  <h2 className="mt-3 font-display text-[26px] font-extrabold leading-tight tracking-[-0.035em]">
+                    {getMatches().length > 0 ? `${getMatches().length} accredited ${data.course ? `for ${data.course}` : 'tutors'}` : 'The match list'}
+                  </h2>
+                  <p className="mt-2 max-w-[58ch] text-[14px] text-muted-foreground">
+                    Request a session and the tutor confirms the final time. Every tutor here passed the qualification exam.
+                  </p>
+                </div>
+
+                {matchError && (
+                  <div className="panel mb-4 px-5 py-4">
+                    <p className="text-[14px] text-crimson">Matching failed: {matchError}</p>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={() => setMatches(null)}>Try again</Button>
+                  </div>
+                )}
+
+                {matches === null && !matchError && (
+                  <div className="panel empty">No matches loaded yet. Go back and continue the questions.</div>
+                )}
+
+                {matches !== null && matches.length === 0 && !matchError && (
+                  <div className="panel empty">No tutor matches this combination. Try another course or window.</div>
+                )}
+
+                {getMatches().length > 0 && (
+                  <div className="panel overflow-hidden">
+                    {getMatches().map(tutor => (
+                      <div key={tutor.id} className="flex flex-col gap-4 border-b border-ink/15 p-5 last:border-0 sm:flex-row sm:items-center">
+                        <span className="grid h-11 w-11 shrink-0 place-items-center border-2 border-ink bg-[#fff7d6] font-display text-[14px] font-bold text-ink">
+                          {tutor.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                            <h3 className="font-display text-[16px] font-bold text-ink">{tutor.name}</h3>
+                            <span className="text-[13px] text-muted-foreground">Verified · {tutor.program}</span>
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
+                            <span className="inline-flex items-center gap-1">
+                              <Star className="h-3.5 w-3.5" strokeWidth={1.6} />
+                              <span className="num">{tutor.stats?.rating ?? '—'}</span>
+                            </span>
+                            <span><span className="num">{tutor.stats?.sessions ?? 0}</span> sessions</span>
+                            {Array.isArray(tutor.subjects) && (
+                              <span className="text-ink/70">{tutor.subjects.map(s => s.code).join(' · ')}</span>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          className="shrink-0"
+                          disabled={requesting === tutor.id}
+                          onClick={async () => {
+                            setRequesting(tutor.id);
+                            const fallbackDate = new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10);
+                            try {
+                              await api.post('/session-requests', {
+                                tutorId: tutor.id,
+                                subjectId: (subjectOptions.find(s => s.code === data.course) || {}).id,
+                                topic: data.goal || 'General review',
+                                preferredDate: fallbackDate,
+                                preferredTime: '3:30 PM',
+                                note: data.level ? `Level: ${data.level} • Language: ${data.language || 'English'} • Preview: ${data.availability || ''}` : null,
+                              });
+                              showToast(`Session requested with ${tutor.name}.`, 'success');
+                            } catch (err) {
+                              showToast(err.message || 'Request failed', 'error');
+                            } finally {
+                              setRequesting(null);
+                            }
+                          }}
+                        >
+                          {requesting === tutor.id ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.6} /> : 'Request session'}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <h2 className="text-2xl font-bold text-primary">Matching you with Faculty-Certified Peers...</h2>
-              <p className="text-muted-foreground">Analyzing schedules, subjects, strengths, and availability...</p>
-              <div className="flex items-center gap-8 mt-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-2"><Shield className="w-4 h-4 text-emerald" /> Verified tutors only</span>
-                <span className="flex items-center gap-2"><BookOpen className="w-4 h-4 text-primary" /> Subject: {data.course || 'Any'}</span>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key={currentStep}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-8"
-            >
-              <h2 className="text-3xl font-bold text-center text-primary mb-8">
-                {steps[currentStep].id === 'goal' && "What do you need help with?"}
-                {steps[currentStep].id === 'timeline' && "When is your deadline?"}
-                {steps[currentStep].id === 'course' && "Select your Course Code"}
-                {steps[currentStep].id === 'level' && "How well do you currently understand it?"}
-                {steps[currentStep].id === 'language' && "Preferred spoken language?"}
-                {steps[currentStep].id === 'availability' && "When can you take lessons?"}
-              </h2>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              {steps[currentStep].id === 'goal' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {['Prepare for Exams', 'Understand a specific topic', 'Catch up on missed lessons'].map(opt => (
-                    <OptionCard key={opt} label={opt} selected={data.goal === opt} onClick={() => selectOption('goal', opt)} />
-                  ))}
-                </div>
-              )}
-
-              {steps[currentStep].id === 'timeline' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {['Within this week', 'Before Midterms', 'Before Finals'].map(opt => (
-                    <OptionCard key={opt} label={opt} selected={data.timeline === opt} onClick={() => selectOption('timeline', opt)} />
-                  ))}
-                </div>
-              )}
-
-              {steps[currentStep].id === 'course' && (
-                <div className="flex flex-wrap justify-center gap-3">
-                  {subjectOptions.map(opt => (
-                    <CoursePill key={opt.code} label={opt.code} selected={data.course === opt.code} onClick={() => selectOption('course', opt.code)} />
-                  ))}
-                </div>
-              )}
-
-              {steps[currentStep].id === 'level' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {['Completely lost', 'I know the basics', 'I just need advanced review'].map(opt => (
-                    <OptionCard key={opt} label={opt} selected={data.level === opt} onClick={() => selectOption('level', opt)} />
-                  ))}
-                </div>
-              )}
-
-              {steps[currentStep].id === 'language' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {['English', 'Tagalog', 'Hiligaynon'].map(opt => (
-                    <OptionCard key={opt} label={opt} selected={data.language === opt} onClick={() => selectOption('language', opt)} />
-                  ))}
-                </div>
-              )}
-
-              {steps[currentStep].id === 'availability' && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {['Mon Morning', 'Tue Afternoon', 'Wed Evening', 'Thu Morning', 'Fri Afternoon', 'Sat Morning'].map(opt => (
-                    <OptionCard key={opt} label={opt} selected={data.availability === opt} onClick={() => selectOption('availability', opt)} />
-                  ))}
-                </div>
-              )}
-
-              {steps[currentStep].id === 'match' && (
-                <div className="space-y-6">
-                  {matchError && (
-                    <Card><CardContent className="p-6 text-center text-crimson">
-                      Matching failed: {matchError}
-                      <div className="mt-3"><Button variant="outline" size="sm" onClick={() => setMatches(null)}>Try again</Button></div>
-                    </CardContent></Card>
-                  )}
-                  {matches === null && !matchError ? (
-                    <Card><CardContent className="p-8 text-center text-muted-foreground">No matches loaded yet — go back and continue.</CardContent></Card>
-                  ) : matches !== null && matches.length === 0 && !matchError ? (
-                    <Card><CardContent className="p-8 text-center text-muted-foreground">
-                      No tutors match this filter. Try another subject.
-                    </CardContent></Card>
-                  ) : (
-                    getMatches().map((tutor, i) => (
-                      <motion.div
-                        key={tutor.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.15 }}
-                      >
-                        <Card className="hover:border-primary/50 transition-all cursor-pointer group hover:shadow-lg">
-                          <CardContent className="p-6 flex items-center gap-6">
-                            <div className="w-16 h-16 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center text-xl font-bold shadow-inner shrink-0">
-                              {tutor.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <h3 className="text-lg font-bold text-primary group-hover:text-secondary transition-colors">{tutor.name}</h3>
-                                {(tutor.is_verified ?? tutor.verified) && <Shield className="w-4 h-4 text-emerald" />}
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-0.5">{tutor.program}</p>
-                              <div className="flex items-center gap-2 mt-1.5 text-sm text-muted-foreground">
-                                <Star className="w-4 h-4 fill-secondary text-secondary" /> {tutor.stats ? tutor.stats.rating : tutor.rating}
-                                <span className="mx-1">•</span>
-                                <span>{tutor.stats ? tutor.stats.sessions : tutor.sessions} sessions</span>
-                                <span className="mx-1">•</span>
-                                <span className="font-semibold text-charcoal">
-                                  {tutor.subjects ? tutor.subjects.map(s => s.code).join(', ') : tutor.subjects.join(', ')}
-                                </span>
-                              </div>
-                              <div className="flex gap-2 mt-2">
-                                <Badge variant="secondary" className="bg-secondary/20 text-secondary-foreground hover:bg-secondary/30 text-xs">
-                                  {(tutor.stats ? tutor.stats.sessions : tutor.sessions) > 50 ? '🏆 Experienced' : '🌟 Rising'}
-                                </Badge>
-                                <Badge variant="secondary" className="bg-secondary/20 text-secondary-foreground hover:bg-secondary/30 text-xs">
-                                  {(tutor.stats ? tutor.stats.rating : tutor.rating) >= 4.8 ? '⭐ Top Rated' : '👍 Well Reviewed'}
-                                </Badge>
-                              </div>
-                            </div>
-                            <Button
-                              className="shrink-0"
-                              disabled={requesting === tutor.id}
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                setRequesting(tutor.id);
-                                const fallbackDate = new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10);
-                                try {
-                                  await api.post('/session-requests', {
-                                    tutorId: tutor.id,
-                                    subjectId: (subjectOptions.find(s => s.code === data.course) || {}).id,
-                                    topic: data.goal || 'General review',
-                                    preferredDate: fallbackDate,
-                                    preferredTime: '3:30 PM',
-                                    note: data.level ? `Level: ${data.level} • Language: ${data.language || 'English'} • Preview: ${data.availability || ''}` : null,
-                                  });
-                                  showToast(`Session requested with ${tutor.name}!`, 'success');
-                                } catch (err) {
-                                  showToast(err.message || 'Request failed', 'error');
-                                } finally {
-                                  setRequesting(null);
-                                }
-                              }}
-                            >
-                              {requesting === tutor.id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Request Session'}
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    ))
-                  )}
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      
-      {currentStep < steps.length - 1 && (
-        <div className="mt-8 flex justify-center">
-          <Button size="lg" className="w-full max-w-xs shadow-lg" onClick={nextStep} disabled={matching || !data[steps[currentStep].id]}>
-            Continue
+      {isQuestionStep && !matching && (
+        <div className="mt-8 flex items-center justify-between gap-3">
+          <Button variant="ghost" onClick={prevStep} disabled={currentStep === 0}>
+            <ArrowLeft className="h-4 w-4" strokeWidth={1.8} /> Back
+          </Button>
+          <Button onClick={nextStep} disabled={!data[steps[currentStep].id] || matching}>
+            {currentStep === steps.length - 2 ? 'Find matches' : 'Continue'}
+            <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
           </Button>
         </div>
       )}

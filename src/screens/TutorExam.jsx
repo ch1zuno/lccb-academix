@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { CheckCircle2, Loader2, Info, FileText, Link2, Trash2, Plus } from 'lucide-react';
+import { Check, Loader2, Trash2, Plus } from 'lucide-react';
+import { cn } from '../lib/utils';
 import api from '../api';
 
 /* Entry point for students who want to tutor: pick subjects, attach
  * supporting documents of academic achievement, submit. The application
- * itself — qualification exam, documents, review status — lives on the
- * separate pending-applicant page (/tutor-pending). */
+ * itself — exam, documents, review status — lives on /tutor-pending. */
 export default function TutorExam({ showToast, user }) {
   const nav = useNavigate();
-  const [status, setStatus] = useState('loading'); // loading | verified | not-learner | no-application
+  const [status, setStatus] = useState('loading');
   const [subjects, setSubjects] = useState(null);
   const [pickedSubjects, setPickedSubjects] = useState([]);
   const [docs, setDocs] = useState([{ title: '', detail: '', link: '' }]);
@@ -21,12 +20,11 @@ export default function TutorExam({ showToast, user }) {
 
   useEffect(() => {
     let cancelled = false;
-    if (user?.is_verified) { setStatus('verified'); return; }
-    if (user && user.role !== 'learner') { setStatus('not-learner'); return; }
+    if (user?.is_verified) { setStatus('verified'); return undefined; }
+    if (user && user.role !== 'learner') { setStatus('not-learner'); return undefined; }
     api.get('/accreditation/mine')
       .then(({ application: app }) => {
         if (cancelled) return;
-        // An application already exists → everything else happens on the pending page.
         if (app) { nav('/tutor-pending', { replace: true }); return; }
         setStatus('no-application');
       })
@@ -38,7 +36,6 @@ export default function TutorExam({ showToast, user }) {
     return () => { cancelled = true; };
   }, []);
 
-  /* Subject list for the application step */
   useEffect(() => {
     if (status !== 'no-application') return;
     api.get('/subjects')
@@ -46,14 +43,14 @@ export default function TutorExam({ showToast, user }) {
       .catch(() => setSubjects([]));
   }, [status]);
 
-  const setDoc = (i, key, val) => setDocs(list => list.map((d, j) => (j === i ? { ...d, [key]: val } : d)));
+  const setDoc = (index, key, value) => setDocs(list => list.map((doc, i) => (i === index ? { ...doc, [key]: value } : doc)));
 
   const apply = async () => {
     setApplying(true);
     try {
-      const achievements = docs.filter(d => d.title.trim());
+      const achievements = docs.filter(doc => doc.title.trim());
       await api.post('/accreditation/apply', { subjectIds: pickedSubjects, achievements });
-      showToast('Application submitted — continue to your qualification exam!', 'success');
+      showToast('Application submitted. Continue to the qualification exam.', 'success');
       nav('/tutor-pending');
     } catch (e) {
       showToast(e.message || 'Could not apply', 'error');
@@ -62,121 +59,159 @@ export default function TutorExam({ showToast, user }) {
     }
   };
 
-  /* ---- Already certified: nothing to do here ---- */
   if (status === 'verified') {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <CheckCircle2 className="w-24 h-24 text-secondary mb-6" />
-        <h2 className="text-3xl font-bold text-primary mb-2">You're Verified</h2>
-        <p className="text-muted-foreground mb-8">
-          {user?.name} is an accredited tutor{user?.certified_by_id ? ' — certification on record.' : '.'}
-        </p>
+      <div className="mx-auto w-full max-w-[720px]">
+        <div className="panel border-t-8 border-t-gold p-6">
+          <span className="status-pill"><span className="status-dot bg-emerald" /> Verified</span>
+          <h1 className="mt-4 font-display text-[28px] font-extrabold leading-tight tracking-[-0.04em]">You are an accredited tutor.</h1>
+          <p className="mt-2 max-w-[56ch] text-[14px] text-muted-foreground">
+            {user?.name} is verified{user?.certified_by_id ? ' — certification is on record.' : '.'} Your subjects are bookable and sessions can be checked in.
+          </p>
+          <Button className="mt-5" onClick={() => nav('/dashboard')}>Go to overview</Button>
+        </div>
       </div>
     );
   }
 
-  /* ---- Only students can apply ---- */
   if (status === 'not-learner') {
     return (
-      <div className="max-w-lg mx-auto py-20 text-center">
-        <Info className="w-16 h-16 text-primary mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-primary mb-2">Students Only</h2>
-        <p className="text-muted-foreground">
-          Only currently-enrolled students can apply for tutor accreditation.
-        </p>
+      <div className="mx-auto w-full max-w-[720px]">
+        <div className="panel border-t-8 border-t-gold p-6">
+          <h1 className="font-display text-[28px] font-extrabold leading-tight tracking-[-0.04em]">Students only</h1>
+          <p className="mt-2 max-w-[56ch] text-[14px] text-muted-foreground">
+            Only currently enrolled students can apply for tutor accreditation. Faculty and staff can manage approvals from the admin workspace.
+          </p>
+        </div>
       </div>
     );
   }
 
   if (status === 'loading') {
-    return <div className="py-20 text-center text-muted-foreground">Loading…</div>;
+    return <div className="panel empty">Reading your accreditation file…</div>;
   }
 
-  /* ---- Application step ---- */
   return (
-    <div className="max-w-2xl mx-auto py-12">
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl text-primary">Become an Accredited Tutor</CardTitle>
-          <CardDescription>{error ?? 'Pick the subjects you can tutor and add your supporting academic documents. Submitting creates your application — the qualification exam opens on the next page.'}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">1 • Subjects you can tutor</h4>
-            <div className="space-y-2">
-              {(subjects ?? []).map(s => (
-                <label key={s.id} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 text-primary border-slate-300"
-                    checked={pickedSubjects.includes(s.id)}
-                    onChange={(e) => setPickedSubjects(sel => e.target.checked ? [...sel, s.id] : sel.filter(id => id !== s.id))}
-                  />
-                  <span className="text-charcoal"><strong>{s.code}</strong> — {s.name}</span>
-                </label>
-              ))}
-            </div>
-            {subjects !== null && subjects.length === 0 && <p className="text-sm text-muted-foreground">No subjects available.</p>}
-          </div>
+    <div className="mx-auto w-full max-w-[860px]">
+      <div className="section-head">
+        <div>
+          <h1 className="section-title">Become a tutor</h1>
+          <p className="section-subtitle">Pick the subjects you can teach and attach the record that proves it. The exam opens next.</p>
+        </div>
+        <span className="border-2 border-ink bg-paper px-2 py-1 text-[13px] font-semibold text-ink">Application</span>
+      </div>
 
-          <div>
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">2 • Supporting documents — academic achievement</h4>
-            <p className="text-xs text-muted-foreground mb-3">Grades, honors or certificates that show you can teach these subjects. A link to the scanned copy is optional.</p>
-            <div className="space-y-3">
-              {docs.map((d, i) => (
-                <div key={i} className="p-3 border rounded-lg bg-slate-50 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-primary shrink-0" />
-                    <Input
-                      placeholder="Document title — e.g. Dean's Lister, 1st Sem AY 2025-2026"
-                      value={d.title}
-                      onChange={(e) => setDoc(i, 'title', e.target.value)}
-                      className="h-9"
-                    />
-                    {docs.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-slate-400 hover:text-crimson shrink-0"
-                        title="Remove document"
-                        onClick={() => setDocs(list => list.filter((_, j) => j !== i))}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
+      {error && <div className="panel mb-4 px-5 py-4 text-[14px] text-crimson">{error}</div>}
+
+      <div className="panel p-6">
+        <h2 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Subjects you can tutor</h2>
+        <p className="mt-1 text-[13px] text-muted-foreground">Choose at least one. You can add more after accreditation.</p>
+
+        {subjects === null && <p className="mt-4 text-[13px] text-muted-foreground">Reading the subject list…</p>}
+        {subjects !== null && subjects.length === 0 && <p className="mt-4 text-[13px] text-muted-foreground">No subjects are available right now.</p>}
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {(subjects ?? []).map(subject => {
+            const selected = pickedSubjects.includes(subject.id);
+            return (
+              <label
+                key={subject.id}
+                className={cn(
+                  'flex cursor-pointer items-start gap-2.5 border-2 border-ink p-3 transition-[background-color,box-shadow]',
+                  selected ? 'bg-gold shadow-[3px_3px_0_#0f2942]' : 'bg-paper hover:bg-[#fff7d6]',
+                )}
+              >
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={selected}
+                  onChange={(event) => setPickedSubjects(current => (
+                    event.target.checked ? [...current, subject.id] : current.filter(id => id !== subject.id)
+                  ))}
+                />
+                <span className={cn(
+                  'mt-0.5 grid h-5 w-5 shrink-0 place-items-center border-2 border-ink',
+                  selected ? 'bg-ink text-paper' : 'bg-paper',
+                )}>
+                  {selected && <Check className="h-2.5 w-2.5" strokeWidth={2.4} />}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-bold text-ink">{subject.code}</span>
+                  <span className="mt-0.5 block truncate text-[13px] text-muted-foreground">{subject.name}</span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+
+        <div className="mt-8 border-t-2 border-ink pt-6">
+          <h2 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Supporting documents</h2>
+          <p className="mt-1 max-w-[62ch] text-[13px] text-muted-foreground">
+            Grades, honors, or certificates that show you can teach these subjects. A scanned copy is optional, but a link helps the reviewer.
+          </p>
+
+          <div className="mt-4 space-y-3">
+            {docs.map((doc, index) => (
+              <div key={index} className="border-2 border-ink bg-[#f8f1e2] p-3">
+                <div className="flex items-center gap-2">
+                  <span className="num grid h-6 w-6 shrink-0 place-items-center border-2 border-ink bg-gold text-[13px] font-bold text-ink">{index + 1}</span>
+                  <Input
+                    placeholder="Document title — e.g. Dean's Lister, 1st Sem AY 2025–2026"
+                    value={doc.title}
+                    onChange={(event) => setDoc(index, 'title', event.target.value)}
+                  />
+                  {docs.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Remove document"
+                      aria-label="Remove document"
+                      onClick={() => setDocs(list => list.filter((_, i) => i !== index))}
+                    >
+                      <Trash2 className="h-4 w-4" strokeWidth={1.6} />
+                    </Button>
+                  )}
+                </div>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
                   <Input
                     placeholder="Details — e.g. GWA 1.45, certified copy on file"
-                    value={d.detail}
-                    onChange={(e) => setDoc(i, 'detail', e.target.value)}
-                    className="h-9 text-sm"
+                    value={doc.detail}
+                    onChange={(event) => setDoc(index, 'detail', event.target.value)}
                   />
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <Link2 className="w-4 h-4 shrink-0" />
-                    <Input
-                      placeholder="Optional link to the scanned document"
-                      value={d.link}
-                      onChange={(e) => setDoc(i, 'link', e.target.value)}
-                      className="h-9 text-sm"
-                    />
-                  </div>
+                  <Input
+                    placeholder="Optional link to the scanned document"
+                    value={doc.link}
+                    onChange={(event) => setDoc(index, 'link', event.target.value)}
+                  />
                 </div>
-              ))}
-            </div>
-            {docs.length < 8 && (
-              <Button variant="outline" size="sm" className="mt-3" onClick={() => setDocs(list => [...list, { title: '', detail: '', link: '' }])}>
-                <Plus className="w-4 h-4 mr-1" /> Add document
-              </Button>
-            )}
+              </div>
+            ))}
           </div>
-        </CardContent>
-        <CardFooter className="border-t pt-6 bg-slate-50">
+
+          {docs.length < 8 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={() => setDocs(list => [...list, { title: '', detail: '', link: '' }])}
+            >
+              <Plus className="h-4 w-4" strokeWidth={1.8} /> Add document
+            </Button>
+          )}
+        </div>
+
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink pt-5">
+          <p className="text-[13px] text-muted-foreground">
+            {pickedSubjects.length === 0
+              ? 'Choose at least one subject to continue.'
+              : `${pickedSubjects.length} subject${pickedSubjects.length === 1 ? '' : 's'} selected · ${docs.filter(doc => doc.title.trim()).length} document${docs.filter(doc => doc.title.trim()).length === 1 ? '' : 's'} attached`}
+          </p>
           <Button disabled={applying || pickedSubjects.length === 0} onClick={apply}>
-            {applying && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Submit Application ({pickedSubjects.length})
+            {applying ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : null}
+            {applying ? 'Submitting…' : 'Submit application'}
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Progress } from '../components/ui/progress';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Clock, CheckCircle2, Loader2, XCircle, Home, Search, Hourglass,
-  FileText, ExternalLink, GraduationCap, ListChecks,
-} from 'lucide-react';
+import { Loader2, ExternalLink, FileText, Check } from 'lucide-react';
+import { cn } from '../lib/utils';
 import api from '../api';
 
 /* Separate page for students who just applied as tutor (pending applicants):
@@ -23,12 +18,11 @@ export default function TutorApplicant({ showToast, user }) {
   const [questions, setQuestions] = useState(null);
   const [answers, setAnswers] = useState({});
   const [currentQ, setCurrentQ] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(1800); // 30 mins
+  const [timeLeft, setTimeLeft] = useState(1800);
   const [starting, setStarting] = useState(false);
   const [grading, setGrading] = useState(false);
-  const [result, setResult] = useState(null); // {score, passed}
+  const [result, setResult] = useState(null);
 
-  /* Load this learner's application; no application → the apply page. */
   useEffect(() => {
     let cancelled = false;
     api.get('/accreditation/mine')
@@ -49,9 +43,8 @@ export default function TutorApplicant({ showToast, user }) {
     return () => { cancelled = true; };
   }, []);
 
-  /* While waiting, poll occasionally so an approval lights up live. */
   useEffect(() => {
-    if (phase !== 'waiting') return;
+    if (phase !== 'waiting') return undefined;
     const timer = setInterval(() => {
       api.get('/accreditation/mine').then(({ application: a }) => {
         if (a?.status === 'approved') setPhase('approved');
@@ -79,10 +72,11 @@ export default function TutorApplicant({ showToast, user }) {
 
   const formatTime = (seconds) => `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
 
-  /* date_applied arrives as a local-midnight Date — show the calendar date only */
   const fmtDate = (d) => {
     const dt = d instanceof Date ? d : new Date(d ?? '');
-    return Number.isNaN(dt.getTime()) ? String(d ?? '') : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return Number.isNaN(dt.getTime())
+      ? String(d ?? '')
+      : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   const handleFinish = async () => {
@@ -96,7 +90,7 @@ export default function TutorApplicant({ showToast, user }) {
       setApp(a => ({ ...a, exam_score: res.exam_score }));
       setPhase('waiting');
       showToast(res.passed
-        ? `Exam submitted — ${res.exam_score}%! Now awaiting superadmin approval.`
+        ? `Exam submitted — ${res.exam_score}%. Awaiting superadmin approval.`
         : `Exam submitted — ${res.exam_score}%. The superadmin will review it.`, res.passed ? 'success' : 'info');
     } catch (e) {
       showToast(e.message || 'Submission failed', 'error');
@@ -105,229 +99,274 @@ export default function TutorApplicant({ showToast, user }) {
     }
   };
 
-  /* Countdown; auto-submit on expiry. */
   useEffect(() => {
-    if (phase !== 'exam' || !examStarted) return;
-    if (timeLeft <= 0) { handleFinish(); return; }
+    if (phase !== 'exam' || !examStarted) return undefined;
+    if (timeLeft <= 0) { handleFinish(); return undefined; }
     const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(timer);
   }, [phase, examStarted, timeLeft]);
 
-  if (phase === 'loading') {
-    return <div className="py-20 text-center text-muted-foreground">Loading your application…</div>;
-  }
-
   const docs = Array.isArray(app?.achievements) ? app.achievements : [];
   const q = questions?.[currentQ];
   const options = q ? (Array.isArray(q.options) ? q.options : Object.values(q.options ?? {})) : [];
+  const score = result?.score ?? app?.exam_score;
+  const progress = questions?.length ? ((currentQ + 1) / questions.length) * 100 : 0;
+
+  const status = phase === 'approved'
+    ? { label: 'Approved', dot: 'bg-emerald', tone: 'text-ink' }
+    : phase === 'rejected'
+      ? { label: 'Not approved', dot: 'bg-crimson', tone: 'text-ink' }
+      : phase === 'waiting'
+        ? { label: 'Awaiting review', dot: 'bg-amber', tone: 'text-ink' }
+        : { label: 'Exam open', dot: 'bg-ink/40', tone: 'text-ink' };
 
   return (
-    <div className="max-w-4xl mx-auto py-8 space-y-6">
-      {/* Application header */}
-      <Card className="bg-gradient-to-br from-primary via-primary to-primary/80 text-white border-0 shadow-xl">
-        <CardContent className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-white/15 border-2 border-white/25 flex items-center justify-center">
-              <GraduationCap className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold">Pending Tutor Application</h2>
-              <p className="text-white/80 text-sm">{user?.name} • {app.application_code} • Applied {fmtDate(app.date_applied)}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap md:justify-end">
-            {(app.subjects ?? []).map(s => (
-              <Badge key={s.code || s} className="bg-white/15 border border-white/25 text-white">{s.code || s}</Badge>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+    <div className="mx-auto w-full max-w-[920px]">
+      <div className="section-head">
+        <div>
+          <h1 className="section-title">Tutor application</h1>
+          <p className="section-subtitle">
+            {user?.name} · {app?.application_code} · Applied {fmtDate(app?.date_applied)}
+          </p>
+        </div>
+        <span className="status-pill"><span className={cn('status-dot', status.dot)} /> {status.label}</span>
+      </div>
 
-      {/* 1 — Qualification exam */}
-      <section className="space-y-3">
-        <h3 className="flex items-center gap-2 text-lg font-bold text-charcoal">
-          <ListChecks className="w-5 h-5 text-primary" /> Qualification Exam
-        </h3>
+      <div className="panel mb-4 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[13px] text-muted-foreground">Subjects applied for</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {(app?.subjects ?? []).map(s => (
+                <span key={s.code || s} className="inline-flex h-6 items-center border-2 border-ink bg-[#fff7d6] px-2 text-[13px] font-semibold text-ink">
+                  {s.code || s}
+                </span>
+              ))}
+              {(app?.subjects ?? []).length === 0 && <span className="text-[14px] text-muted-foreground">No subjects listed.</span>}
+            </div>
+          </div>
+          {score != null && (
+            <div className="text-right">
+              <p className="text-[13px] font-semibold text-muted-foreground">Qualification exam</p>
+              <p className="num mt-1 inline-block border-2 border-ink bg-gold px-2 text-[28px] leading-none text-ink">{score}%</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="border-b-2 border-ink bg-[#f8f1e2] px-5 py-4">
+          <h2 className="font-display text-[18px] font-extrabold tracking-[-0.03em]">
+            {phase === 'exam' ? 'Qualification exam' : 'Application status'}
+          </h2>
+          <p className="meta mt-0.5">
+            {phase === 'exam'
+              ? '15 multiple-choice questions · 30 minutes · one attempt'
+              : phase === 'waiting'
+                ? 'The exam is in. The superadmin is reading the file.'
+                : phase === 'approved'
+                  ? 'The application was verified.'
+                  : phase === 'rejected'
+                    ? 'The application was not approved.'
+                    : 'Reading your file…'}
+          </p>
+        </div>
+
+        {phase === 'loading' && <div className="empty">Loading your application…</div>}
 
         {phase === 'exam' && !examStarted && (
-          <Card className="shadow-sm">
-            <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <p className="font-semibold text-charcoal">15 multiple-choice questions • 30 minutes • one attempt</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Graded the moment you submit. Afterwards you'll wait for the superadmin's approval —
-                  you can head home or find a tutor in the meantime.
+          <div className="p-5">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="max-w-[62ch]">
+                <p className="text-[14px] text-ink">Answer all fifteen questions in one sitting.</p>
+                <p className="mt-1 text-[13px] leading-snug text-muted-foreground">
+                  Graded the moment you submit. Afterwards you will wait for the superadmin&apos;s approval — you can head home or find a tutor in the meantime.
                 </p>
               </div>
-              <Button onClick={startExam} disabled={starting} className="shrink-0 bg-primary hover:bg-primary/90">
-                {starting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Clock className="w-4 h-4 mr-2" />}
-                Start Exam
+              <Button onClick={startExam} disabled={starting} className="shrink-0">
+                {starting ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : null}
+                {starting ? 'Opening…' : 'Start exam'}
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {phase === 'exam' && examStarted && q && (
-          <Card className="shadow-md">
-            <div className="p-4 border-b bg-slate-50 rounded-t-lg">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-charcoal">Question {currentQ + 1} of {questions.length}</p>
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-border">
-                  <Clock className={`w-4 h-4 ${timeLeft < 300 ? 'text-crimson animate-pulse' : 'text-primary'}`} />
-                  <span className={`font-mono font-bold ${timeLeft < 300 ? 'text-crimson' : 'text-primary'}`}>
-                    {formatTime(timeLeft)}
-                  </span>
-                </div>
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-ink px-5 py-3">
+              <div>
+                <p className="num text-[13px] font-semibold text-muted-foreground">Question {currentQ + 1} of {questions.length}</p>
+                <p className="mt-0.5 text-[13px] text-muted-foreground">{Object.keys(answers).length} answered</p>
               </div>
-              <Progress value={(currentQ / questions.length) * 100} className="h-2 mt-3" />
+              <span className={cn('num border-2 border-ink px-2 py-0.5 text-[16px]', timeLeft < 300 ? 'bg-[#f4d6d0] text-crimson' : 'bg-paper text-ink')}>
+                {formatTime(timeLeft)}
+              </span>
             </div>
-            <CardContent className="p-6">
+            <div className="h-2.5 w-full border-2 border-ink bg-paper">
+              <motion.div
+                className="h-full bg-gold"
+                initial={false}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.25 }}
+              />
+            </div>
+
+            <div className="p-5 sm:p-6">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentQ}
-                  initial={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.16 }}
                 >
-                  <h3 className="text-xl font-medium text-charcoal mb-6 leading-relaxed">
-                    {currentQ + 1}. {q.question}
+                  <h3 className="max-w-[64ch] font-display text-[21px] font-extrabold leading-snug tracking-[-0.03em]">
+                    {q.question}
                   </h3>
-                  <div className="space-y-3">
-                    {options.map((opt, i) => (
-                      <label
-                        key={i}
-                        className="flex items-center p-4 border rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:checked]:ring-1 has-[:checked]:ring-primary"
-                      >
-                        <input
-                          type="radio"
-                          name={`q-${q.question_number}`}
-                          className="w-4 h-4 text-primary focus:ring-primary border-slate-300"
-                          checked={answers[q.question_number] === i}
-                          onChange={() => setAnswers(prev => ({ ...prev, [q.question_number]: i }))}
-                        />
-                        <span className="ml-3 text-charcoal font-medium group-hover:text-primary transition-colors">{opt}</span>
-                      </label>
-                    ))}
+                  <div className="mt-5 space-y-2">
+                    {options.map((opt, i) => {
+                      const selected = answers[q.question_number] === i;
+                      return (
+                        <label
+                          key={i}
+                          className={cn(
+                            'flex cursor-pointer items-start gap-3 border-2 border-ink p-3.5 transition-[background-color,box-shadow]',
+                            selected ? 'bg-gold shadow-[3px_3px_0_#0f2942]' : 'bg-paper hover:bg-[#fff7d6]',
+                          )}
+                        >
+                          <input
+                            type="radio"
+                            name={`q-${q.question_number}`}
+                            className="sr-only"
+                            checked={selected}
+                            onChange={() => setAnswers(prev => ({ ...prev, [q.question_number]: i }))}
+                          />
+                          <span className={cn(
+                            'mt-0.5 grid h-5 w-5 shrink-0 place-items-center border-2 border-ink',
+                            selected ? 'bg-ink text-paper' : 'bg-paper',
+                          )}>
+                            {selected && <Check className="h-3 w-3" strokeWidth={2.2} />}
+                          </span>
+                          <span className="text-[14px] leading-snug text-ink">{opt}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                 </motion.div>
               </AnimatePresence>
-            </CardContent>
-            <div className="p-4 border-t bg-slate-50 rounded-b-lg flex items-center justify-between">
-              <Button variant="ghost" onClick={() => setCurrentQ(Math.max(0, currentQ - 1))} disabled={currentQ === 0}>Previous</Button>
-              <span className="text-xs text-muted-foreground font-medium">{Object.keys(answers).length}/{questions.length} answered</span>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink px-5 py-3.5">
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentQ(Math.max(0, currentQ - 1))}
+                disabled={currentQ === 0 || grading}
+              >
+                Previous
+              </Button>
               {currentQ < questions.length - 1 ? (
-                <Button onClick={() =>setCurrentQ(Math.min(questions.length - 1, currentQ + 1))}>Next Question</Button>
+                <Button onClick={() => setCurrentQ(Math.min(questions.length - 1, currentQ + 1))}>
+                  Next question
+                </Button>
               ) : (
-                <Button onClick={handleFinish} disabled={grading} className="bg-secondary text-secondary-foreground hover:bg-secondary/80">
-                  {grading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Submit Exam
+                <Button onClick={handleFinish} disabled={grading}>
+                  {grading ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : null}
+                  {grading ? 'Submitting…' : 'Submit exam'}
                 </Button>
               )}
             </div>
-          </Card>
+          </>
         )}
 
         {phase === 'waiting' && (
-          <Card className="shadow-md border-amber/30 bg-amber/5">
-            <CardContent className="p-6 text-center">
-              <Hourglass className="w-12 h-12 text-amber mx-auto mb-3" />
-              <h4 className="text-xl font-bold text-charcoal">Waiting for superadmin approval</h4>
-              <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                {result ? `Your exam scored ${result.score}%. ` : `Your exam scored ${app.exam_score}%. `}
-                The superadmin is reviewing your score and supporting documents —
-                you'll receive a notification with the decision.
-              </p>
-              <div className="flex flex-wrap gap-3 justify-center mt-5">
-                <Button variant="outline" onClick={() => nav('/dashboard')} className="border-primary/30 text-primary hover:bg-primary/5">
-                  <Home className="w-4 h-4 mr-2" /> Back to Home
-                </Button>
-                <Button onClick={() => nav('/wizard')} className="bg-primary hover:bg-primary/90">
-                  <Search className="w-4 h-4 mr-2" /> Find a Tutor
-                </Button>
+          <div className="p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <span className="mt-1.5 h-2.5 w-2.5 shrink-0 border-2 border-ink bg-amber" />
+              <div>
+                <h3 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Awaiting superadmin approval</h3>
+                <p className="mt-1 max-w-[58ch] text-[14px] leading-snug text-muted-foreground">
+                  Your exam scored {score ?? '—'}%. The superadmin is reviewing your score and supporting documents — you will receive a notification with the decision.
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => nav('/dashboard')}>Back to overview</Button>
+              <Button onClick={() => nav('/wizard')}>Find a tutor</Button>
+            </div>
+          </div>
         )}
 
         {phase === 'approved' && (
-          <Card className="shadow-md border-secondary/40 bg-secondary/5">
-            <CardContent className="p-6 text-center">
-              <CheckCircle2 className="w-12 h-12 text-emerald mx-auto mb-3" />
-              <h4 className="text-xl font-bold text-charcoal">Approved — you're a verified tutor candidate!</h4>
-              <p className="text-sm text-muted-foreground mt-1">
-                The superadmin verified your application. You can now be matched as a tutor too.
-              </p>
-              <div className="flex flex-wrap gap-3 justify-center mt-5">
-                <Button variant="outline" onClick={() => nav('/dashboard')} className="border-primary/30 text-primary hover:bg-primary/5">
-                  <Home className="w-4 h-4 mr-2" /> Back to Home
-                </Button>
-                <Button onClick={() => nav('/wizard')} className="bg-primary hover:bg-primary/90">
-                  <Search className="w-4 h-4 mr-2" /> Find a Tutor
-                </Button>
+          <div className="p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <span className="mt-1.5 h-2.5 w-2.5 shrink-0 border-2 border-ink bg-emerald" />
+              <div>
+                <h3 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Approved — you are a verified tutor.</h3>
+                <p className="mt-1 max-w-[58ch] text-[14px] leading-snug text-muted-foreground">
+                  The superadmin verified your application. Your subjects are bookable and you can be matched as a tutor.
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => nav('/dashboard')}>Back to overview</Button>
+              <Button onClick={() => nav('/wizard')}>Find a tutor</Button>
+            </div>
+          </div>
         )}
 
         {phase === 'rejected' && (
-          <Card className="shadow-md border-crimson/30">
-            <CardContent className="p-6 text-center">
-              <XCircle className="w-12 h-12 text-crimson mx-auto mb-3" />
-              <h4 className="text-xl font-bold text-charcoal">Application not approved</h4>
-              <p className="text-sm text-muted-foreground mt-1">Check your notifications for the superadmin's note.</p>
-              <div className="flex flex-wrap gap-3 justify-center mt-5">
-                <Button variant="outline" onClick={() => nav('/dashboard')} className="border-primary/30 text-primary hover:bg-primary/5">
-                  <Home className="w-4 h-4 mr-2" /> Back to Home
-                </Button>
-                <Button onClick={() => nav('/wizard')} className="bg-primary hover:bg-primary/90">
-                  <Search className="w-4 h-4 mr-2" /> Find a Tutor
-                </Button>
+          <div className="p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <span className="mt-1.5 h-2.5 w-2.5 shrink-0 border-2 border-ink bg-crimson" />
+              <div>
+                <h3 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Application not approved</h3>
+                <p className="mt-1 max-w-[58ch] text-[14px] leading-snug text-muted-foreground">
+                  Check your notifications for the superadmin&apos;s note. You can keep using peer tutoring as a learner.
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => nav('/dashboard')}>Back to overview</Button>
+              <Button onClick={() => nav('/wizard')}>Find a tutor</Button>
+            </div>
+          </div>
         )}
-      </section>
+      </div>
 
-      {/* 2 — Supporting documents (academic achievement) */}
-      <section className="space-y-3">
-        <h3 className="flex items-center gap-2 text-lg font-bold text-charcoal">
-          <FileText className="w-5 h-5 text-secondary" /> Supporting Documents — Academic Achievement
-        </h3>
-        <Card className="shadow-sm">
-          <CardContent className="p-5">
-            {docs.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No supporting documents were submitted with this application.
-              </p>
-            ) : (
-              <div className="grid sm:grid-cols-2 gap-3">
-                {docs.map((d, i) => {
-                  const entry = typeof d === 'string' ? { title: d } : d;
-                  return (
-                    <div key={i} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-slate-50">
-                      <FileText className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                      <div className="min-w-0">
-                        <p className="font-semibold text-charcoal text-sm">{entry.title}</p>
-                        {entry.detail && <p className="text-xs text-muted-foreground mt-0.5">{entry.detail}</p>}
-                        {entry.link && (
-                          <a
-                            href={entry.link}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1"
-                          >
-                            View document <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </section>
+      <div className="panel mt-4">
+        <div className="border-b-2 border-ink bg-[#f8f1e2] px-5 py-4">
+          <h2 className="font-display text-[18px] font-extrabold tracking-[-0.03em]">Supporting documents</h2>
+          <p className="meta mt-0.5">Academic achievement on file for the reviewer.</p>
+        </div>
+        {docs.length === 0 ? (
+          <div className="empty">No supporting documents were submitted with this application.</div>
+        ) : (
+          <ul className="px-5">
+            {docs.map((d, i) => {
+              const entry = typeof d === 'string' ? { title: d } : d;
+              return (
+                <li key={`${entry.title}-${i}`} className="flex items-start gap-3 border-b border-ink/15 py-3.5 last:border-0">
+                  <FileText className="mt-0.5 h-4 w-4 shrink-0 text-ink" strokeWidth={2} />
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-bold leading-snug text-ink">{entry.title}</p>
+                    {entry.detail && <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">{entry.detail}</p>}
+                    {entry.link && (
+                      <a
+                        href={entry.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-ink underline decoration-gold decoration-2 underline-offset-4 hover:decoration-ink"
+                      >
+                        Open document <ExternalLink className="h-3 w-3" strokeWidth={1.6} />
+                      </a>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
