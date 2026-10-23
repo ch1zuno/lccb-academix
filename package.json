@@ -12,7 +12,6 @@
     "start": "node server/scripts/start.js"
   },
   "devDependencies": {
-    "@embedded-postgres/windows-x64": "^18.4.0-beta.17",
     "@tailwindcss/vite": "^4.3.3",
     "autoprefixer": "^10.6.1",
     "embedded-postgres": "^18.4.0-beta.17",
@@ -20,6 +19,9 @@
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
+  },
+  "optionalDependencies": {
+    "@embedded-postgres/windows-x64": "^18.4.0-beta.17"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.2.6",
