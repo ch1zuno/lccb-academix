@@ -58,6 +58,31 @@ Handy utilities: `node server/scripts/pooler-verify.js` (checks the connection) 
 `node server/scripts/pooler-probe.js` (discovers which pooler region hosts the project
 when you only know the direct hostname).
 
+## Deploy to Vercel
+
+The project deploys to Vercel as **one serverless function + one static SPA**:
+
+- `api/index.js` — serves the exact Express app from `server/app.js` as a
+  serverless function (`bcryptjs`, pure-JS deps only; the pg Pool talks to the
+  remote `DATABASE_URL` directly — no embedded Postgres in the cloud build).
+- `vercel.json` rewrites `/api` and `/api/(.*)` into that function, everything
+  else falls through to the Vite SPA (`/index.html`).
+- Local entry (`node server/index.js`) shares `server/app.js` and boots the
+  embedded Postgres first — cloud behaviour and local behaviour cannot drift.
+
+**Project settings to make the API actually work on the deployed site** (Vercel
+dashboard → Settings → Environment Variables):
+
+| Name | Value |
+| --- | --- |
+| `DATABASE_URL` | the hosted Postgres connection string (e.g. the Supabase session-pooler URL) |
+| `JWT_SECRET` | any long random string (dev fallback: `change-me-dev`) |
+| `FRONTEND_ORIGIN` | the deployed origin, e.g. `https://lccb-academix.vercel.app` |
+
+`DEVICE_API_KEY` is optional in dev (default `dev-device-key`). After adding
+variables, trigger **Redeploy** (or push again) — pushes to `main` deploy
+automatically since the project is GitHub-connected.
+
 ## Demo accounts
 
 All seeded users share the password **`demo1234`**. Sign in with the `custom_id` or email.
