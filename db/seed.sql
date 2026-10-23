@@ -215,6 +215,21 @@ SELECT a.id, s.id FROM tutor_applications a, subjects s WHERE a.application_code
 -- 001: hours remaining starts equal to hours required
 UPDATE referrals SET hours_remaining = hours_required;
 
+-- Spring cohort: student accounts in the official 9-digit ID format (XX-XXXX-XXX).
+-- Emails use the student domain @lccbonline.edu.ph; password stays demo1234.
+INSERT INTO users (custom_id, name, email, role, program, password_hash) VALUES
+('24-0870-103', 'Cemer Daniel L. Miranda', 'cemerdaniel.miranda@lccbonline.edu.ph', 'learner', 'BSIT 2-B',  '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('24-0870-118', 'Jose Ady Tornea',         'joseady.tornea@lccbonline.edu.ph',      'learner', 'BSIT 2-B',  '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('24-0870-131', 'Jan Arnold Benabon',      'janarnold.benabon@lccbonline.edu.ph',   'learner', 'BSIT 1-A',  '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('25-0870-142', 'John Louis Cana',         'johnlouis.cana@lccbonline.edu.ph',      'learner', 'BSA 1-A',   '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('25-0870-155', 'Matthew Geriane',         'matthew.geriane@lccbonline.edu.ph',     'learner', 'BSBA 1-A',  '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('25-0870-168', 'Inocencio Garcia',        'inocencio.garcia@lccbonline.edu.ph',    'learner', 'BSIT 2-A',  '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('25-0871-071', 'John Lourence Chavez',    'johnlourence.chavez@lccbonline.edu.ph', 'learner', 'BSA 2-B',   '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('25-0871-086', 'Maria Isabel V. Tampus',  'mariaisabel.tampus@lccbonline.edu.ph',  'learner', 'BSBA 3-A',  '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('26-0870-093', 'Kris Mark A. Ledesma',    'krismark.ledesma@lccbonline.edu.ph',    'learner', 'BSIT 1-C',  '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('26-0871-114', 'Franz Nico S. Guzman',    'franznico.guzman@lccbonline.edu.ph',    'learner', 'BSA 1-B',   '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu')
+ON CONFLICT DO NOTHING;
+
 -- Learner joining bonus so the earn → redeem demo flow works right after reset
 INSERT INTO points_ledger (user_id, amount, description)
 SELECT id, 100, 'Academix joining bonus' FROM users WHERE role = 'learner';
