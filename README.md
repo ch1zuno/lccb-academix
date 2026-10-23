@@ -112,7 +112,7 @@ All seeded users share the password **`demo1234`**. Sign in with the `custom_id`
 | --- | --- | --- | --- |
 | `/public/overview` | GET | public | anonymous landing stats: tutor count, hours, points, active subjects, honour roll |
 | `/auth/login` · `/auth/me` · `/auth/dev-accounts` | POST · GET | public / authed | JWT auth (bcrypt), metadata survival |
-| `/referrals` · `/referrals/assign` · `/referrals/:id/status` · `/referrals/search-students` | GET POST PATCH | faculty/superadmin · scoped | referral lifecycle: flagged → assigned → in-progress → resolved |
+| `/referrals` · `/referrals/:id/assign` · `/referrals/:id/status` · `DELETE /referrals/:id` · `/referrals/search-students` | GET POST PATCH DELETE | faculty/superadmin · scoped | referral lifecycle: flagged → assigned → in-progress → resolved; faculty may reject a flagged one; superadmin may hard-delete **rejected** referrals only (codes auto-renumber from the highest existing) |
 | `/subjects` · `/tutors` · `/session-requests` | GET POST | authed · accept/decline | matching: accreditation-gated requests, double-accept blocked |
 | `/sessions/mine` · `/sessions/:id/stage-token` · `/sessions/:id/check-in` | GET POST | tutor/participant | check-in tokens (10-min TTL, one-shot), 2 confirmations start session |
 | `/sessions/:id/wrap-up` | POST | participant | **one transaction**: end, notes, rating, hours-debit, auto-resolve, points, badges |

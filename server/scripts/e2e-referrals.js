@@ -53,4 +53,49 @@ const login = (loginId) => request('/auth/login', { method: 'POST', body: { logi
   } else {
     console.log('no assigned referral visible to this faculty (REF-004 belongs to FA-021); skipping');
   }
+
+  // ── rejected referrals: lifecycle guards + superadmin removal ───────────
+  let bad = 0;
+  const expect = (label, actual, wanted, extra) => {
+    const ok = actual === wanted;
+    if (!ok) bad++;
+    console.log(`${ok ? 'ok' : 'FAIL'} ${label} -> ${actual}${extra ? ` (${extra})` : ''}`);
+  };
+
+  const superadmin = (await login('l.betita.admin@lccbacolod.edu.ph')).data;
+  const learnerL = (await login('TE-128')).data;
+  const pg2 = new pg.default.Client({ connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/lccb_academix' });
+  await pg2.connect();
+  const anyLearner = (await pg2.query(`SELECT id FROM users WHERE role = 'learner' ORDER BY created_at LIMIT 1`)).rows[0].id;
+  const anySubject = (await pg2.query(`SELECT id FROM subjects ORDER BY code LIMIT 1`)).rows[0].id;
+  await pg2.end();
+
+  const created = await request('/referrals', {
+    method: 'POST', token: faculty.token,
+    body: { learnerId: anyLearner, subjectId: anySubject, topic: 'E2E rejection probe', urgency: 'low', hoursRequired: 2 },
+  });
+  const staged = created.data.referral;
+  expect('create referral', created.status, 201, staged?.referral_code);
+
+  // learners cannot remove anything
+  const learnerDelete = await request(`/referrals/${staged.id}`, { method: 'DELETE', token: learnerL.token });
+  expect('learner delete (403)', learnerDelete.status, 403, learnerDelete.data.error);
+
+  // superadmin can only remove REJECTED referrals — flagged must be refused
+  const preDelete = await request(`/referrals/${staged.id}`, { method: 'DELETE', token: superadmin.token });
+  expect('superadmin delete while flagged (409)', preDelete.status, 409, preDelete.data.error);
+
+  // creator faculty rejects the flagged referral; then it is terminal
+  const rejected = await request(`/referrals/${staged.id}/status`, { method: 'PATCH', token: faculty.token, body: { status: 'rejected' } });
+  expect('faculty reject', rejected.status, 200, rejected.data.referral?.status);
+  const revive = await request(`/referrals/${staged.id}/status`, { method: 'PATCH', token: faculty.token, body: { status: 'assigned' } });
+  expect('rejected is terminal (409)', revive.status, 409, revive.data.error);
+
+  // superadmin removes it; a second DELETE finds nothing
+  const removed = await request(`/referrals/${staged.id}`, { method: 'DELETE', token: superadmin.token });
+  expect('superadmin delete rejected', removed.status, 200, removed.data.removed === true ? 'removed ok' : JSON.stringify(removed.data));
+  const gone = await request(`/referrals/${staged.id}`, { method: 'DELETE', token: superadmin.token });
+  expect('delete again (404)', gone.status, 404, gone.data.error);
+
+  if (bad) process.exit(1);
 })();

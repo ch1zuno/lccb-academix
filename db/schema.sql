@@ -11,7 +11,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TYPE user_role AS ENUM ('superadmin', 'faculty', 'tutor', 'learner');
 CREATE TYPE referral_urgency AS ENUM ('low', 'medium', 'high');
-CREATE TYPE referral_status AS ENUM ('flagged', 'assigned', 'in-progress', 'resolved');
+CREATE TYPE referral_status AS ENUM ('flagged', 'assigned', 'in-progress', 'resolved', 'rejected');
 CREATE TYPE session_status AS ENUM ('upcoming', 'in-progress', 'completed', 'cancelled');
 CREATE TYPE application_status AS ENUM ('pending', 'approved', 'rejected');
 CREATE TYPE check_in_method AS ENUM ('qr', 'fingerprint', 'otp');

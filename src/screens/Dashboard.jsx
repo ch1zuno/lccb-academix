@@ -13,14 +13,20 @@ import api from '../api';
 export function useReferrals(role) {
   const [referrals, setReferrals] = useState(null);
   const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   useEffect(() => {
     let cancelled = false;
     api.get('/referrals')
       .then(({ referrals: rows }) => { if (!cancelled) setReferrals(rows); })
       .catch((e) => { if (!cancelled) setError(e.message); });
     return () => { cancelled = true; };
-  }, [role]);
-  return { referrals, error, loading: referrals === null && !error };
+  }, [role, refreshKey]);
+  return {
+    referrals,
+    error,
+    loading: referrals === null && !error,
+    reload: () => setRefreshKey((k) => k + 1),
+  };
 }
 
 const fmtDate = (value) => {
@@ -49,6 +55,7 @@ const STATUS_DOT = {
   assigned: 'bg-amber',
   'in-progress': 'bg-ink/45',
   resolved: 'bg-emerald',
+  rejected: 'bg-ink/40',
   upcoming: 'bg-ink/35',
   completed: 'bg-ink',
   cancelled: 'bg-crimson',
@@ -102,7 +109,7 @@ function SectionHeading({ title, detail, action }) {
 
 export default function Dashboard({ role, user, showToast }) {
   const navigate = useNavigate();
-  const { referrals: liveReferrals, error: referralsError, loading: referralsLoading } = useReferrals(role);
+  const { referrals: liveReferrals, error: referralsError, loading: referralsLoading, reload: reloadReferrals } = useReferrals(role);
   const [analytics, setAnalytics] = useState(null);
   const [analyticsError, setAnalyticsError] = useState(null);
   const [analyticTutors, setAnalyticTutors] = useState(null);
@@ -141,7 +148,8 @@ export default function Dashboard({ role, user, showToast }) {
     const deptRows = analytics?.byDept ?? [];
     const topTutors = analyticTutors?.slice(0, 5) ?? [];
     const feed = (liveReferrals ?? []).slice(0, 5);
-    const pipeline = ['flagged', 'assigned', 'in-progress', 'resolved'].map(key => ({
+    const rejectedRows = (liveReferrals ?? []).filter(r => r.status === 'rejected');
+    const pipeline = ['flagged', 'assigned', 'in-progress', 'resolved', 'rejected'].map(key => ({
       key,
       count: (liveReferrals ?? []).filter(r => r.status === key).length,
     }));
@@ -153,6 +161,17 @@ export default function Dashboard({ role, user, showToast }) {
       { label: 'Referral recovery', value: analytics ? `${analytics.recoveryRate ?? 0}%` : '—', sub: analytics ? `${analytics.resolvedReferrals} of ${analytics.totalReferrals} resolved` : ' ' },
       { label: 'Points issued', value: analytics ? fmtPoints(analytics.pointsIssued) : '—', sub: analytics ? `${analytics.avgRating ?? '—'} average session rating` : ' ' },
     ];
+
+    const removeReferral = async (referral) => {
+      if (!window.confirm(`Remove ${referral.referral_code} from the ledger? This cannot be undone.`)) return;
+      try {
+        await api.delete(`/referrals/${referral.id}`);
+        showToast(`${referral.referral_code} was removed from the ledger.`, 'success');
+        reloadReferrals();
+      } catch (e) {
+        showToast(e.message || 'Could not remove the referral', 'error');
+      }
+    };
 
     return (
       <div className="space-y-5">
@@ -325,6 +344,33 @@ export default function Dashboard({ role, user, showToast }) {
             </div>
           </div>
         </div>
+
+        {rejectedRows.length > 0 && (
+          <div className="panel p-5">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">Rejected referrals</h2>
+              <span className="num text-[13px] text-muted-foreground">{rejectedRows.length}</span>
+            </div>
+            <p className="meta mt-0.5">Flagged as rejected by the board. Removal is permanent.</p>
+            <div className="mt-3">
+              {rejectedRows.map(referral => (
+                <div key={referral.id} className="flex items-start gap-3 border-b border-line py-2.5 last:border-0">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] leading-tight text-ink">
+                      <span className="num font-semibold">{referral.referral_code}</span> · {referral.learner}
+                    </p>
+                    <p className="mt-0.5 truncate text-[13px] leading-tight text-muted-foreground">
+                      {referral.subject_code} · {referral.topic} · {referral.faculty}
+                    </p>
+                  </div>
+                  <Button variant="destructive" size="sm" className="shrink-0" onClick={() => removeReferral(referral)}>
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -337,8 +383,19 @@ export default function Dashboard({ role, user, showToast }) {
       { key: 'assigned', label: 'Assigned', dot: 'bg-amber', items: board.filter(r => r.status === 'assigned') },
       { key: 'in-progress', label: 'In progress', dot: 'bg-ink/45', items: board.filter(r => r.status === 'in-progress') },
       { key: 'resolved', label: 'Resolved', dot: 'bg-emerald', items: board.filter(r => r.status === 'resolved') },
+      { key: 'rejected', label: 'Rejected', dot: 'bg-ink/40', items: board.filter(r => r.status === 'rejected') },
     ];
     const stats = columns.map(col => ({ label: col.label, value: col.items.length, sub: col.items.length === 1 ? 'referral' : 'referrals', dot: col.dot }));
+
+    const rejectReferral = async (referral) => {
+      try {
+        await api.patch(`/referrals/${referral.id}/status`, { status: 'rejected' });
+        showToast(`${referral.referral_code} was rejected.`, 'success');
+        reloadReferrals();
+      } catch (e) {
+        showToast(e.message || 'Could not reject the referral', 'error');
+      }
+    };
 
     return (
       <div className="space-y-5">
@@ -354,7 +411,7 @@ export default function Dashboard({ role, user, showToast }) {
         {referralsLoading && <div className="panel empty">Reading the board…</div>}
 
         {!referralsLoading && !referralsError && (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             {columns.map(column => (
               <div key={column.key} className="border-2 border-ink bg-[#e9e1d1] p-2.5">
                 <div className="flex items-center justify-between gap-2 border-b-2 border-ink px-1 pb-2.5">
@@ -395,6 +452,21 @@ export default function Dashboard({ role, user, showToast }) {
                         )}
                         {referral.notes && <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-muted-foreground">{referral.notes}</p>}
                         <p className="mt-2 text-[13px] text-muted-foreground">{fmtDate(referral.date)} · {referral.faculty}</p>
+                        {(referral.status === 'flagged' || referral.status === 'rejected') && (
+                          <div className="mt-3 border-t border-line pt-2.5">
+                            {referral.status === 'flagged'
+                              ? (
+                                <Button variant="outline" size="sm" className="w-full" onClick={() => rejectReferral(referral)}>
+                                  Reject referral
+                                </Button>
+                              )
+                              : (
+                                <p className="text-center text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                                  Removal is a superadmin action
+                                </p>
+                              )}
+                          </div>
+                        )}
                       </article>
                     );
                   })}

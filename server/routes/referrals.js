@@ -34,6 +34,24 @@ function whereFor(user) {
 const isValidUrgency = (u) => ['low', 'medium', 'high'].includes(u);
 const reorder = (row) => ({ ...row, hoursRequired: row.hours_required, hoursRemaining: row.hours_remaining, referralCode: row.referral_code });
 
+/** DELETE /referrals/:id — superadmin only, and ONLY rejected referrals.
+ * Sessions linked through referral_id lose the link but stay (ON DELETE SET NULL);
+ * everything else about the ledger is untouched. */
+router.delete('/referrals/:id', requireAuth, requireRole('superadmin'), async (req, res, next) => {
+  try {
+    const { rows } = await query(
+      `DELETE FROM referrals WHERE id = $1 AND status = 'rejected' RETURNING id, referral_code`,
+      [req.params.id],
+    );
+    if (!rows[0]) {
+      const found = await query(`SELECT id FROM referrals WHERE id = $1`, [req.params.id]);
+      if (!found.rows[0]) throw httpError(404, 'Referral not found');
+      throw httpError(409, 'Only rejected referrals can be removed');
+    }
+    res.json({ removed: true, referral: rows[0] });
+  } catch (e) { next(e); }
+});
+
 router.get('/referrals', requireAuth, async (req, res, next) => {
   try {
     const { sql, params } = whereFor(req.user);
@@ -109,7 +127,9 @@ router.post('/referrals/:id/assign', requireAuth, requireRole('faculty'), async 
 });
 
 const TRANSITIONS = {
-  flagged: ['assigned'],
+  flagged: ['assigned', 'rejected'],
+  // rejected is terminal: only removal (superadmin DELETE) lifts it off the board
+  rejected: [],
   assigned: ['in-progress', 'resolved'],
   'in-progress': ['in-progress', 'resolved'],
   resolved: [],
@@ -160,7 +180,11 @@ export default router;
 
 // helpers ------------------------------------------------------------
 async function nextReferralNumber() {
-  const { rows } = await query(`SELECT count(*)::int + 1 AS n FROM referrals`);
+  // count(*)-based numbering collides once rows can be removed (delete REF-006,
+  // next create would try REF-006 again) — derive it from the highest code instead.
+  const { rows } = await query(
+    `SELECT COALESCE(max(NULLIF(regexp_replace(referral_code, '[^0-9]', '', 'g'), '')::int), 0) + 1 AS n FROM referrals`,
+  );
   return rows[0].n;
 }
 
