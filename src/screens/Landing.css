@@ -125,13 +125,31 @@
   letter-spacing: 0.02em;
 }
 
-/* three.js wordmark box (toon block letters). "ACADEMIX" is the hero row;
- * "LCCB" sits as a small stamp above it. */
-.ledger-monogram-3d {
+/* 2D wordmark (SVG). "ACADEMIX" is the hero row; "LCCB" sits as a small
+ * stamp above it. Frameless on the cream card. */
+.ledger-brand-2d {
   display: block;
   flex-shrink: 0;
   width: 318px;
-  height: 86px;
+  height: auto;
+  transform-origin: 0 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ledger-brand-2d {
+    animation: brand-pop 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+    transition: transform 0.25s ease;
+  }
+
+  .ledger-wordmark:hover .ledger-brand-2d {
+    transform: rotate(-1deg) translateY(-3px);
+  }
+}
+
+@keyframes brand-pop {
+  from {
+    transform: scale(0.94);
+  }
 }
 
 .ledger-monogram-3d canvas {
@@ -1878,9 +1896,9 @@
     font-size: 13px;
   }
 
-  .ledger-monogram-3d {
+  .ledger-brand-2d {
     width: 248px;
-    height: 66px;
+    height: auto;
   }
 
   .ledger-wordmark strong {
@@ -2216,9 +2234,9 @@
     display: none;
   }
 
-  .ledger-monogram-3d {
-    width: 232px;
-    height: 62px;
+  .ledger-brand-2d {
+    width: 100%;
+    height: auto;
   }
 
   .ledger-wordmark {

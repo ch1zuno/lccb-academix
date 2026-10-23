@@ -134,13 +134,12 @@ src/                   React app; `src/api.js` is the only API client
   cap with swinging tassel, "A+" ledger stack, subject letter tiles, session clock,
   point coins, flat chips) over a blueprint grid floor; it tilts with the pointer and
   every object pops on hover. No photographs are used in the hero.
-- **Logo (`src/components/Logo3D.jsx`)**: the brandmark is rendered by **three.js**
-  (`three`, r186) as toon/cel-shaded block letters — navy caps, gold extrude sides,
-  cartoon contour outlines (`OutlineEffect`), staggered pop-in, idle bob, pointer
-  tilt. "ACADEMIX" (the app's name) is the dominant row; "LCCB" sits above it as a
-  small stamp. Font: `public/fonts/helvetiker_bold.typeface.json` (from the three.js
-  examples, MIT). The flat DOM monogram is the automatic fallback when WebGL or the
-  font is unavailable.
+- **Logo (`src/components/Logo2D.jsx`)**: the brandmark is a **flat SVG wordmark**
+  — navy block caps in Bricolage Grotesque with a hard gold offset edge, a thick
+  contour outline (`paint-order: stroke`) and hand-lettered per-glyph wobble;
+  "ACADEMIX" (the app's name) is the hero row, "LCCB" a small stamp above it,
+  plus a one-time pop entrance and a small hover tilt (both reduced-motion
+  guarded). Renders crisp at every size with zero WebGL.
 - **Illustrations**: section artwork uses free flat illustrations from
   [Storyset (Freepik Labs)](https://storyset.com/education) (`public/illustrations/`),
   credited in the landing footer.

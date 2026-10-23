@@ -4,7 +4,7 @@ import { animate } from 'animejs';
 import { ArrowRight, ArrowLeft, Loader2, X } from 'lucide-react';
 import api from '../api';
 import { saveSession } from '../authToken';
-import Logo3D from '../components/Logo3D';
+import Logo2D from '../components/Logo2D';
 import './Landing.css';
 
 const DEV = import.meta.env.DEV;
@@ -397,20 +397,7 @@ export default function LandingPage({ onLogin }) {
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
               <div className="ledger-wordmark">
-                <Logo3D
-                  className="ledger-monogram-3d"
-                  label="Academix — La Consolacion College Bacolod"
-                  rows={[{ text: 'LCCB', size: 0.34 }, { text: 'ACADEMIX', size: 1 }]}
-                  fallback={(
-                    <>
-                      <span className="ledger-monogram">LCCB</span>
-                      <span>
-                        <strong>Academix</strong>
-                        <small>La Consolacion College Bacolod</small>
-                      </span>
-                    </>
-                  )}
-                />
+                <Logo2D className="ledger-brand-2d" />
                 <small>La Consolacion College Bacolod</small>
               </div>
               <h1 id="hero-title">Peer tutoring<br />that <span className="ledger-mark">counts.</span></h1>
