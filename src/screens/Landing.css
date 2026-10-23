@@ -1803,6 +1803,27 @@
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 
+/* Sketched-draft opening: while .sketching holds, the hero renders through the
+ * #acid-sketch SVG filter (rough displacement + photocopy contrast + near-grey)
+ * whose SMIL tracks ink it into the finished UI — scraping to identity by ~1.05s. */
+.ledger-hero.sketching {
+  filter: url(#acid-sketch);
+}
+
+/* the <svg> that hosts the filter defs must stay out of layout */
+.sketch-filter-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ledger-hero.sketching {
+    filter: none;
+  }
+}
+
 @media (max-width: 1220px) {
   .ledger-sticker {
     display: none;

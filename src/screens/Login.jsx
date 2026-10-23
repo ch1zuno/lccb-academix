@@ -213,6 +213,19 @@ const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
 export default function LandingPage({ onLogin }) {
   const [showLogin, setShowLogin] = useState(false);
+  /* Sketched-draft opening: the hero renders through a rough pencil filter
+   * that "inks in" over ~1s; then the finished UI stands alone. */
+  const [sketching, setSketching] = useState(
+    () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  useEffect(() => {
+    if (!sketching) return undefined;
+    // the SMIL tracks hang on begin="indefinite": start them now, at mount,
+    // so the draft phase runs from this moment, inking in over ~1.05s.
+    document.querySelectorAll('#acid-sketch animate').forEach((a) => a.beginElement());
+    const t = setTimeout(() => setSketching(false), 1150);
+    return () => clearTimeout(t);
+  }, []);
   const [loginRole, setLoginRole] = useState('learner');
   const [loading, setLoading] = useState(false);
   const [schoolId, setSchoolId] = useState('');
@@ -382,8 +395,40 @@ export default function LandingPage({ onLogin }) {
 
   return (
     <div className="ledger-page">
+      {/* ── Sketch filter: the hero opens as a rough pencil draft and inks in ──
+       * The whole filter animates toward identity (SMIL), so removing the class
+       * at 1.2s is seamless — scale 0 + saturate 1 + slope 1 == passthrough. */}
+      <svg className="sketch-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
+        <defs>
+          <filter id="acid-sketch" x="-4%" y="-6%" width="108%" height="112%" colorInterpolationFilters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency="0.021 0.032" numOctaves="2" seed="7" result="grain" />
+            <feDisplacementMap in="SourceGraphic" in2="grain" scale="0" xChannelSelector="R" yChannelSelector="G" result="rough">
+              <animate begin="indefinite" attributeName="scale" values="27;24;0" keyTimes="0;0.28;1" dur="0.95s" fill="freeze" calcMode="spline" keySplines="0.3 0 0.4 1;0 0 0.2 1" />
+            </feDisplacementMap>
+            <feColorMatrix in="rough" type="saturate" values="1" result="ink">
+              <animate begin="indefinite" attributeName="values" values="0.05;0.08;1" keyTimes="0;0.32;1" dur="1.05s" fill="freeze" />
+            </feColorMatrix>
+            <feComponentTransfer in="ink">
+              <feFuncR type="linear" slope="1" intercept="0">
+                <animate begin="indefinite" attributeName="slope" values="2.25;2.25;1" keyTimes="0;0.38;1" dur="1.05s" fill="freeze" />
+                <animate begin="indefinite" attributeName="intercept" values="-0.63;-0.63;0" keyTimes="0;0.38;1" dur="1.05s" fill="freeze" />
+              </feFuncR>
+              <feFuncG type="linear" slope="1" intercept="0">
+                <animate begin="indefinite" attributeName="slope" values="2.25;2.25;1" keyTimes="0;0.38;1" dur="1.05s" fill="freeze" />
+                <animate begin="indefinite" attributeName="intercept" values="-0.63;-0.63;0" keyTimes="0;0.38;1" dur="1.05s" fill="freeze" />
+              </feFuncG>
+              <feFuncB type="linear" slope="1" intercept="0">
+                <animate begin="indefinite" attributeName="slope" values="2.25;2.25;1" keyTimes="0;0.38;1" dur="1.05s" fill="freeze" />
+                <animate begin="indefinite" attributeName="intercept" values="-0.63;-0.63;0" keyTimes="0;0.38;1" dur="1.05s" fill="freeze" />
+              </feFuncB>
+              <feFuncA type="identity" />
+            </feComponentTransfer>
+          </filter>
+        </defs>
+      </svg>
+
       {/* ── First screen: the ledger as an object ─────────────────────────── */}
-      <section className="ledger-hero" aria-labelledby="hero-title">
+      <section className={`ledger-hero${sketching ? ' sketching' : ''}`} aria-labelledby="hero-title">
         <div className="ledger-hero-grid">
           <div className="ledger-card">
             <div className="ledger-band" aria-hidden="true">
