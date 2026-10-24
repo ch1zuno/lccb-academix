@@ -6,7 +6,7 @@
  * Verifies: API + database health, all four role logins, every page's main
  * data endpoint, the role guard, and that demo:stage left the showcase states
  * in place (flagged + rejected referrals, an upcoming session, an approvable
- * application). Exits non-zero if anything is off. */
+ * application with a supporting file). Exits non-zero if anything is off. */
 
 const args = process.argv.slice(2);
 const warm = args.includes('--warm');
@@ -140,12 +140,22 @@ async function login(loginId) {
     Boolean(upcoming),
     upcoming ? upcoming.session_code : 'run npm run demo:stage',
   );
-  const approvable = applications.find((a) => a.status === 'pending' && a.exam_score != null);
+  const approvable = applications.find((a) => a.status === 'pending' && a.exam_score != null && (a.document_count ?? 0) > 0);
   check(
-    'approvable tutor application',
+    'approvable tutor application with a file',
     Boolean(approvable),
-    approvable ? `${approvable.application_code} · ${approvable.name}` : 'run npm run demo:stage',
+    approvable
+      ? `${approvable.application_code} · ${approvable.name} · ${approvable.document_count} file${approvable.document_count === 1 ? '' : 's'}`
+      : 'run npm run demo:stage',
   );
+  if (approvable && tokens.superadmin) {
+    const files = await request(`/accreditation/${approvable.id}/documents`, { token: tokens.superadmin });
+    check(
+      'reviewer can read the attached files',
+      files.status === 200 && (files.data.documents?.length ?? 0) > 0,
+      `${files.status} · ${files.data.documents?.length ?? 0} file(s)`,
+    );
+  }
 
   console.log(`\n${pass} passed, ${fail} failed.`);
   if (fail) {

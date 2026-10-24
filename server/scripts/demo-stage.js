@@ -21,6 +21,11 @@ const COHORT_APPLICANTS = [
   '24-0870-118', '24-0870-131', '25-0870-142', '25-0870-155',
   '25-0870-168', '25-0871-071', '25-0871-086', '26-0870-093', '26-0871-114',
 ];
+/* 8x8 gold PNG — the demo attachment that satisfies the approve gate. */
+const DEMO_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAJElEQVR4nGPg13S6soYXgpDZDFhF+TWdGLCKQnVgNY2BDnYAADMIUhFiMs0JAAAAAElFTkSuQmCC',
+  'base64',
+);
 
 async function request(path, { method = 'GET', token, body } = {}) {
   const res = await fetch(BASE + path, {
@@ -50,6 +55,24 @@ async function step(label, fn) {
     failures += 1;
     console.log(`✗ ${label} — ${e.message}`);
   }
+}
+
+/* The approve gate needs one real file; attach the demo PNG once per application. */
+async function ensureDemoDocument(token, application) {
+  const mine = (await request('/accreditation/mine', { token })).data.application;
+  if ((mine?.document_count ?? 0) > 0) {
+    return `, ${mine.document_count} file${mine.document_count === 1 ? '' : 's'} on file`;
+  }
+  const form = new FormData();
+  form.append('document', new Blob([DEMO_PNG], { type: 'image/png' }), 'deans-list-demo.png');
+  const res = await fetch(`${BASE}/accreditation/${application.id}/documents`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  let data; try { data = await res.json(); } catch { data = {}; }
+  if (res.status !== 201) throw new Error(data.error || `document upload ${res.status}`);
+  return ', demo file attached';
 }
 
 const today = new Date().toISOString().slice(0, 10);
@@ -160,7 +183,8 @@ await step('pending, exam-ready tutor application for approvals', async () => {
     const who = await login(candidate);
     const mine = (await request('/accreditation/mine', { token: who.token })).data.application;
     if (mine && mine.status === 'pending' && mine.exam_score != null) {
-      return `already approvable (${mine.application_code}, score ${mine.exam_score})`;
+      const note = await ensureDemoDocument(who.token, mine);
+      return `already approvable (${mine.application_code}, score ${mine.exam_score}${note})`;
     }
     if (mine && mine.status === 'pending') {
       // Application exists but the exam is unsent — finish it so Approve works live.
@@ -169,7 +193,10 @@ await step('pending, exam-ready tutor application for approvals', async () => {
       const answers = {};
       for (const q of exam.data.questions ?? []) answers[String(q.question_number)] = 0;
       const graded = await request('/accreditation/exam', { method: 'POST', token: who.token, body: { answers } });
-      if (graded.status === 200) return `application ${mine.application_code} exam-ready (score ${graded.data.exam_score})`;
+      if (graded.status === 200) {
+        const note = await ensureDemoDocument(who.token, mine);
+        return `application ${mine.application_code} exam-ready (score ${graded.data.exam_score}${note})`;
+      }
       continue;
     }
     if (mine) continue; // approved/rejected already — next candidate
@@ -196,7 +223,8 @@ await step('pending, exam-ready tutor application for approvals', async () => {
     const answers = {};
     for (const q of exam.data.questions ?? []) answers[String(q.question_number)] = 0;
     await request('/accreditation/exam', { method: 'POST', token: who.token, body: { answers } });
-    return `application ${applied.data.application.application_code} pending for ${candidate} (exam submitted)`;
+    const note = await ensureDemoDocument(who.token, applied.data.application);
+    return `application ${applied.data.application.application_code} pending for ${candidate} (exam submitted${note})`;
   }
   throw new Error('all cohort candidates already have applications');
 });

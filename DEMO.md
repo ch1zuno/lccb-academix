@@ -73,16 +73,19 @@ referrals* panel → **Remove** (only a superadmin, only while rejected; the
 session history survives via `ON DELETE SET NULL`).
 
 **Act 4 — Accreditation and analytics (1.5 min).** As **Superadmin** →
-**Tutor approvals**. The staged applicant already sat the exam, so **Approve**
-works. Open **Overview** for the KPI/trend view. Close on the API story: one
-pool, append-only ledger, transactional wrap-up, 409 guards against double
-accept/check-in/redeem.
+**Tutor approvals**. The staged applicant already sat the exam and has a demo
+file attached, so open the file (thumbnail, then **Open**) and **Approve**.
+Both conditions are real gates: no exam or no file → 409. Open **Overview** for
+the KPI/trend view. Close on the API story: one pool, append-only ledger,
+transactional wrap-up, attachments in Postgres, 409 guards against double
+accept/check-in/redeem/approve.
 
 ## Rehearsal notes
 
 - Re-run `npm run demo:stage` after each full rehearsal: it re-creates the
   rejected referral if you removed it, moves the pending application to the
-  next cohort candidate, and tops the wallet back up if you redeemed.
+  next cohort candidate (attaching the demo file if it has none), and tops the
+  wallet back up if you redeemed.
 - `npm run db:migrate` before rehearsals if new `db/migrations/*.sql` landed —
   it only applies pending files and never drops data.
 - If a login returns **429**, the per-IP limiter counted repeated failures;

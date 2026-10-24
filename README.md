@@ -104,7 +104,7 @@ All seeded users share the password **`demo1234`**. Sign in with the `custom_id`
 3. **Check-in** — tutor stages an OTP/QR token, both Confirm via `/checkins/:code`, 2 confirmations → session `in-progress`. Physical check-ins: `POST /device/import-roster` + `POST /device/verify` (header `X-Device-Key`).
 4. **Wrap-up** — either participant submits rating (+ tutor notes) in one transaction: hours debited from the referral (auto-resolve at 0), tutor +50 & learner +25 attendance credits, badges awarded.
 5. **Rewards** — learner redeems points (stock decremented atomically, voucher issued).
-6. **Accreditation** — learner opens **Become a Tutor** (`/exam`): picks subjects and attaches supporting documents of academic achievement. Submitting lands on the pending-applicant page (`/tutor-pending`) with the qualification exam (one-shot, server-graded) and their documents; after the exam the applicant waits for the superadmin decision (page polls live) with shortcut buttons to go home or find a tutor. Superadmin approves → `is_verified` + `certified_by_id`.
+6. **Accreditation** — learner opens **Become a Tutor** (`/exam`): picks subjects, uploads proof files (PDF, DOC/DOCX, PNG, JPG/WEBP; 4 MB each, up to 5), and may add academic-record notes. Thumbnails appear before submit, then files upload one-by-one (keeps each request under Vercel's 4.5 MB body cap). Submitting lands on `/tutor-pending` with the files, the one-shot server-graded exam, and live approval polling; the applicant can still add or withdraw files while pending. Superadmin reviews the attachments and approves → `is_verified` + `certified_by_id`; approval is blocked until at least one file is attached.
 
 ## API routes (mounted under `/api`)
 
@@ -120,9 +120,15 @@ All seeded users share the password **`demo1234`**. Sign in with the `custom_id`
 | `/device/import-roster` · `/device/roster` · `/device/verify` | POST GET | `X-Device-Key` | physical check-in via device fingerprint |
 | `/rewards` · `/rewards/:id/redeem` · `/wallet` | GET POST | authed | catalog, server-side grading redemption (`FOR UPDATE` stock, ledger debit, voucher) |
 | `/notifications` | GET PATCH | authed | per-user feed + mark-all-read |
-| `/accreditation/apply` · `/accreditation/exam` · `/accreditation/mine` | GET POST | learner/authed | apply with subjects + supporting-document entries (`achievements` jsonb); exam questions never expose answers; grading is one-shot |
-| `/accreditation/applications` · `/:id/approve` · `/:id/reject` | GET POST | superadmin | sets `is_verified` + `certified_by_id` |
+| `/accreditation/apply` · `/accreditation/exam` · `/accreditation/mine` | GET POST | learner/authed | apply with subjects + academic-record notes (`achievements` jsonb); exam questions never expose answers; grading is one-shot |
+| `/accreditation/:id/documents` · `/accreditation/documents/:id` | GET POST DELETE | owner/superadmin | supporting files stored in Postgres (`bytea`): multipart `document`, 4 MB each, 5 per application; owner may withdraw while pending; superadmin reads for review |
+| `/accreditation/applications` · `/:id/approve` · `/:id/reject` | GET POST | superadmin | approve requires the exam **and** ≥1 attached file; sets `is_verified` + `certified_by_id` |
 | `/analytics` | GET | superadmin | CTE aggregates: KPIs, 6-week trend, dept breakdown |
+
+> **Supporting files** live in `application_documents` (`bytea`) — no object
+> storage or writable disk. `multer` parses one multipart `document` per request,
+> magic bytes must match the extension (a renamed executable is rejected), and the
+> 4 MB/5-file caps keep every upload inside Vercel's 4.5 MB body limit.
 
 ## Scripts
 
@@ -147,7 +153,8 @@ db/schema.sql          source-of-truth DDL (incl. platform tables, triggers, vie
                        sessions.duration_hours is the numeric hour source of truth (DEFAULT 1)
 db/seed.sql            demo data (39 users; password demo1234; UTF-8)
 db/migrations/         numbered migration files (marked applied on reset);
-                       002_session_duration_and_seed_repair.sql backfills numeric durations
+                       002_session_duration_and_seed_repair.sql backfills numeric durations;
+                       004_application_documents.sql adds the upload table
 server/                Express app, one pg Pool (`server/db.js`), routes, middleware
 server/scripts/        db-reset + db-migrate + embedded-PG boot + demo staging/check + e2e scripts
 src/                   React app; `src/api.js` is the only API client
