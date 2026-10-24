@@ -9,8 +9,18 @@ const router = express.Router();
  * per-subject tutor/session counts, the current tutor honor roll and the
  * cheapest rewards. No names of learners, no contact details.
  */
+// 60s micro-cache: the landing fetches this on every visit and the aggregates
+// are the slowest part of a cold serverless first paint. Each warm instance
+// keeps its own copy — fine for anonymous counters.
+let overviewCache = { at: 0, data: null };
+const OVERVIEW_TTL_MS = 60_000;
+
 router.get('/public/overview', async (_req, res, next) => {
   try {
+    res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
+    if (overviewCache.data && Date.now() - overviewCache.at < OVERVIEW_TTL_MS) {
+      return res.json(overviewCache.data);
+    }
     const [totalsResult, subjectsResult, tutorsResult, rewardsResult] = await Promise.all([
       query(`
         SELECT
@@ -56,12 +66,14 @@ router.get('/public/overview', async (_req, res, next) => {
     const totals = totalsResult.rows[0] ?? {};
     totals.hours = Number(totals.hours ?? 0);
 
-    res.json({
+    const payload = {
       totals,
       subjects: subjectsResult.rows,
       tutors: tutorsResult.rows,
       rewards: rewardsResult.rows,
-    });
+    };
+    overviewCache = { at: Date.now(), data: payload };
+    res.json(payload);
   } catch (e) {
     next(e);
   }

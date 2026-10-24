@@ -35,7 +35,8 @@ router.get('/analytics', requireAuth, requireRole('superadmin'), async (_req, re
       ),
       ref_stats AS (
         SELECT
-          count(*)::int AS total,
+          count(*) FILTER (WHERE status <> 'rejected')::int AS total,
+          count(*) FILTER (WHERE status = 'rejected')::int AS rejected,
           count(*) FILTER (WHERE status = 'resolved')::int AS resolved
         FROM referrals
       ),
@@ -46,7 +47,7 @@ router.get('/analytics', requireAuth, requireRole('superadmin'), async (_req, re
       SELECT
         t.active_tutors, l.total_learners, s.monthly, s.monthly_prev,
         round(s.avg_rating::numeric, 1) AS avg_rating,
-        r.total, r.resolved,
+        r.total, r.rejected, r.resolved,
         round((r.resolved::numeric / GREATEST(r.total, 1)) * 100) AS recovery_rate,
         lg.issued
       FROM tutor_stats t, learner_stats l, session_stats s, ref_stats r, ledger_stats lg`);
@@ -87,6 +88,7 @@ router.get('/analytics', requireAuth, requireRole('superadmin'), async (_req, re
       monthlyPrev: o.monthly_prev,
       avgRating: o.avg_rating,
       totalReferrals: o.total,
+      rejectedReferrals: o.rejected,
       resolvedReferrals: o.resolved,
       recoveryRate: o.recovery_rate,
       pointsIssued: o.issued,
