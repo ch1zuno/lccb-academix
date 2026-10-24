@@ -170,6 +170,16 @@ CREATE TABLE application_subjects (
   UNIQUE(application_id, subject_id)
 );
 
+CREATE TABLE application_documents (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  application_id uuid NOT NULL REFERENCES tutor_applications(id) ON DELETE CASCADE,
+  file_name text NOT NULL,
+  mime_type text NOT NULL,
+  size_bytes int NOT NULL CHECK (size_bytes > 0),
+  data bytea NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE points_ledger (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -265,6 +275,7 @@ CREATE INDEX idx_user_badges_user_id ON user_badges(user_id);
 CREATE INDEX idx_sessions_subject_id ON sessions(subject_id);
 CREATE INDEX idx_user_subjects_subject_id ON user_subjects(subject_id);
 CREATE INDEX idx_tutor_applications_status ON tutor_applications(status);
+CREATE INDEX idx_application_documents_application ON application_documents(application_id);
 CREATE INDEX idx_sessions_referral_id ON sessions(referral_id);
 CREATE INDEX idx_sessions_date_desc ON sessions(date DESC);
 CREATE INDEX idx_check_in_tokens_session_id ON check_in_tokens(session_id);

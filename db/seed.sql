@@ -213,6 +213,14 @@ SELECT a.id, s.id FROM tutor_applications a, subjects s WHERE a.application_code
 SELECT a.id, s.id FROM tutor_applications a, subjects s WHERE a.application_code = 'APP-002' AND s.code IN ('ACCT 102', 'MGMT 301') UNION ALL
 SELECT a.id, s.id FROM tutor_applications a, subjects s WHERE a.application_code = 'APP-003' AND s.code IN ('ENGL 101');
 
+-- A real attachment so the seeded pending application already satisfies the
+-- approve gate. The bytes are an 8x8 gold PNG generated for the demo.
+INSERT INTO application_documents (application_id, file_name, mime_type, size_bytes, data)
+SELECT a.id, 'deans-list-2026.png', 'image/png',
+       octet_length(decode('89504e470d0a1a0a0000000d49484452000000080000000808020000004b6d29dc0000002449444154789c63e0d774bab286178290d90c5845f9359d18b08a427560358d810e760000330852116232cd090000000049454e44ae426082', 'hex')),
+       decode('89504e470d0a1a0a0000000d49484452000000080000000808020000004b6d29dc0000002449444154789c63e0d774bab286178290d90c5845f9359d18b08a427560358d810e760000330852116232cd090000000049454e44ae426082', 'hex')
+FROM tutor_applications a WHERE a.application_code = 'APP-003';
+
 -- 001: hours remaining starts equal to hours required
 UPDATE referrals SET hours_remaining = hours_required;
 
