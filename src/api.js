@@ -23,7 +23,14 @@ async function request(path, { method = 'GET', body, params } = {}) {
   });
   const type = res.headers.get('content-type') || '';
   const payload = type.includes('json') ? await res.json().catch(() => ({})) : await res.text();
-  if (!res.ok) throw new ApiError(res.status, payload?.error || payload?.message || `HTTP ${res.status}`, payload);
+  if (!res.ok) {
+    // A 401 outside the login call means the token expired or was revoked —
+    // let the shell drop to the login screen instead of leaving broken pages.
+    if (res.status === 401 && path !== '/auth/login') {
+      window.dispatchEvent(new Event('academix:unauthorized'));
+    }
+    throw new ApiError(res.status, payload?.error || payload?.message || `HTTP ${res.status}`, payload);
+  }
   return payload;
 }
 

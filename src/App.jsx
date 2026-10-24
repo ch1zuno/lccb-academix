@@ -35,6 +35,29 @@ const DEMO_ROLES = [
   { role: 'superadmin', loginId: 'l.betita.admin@lccbacolod.edu.ph' },
 ];
 
+/* Which workspace actually owns each page. A direct URL (or a role switch made
+ * while standing on a page) must never render another role's screen. */
+const ROLE_ROUTES = {
+  '/wizard': ['learner'],
+  '/dashboard': ['learner', 'tutor', 'faculty', 'superadmin'],
+  '/exam': ['learner', 'tutor'],
+  '/tutor-pending': ['learner'],
+  '/referral': ['faculty'],
+  '/checkin': ['learner', 'tutor'],
+  '/rewards': ['learner', 'tutor'],
+  '/approvals': ['superadmin'],
+};
+
+function RoleGate({ role, path, showToast, children }) {
+  const allowed = (ROLE_ROUTES[path] ?? []).includes(role);
+  useEffect(() => {
+    if (!allowed) showToast('That page belongs to another workspace.', 'error');
+    // showToast is intentionally not a dependency — it only calls setToast.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowed]);
+  return allowed ? children : <Navigate to="/dashboard" replace />;
+}
+
 const initialsOf = (name = '') => name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
 export default function App() {
@@ -93,6 +116,31 @@ export default function App() {
       .catch(() => {});
   };
   useEffect(() => { if (user) refreshNotifications(); }, [user?.id]);
+
+  // Token expiry / revoke: api.js emits this on any 401 outside the login call.
+  useEffect(() => {
+    const onExpired = () => {
+      clearSession();
+      setUser(null);
+      setShowRoleMenu(false);
+      setMobileOpen(false);
+      navigate('/dashboard');
+      showToast('Session expired — sign in again.', 'error');
+    };
+    window.addEventListener('academix:unauthorized', onExpired);
+    return () => window.removeEventListener('academix:unauthorized', onExpired);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
+
+  // Keep the notification badge honest without a socket: focus + 30s poll.
+  useEffect(() => {
+    if (!user) return undefined;
+    const timer = setInterval(refreshNotifications, 30_000);
+    const onFocus = () => refreshNotifications();
+    window.addEventListener('focus', onFocus);
+    return () => { clearInterval(timer); window.removeEventListener('focus', onFocus); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const markAllRead = () => {
     api.patch('/notifications', {}).then(refreshNotifications).catch(() => {});
@@ -200,6 +248,10 @@ export default function App() {
     </nav>
   );
 
+  const gate = (path, element) => (
+    <RoleGate role={role} path={path} showToast={showToast}>{element}</RoleGate>
+  );
+
   return (
     <div className="min-h-screen bg-stone text-ink">
       {/* Mobile bar */}
@@ -302,14 +354,29 @@ export default function App() {
               >
                 <Routes location={location} key={location.pathname}>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/wizard" element={<LearnerWizard showToast={showToast} />} />
-                  <Route path="/dashboard" element={<Dashboard role={role} user={user} showToast={showToast} />} />
-                  <Route path="/exam" element={<TutorExam showToast={showToast} user={user} />} />
-                  <Route path="/tutor-pending" element={<TutorApplicant showToast={showToast} user={user} />} />
-                  <Route path="/referral" element={<FacultyReferral showToast={showToast} user={user} />} />
-                  <Route path="/checkin" element={<SessionCheckIn role={role} user={user} showToast={showToast} />} />
-                  <Route path="/rewards" element={<RewardCatalog showToast={showToast} />} />
-                  <Route path="/approvals" element={<SuperadminApprovals showToast={showToast} />} />
+                  <Route path="/wizard" element={gate('/wizard', <LearnerWizard showToast={showToast} />)} />
+                  <Route path="/dashboard" element={gate('/dashboard', <Dashboard role={role} user={user} showToast={showToast} />)} />
+                  <Route path="/exam" element={gate('/exam', <TutorExam showToast={showToast} user={user} />)} />
+                  <Route path="/tutor-pending" element={gate('/tutor-pending', <TutorApplicant showToast={showToast} user={user} />)} />
+                  <Route path="/referral" element={gate('/referral', <FacultyReferral showToast={showToast} user={user} />)} />
+                  <Route path="/checkin" element={gate('/checkin', <SessionCheckIn role={role} user={user} showToast={showToast} />)} />
+                  <Route path="/rewards" element={gate('/rewards', <RewardCatalog showToast={showToast} />)} />
+                  <Route path="/approvals" element={gate('/approvals', <SuperadminApprovals showToast={showToast} />)} />
+                  <Route
+                    path="*"
+                    element={(
+                      <div className="panel mx-auto mt-10 max-w-[560px] p-8 text-center">
+                        <p className="meta uppercase tracking-[0.14em]">404 · Off the ledger</p>
+                        <h1 className="mt-3 font-display text-[30px] font-extrabold leading-tight tracking-[-0.03em]">
+                          This page is not in the ledger.
+                        </h1>
+                        <p className="mt-2 text-[14px] text-muted-foreground">
+                          The address may have moved with a workspace switch.
+                        </p>
+                        <Button className="mt-6" onClick={() => navigate('/dashboard')}>Back to dashboard</Button>
+                      </div>
+                    )}
+                  />
                 </Routes>
               </motion.div>
             </AnimatePresence>
