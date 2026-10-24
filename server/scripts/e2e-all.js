@@ -12,6 +12,7 @@ const scripts = [
   'e2e-rewards.js',
   'e2e-accreditation.js',
   'e2e-analytics.js',
+  'e2e-ledger-integrity.js',
 ];
 
 let failed = 0;
