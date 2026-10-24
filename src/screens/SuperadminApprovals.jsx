@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
+import { ApplicationFileList } from '../components/ApplicationDocumentPicker';
 import { Loader2, Check, X, ExternalLink, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { downloadApplicationDocument, openApplicationDocument, MAX_APPLICATION_FILES } from '../lib/applicationFiles';
 import api from '../api';
 
 const fmtDate = (value) => {
@@ -18,6 +20,7 @@ const subjectCode = (subject) => (typeof subject === 'string' ? subject : subjec
 export default function SuperadminApprovals({ showToast }) {
   const [applications, setApplications] = useState(null);
   const [selectedApp, setSelectedApp] = useState(null);
+  const [selectedDocs, setSelectedDocs] = useState(null);
   const [busy, setBusy] = useState(null);
 
   useEffect(() => {
@@ -25,6 +28,20 @@ export default function SuperadminApprovals({ showToast }) {
       .then(({ applications: rows }) => setApplications(rows))
       .catch((e) => { setApplications([]); showToast(e.message || 'Failed to load applications', 'error'); });
   }, []);
+
+  useEffect(() => {
+    if (!selectedApp) { setSelectedDocs(null); return undefined; }
+    let alive = true;
+    setSelectedDocs(null);
+    api.get(`/accreditation/${selectedApp.id}/documents`)
+      .then(({ documents }) => { if (alive) setSelectedDocs(documents); })
+      .catch((e) => {
+        if (!alive) return;
+        setSelectedDocs([]);
+        showToast(e.message || 'Could not read the attached files', 'error');
+      });
+    return () => { alive = false; };
+  }, [selectedApp?.id]);
 
   useEffect(() => {
     if (!selectedApp) return undefined;
@@ -66,12 +83,15 @@ export default function SuperadminApprovals({ showToast }) {
     }
   };
 
+  const openFile = (item) => openApplicationDocument(item.doc).catch(e => showToast(e.message, 'error'));
+  const downloadFile = (item) => downloadApplicationDocument(item.doc).catch(e => showToast(e.message, 'error'));
+
   return (
     <div className="mx-auto w-full max-w-[1180px]">
       <div className="section-head">
         <div>
           <h1 className="section-title">Tutor approvals</h1>
-          <p className="section-subtitle">Read the exam score, academic record, and supporting documents before you sign off.</p>
+          <p className="section-subtitle">Read the exam score, academic record, and attached files before you sign off.</p>
         </div>
         <span className="border-2 border-ink bg-gold px-2 py-1 text-[13px] font-bold text-ink shadow-[2px_2px_0_#0f2942]">{applications?.length ?? '—'} pending</span>
       </div>
@@ -91,7 +111,6 @@ export default function SuperadminApprovals({ showToast }) {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence initial={false}>
             {applications.map(app => {
-              const achievements = Array.isArray(app.achievements) ? app.achievements : [];
               return (
                 <motion.article
                   layout
@@ -122,8 +141,8 @@ export default function SuperadminApprovals({ showToast }) {
                       <p className="num mt-1 text-[22px] leading-none text-ink">{app.exam_score == null ? '—' : `${app.exam_score}%`}</p>
                     </div>
                     <div className="border-2 border-ink bg-[#f8f1e2] p-2 text-right">
-                      <p className="text-[13px] font-semibold text-muted-foreground">Documents</p>
-                      <p className="num mt-1 text-[22px] leading-none text-ink">{achievements.length}</p>
+                      <p className="text-[13px] font-semibold text-muted-foreground">Files</p>
+                      <p className="num mt-1 text-[22px] leading-none text-ink">{app.document_count ?? 0}</p>
                     </div>
                   </div>
 
@@ -198,8 +217,8 @@ export default function SuperadminApprovals({ showToast }) {
                   {[
                     { label: 'Exam score', value: selectedApp.exam_score == null ? '—' : `${selectedApp.exam_score}%` },
                     { label: 'Subjects', value: (selectedApp.subjects ?? []).length },
-                    { label: 'Documents', value: (selectedApp.achievements ?? []).length },
-                    { label: 'Status', value: 'Pending' },
+                    { label: 'Files', value: selectedDocs?.length ?? selectedApp.document_count ?? 0 },
+                    { label: 'Notes', value: (selectedApp.achievements ?? []).length },
                   ].map(item => (
                     <div key={item.label} className="border-2 border-ink bg-[#f8f1e2] p-3">
                       <p className="text-[13px] font-semibold text-muted-foreground">{item.label}</p>
@@ -207,6 +226,36 @@ export default function SuperadminApprovals({ showToast }) {
                     </div>
                   ))}
                 </div>
+
+                <section className="mt-6">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-display text-[17px] font-bold text-ink">Supporting files</h3>
+                    <span className="border-2 border-ink bg-gold px-2 py-0.5 text-[11px] font-bold">
+                      {selectedDocs?.length ?? selectedApp.document_count ?? 0} / {MAX_APPLICATION_FILES}
+                    </span>
+                  </div>
+                  {selectedDocs === null ? (
+                    <p className="mt-2 text-[13px] text-muted-foreground">Reading attached files…</p>
+                  ) : selectedDocs.length === 0 ? (
+                    <p className="mt-2 border-2 border-ink bg-[#f6d7d2] px-4 py-3 text-[13px] font-semibold text-crimson">
+                      No files attached. Approval is blocked until the applicant uploads at least one supporting file.
+                    </p>
+                  ) : (
+                    <div className="mt-2">
+                      <ApplicationFileList
+                        items={selectedDocs.map(doc => ({
+                          id: doc.id,
+                          name: doc.file_name,
+                          size: doc.size_bytes,
+                          mime: doc.mime_type,
+                          doc,
+                        }))}
+                        onOpen={openFile}
+                        onDownload={downloadFile}
+                      />
+                    </div>
+                  )}
+                </section>
 
                 <section className="mt-6">
                   <h3 className="font-display text-[17px] font-bold text-ink">Academic record</h3>
@@ -225,7 +274,7 @@ export default function SuperadminApprovals({ showToast }) {
                 </section>
 
                 <section className="mt-6">
-                  <h3 className="font-display text-[17px] font-bold text-ink">Achievements &amp; documents</h3>
+                  <h3 className="font-display text-[17px] font-bold text-ink">Academic record notes</h3>
                   {Array.isArray(selectedApp.achievements) && selectedApp.achievements.length > 0 ? (
                     <ul className="mt-1">
                       {selectedApp.achievements.map((achievement, index) => {
@@ -243,7 +292,7 @@ export default function SuperadminApprovals({ showToast }) {
                                   rel="noreferrer"
                                   className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-ink underline decoration-gold decoration-2 underline-offset-4 hover:decoration-ink"
                                 >
-                                  Open document <ExternalLink className="h-3 w-3" strokeWidth={1.6} />
+                                  Open link <ExternalLink className="h-3 w-3" strokeWidth={1.6} />
                                 </a>
                               )}
                             </div>
@@ -252,7 +301,7 @@ export default function SuperadminApprovals({ showToast }) {
                       })}
                     </ul>
                   ) : (
-                    <p className="mt-2 text-[13px] text-muted-foreground">No achievements submitted.</p>
+                    <p className="mt-2 text-[13px] text-muted-foreground">No academic-record notes submitted.</p>
                   )}
                 </section>
 
@@ -269,7 +318,13 @@ export default function SuperadminApprovals({ showToast }) {
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink bg-[#f8f1e2] px-6 py-4">
-                <p className="text-[13px] text-muted-foreground">Approval verifies the tutor and makes their subjects bookable.</p>
+                <p className="text-[13px] text-muted-foreground">
+                  {selectedDocs === null
+                    ? 'Checking the attached files…'
+                    : selectedDocs.length === 0
+                      ? 'Approval is blocked until at least one supporting file is attached.'
+                      : 'Approval verifies the tutor and makes their subjects bookable.'}
+                </p>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" onClick={() => setSelectedApp(null)} disabled={Boolean(busy)}>Cancel</Button>
                   <Button
@@ -281,7 +336,7 @@ export default function SuperadminApprovals({ showToast }) {
                     Reject
                   </Button>
                   <Button
-                    disabled={busy === selectedApp.id}
+                    disabled={busy === selectedApp.id || selectedDocs === null || selectedDocs.length === 0}
                     onClick={() => handleApprove(selectedApp)}
                   >
                     {busy === selectedApp.id ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : <Check className="h-4 w-4" strokeWidth={2} />}

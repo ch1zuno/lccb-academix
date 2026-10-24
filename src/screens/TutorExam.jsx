@@ -2,21 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import ApplicationDocumentPicker from '../components/ApplicationDocumentPicker';
 import { Check, Loader2, Trash2, Plus } from 'lucide-react';
 import { cn } from '../lib/utils';
 import api from '../api';
 
-/* Entry point for students who want to tutor: pick subjects, attach
- * supporting documents of academic achievement, submit. The application
- * itself — exam, documents, review status — lives on /tutor-pending. */
+const nextFileId = () => (
+  globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
+);
+
+/* Entry point for students who want to tutor: pick subjects, upload proof
+ * files, add academic notes, submit. The application itself — exam, files,
+ * review status — lives on /tutor-pending. */
 export default function TutorExam({ showToast, user }) {
   const nav = useNavigate();
   const [status, setStatus] = useState('loading');
   const [subjects, setSubjects] = useState(null);
   const [pickedSubjects, setPickedSubjects] = useState([]);
+  const [staged, setStaged] = useState([]); // [{ id, file }]
   const [docs, setDocs] = useState([{ title: '', detail: '', link: '' }]);
   const [applying, setApplying] = useState(false);
+  const [uploadStep, setUploadStep] = useState('');
   const [error, setError] = useState(null);
+
+  const fileItems = staged.map(({ id, file }) => ({
+    id,
+    name: file.name,
+    size: file.size,
+    mime: file.type,
+    file,
+  }));
 
   useEffect(() => {
     let cancelled = false;
@@ -46,16 +61,44 @@ export default function TutorExam({ showToast, user }) {
   const setDoc = (index, key, value) => setDocs(list => list.map((doc, i) => (i === index ? { ...doc, [key]: value } : doc)));
 
   const apply = async () => {
+    if (pickedSubjects.length === 0) {
+      showToast('Choose at least one subject before submitting.', 'error');
+      return;
+    }
+    if (staged.length === 0) {
+      showToast('Attach at least one supporting file before submitting.', 'error');
+      return;
+    }
     setApplying(true);
+    setUploadStep('Submitting application…');
     try {
       const achievements = docs.filter(doc => doc.title.trim());
-      await api.post('/accreditation/apply', { subjectIds: pickedSubjects, achievements });
-      showToast('Application submitted. Continue to the qualification exam.', 'success');
+      const { application } = await api.post('/accreditation/apply', { subjectIds: pickedSubjects, achievements });
+      let failed = 0;
+      for (let i = 0; i < staged.length; i += 1) {
+        setUploadStep(`Uploading file ${i + 1} of ${staged.length}…`);
+        const form = new FormData();
+        form.append('document', staged[i].file);
+        try {
+          await api.upload(`/accreditation/${application.id}/documents`, form);
+        } catch {
+          failed += 1;
+        }
+      }
+      if (failed) {
+        showToast(
+          `Application submitted, but ${failed} file${failed === 1 ? '' : 's'} did not upload. Add ${failed === 1 ? 'it' : 'them'} from your application page.`,
+          'error',
+        );
+      } else {
+        showToast('Application submitted with supporting files. Continue to the qualification exam.', 'success');
+      }
       nav('/tutor-pending');
     } catch (e) {
       showToast(e.message || 'Could not apply', 'error');
     } finally {
       setApplying(false);
+      setUploadStep('');
     }
   };
 
@@ -96,7 +139,7 @@ export default function TutorExam({ showToast, user }) {
       <div className="section-head">
         <div>
           <h1 className="section-title">Become a tutor</h1>
-          <p className="section-subtitle">Pick the subjects you can teach and attach the record that proves it. The exam opens next.</p>
+          <p className="section-subtitle">Pick the subjects you can teach, attach proof files, and add academic notes. The exam opens next.</p>
         </div>
         <span className="border-2 border-ink bg-paper px-2 py-1 text-[13px] font-semibold text-ink">Application</span>
       </div>
@@ -145,9 +188,36 @@ export default function TutorExam({ showToast, user }) {
         </div>
 
         <div className="mt-8 border-t-2 border-ink pt-6">
-          <h2 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Supporting documents</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Supporting files</h2>
+            <span className="border-2 border-ink bg-gold px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em]">Required</span>
+          </div>
           <p className="mt-1 max-w-[62ch] text-[13px] text-muted-foreground">
-            Grades, honors, or certificates that show you can teach these subjects. A scanned copy is optional, but a link helps the reviewer.
+            Upload proof of the academic record you are claiming — grade slips, honors certificates, or your registration form.
+            At least one file is required; the superadmin cannot approve the application without one.
+          </p>
+
+          <ApplicationDocumentPicker
+            className="mt-4"
+            items={fileItems}
+            onAdd={(files) => setStaged(list => [...list, ...files.map(file => ({ id: nextFileId(), file }))])}
+            onRemove={(id) => setStaged(list => list.filter(item => item.id !== id))}
+            onError={(message) => showToast(message, 'error')}
+            disabled={applying}
+          />
+
+          {applying && uploadStep && (
+            <p className="mt-2 text-[12px] font-semibold text-ink" role="status">{uploadStep}</p>
+          )}
+        </div>
+
+        <div className="mt-8 border-t-2 border-ink pt-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Academic record notes</h2>
+            <span className="border-2 border-ink bg-paper px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Optional</span>
+          </div>
+          <p className="mt-1 max-w-[62ch] text-[13px] text-muted-foreground">
+            Short honors, leadership roles, or links the reviewer should know about. These are text notes, separate from the files above.
           </p>
 
           <div className="mt-4 space-y-3">
@@ -156,7 +226,7 @@ export default function TutorExam({ showToast, user }) {
                 <div className="flex items-center gap-2">
                   <span className="num grid h-6 w-6 shrink-0 place-items-center border-2 border-ink bg-gold text-[13px] font-bold text-ink">{index + 1}</span>
                   <Input
-                    placeholder="Document title — e.g. Dean's Lister, 1st Sem AY 2025–2026"
+                    placeholder="Note title — e.g. Dean's Lister, 1st Sem AY 2025–2026"
                     value={doc.title}
                     onChange={(event) => setDoc(index, 'title', event.target.value)}
                   />
@@ -164,8 +234,8 @@ export default function TutorExam({ showToast, user }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      title="Remove document"
-                      aria-label="Remove document"
+                      title="Remove note"
+                      aria-label="Remove note"
                       onClick={() => setDocs(list => list.filter((_, i) => i !== index))}
                     >
                       <Trash2 className="h-4 w-4" strokeWidth={1.6} />
@@ -179,7 +249,7 @@ export default function TutorExam({ showToast, user }) {
                     onChange={(event) => setDoc(index, 'detail', event.target.value)}
                   />
                   <Input
-                    placeholder="Optional link to the scanned document"
+                    placeholder="Optional link — https://…"
                     value={doc.link}
                     onChange={(event) => setDoc(index, 'link', event.target.value)}
                   />
@@ -195,7 +265,7 @@ export default function TutorExam({ showToast, user }) {
               className="mt-3"
               onClick={() => setDocs(list => [...list, { title: '', detail: '', link: '' }])}
             >
-              <Plus className="h-4 w-4" strokeWidth={1.8} /> Add document
+              <Plus className="h-4 w-4" strokeWidth={1.8} /> Add note
             </Button>
           )}
         </div>
@@ -204,11 +274,16 @@ export default function TutorExam({ showToast, user }) {
           <p className="text-[13px] text-muted-foreground">
             {pickedSubjects.length === 0
               ? 'Choose at least one subject to continue.'
-              : `${pickedSubjects.length} subject${pickedSubjects.length === 1 ? '' : 's'} selected · ${docs.filter(doc => doc.title.trim()).length} document${docs.filter(doc => doc.title.trim()).length === 1 ? '' : 's'} attached`}
+              : staged.length === 0
+                ? 'Attach at least one supporting file to submit.'
+                : `${pickedSubjects.length} subject${pickedSubjects.length === 1 ? '' : 's'} selected · ${staged.length} file${staged.length === 1 ? '' : 's'} staged · ${docs.filter(doc => doc.title.trim()).length} note${docs.filter(doc => doc.title.trim()).length === 1 ? '' : 's'}`}
           </p>
-          <Button disabled={applying || pickedSubjects.length === 0} onClick={apply}>
+          <Button
+            disabled={applying || pickedSubjects.length === 0 || staged.length === 0}
+            onClick={apply}
+          >
             {applying ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : null}
-            {applying ? 'Submitting…' : 'Submit application'}
+            {applying ? (uploadStep || 'Submitting…') : 'Submit application'}
           </Button>
         </div>
       </div>

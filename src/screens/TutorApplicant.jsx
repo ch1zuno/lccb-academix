@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
+import ApplicationDocumentPicker, { ApplicationFileList } from '../components/ApplicationDocumentPicker';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ExternalLink, FileText, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { downloadApplicationDocument, openApplicationDocument, MAX_APPLICATION_FILES } from '../lib/applicationFiles';
 import api from '../api';
 
+const nextFileId = () => (
+  globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
+);
+
 /* Separate page for students who just applied as tutor (pending applicants):
- * 1. the qualification exam, 2. their supporting documents of academic
- *    achievement. After the exam the student waits for the superadmin's
- *    approval and can jump back home or off to find a tutor. */
+ * 1. the qualification exam, 2. their attached files, 3. academic-record
+ *    notes. After the exam the student waits for the superadmin's approval
+ *    and can jump back home or off to find a tutor. */
 export default function TutorApplicant({ showToast, user }) {
   const nav = useNavigate();
   const [app, setApp] = useState(null);
   const [phase, setPhase] = useState('loading'); // loading | exam | waiting | approved | rejected
+  const [fileDocs, setFileDocs] = useState(null);
+  const [fileBusy, setFileBusy] = useState([]);
   const [examStarted, setExamStarted] = useState(false);
   const [questions, setQuestions] = useState(null);
   const [answers, setAnswers] = useState({});
@@ -22,6 +30,13 @@ export default function TutorApplicant({ showToast, user }) {
   const [starting, setStarting] = useState(false);
   const [grading, setGrading] = useState(false);
   const [result, setResult] = useState(null);
+
+  const loadFiles = async (applicationId) => {
+    if (!applicationId) return;
+    const { documents } = await api.get(`/accreditation/${applicationId}/documents`);
+    setFileDocs(documents);
+    setApp(current => (current ? { ...current, document_count: documents.length } : current));
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -34,6 +49,7 @@ export default function TutorApplicant({ showToast, user }) {
         else if (a.status === 'rejected') setPhase('rejected');
         else if (a.exam_score != null) setPhase('waiting');
         else setPhase('exam');
+        loadFiles(a.id).catch(() => { if (!cancelled) setFileDocs([]); });
       })
       .catch((e) => {
         if (cancelled) return;
@@ -47,12 +63,47 @@ export default function TutorApplicant({ showToast, user }) {
     if (phase !== 'waiting') return undefined;
     const timer = setInterval(() => {
       api.get('/accreditation/mine').then(({ application: a }) => {
+        if (a) setApp(a);
         if (a?.status === 'approved') setPhase('approved');
         if (a?.status === 'rejected') setPhase('rejected');
       }).catch(() => {});
     }, 20000);
     return () => clearInterval(timer);
   }, [phase]);
+
+  const addFiles = async (files) => {
+    if (!app?.id) return;
+    for (const file of files) {
+      const key = nextFileId();
+      setFileBusy(list => [...list, { id: key, name: file.name, size: file.size, mime: file.type, busy: true }]);
+      try {
+        const form = new FormData();
+        form.append('document', file);
+        await api.upload(`/accreditation/${app.id}/documents`, form);
+        showToast(`${file.name} attached.`, 'success');
+      } catch (e) {
+        showToast(e.message || `Could not upload ${file.name}`, 'error');
+      } finally {
+        setFileBusy(list => list.filter(item => item.id !== key));
+      }
+    }
+    try { await loadFiles(app.id); } catch { /* keep the last good list */ }
+  };
+
+  const removeFile = async (id) => {
+    try {
+      await api.delete(`/accreditation/documents/${id}`);
+      const remaining = (fileDocs ?? []).filter(doc => doc.id !== id);
+      setFileDocs(remaining);
+      setApp(current => (current ? { ...current, document_count: remaining.length } : current));
+      showToast('File removed.', 'success');
+    } catch (e) {
+      showToast(e.message || 'Could not remove the file', 'error');
+    }
+  };
+
+  const openFile = (item) => openApplicationDocument(item.doc).catch(e => showToast(e.message, 'error'));
+  const downloadFile = (item) => downloadApplicationDocument(item.doc).catch(e => showToast(e.message, 'error'));
 
   const startExam = async () => {
     setStarting(true);
@@ -107,6 +158,16 @@ export default function TutorApplicant({ showToast, user }) {
   }, [phase, examStarted, timeLeft]);
 
   const docs = Array.isArray(app?.achievements) ? app.achievements : [];
+  const attachedItems = (fileDocs ?? []).map(doc => ({
+    id: doc.id,
+    name: doc.file_name,
+    size: doc.size_bytes,
+    mime: doc.mime_type,
+    doc,
+  }));
+  const allFileItems = [...attachedItems, ...fileBusy];
+  const fileCount = fileDocs?.length ?? app?.document_count ?? 0;
+  const pending = phase === 'exam' || phase === 'waiting';
   const q = questions?.[currentQ];
   const options = q ? (Array.isArray(q.options) ? q.options : Object.values(q.options ?? {})) : [];
   const score = result?.score ?? app?.exam_score;
@@ -171,6 +232,15 @@ export default function TutorApplicant({ showToast, user }) {
                     : 'Reading your file…'}
           </p>
         </div>
+
+        {pending && fileCount === 0 && (
+          <div className="mx-5 mt-4 border-2 border-ink bg-[#fff0c2] px-4 py-3">
+            <p className="text-[13px] font-bold text-ink">Submission incomplete</p>
+            <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">
+              Attach at least one supporting file below — the superadmin cannot approve the application without one.
+            </p>
+          </div>
+        )}
 
         {phase === 'loading' && <div className="empty">Loading your application…</div>}
 
@@ -336,36 +406,80 @@ export default function TutorApplicant({ showToast, user }) {
       <div className="panel mt-4">
         <div className="border-b-2 border-ink bg-[#f8f1e2] px-5 py-4">
           <h2 className="font-display text-[18px] font-extrabold tracking-[-0.03em]">Supporting documents</h2>
-          <p className="meta mt-0.5">Academic achievement on file for the reviewer.</p>
+          <p className="meta mt-0.5">Files and academic-record notes the reviewer sees.</p>
         </div>
-        {docs.length === 0 ? (
-          <div className="empty">No supporting documents were submitted with this application.</div>
-        ) : (
-          <ul className="px-5">
-            {docs.map((d, i) => {
-              const entry = typeof d === 'string' ? { title: d } : d;
-              return (
-                <li key={`${entry.title}-${i}`} className="flex items-start gap-3 border-b border-ink/15 py-3.5 last:border-0">
-                  <FileText className="mt-0.5 h-4 w-4 shrink-0 text-ink" strokeWidth={2} />
-                  <div className="min-w-0">
-                    <p className="text-[14px] font-bold leading-snug text-ink">{entry.title}</p>
-                    {entry.detail && <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">{entry.detail}</p>}
-                    {entry.link && (
-                      <a
-                        href={entry.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-ink underline decoration-gold decoration-2 underline-offset-4 hover:decoration-ink"
-                      >
-                        Open document <ExternalLink className="h-3 w-3" strokeWidth={1.6} />
-                      </a>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+
+        <div className="p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-[13px] font-bold uppercase tracking-[0.08em]">Attached files</h3>
+            <span className={cn(
+              'border-2 border-ink px-2 py-0.5 text-[11px] font-bold',
+              fileCount === 0 ? 'bg-[#f6d7d2] text-crimson' : 'bg-gold text-ink',
+            )}>
+              {fileCount} / {MAX_APPLICATION_FILES}
+            </span>
+          </div>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            PDF, DOC/DOCX, PNG, JPG or WEBP · 4 MB each.
+            {pending
+              ? ' You can add or withdraw files while the application is pending.'
+              : ' The file set is locked because the application is decided.'}
+          </p>
+
+          {fileDocs === null ? (
+            <p className="mt-3 text-[13px] text-muted-foreground">Reading attached files…</p>
+          ) : pending ? (
+            <ApplicationDocumentPicker
+              className="mt-3"
+              items={allFileItems}
+              onAdd={addFiles}
+              onRemove={removeFile}
+              onError={(message) => showToast(message, 'error')}
+            />
+          ) : (
+            <div className="mt-3">
+              <ApplicationFileList
+                items={attachedItems}
+                onOpen={openFile}
+                onDownload={downloadFile}
+                empty={<p className="border-2 border-dashed border-ink/40 px-4 py-3 text-[13px] text-muted-foreground">No files were attached to this application.</p>}
+              />
+            </div>
+          )}
+
+          <div className="mt-6 border-t-2 border-ink pt-4">
+            <h3 className="text-[13px] font-bold uppercase tracking-[0.08em]">Academic record notes</h3>
+            <p className="mt-1 text-[13px] text-muted-foreground">Text notes and links submitted with the application.</p>
+            {docs.length === 0 ? (
+              <p className="mt-3 text-[13px] text-muted-foreground">No academic-record notes were submitted.</p>
+            ) : (
+              <ul className="mt-1">
+                {docs.map((d, i) => {
+                  const entry = typeof d === 'string' ? { title: d } : d;
+                  return (
+                    <li key={`${entry.title}-${i}`} className="flex items-start gap-3 border-b border-ink/15 py-3.5 last:border-0">
+                      <FileText className="mt-0.5 h-4 w-4 shrink-0 text-ink" strokeWidth={2} />
+                      <div className="min-w-0">
+                        <p className="text-[14px] font-bold leading-snug text-ink">{entry.title}</p>
+                        {entry.detail && <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">{entry.detail}</p>}
+                        {entry.link && (
+                          <a
+                            href={entry.link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-ink underline decoration-gold decoration-2 underline-offset-4 hover:decoration-ink"
+                          >
+                            Open link <ExternalLink className="h-3 w-3" strokeWidth={1.6} />
+                          </a>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
