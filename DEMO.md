@@ -26,6 +26,11 @@ card are dev-only).
 1. Confirm the Vercel project has `DATABASE_URL`, `JWT_SECRET` and
    `FRONTEND_ORIGIN` set (Project → Settings → Environment Variables), then
    redeploy if you just added them.
+
+   **After this release:** run `npm run db:migrate` once against the hosted
+   database (with its `DATABASE_URL` set). Migration 004 adds
+   `application_documents`; without it, uploads and the approvals file panel
+   fail even when the env vars are in place.
 2. Stage the showcase data and run the readiness gate:
 
    ```powershell
@@ -83,9 +88,9 @@ accept/check-in/redeem/approve.
 ## Rehearsal notes
 
 - Re-run `npm run demo:stage` after each full rehearsal: it re-creates the
-  rejected referral if you removed it, moves the pending application to the
-  next cohort candidate (attaching the demo file if it has none), and tops the
-  wallet back up if you redeemed.
+  rejected referral if you removed it, finds or creates an approvable pending
+  application for the next cohort candidate (attaching the demo file if it has
+  none), and tops the wallet back up if you redeemed.
 - `npm run db:migrate` before rehearsals if new `db/migrations/*.sql` landed —
   it only applies pending files and never drops data.
 - If a login returns **429**, the per-IP limiter counted repeated failures;
