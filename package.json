@@ -9,6 +9,9 @@
     "preview": "vite preview",
     "server": "node server/index.js",
     "db:reset": "node server/scripts/db-reset.js",
+    "db:migrate": "node server/scripts/db-migrate.js",
+    "demo:stage": "node server/scripts/demo-stage.js",
+    "demo:check": "node server/scripts/demo-check.js",
     "start": "node server/scripts/start.js"
   },
   "devDependencies": {

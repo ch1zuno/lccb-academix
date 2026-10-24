@@ -110,7 +110,8 @@ All seeded users share the password **`demo1234`**. Sign in with the `custom_id`
 
 | Route | Method(s) | Role | Purpose |
 | --- | --- | --- | --- |
-| `/public/overview` | GET | public | anonymous landing stats: tutor count, hours, points, active subjects, honour roll |
+| `/public/overview` | GET | public | anonymous landing stats: tutor count, hours, points, active subjects, honour roll (60s micro-cache) |
+| `/health` | GET | public | API **and** database probe; 503 with the reason when the pool or `DATABASE_URL` is down |
 | `/auth/login` · `/auth/me` · `/auth/dev-accounts` | POST · GET | public / authed | JWT auth (bcrypt), metadata survival |
 | `/referrals` · `/referrals/:id/assign` · `/referrals/:id/status` · `DELETE /referrals/:id` · `/referrals/search-students` | GET POST PATCH DELETE | faculty/superadmin · scoped | referral lifecycle: flagged → assigned → in-progress → resolved; faculty may reject a flagged one; superadmin may hard-delete **rejected** referrals only (codes auto-renumber from the highest existing) |
 | `/subjects` · `/tutors` · `/session-requests` | GET POST | authed · accept/decline | matching: accreditation-gated requests, double-accept blocked |
@@ -128,10 +129,16 @@ All seeded users share the password **`demo1234`**. Sign in with the `custom_id`
 | Command | What it does |
 | --- | --- |
 | `npm run db:reset` | drop schema → `db/schema.sql` → mark migrations → `db/seed.sql` (destructive — see the warning above) |
+| `npm run db:migrate` | apply pending `db/migrations/*.sql` (transactional; safe on hosted databases) |
+| `npm run demo:stage` | stage the presentation states through the API (`DEMO:`-tagged, re-runnable, insert-only; set `DEMO_API_BASE` for the hosted site) |
+| `npm run demo:check` | readiness gate: health, all four role logins, every page endpoint, staged states (`--warm` pre-warms the serverless function) |
 | `npm run server` | Express API on `PORT` (embedded PG auto-boot) |
 | `npm run dev` | Vite only |
 | `npm run start` | both servers together |
-| `node server/scripts/e2e-all.js` | runs every end-to-end check (referrals, matching, check-in, wrap-up, rewards, accreditation, analytics) — best against a scratch local database |
+| `node server/scripts/e2e-all.js` | runs every end-to-end check (referrals, matching, check-in, wrap-up, rewards, accreditation, analytics, ledger integrity) — best against a scratch local database |
+
+> Presenting? Follow [`DEMO.md`](DEMO.md) — it covers staging, the readiness
+> gate, the four-act script, and the offline fallback.
 
 ## Project layout
 
@@ -142,7 +149,7 @@ db/seed.sql            demo data (39 users; password demo1234; UTF-8)
 db/migrations/         numbered migration files (marked applied on reset);
                        002_session_duration_and_seed_repair.sql backfills numeric durations
 server/                Express app, one pg Pool (`server/db.js`), routes, middleware
-server/scripts/        db-reset + embedded-PG boot + e2e scripts
+server/scripts/        db-reset + db-migrate + embedded-PG boot + demo staging/check + e2e scripts
 src/                   React app; `src/api.js` is the only API client
 ```
 
