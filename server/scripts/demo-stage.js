@@ -11,7 +11,8 @@
  *  - re-runnable: each step first looks for its showcase object and skips if
  *    it already exists in the required state. */
 
-const BASE = (process.env.DEMO_API_BASE || 'http://localhost:4000/api').replace(/\/+$/, '');
+const ORIGIN = (process.env.DEMO_API_BASE || 'http://localhost:4000').replace(/\/+$/, '');
+const BASE = ORIGIN.endsWith('/api') ? ORIGIN : `${ORIGIN}/api`;
 const PASSWORD = 'demo1234';
 const FACULTY = 'b.tisuela@lccbacolod.edu.ph';
 const LEARNER = 'TE-128';
