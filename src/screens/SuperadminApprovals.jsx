@@ -4,6 +4,7 @@ import { ApplicationFileList } from '../components/ApplicationDocumentPicker';
 import { Loader2, Check, X, ExternalLink, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { downloadApplicationDocument, openApplicationDocument, MAX_APPLICATION_FILES } from '../lib/applicationFiles';
+import { cn } from '../lib/utils';
 import api from '../api';
 
 const fmtDate = (value) => {
@@ -86,6 +87,10 @@ export default function SuperadminApprovals({ showToast }) {
   const openFile = (item) => openApplicationDocument(item.doc).catch(e => showToast(e.message, 'error'));
   const downloadFile = (item) => downloadApplicationDocument(item.doc).catch(e => showToast(e.message, 'error'));
 
+  const selectedGrades = selectedApp?.grades && typeof selectedApp.grades === 'object' ? selectedApp.grades : {};
+  const selectedAchievements = Array.isArray(selectedApp?.achievements) ? selectedApp.achievements : [];
+  const hasSelectedGrades = Object.keys(selectedGrades).length > 0;
+
   return (
     <div className="mx-auto w-full max-w-[1180px]">
       <div className="section-head">
@@ -111,6 +116,8 @@ export default function SuperadminApprovals({ showToast }) {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence initial={false}>
             {applications.map(app => {
+              const fileCount = app.document_count ?? 0;
+              const noFiles = fileCount === 0;
               return (
                 <motion.article
                   layout
@@ -140,9 +147,12 @@ export default function SuperadminApprovals({ showToast }) {
                       <p className="text-[13px] font-semibold text-muted-foreground">Exam score</p>
                       <p className="num mt-1 text-[22px] leading-none text-ink">{app.exam_score == null ? '—' : `${app.exam_score}%`}</p>
                     </div>
-                    <div className="border-2 border-ink bg-[#f8f1e2] p-2 text-right">
+                    <div className={cn('border-2 border-ink p-2 text-right', noFiles ? 'bg-[#f6d7d2]' : 'bg-[#f8f1e2]')}>
                       <p className="text-[13px] font-semibold text-muted-foreground">Files</p>
-                      <p className="num mt-1 text-[22px] leading-none text-ink">{app.document_count ?? 0}</p>
+                      <div className="mt-1 flex items-baseline justify-end gap-1.5">
+                        <p className={cn('num text-[22px] leading-none', noFiles ? 'text-crimson' : 'text-ink')}>{fileCount}</p>
+                        {noFiles && <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-crimson">Needs file</span>}
+                      </div>
                     </div>
                   </div>
 
@@ -157,7 +167,7 @@ export default function SuperadminApprovals({ showToast }) {
                   <div className="mt-auto flex items-end justify-between gap-3 pt-5">
                     <p className="text-[13px] text-muted-foreground">Applied {fmtDate(app.date_applied)}</p>
                     <Button size="sm" variant="outline" onClick={() => setSelectedApp(app)}>
-                      Review file
+                      Review application
                     </Button>
                   </div>
                 </motion.article>
@@ -189,12 +199,12 @@ export default function SuperadminApprovals({ showToast }) {
               transition={{ duration: 0.18 }}
               className="fixed left-1/2 top-1/2 z-50 flex max-h-[90svh] w-[min(760px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden border-2 border-ink bg-paper shadow-[10px_10px_0_#d4ac0d]"
             >
-              <div className="flex items-start justify-between gap-4 border-b-2 border-ink bg-[#f8f1e2] px-6 py-5">
-                <div className="flex items-start gap-3">
+              <div className="flex items-start justify-between gap-4 border-b-2 border-ink bg-[#f8f1e2] px-4 py-4 sm:px-6 sm:py-5">
+                <div className="flex min-w-0 items-start gap-3">
                   <span className="grid h-11 w-11 shrink-0 place-items-center border-2 border-ink bg-gold text-[14px] font-bold shadow-[2px_2px_0_#0f2942]">
                     {initials(selectedApp.name)}
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <h2 id="application-title" className="font-display text-[22px] font-extrabold tracking-[-0.035em]">{selectedApp.name}</h2>
                     <p className="mt-0.5 text-[13px] text-muted-foreground">
                       {selectedApp.program || selectedApp.department} · Applied {fmtDate(selectedApp.date_applied)}
@@ -212,7 +222,7 @@ export default function SuperadminApprovals({ showToast }) {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 py-5">
+              <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                   {[
                     { label: 'Exam score', value: selectedApp.exam_score == null ? '—' : `${selectedApp.exam_score}%` },
@@ -257,27 +267,25 @@ export default function SuperadminApprovals({ showToast }) {
                   )}
                 </section>
 
-                <section className="mt-6">
-                  <h3 className="font-display text-[17px] font-bold text-ink">Academic record</h3>
-                  {selectedApp.grades && Object.keys(selectedApp.grades).length > 0 ? (
+                {hasSelectedGrades && (
+                  <section className="mt-6">
+                    <h3 className="font-display text-[17px] font-bold text-ink">Academic record</h3>
                     <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      {Object.entries(selectedApp.grades).map(([term, grade]) => (
+                      {Object.entries(selectedGrades).map(([term, grade]) => (
                         <div key={term} className="border-2 border-ink bg-[#f8f1e2] p-3">
                           <p className="text-[13px] text-muted-foreground">{term.replace('preFinal', 'Pre-Final')}</p>
                           <p className="num mt-1 text-[20px] leading-none text-ink">{grade}</p>
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <p className="mt-2 text-[13px] text-muted-foreground">No academic records provided.</p>
-                  )}
-                </section>
+                  </section>
+                )}
 
-                <section className="mt-6">
-                  <h3 className="font-display text-[17px] font-bold text-ink">Academic record notes</h3>
-                  {Array.isArray(selectedApp.achievements) && selectedApp.achievements.length > 0 ? (
+                {selectedAchievements.length > 0 && (
+                  <section className="mt-6">
+                    <h3 className="font-display text-[17px] font-bold text-ink">Academic record notes</h3>
                     <ul className="mt-1">
-                      {selectedApp.achievements.map((achievement, index) => {
+                      {selectedAchievements.map((achievement, index) => {
                         const entry = typeof achievement === 'string' ? { title: achievement } : achievement;
                         return (
                           <li key={`${entry.title}-${index}`} className="flex items-start gap-2.5 border-b border-ink/15 py-3 last:border-0">
@@ -300,10 +308,15 @@ export default function SuperadminApprovals({ showToast }) {
                         );
                       })}
                     </ul>
-                  ) : (
-                    <p className="mt-2 text-[13px] text-muted-foreground">No academic-record notes submitted.</p>
-                  )}
-                </section>
+                  </section>
+                )}
+
+                {!hasSelectedGrades && selectedAchievements.length === 0 && (
+                  <section className="mt-6">
+                    <h3 className="font-display text-[17px] font-bold text-ink">Academic record</h3>
+                    <p className="mt-2 text-[13px] text-muted-foreground">No academic record or notes were submitted.</p>
+                  </section>
+                )}
 
                 <section className="mt-6">
                   <h3 className="font-display text-[17px] font-bold text-ink">Subjects applied for</h3>
@@ -317,15 +330,15 @@ export default function SuperadminApprovals({ showToast }) {
                 </section>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink bg-[#f8f1e2] px-6 py-4">
-                <p className="text-[13px] text-muted-foreground">
+              <div className="flex flex-col gap-3 border-t-2 border-ink bg-[#f8f1e2] px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-6">
+                <p className="text-[13px] text-muted-foreground sm:max-w-[42ch]">
                   {selectedDocs === null
                     ? 'Checking the attached files…'
                     : selectedDocs.length === 0
                       ? 'Approval is blocked until at least one supporting file is attached.'
                       : 'Approval verifies the tutor and makes their subjects bookable.'}
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
                   <Button variant="ghost" onClick={() => setSelectedApp(null)} disabled={Boolean(busy)}>Cancel</Button>
                   <Button
                     variant="destructive"
@@ -336,6 +349,7 @@ export default function SuperadminApprovals({ showToast }) {
                     Reject
                   </Button>
                   <Button
+                    className="col-span-2 sm:col-auto"
                     disabled={busy === selectedApp.id || selectedDocs === null || selectedDocs.length === 0}
                     onClick={() => handleApprove(selectedApp)}
                   >

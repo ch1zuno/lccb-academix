@@ -224,12 +224,12 @@ export default function TutorApplicant({ showToast, user }) {
             {phase === 'exam'
               ? '15 multiple-choice questions · 30 minutes · one attempt'
               : phase === 'waiting'
-                ? 'The exam is in. The superadmin is reading the file.'
+                ? 'The exam is in. The superadmin is reviewing your score and files.'
                 : phase === 'approved'
                   ? 'The application was verified.'
                   : phase === 'rejected'
                     ? 'The application was not approved.'
-                    : 'Reading your file…'}
+                    : 'Reading your application…'}
           </p>
         </div>
 
@@ -359,9 +359,9 @@ export default function TutorApplicant({ showToast, user }) {
                 </p>
               </div>
             </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => nav('/dashboard')}>Back to overview</Button>
-              <Button onClick={() => nav('/wizard')}>Find a tutor</Button>
+            <div className="mt-5 grid gap-2 sm:flex sm:flex-wrap">
+              <Button variant="outline" className="w-full sm:w-auto" onClick={() => nav('/dashboard')}>Back to overview</Button>
+              <Button className="w-full sm:w-auto" onClick={() => nav('/wizard')}>Find a tutor</Button>
             </div>
           </div>
         )}
@@ -377,9 +377,9 @@ export default function TutorApplicant({ showToast, user }) {
                 </p>
               </div>
             </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => nav('/dashboard')}>Back to overview</Button>
-              <Button onClick={() => nav('/wizard')}>Find a tutor</Button>
+            <div className="mt-5 grid gap-2 sm:flex sm:flex-wrap">
+              <Button variant="outline" className="w-full sm:w-auto" onClick={() => nav('/dashboard')}>Back to overview</Button>
+              <Button className="w-full sm:w-auto" onClick={() => nav('/wizard')}>Find a tutor</Button>
             </div>
           </div>
         )}
@@ -395,9 +395,9 @@ export default function TutorApplicant({ showToast, user }) {
                 </p>
               </div>
             </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => nav('/dashboard')}>Back to overview</Button>
-              <Button onClick={() => nav('/wizard')}>Find a tutor</Button>
+            <div className="mt-5 grid gap-2 sm:flex sm:flex-wrap">
+              <Button variant="outline" className="w-full sm:w-auto" onClick={() => nav('/dashboard')}>Back to overview</Button>
+              <Button className="w-full sm:w-auto" onClick={() => nav('/wizard')}>Find a tutor</Button>
             </div>
           </div>
         )}
@@ -434,6 +434,8 @@ export default function TutorApplicant({ showToast, user }) {
               items={allFileItems}
               onAdd={addFiles}
               onRemove={removeFile}
+              onOpen={openFile}
+              onDownload={downloadFile}
               onError={(message) => showToast(message, 'error')}
             />
           ) : (

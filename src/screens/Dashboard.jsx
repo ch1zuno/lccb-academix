@@ -274,7 +274,7 @@ export default function Dashboard({ role, user, showToast }) {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
-          <div className="panel p-5">
+          <div className="panel min-w-0 p-5">
             <div className="flex items-baseline justify-between gap-3">
               <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">Top tutors</h2>
               <span className="meta">By balance</span>
@@ -296,7 +296,7 @@ export default function Dashboard({ role, user, showToast }) {
             </div>
           </div>
 
-          <div className="panel p-5">
+          <div className="panel min-w-0 p-5">
             <div className="flex items-baseline justify-between gap-3">
               <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">Referral pipeline</h2>
               <span className="num text-[13px] text-muted-foreground">{liveReferrals?.length ?? 0}</span>
@@ -317,7 +317,7 @@ export default function Dashboard({ role, user, showToast }) {
             {referralsError && <p className="meta mt-4 text-crimson">{referralsError}</p>}
           </div>
 
-          <div className="panel p-5">
+          <div className="panel min-w-0 p-5">
             <div className="flex items-baseline justify-between gap-3">
               <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">Recent referrals</h2>
               <button type="button" onClick={() => navigate('/referral')} className="text-[13px] font-semibold text-ink underline decoration-gold decoration-2 underline-offset-4 hover:decoration-ink">
@@ -574,7 +574,7 @@ export default function Dashboard({ role, user, showToast }) {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="panel">
+          <div className="panel min-w-0">
             <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-[#f8f1e2] px-5 py-4">
               <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">Upcoming sessions</h2>
               <span className="num border-2 border-ink bg-paper px-1.5 text-[13px]">{upcoming.length}</span>
@@ -601,7 +601,7 @@ export default function Dashboard({ role, user, showToast }) {
             ))}
           </div>
 
-          <div className="panel">
+          <div className="panel min-w-0">
             <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-[#f8f1e2] px-5 py-4">
               <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">Completed</h2>
               <span className="num border-2 border-ink bg-paper px-1.5 text-[13px]">{completed.length}</span>
@@ -609,7 +609,7 @@ export default function Dashboard({ role, user, showToast }) {
             {sessionsMine === null && <div className="empty">Reading your record…</div>}
             {sessionsMine !== null && completed.length === 0 && <div className="empty">Completed sessions appear here after wrap-up.</div>}
             {completed.length > 0 && (
-              <div className="px-5 pb-2">
+              <div className="overflow-x-auto px-5 pb-2">
                 <table className="data-table">
                   <thead>
                     <tr>

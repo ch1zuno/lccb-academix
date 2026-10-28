@@ -4,7 +4,6 @@ import api from '../api';
 import { cn } from '../lib/utils';
 import {
   APPLICATION_FILE_ACCEPT,
-  MAX_APPLICATION_FILE_BYTES,
   MAX_APPLICATION_FILES,
   canPreviewFile,
   fileExtension,
@@ -63,7 +62,7 @@ export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty
         <li key={item.id} className="flex items-center gap-3 border-2 border-ink bg-paper p-2.5">
           <DocumentThumb item={item} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-bold" title={item.name}>{item.name}</p>
+            <p className="line-clamp-2 text-[13px] font-bold leading-tight [overflow-wrap:anywhere] sm:truncate sm:leading-normal" title={item.name}>{item.name}</p>
             <p className="mt-0.5 text-[12px] text-muted-foreground">
               {(fileExtension(item.name) || 'FILE').toUpperCase()} · {formatFileSize(item.size)}
               {item.busy ? ' · uploading…' : ''}
@@ -84,7 +83,7 @@ export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty
               type="button"
               onClick={() => onDownload(item)}
               aria-label={`Download ${item.name}`}
-              className="grid h-7 w-7 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-[#f0e7d5]"
+              className="hidden h-7 w-7 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-[#f0e7d5] sm:grid"
             >
               <Download className="h-3.5 w-3.5" />
             </button>
@@ -210,11 +209,6 @@ export default function ApplicationDocumentPicker({
             onDownload={onDownload}
           />
         </div>
-      ) : null}
-      {items.length > 0 ? (
-        <p className="mt-2 text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-          {items.length} of {maxFiles} files · {formatFileSize(MAX_APPLICATION_FILE_BYTES)} max each
-        </p>
       ) : null}
     </div>
   );

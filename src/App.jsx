@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import {
   BookOpen, Bell, ChevronDown, Check, LayoutDashboard, Search, Clock,
@@ -63,6 +63,7 @@ const initialsOf = (name = '') => name.split(' ').map(n => n[0]).join('').slice(
 export default function App() {
   const [user, setUser] = useState(() => loadSession()?.user ?? null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const mobileCloseRef = useRef(null);
   const [toast, setToast] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
@@ -96,6 +97,16 @@ export default function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  // The mobile workspace menu is a full-screen dialog: lock the page behind it
+  // and put keyboard focus on its close control.
+  useEffect(() => {
+    if (!mobileOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    mobileCloseRef.current?.focus();
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [mobileOpen]);
 
   const currentProfile = user
     ? {
@@ -269,6 +280,9 @@ export default function App() {
           <button
             className="grid h-10 w-10 place-items-center border-2 border-ink bg-paper text-ink shadow-[2px_2px_0_#0f2942] transition-transform active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
             aria-label="Open menu"
+            aria-haspopup="dialog"
+            aria-controls="mobile-workspace-menu"
+            aria-expanded={mobileOpen}
             onClick={() => setMobileOpen(true)}
           >
             <Menu className="h-5 w-5" strokeWidth={2.2} />
@@ -388,6 +402,10 @@ export default function App() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
+            id="mobile-workspace-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Workspace menu"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -395,7 +413,7 @@ export default function App() {
           >
             <div className="flex h-16 items-center justify-between border-b-2 border-ink bg-[#f7f0e2] px-4">
               <Wordmark compact />
-              <button className="grid h-10 w-10 place-items-center border-2 border-ink bg-paper shadow-[2px_2px_0_#0f2942]" onClick={() => setMobileOpen(false)} aria-label="Close menu">
+              <button ref={mobileCloseRef} className="grid h-10 w-10 place-items-center border-2 border-ink bg-paper shadow-[2px_2px_0_#0f2942]" onClick={() => setMobileOpen(false)} aria-label="Close menu">
                 <X className="h-5 w-5" strokeWidth={2.2} />
               </button>
             </div>

@@ -279,6 +279,7 @@ export default function TutorExam({ showToast, user }) {
                 : `${pickedSubjects.length} subject${pickedSubjects.length === 1 ? '' : 's'} selected · ${staged.length} file${staged.length === 1 ? '' : 's'} staged · ${docs.filter(doc => doc.title.trim()).length} note${docs.filter(doc => doc.title.trim()).length === 1 ? '' : 's'}`}
           </p>
           <Button
+            className="w-full sm:w-auto"
             disabled={applying || pickedSubjects.length === 0 || staged.length === 0}
             onClick={apply}
           >
