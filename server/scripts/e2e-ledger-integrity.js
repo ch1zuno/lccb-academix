@@ -2,15 +2,10 @@
  * UPDATE and DELETE must be rejected by the trigger, not just by the API.
  * Read-only toward existing rows — it only attempts the blocked statements,
  * which roll back. */
-import 'dotenv/config';
 import pg from 'pg';
+import { E2E_DATABASE_URL } from './e2e-db.js';
 
-if (!process.env.DATABASE_URL) {
-  console.error('DATABASE_URL missing — run with the scratch database URL in the environment.');
-  process.exit(1);
-}
-
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+const client = new pg.Client({ connectionString: E2E_DATABASE_URL });
 await client.connect();
 
 let bad = 0;

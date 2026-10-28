@@ -51,6 +51,12 @@ export function ensurePostgres() {
         user, password, port,
         persistent: true,
         initdbFlags: ['-E', 'UTF8', '--locale=C'], // UTF8 for emoji/data in seed.sql
+        // pg.stop() drops its internal client while the postmaster shuts down;
+        // a close/reset there is expected, not an application error.
+        onError: (err) => {
+          if (/ECONNRESET|Connection terminated unexpectedly|EPIPE/i.test(String(err?.message ?? err))) return;
+          console.error(err);
+        },
       });
       runningPg = pg;
       let started = false;

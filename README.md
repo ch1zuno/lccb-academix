@@ -47,13 +47,17 @@ from IPv4-only networks):
 DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
 ```
 
-Remote hosts get SSL automatically (localhost stays plain). `npm run db:reset` works
-against any Postgres — **it wipes the `public` schema first**, so only run it on a
-database that may be destroyed. Never run `db:reset` against a hosted database that
-holds real or live-demo data. To validate `db/schema.sql` + `db/seed.sql` safely, do it
-on a scratch database: the embedded local Postgres (point `DATABASE_URL` at
+Remote hosts get SSL automatically (localhost stays plain). `npm run db:reset` refuses a
+non-local host unless `ALLOW_REMOTE_DB_RESET=1` is set, because **it wipes the `public`
+schema first** — only use that flag on a database that may be destroyed. Never run
+`db:reset` against a hosted database that holds real or live-demo data. To validate
+`db/schema.sql` + `db/seed.sql` safely, do it on a scratch database: the embedded local
+Postgres (point `DATABASE_URL` at
 `postgres://postgres:postgres@localhost:5432/<scratch-name>`) runs schema → migrations
 → seed in seconds without touching anything remote.
+The API e2e scripts in `server/scripts` also default their direct SQL to that local
+scratch database and refuse non-local hosts; set `E2E_DATABASE_URL` if the API is
+running against a differently named local database.
 Handy utilities: `node server/scripts/pooler-verify.js` (checks the connection) and
 `node server/scripts/pooler-probe.js` (discovers which pooler region hosts the project
 when you only know the direct hostname).

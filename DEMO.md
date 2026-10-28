@@ -110,8 +110,9 @@ npm run demo:stage
 npm run demo:check
 ```
 
-Then present from <http://localhost:5173>. `db:reset` is destructive: **only**
-run it against the local embedded cluster, never against Supabase.
+Then present from <http://localhost:5173>. `db:reset` is destructive and now refuses
+non-local hosts unless `ALLOW_REMOTE_DB_RESET=1`; only run it against the local
+embedded cluster, never against Supabase.
 
 ## Do-not list
 

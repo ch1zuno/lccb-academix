@@ -1,5 +1,6 @@
 /* Minimal API e2e: faculty assigns a tutor to REF-001, tutor accepts progress; learner must NOT be able to change status. */
-import 'dotenv/config';
+import pg from 'pg';
+import { E2E_DATABASE_URL } from './e2e-db.js';
 const BASE = 'http://localhost:4000/api';
 
 async function request(path, { method = 'GET', token, body } = {}) {
@@ -23,9 +24,13 @@ const login = (loginId) => request('/auth/login', { method: 'POST', body: { logi
 
   // faculty picks the flagged one and assigns TU-056 (learner-only referral probes follow)
   // faculty assigns a real tutor to the flagged referral
-  const pg = await import('pg');
-  const psql = new pg.default.Client({ connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/lccb_academix' });
+  const psql = new pg.Client({ connectionString: E2E_DATABASE_URL });
   await psql.connect();
+  const { rows: [facultyRow] } = await psql.query('SELECT id FROM users WHERE email = $1', [faculty.user.email]);
+  if (!facultyRow || facultyRow.id !== faculty.user.id) {
+    await psql.end();
+    throw new Error('Direct SQL target does not match the API database — set E2E_DATABASE_URL or run the API against the same local database.');
+  }
   const tutorRow = (await psql.query(`SELECT id FROM users WHERE custom_id = 'TU-056'`)).rows[0];
   await psql.end();
   const assigned = await request(`/referrals/${ref.id}/assign`, { method: 'POST', token: faculty.token, body: { tutorId: tutorRow.id } });
@@ -64,7 +69,7 @@ const login = (loginId) => request('/auth/login', { method: 'POST', body: { logi
 
   const superadmin = (await login('l.betita.admin@lccbacolod.edu.ph')).data;
   const learnerL = (await login('TE-128')).data;
-  const pg2 = new pg.default.Client({ connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/lccb_academix' });
+  const pg2 = new pg.Client({ connectionString: E2E_DATABASE_URL });
   await pg2.connect();
   const anyLearner = (await pg2.query(`SELECT id FROM users WHERE role = 'learner' ORDER BY created_at LIMIT 1`)).rows[0].id;
   const anySubject = (await pg2.query(`SELECT id FROM subjects ORDER BY code LIMIT 1`)).rows[0].id;

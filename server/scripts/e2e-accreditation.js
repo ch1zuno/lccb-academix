@@ -1,6 +1,11 @@
 /* Accreditation e2e: apply → files → exam → grade → approve.
- * Also asserts the upload guards: type/size/ownership/5-file cap/approve gate. */
-import 'dotenv/config';
+ * Also asserts the upload guards: type/size/ownership/5-file cap/approve gate.
+ *
+ * The API base is localhost, so direct SQL deliberately ignores .env: it uses
+ * E2E_DATABASE_URL (or DATABASE_URL) and otherwise the local scratch database.
+ * A guard below aborts if the SQL target and the API user do not match. */
+import pg from 'pg';
+import { E2E_DATABASE_URL } from './e2e-db.js';
 const BASE = 'http://localhost:4000/api';
 
 const DEMO_PNG = Buffer.from(
@@ -49,8 +54,7 @@ async function download(path, token) {
 
 const login = (loginId) => request('/auth/login', { method: 'POST', body: { loginId, password: 'demo1234' } });
 
-const pg = await import('pg');
-const psql = new pg.default.Client({ connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/lccb_academix' });
+const psql = new pg.Client({ connectionString: E2E_DATABASE_URL });
 await psql.connect();
 const CORRECT = {};
 {
@@ -60,10 +64,31 @@ const CORRECT = {};
 
 (async () => {
   console.log('\nAccreditation: apply, attach files, exam, approve');
-  const learner = (await login('TE-092')).data; // Pringle
   const sa = (await login('l.betita.admin@lccbacolod.edu.ph')).data;
-  const other = (await login('TE-128')).data;
-  if (!learner.token || !sa.token || !other.token) throw new Error('demo logins failed');
+  if (!sa.token) throw new Error('superadmin login failed');
+  const { rows: [saRow] } = await psql.query('SELECT id FROM users WHERE email = $1', [sa.user.email]);
+  if (!saRow || saRow.id !== sa.user.id) {
+    throw new Error('Direct SQL target does not match the API database — set E2E_DATABASE_URL or run the API against the same local database.');
+  }
+
+  const { rows: cleanLearners } = await psql.query(`
+    SELECT u.custom_id
+    FROM users u
+    WHERE u.role = 'learner'
+      AND NOT EXISTS (
+        SELECT 1 FROM tutor_applications a WHERE a.user_id = u.id
+      )
+    ORDER BY u.custom_id
+    LIMIT 2
+  `);
+  if (cleanLearners.length < 2) {
+    throw new Error('Need two learners without applications — run npm run db:reset before this e2e.');
+  }
+  const [candidate, otherCandidate] = cleanLearners.map((row) => row.custom_id);
+  console.log(`using clean learners ${candidate} and ${otherCandidate}`);
+  const learner = (await login(candidate)).data;
+  const other = (await login(otherCandidate)).data;
+  if (!learner.token || !other.token) throw new Error('demo logins failed');
 
   const rejected = await request('/accreditation/exam', { token: learner.token });
   check('exam before apply is 404', rejected.status === 404, `${rejected.status} ${rejected.data.error}`);

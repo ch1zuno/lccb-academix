@@ -1,5 +1,6 @@
 /* Wrap-up e2e: validates single-transaction session wrap (notes + rating + hours + points). */
-import 'dotenv/config';
+import pg from 'pg';
+import { E2E_DATABASE_URL } from './e2e-db.js';
 const BASE = 'http://localhost:4000/api';
 
 async function request(path, { method = 'GET', token, body } = {}) {
@@ -12,12 +13,15 @@ async function request(path, { method = 'GET', token, body } = {}) {
   return { status: res.status, data };
 }
 const login = (loginId) => request('/auth/login', { method: 'POST', body: { loginId, password: 'demo1234' } });
-const pg = await import('pg');
-const psql = new pg.default.Client({ connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/lccb_academix' });
+const psql = new pg.Client({ connectionString: E2E_DATABASE_URL });
 await psql.connect();
 
 (async () => {
   const tutor = (await login('TU-042')).data;
+  const { rows: [tutorRow] } = await psql.query('SELECT id FROM users WHERE email = $1', [tutor.user.email]);
+  if (!tutorRow || tutorRow.id !== tutor.user.id) {
+    throw new Error('Direct SQL target does not match the API database — set E2E_DATABASE_URL or run the API against the same local database.');
+  }
   const mine = (await request('/sessions/mine', { token: tutor.token })).data.sessions;
   const inProgress = mine.find(s => s.status === 'in-progress');
   if (!inProgress) { console.log('no in-progress session; abort — run e2e-checkin first'); process.exit(0); }

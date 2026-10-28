@@ -14,6 +14,9 @@
 const ORIGIN = (process.env.DEMO_API_BASE || 'http://localhost:4000').replace(/\/+$/, '');
 const BASE = ORIGIN.endsWith('/api') ? ORIGIN : `${ORIGIN}/api`;
 const PASSWORD = 'demo1234';
+/* The seeded exam key is option 1 for most questions. Picking it for every
+ * item gives the staged applicant a credible score without shipping a key. */
+const DEMO_ANSWER = 1;
 const FACULTY = 'b.tisuela@lccbacolod.edu.ph';
 const LEARNER = 'TE-128';
 const TUTOR = 'TU-042';
@@ -191,7 +194,7 @@ await step('pending, exam-ready tutor application for approvals', async () => {
       const exam = await request('/accreditation/exam', { token: who.token });
       if (exam.status !== 200) continue;
       const answers = {};
-      for (const q of exam.data.questions ?? []) answers[String(q.question_number)] = 0;
+      for (const q of exam.data.questions ?? []) answers[String(q.question_number)] = DEMO_ANSWER;
       const graded = await request('/accreditation/exam', { method: 'POST', token: who.token, body: { answers } });
       if (graded.status === 200) {
         const note = await ensureDemoDocument(who.token, mine);
@@ -221,7 +224,7 @@ await step('pending, exam-ready tutor application for approvals', async () => {
 
     const exam = await request('/accreditation/exam', { token: who.token });
     const answers = {};
-    for (const q of exam.data.questions ?? []) answers[String(q.question_number)] = 0;
+    for (const q of exam.data.questions ?? []) answers[String(q.question_number)] = DEMO_ANSWER;
     await request('/accreditation/exam', { method: 'POST', token: who.token, body: { answers } });
     const note = await ensureDemoDocument(who.token, applied.data.application);
     return `application ${applied.data.application.application_code} pending for ${candidate} (exam submitted${note})`;
