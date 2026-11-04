@@ -1801,6 +1801,14 @@
   line-height: 1.4;
 }
 
+.login-consent {
+  margin: 12px 0 0;
+  color: var(--lg-muted);
+  font-size: 11.5px;
+  line-height: 1.45;
+  text-align: center;
+}
+
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 
 /* Sketched-draft opening: while .sketching holds, the hero renders through the

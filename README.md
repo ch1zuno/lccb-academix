@@ -31,6 +31,9 @@ DATABASE_URL=postgres://postgres:postgres@localhost:5432/lccb_academix
 JWT_SECRET=dev-secret-change-me
 PORT=4000
 DEVICE_API_KEY=dev-device-key
+# Demo mode is automatic in dev; on a production demo set both:
+# DEMO_MODE=1
+# VITE_DEMO_MODE=1
 ```
 
 Embedded Postgres (`embedded-postgres`) starts automatically on port 5432 with data in
@@ -80,16 +83,24 @@ dashboard → Settings → Environment Variables):
 | Name | Value |
 | --- | --- |
 | `DATABASE_URL` | the hosted Postgres connection string (e.g. the Supabase session-pooler URL) |
-| `JWT_SECRET` | any long random string (dev fallback: `change-me-dev`) |
+| `JWT_SECRET` | a long random string; never ship the dev fallback |
 | `FRONTEND_ORIGIN` | the deployed origin, e.g. `https://lccb-academix.vercel.app` |
+| `DEMO_MODE` | `1` only for a demo deployment; production should omit it |
+| `VITE_DEMO_MODE` | `1` only for a demo deployment; baked in at build time |
 
 `DEVICE_API_KEY` is optional in dev (default `dev-device-key`). After adding
 variables, trigger **Redeploy** (or push again) — pushes to `main` deploy
 automatically since the project is GitHub-connected.
 
+**Demo mode is opt-in in production.** Without `DEMO_MODE=1` the API rejects
+the shared `demo1234` password; without `VITE_DEMO_MODE=1` the role switcher is
+hidden and the build has no demo affordances. This keeps a real deployment from
+shipping four shared accounts. Local development still turns both on
+automatically.
+
 ## Demo accounts
 
-All seeded users share the password **`demo1234`**. Sign in with the `custom_id` or email.
+All seeded users share the password **`demo1234`** while demo mode is enabled. Sign in with the `custom_id` or email. On a production non-demo deployment, use `POST /api/auth/change-password` (or the seeded account's real password) and leave `DEMO_MODE` unset.
 
 | Role       | Login ID  | Email                              |
 | ---------- | --------- | ---------------------------------- |
@@ -116,8 +127,9 @@ All seeded users share the password **`demo1234`**. Sign in with the `custom_id`
 | --- | --- | --- | --- |
 | `/public/overview` | GET | public | anonymous landing stats: tutor count, hours, points, active subjects, honour roll (60s micro-cache) |
 | `/health` | GET | public | API **and** database probe; 503 with the reason when the pool or `DATABASE_URL` is down |
-| `/auth/login` · `/auth/me` · `/auth/dev-accounts` | POST · GET | public / authed | JWT auth (bcrypt), metadata survival |
-| `/referrals` · `/referrals/:id/assign` · `/referrals/:id/status` · `DELETE /referrals/:id` · `/referrals/search-students` | GET POST PATCH DELETE | faculty/superadmin · scoped | referral lifecycle: flagged → assigned → in-progress → resolved; faculty may reject a flagged one; superadmin may hard-delete **rejected** referrals only (codes auto-renumber from the highest existing) |
+| `/auth/login` · `/auth/me` · `/auth/dev-accounts` | POST · GET | public / authed | bcrypt auth; the JWT rides in an **HttpOnly, SameSite=Strict cookie** (API scripts may use `Authorization: Bearer`); dev-accounts only in dev + demo mode |
+| `/auth/change-password` · `/auth/logout` · `/auth/logout-all` | POST | authed | rotates the password / clears this browser / bumps `token_version` so every older JWT is rejected |
+| `/referrals` · `/referrals/:id/assign` · `/referrals/:id/status` · `DELETE /referrals/:id` · `/referrals/search-students` · `/referrals/export.csv` | GET POST PATCH DELETE | faculty/superadmin · scoped | referral lifecycle: flagged → assigned → in-progress → resolved; faculty may reject a flagged one; superadmin may hard-delete **rejected** referrals only (codes auto-renumber from the highest existing); board export is formula-safe CSV |
 | `/subjects` · `/tutors` · `/session-requests` | GET POST | authed · accept/decline | matching: accreditation-gated requests, double-accept blocked |
 | `/sessions/mine` · `/sessions/:id/stage-token` · `/sessions/:id/check-in` | GET POST | tutor/participant | check-in tokens (10-min TTL, one-shot), 2 confirmations start session |
 | `/sessions/:id/wrap-up` | POST | participant | **one transaction**: end, notes, rating, hours-debit, auto-resolve, points, badges |
@@ -127,6 +139,8 @@ All seeded users share the password **`demo1234`**. Sign in with the `custom_id`
 | `/accreditation/apply` · `/accreditation/exam` · `/accreditation/mine` | GET POST | learner/authed | apply with subjects + academic-record notes (`achievements` jsonb); exam questions never expose answers; grading is one-shot |
 | `/accreditation/:id/documents` · `/accreditation/documents/:id` | GET POST DELETE | owner/superadmin | supporting files stored in Postgres (`bytea`): multipart `document`, 4 MB each, 5 per application; owner may withdraw while pending; superadmin reads for review |
 | `/accreditation/applications` · `/:id/approve` · `/:id/reject` | GET POST | superadmin | approve requires the exam **and** ≥1 attached file; sets `is_verified` + `certified_by_id` |
+| `/accreditation/:id/reset-exam` | POST | superadmin | clears an expired/frozen exam attempt without touching the application |
+| `/audit` | GET | superadmin | append-only audit trail (approvals, exams, referrals, redemptions, logins) |
 | `/analytics` | GET | superadmin | CTE aggregates: KPIs, 6-week trend, dept breakdown |
 
 > **Supporting files** live in `application_documents` (`bytea`) — no object
@@ -140,15 +154,43 @@ All seeded users share the password **`demo1234`**. Sign in with the `custom_id`
 | --- | --- |
 | `npm run db:reset` | drop schema → `db/schema.sql` → mark migrations → `db/seed.sql` (destructive — see the warning above) |
 | `npm run db:migrate` | apply pending `db/migrations/*.sql` (transactional; safe on hosted databases) |
+| `npm test` | unit tests for upload validation and weekly point caps (Node test runner) |
 | `npm run demo:stage` | stage the presentation states through the API (`DEMO:`-tagged, re-runnable, insert-only; set `DEMO_API_BASE` for the hosted site) |
-| `npm run demo:check` | readiness gate: health, all four role logins, every page endpoint, staged states (`--warm` pre-warms the serverless function) |
+| `npm run demo:check` | readiness gate: health, demo mode, all four role logins, every page endpoint, staged states (`--warm` pre-warms the serverless function) |
+| `npm run db:backup` | `pg_dump` a portable SQL backup into `backups/` (gitignored) |
+| `npm run db:export -- TE-128` | read-only data-subject export (JSON, no document bytes) |
+| `npm run db:purge` | dry-run retention purge; `-- --apply` deletes old decided-application files and notifications |
 | `npm run server` | Express API on `PORT` (embedded PG auto-boot) |
 | `npm run dev` | Vite only |
 | `npm run start` | both servers together |
-| `node server/scripts/e2e-all.js` | runs every end-to-end check (referrals, matching, check-in, wrap-up, rewards, accreditation, analytics, ledger integrity) — best against a scratch local database |
+| `node server/scripts/e2e-all.js` | runs the full end-to-end suite (referrals, matching, check-in, wrap-up, rewards, accreditation, analytics, ledger integrity, auth revocation, audit immutability, concurrency/anti-farming) — best against a scratch local database |
 
 > Presenting? Follow [`DEMO.md`](DEMO.md) — it covers staging, the readiness
 > gate, the four-act script, and the offline fallback.
+
+## Integrity, privacy, and operations
+
+- **Session points** require two distinct check-ins before wrap-up. Weekly caps
+  (500 tutor / 250 learner) limit session farming; the session still completes
+  and the cap is returned in the response.
+- **Redemptions** lock the spender and reward rows, derive the balance from the
+  append-only ledger, and write the stock change, debit, voucher, and audit row
+  in one transaction. Concurrent redemptions cannot overdraw a wallet.
+- **Exam clock** is server-side: opening the paper starts a 30-minute window;
+  the answer key never leaves the API. A superadmin can reset a stranded attempt.
+- **Session security**: the 12-hour JWT is delivered in an HttpOnly,
+  SameSite=Strict cookie; JavaScript never reads it, and `api.js` sends
+  `credentials: 'include'`. `users.token_version` is checked on every request,
+  so a password change or `logout-all` invalidates every issued JWT immediately.
+- **Audit trail**: `audit_log` is append-only at the database level. Approval,
+  exam, referral, redemption, upload/delete, login, and password events are
+  recorded with actor, IP, and detail. Superadmins read it at `GET /api/audit`.
+- **Retention**: `npm run db:purge` is a dry run by default. It deletes only
+  decided-application files and old notifications; ledger, audit, sessions, and
+  decisions are never purged. Remote purge requires `ALLOW_HOSTED_PURGE=1`.
+- **CI** (`.github/workflows/ci.yml`) boots Postgres 16, applies schema + seed,
+  runs unit tests and the production build, then stages the demo against the
+  real API and runs the readiness gate.
 
 ## Project layout
 
@@ -158,9 +200,12 @@ db/schema.sql          source-of-truth DDL (incl. platform tables, triggers, vie
 db/seed.sql            demo data (39 users; password demo1234; UTF-8)
 db/migrations/         numbered migration files (marked applied on reset);
                        002_session_duration_and_seed_repair.sql backfills numeric durations;
-                       004_application_documents.sql adds the upload table
+                       004_application_documents.sql adds the upload table;
+                       005_trust_and_integrity.sql adds token_version, the exam clock,
+                       booking/application guards, and the append-only audit log
 server/                Express app, one pg Pool (`server/db.js`), routes, middleware
-server/scripts/        db-reset + db-migrate + embedded-PG boot + demo staging/check + e2e scripts
+server/scripts/        db-reset + db-migrate + backups/export/purge + demo staging/check + e2e scripts
+server/lib/            upload validation, weekly caps, audit helper, unit tests
 src/                   React app; `src/api.js` is the only API client
 ```
 

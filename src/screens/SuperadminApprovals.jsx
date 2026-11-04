@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '../components/ui/button';
 import { ApplicationFileList } from '../components/ApplicationDocumentPicker';
 import { Loader2, Check, X, ExternalLink, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { downloadApplicationDocument, openApplicationDocument, MAX_APPLICATION_FILES } from '../lib/applicationFiles';
 import { cn } from '../lib/utils';
+import { trapTabKey } from '../lib/focusTrap';
 import api from '../api';
 
 const fmtDate = (value) => {
@@ -23,11 +24,21 @@ export default function SuperadminApprovals({ showToast }) {
   const [selectedApp, setSelectedApp] = useState(null);
   const [selectedDocs, setSelectedDocs] = useState(null);
   const [busy, setBusy] = useState(null);
+  const [auditEntries, setAuditEntries] = useState(null);
+  const dialogRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const previousFocusRef = useRef(null);
 
   useEffect(() => {
     api.get('/accreditation/applications')
       .then(({ applications: rows }) => setApplications(rows))
       .catch((e) => { setApplications([]); showToast(e.message || 'Failed to load applications', 'error'); });
+  }, []);
+
+  useEffect(() => {
+    api.get('/audit', { limit: 8 })
+      .then(({ entries }) => setAuditEntries(entries ?? []))
+      .catch(() => setAuditEntries([]));
   }, []);
 
   useEffect(() => {
@@ -44,16 +55,28 @@ export default function SuperadminApprovals({ showToast }) {
     return () => { alive = false; };
   }, [selectedApp?.id]);
 
+  // Dialog focus: remember the trigger, move focus inside, trap Tab, restore on close.
   useEffect(() => {
     if (!selectedApp) return undefined;
-    const onKey = (event) => { if (event.key === 'Escape' && !busy) setSelectedApp(null); };
-    window.addEventListener('keydown', onKey);
-    const previous = document.body.style.overflow;
+    previousFocusRef.current = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    const focusTimer = setTimeout(() => closeButtonRef.current?.focus(), 30);
     return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previous;
+      clearTimeout(focusTimer);
+      document.body.style.overflow = previousOverflow;
+      previousFocusRef.current?.focus?.();
     };
+  }, [selectedApp?.id]);
+
+  useEffect(() => {
+    if (!selectedApp) return undefined;
+    const onKey = (event) => {
+      if (event.key === 'Escape' && !busy) { setSelectedApp(null); return; }
+      trapTabKey(event, dialogRef.current);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [selectedApp, busy]);
 
   const handleApprove = async (app) => {
@@ -177,6 +200,34 @@ export default function SuperadminApprovals({ showToast }) {
         </div>
       )}
 
+      {auditEntries && auditEntries.length > 0 && (
+        <section className="mt-8">
+          <div className="section-head">
+            <div>
+              <h2 className="section-title">Recorded decisions</h2>
+              <p className="section-subtitle">Append-only trail of approvals, exams, referrals, and redemptions.</p>
+            </div>
+            <span className="border-2 border-ink bg-paper px-2 py-1 text-[12px] font-bold uppercase tracking-[0.04em] text-muted-foreground">
+              Last {auditEntries.length}
+            </span>
+          </div>
+          <div className="panel divide-y-2 divide-ink/10">
+            {auditEntries.map((entry) => (
+              <div key={entry.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2.5">
+                <span className="font-mono text-[12px] font-bold uppercase tracking-[0.03em] text-ink">
+                  {String(entry.action || '').replace(/\./g, ' ')}
+                </span>
+                <span className="text-[13px] font-semibold">{entry.actor_name || entry.actor_role || 'System'}</span>
+                {entry.detail?.code && <span className="text-[12px] text-muted-foreground">{entry.detail.code}</span>}
+                <span className="ml-auto text-[12px] text-muted-foreground">
+                  {new Date(entry.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <AnimatePresence>
         {selectedApp && (
           <>
@@ -190,6 +241,7 @@ export default function SuperadminApprovals({ showToast }) {
               onClick={() => { if (!busy) setSelectedApp(null); }}
             />
             <motion.div
+              ref={dialogRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="application-title"
@@ -212,6 +264,7 @@ export default function SuperadminApprovals({ showToast }) {
                   </div>
                 </div>
                 <button
+                  ref={closeButtonRef}
                   type="button"
                   onClick={() => setSelectedApp(null)}
                   disabled={Boolean(busy)}

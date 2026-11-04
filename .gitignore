@@ -38,3 +38,7 @@ build/
 # Embedded postgres data
 .pgdata/
 
+# Local operations output (backups and subject exports contain PII)
+backups/
+exports/
+

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { ArrowRight, ArrowLeft, Loader2, Star, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { addDaysYmd } from '../lib/dates';
 import api from '../api';
 
 const steps = [
@@ -331,7 +332,7 @@ export default function LearnerWizard({ showToast }) {
                           disabled={requesting === tutor.id}
                           onClick={async () => {
                             setRequesting(tutor.id);
-                            const fallbackDate = new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10);
+                            const fallbackDate = addDaysYmd(3);
                             try {
                               await api.post('/session-requests', {
                                 tutorId: tutor.id,

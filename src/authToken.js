@@ -1,21 +1,20 @@
-/* JWT persistence shared between api.js and the React tree. */
-export const TOKEN_KEY = 'academix-token';
+/* The JWT lives in an HttpOnly cookie and is never exposed to JavaScript.
+ * Only the non-sensitive profile is cached so the shell can paint immediately;
+ * the API revalidates the cookie on boot. */
 export const USER_KEY = 'academix-user';
+const LEGACY_TOKEN_KEY = 'academix-token';
 
-export function useToken() {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function saveSession(token, user) {
-  localStorage.setItem(TOKEN_KEY, token);
+export function saveSession(user) {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
+  localStorage.removeItem(LEGACY_TOKEN_KEY);
 }
 
 export function loadSession() {
-  const token = localStorage.getItem(TOKEN_KEY);
-  if (!token) return null;
+  const raw = localStorage.getItem(USER_KEY);
+  if (!raw) return null;
   try {
-    return { token, user: JSON.parse(localStorage.getItem(USER_KEY) || 'null') };
+    const user = JSON.parse(raw);
+    return user ? { user } : null;
   } catch {
     clearSession();
     return null;
@@ -23,6 +22,6 @@ export function loadSession() {
 }
 
 export function clearSession() {
-  localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(LEGACY_TOKEN_KEY);
 }

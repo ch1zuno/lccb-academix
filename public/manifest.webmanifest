@@ -1,0 +1,23 @@
+{
+  "name": "LCCB Academix",
+  "short_name": "Academix",
+  "description": "Peer tutoring, accreditation, rewards, and analytics for La Consolacion College Bacolod.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F2EDE1",
+  "theme_color": "#0F2942",
+  "icons": [
+    {
+      "src": "/academix-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/academix-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

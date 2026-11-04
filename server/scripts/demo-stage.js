@@ -20,6 +20,7 @@ const DEMO_ANSWER = 1;
 const FACULTY = 'b.tisuela@lccbacolod.edu.ph';
 const LEARNER = 'TE-128';
 const TUTOR = 'TU-042';
+const SUPERADMIN = 'l.betita.admin@lccbacolod.edu.ph';
 const COHORT_APPLICANTS = [
   '24-0870-118', '24-0870-131', '25-0870-142', '25-0870-155',
   '25-0870-168', '25-0871-071', '25-0871-086', '26-0870-093', '26-0871-114',
@@ -78,9 +79,28 @@ async function ensureDemoDocument(token, application) {
   return ', demo file attached';
 }
 
-const today = new Date().toISOString().slice(0, 10);
+const ymd = (value = new Date()) => {
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+const today = ymd();
 
 console.log(`Demo staging against ${BASE}\n`);
+
+// Refuse to stage a demo on a deployment that has intentionally disabled demo
+// mode: the shared demo password would fail midway and leave half a story.
+const preflight = await request('/health');
+if (preflight.status !== 200 || preflight.data.ok !== true) {
+  console.error(`API is not ready (${preflight.status} ${preflight.data.error ?? ''}). Fix /api/health first.`);
+  process.exit(1);
+}
+if (preflight.data.demoMode !== true) {
+  console.error('DEMO_MODE is off on this deployment. Set DEMO_MODE=1 before staging the demo.');
+  process.exit(1);
+}
 
 const faculty = await login(FACULTY);
 const learner = await login(LEARNER);
@@ -150,8 +170,12 @@ await step('rejected referral for the superadmin remove act', async () => {
 
 await step('upcoming session for the check-in act', async () => {
   const sessions = (await request('/sessions/mine', { token: learner.token })).data.sessions ?? [];
-  const upcoming = sessions.find((s) => s.status === 'upcoming');
-  if (upcoming) return `already scheduled (${upcoming.session_code})`;
+  // Seeded "upcoming" rows are relative to reset day, but a long-lived hosted
+  // demo can still age out. Only a session that is actually in the future
+  // counts as staged; otherwise create a fresh one instead of presenting a
+  // check-in button for a date that already passed.
+  const upcoming = sessions.find((s) => s.status === 'upcoming' && ymd(s.date) >= today);
+  if (upcoming) return `already scheduled (${upcoming.session_code}, ${upcoming.date})`;
 
   const tutors = (await request('/tutors?available=1', { token: learner.token })).data.tutors ?? [];
   const tutorRow = tutors.find((t) => t.custom_id === TUTOR) ?? tutors.find((t) => (t.subjects ?? []).length > 0);
@@ -191,7 +215,13 @@ await step('pending, exam-ready tutor application for approvals', async () => {
     }
     if (mine && mine.status === 'pending') {
       // Application exists but the exam is unsent — finish it so Approve works live.
-      const exam = await request('/accreditation/exam', { token: who.token });
+      let exam = await request('/accreditation/exam', { token: who.token });
+      if (exam.status === 409 && /window has closed/i.test(exam.data.error ?? '')) {
+        // A long-lived rehearsal can outlive the 30-minute server clock.
+        const admin = await login(SUPERADMIN);
+        await request(`/accreditation/${mine.id}/reset-exam`, { method: 'POST', token: admin.token });
+        exam = await request('/accreditation/exam', { token: who.token });
+      }
       if (exam.status !== 200) continue;
       const answers = {};
       for (const q of exam.data.questions ?? []) answers[String(q.question_number)] = DEMO_ANSWER;
@@ -223,9 +253,11 @@ await step('pending, exam-ready tutor application for approvals', async () => {
     }
 
     const exam = await request('/accreditation/exam', { token: who.token });
+    if (exam.status !== 200) throw new Error(exam.data.error || `GET /accreditation/exam ${exam.status}`);
     const answers = {};
     for (const q of exam.data.questions ?? []) answers[String(q.question_number)] = DEMO_ANSWER;
-    await request('/accreditation/exam', { method: 'POST', token: who.token, body: { answers } });
+    const graded = await request('/accreditation/exam', { method: 'POST', token: who.token, body: { answers } });
+    if (graded.status !== 200) throw new Error(graded.data.error || `POST /accreditation/exam ${graded.status}`);
     const note = await ensureDemoDocument(who.token, applied.data.application);
     return `application ${applied.data.application.application_code} pending for ${candidate} (exam submitted${note})`;
   }

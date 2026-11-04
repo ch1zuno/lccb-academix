@@ -21,13 +21,13 @@ export const app = express();
 // without this the per-IP login limiter would bucket every visitor together.
 app.set('trust proxy', 1);
 app.use(helmet());
-app.use(cors({ origin: config.frontendOrigin }));
+app.use(cors({ origin: config.frontendOrigin, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('tiny'));
 
 const loginLimiter = rateLimit({
   windowMs: 60_000,
-  max: 60,
+  max: 20,
   // Only FAILED attempts count: the demo workspace switcher performs a real
   // login per role change, and rehearsals must never trip a 429 on stage.
   skipSuccessfulRequests: true,
@@ -45,7 +45,18 @@ app.get('/api/health', async (_req, res) => {
   res.set('Cache-Control', 'no-store');
   try {
     await query('SELECT 1');
-    res.json({ ok: true, database: 'up', latencyMs: Date.now() - started });
+    // Surface the applied migration so a stale hosted schema is visible from
+    // the one endpoint the demo runbook asks a presenter to check.
+    const migration = await query(
+      'SELECT filename FROM schema_migrations ORDER BY filename DESC LIMIT 1',
+    ).then((r) => r.rows[0]?.filename ?? null).catch(() => null);
+    res.json({
+      ok: true,
+      database: 'up',
+      demoMode: config.demoMode,
+      migration,
+      latencyMs: Date.now() - started,
+    });
   } catch (e) {
     res.status(503).json({
       ok: false,

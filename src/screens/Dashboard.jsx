@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Plus } from 'lucide-react';
+import { ArrowUpRight, Download, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
+import { localYmd } from '../lib/dates';
 import api from '../api';
 
 /**
@@ -115,6 +116,23 @@ export default function Dashboard({ role, user, showToast }) {
   const [analyticTutors, setAnalyticTutors] = useState(null);
   const [sessionsMine, setSessionsMine] = useState(null);
   const [walletBalance, setWalletBalance] = useState(null);
+  const [sessionRequests, setSessionRequests] = useState(null);
+  const [actingRequestId, setActingRequestId] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
+
+  const reloadSessions = () => {
+    api.get('/sessions/mine')
+      .then(({ sessions }) => setSessionsMine(sessions))
+      .catch(() => setSessionsMine([]));
+  };
+
+  const reloadRequests = () => {
+    if (role === 'tutor') {
+      api.get('/session-requests')
+        .then(({ requests }) => setSessionRequests(requests.filter(r => r.status === 'pending')))
+        .catch(() => setSessionRequests([]));
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -131,9 +149,54 @@ export default function Dashboard({ role, user, showToast }) {
     }
     if (role === 'tutor') {
       api.get('/wallet').then(({ balance }) => { if (!cancelled) setWalletBalance(balance); }).catch(() => {});
+      api.get('/session-requests')
+        .then(({ requests }) => { if (!cancelled) setSessionRequests(requests.filter(r => r.status === 'pending')); })
+        .catch(() => { if (!cancelled) setSessionRequests([]); });
     }
     return () => { cancelled = true; };
   }, [role]);
+
+  const handleAcceptRequest = async (requestId, learnerName) => {
+    setActingRequestId(requestId);
+    try {
+      await api.post(`/session-requests/${requestId}/accept`);
+      showToast(`Session accepted with ${learnerName}.`, 'success');
+      reloadRequests();
+      reloadSessions();
+    } catch (e) {
+      showToast(e.message || 'Could not accept session request', 'error');
+    } finally {
+      setActingRequestId(null);
+    }
+  };
+
+  const handleDeclineRequest = async (requestId) => {
+    setActingRequestId(requestId);
+    try {
+      await api.post(`/session-requests/${requestId}/decline`);
+      showToast('Session request declined.', 'info');
+      reloadRequests();
+    } catch (e) {
+      showToast(e.message || 'Could not decline session request', 'error');
+    } finally {
+      setActingRequestId(null);
+    }
+  };
+
+  const handleCancelSession = async (sessionId) => {
+    const reason = window.prompt('Reason for cancelling (optional):');
+    if (reason === null) return; // user pressed Cancel on the prompt
+    setCancellingId(sessionId);
+    try {
+      await api.post(`/sessions/${sessionId}/cancel`, { reason });
+      showToast('Session cancelled. The other participant has been notified.', 'info');
+      reloadSessions();
+    } catch (e) {
+      showToast(e.message || 'Could not cancel session', 'error');
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   // ── Superadmin ───────────────────────────────────────────────────────────
   if (role === 'superadmin') {
@@ -397,12 +460,32 @@ export default function Dashboard({ role, user, showToast }) {
       }
     };
 
+    const downloadCsv = async () => {
+      try {
+        const blob = await api.blob('/referrals/export.csv');
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `academix-referrals-${localYmd()}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast('Referral board exported.', 'success');
+      } catch (e) {
+        showToast(e.message || 'Export failed', 'error');
+      }
+    };
+
     return (
       <div className="space-y-5">
         <SectionHeading
           title="Referral board"
           detail={`Early-warning interventions for ${user?.name ?? 'your students'}.`}
-          action={<Button onClick={() => navigate('/referral')}><Plus className="h-4 w-4" strokeWidth={1.8} /> New referral</Button>}
+          action={(
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={downloadCsv}><Download className="h-4 w-4" strokeWidth={1.8} /> Export CSV</Button>
+              <Button onClick={() => navigate('/referral')}><Plus className="h-4 w-4" strokeWidth={1.8} /> New referral</Button>
+            </div>
+          )}
         />
 
         <Metrics items={stats} />
@@ -573,6 +656,57 @@ export default function Dashboard({ role, user, showToast }) {
           </div>
         </div>
 
+        {sessionRequests && sessionRequests.length > 0 && (
+          <div className="panel border-2 border-gold bg-[#fffdf6] p-5">
+            <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
+              <div>
+                <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
+                  Pending session requests
+                </h2>
+                <p className="mt-0.5 text-[13px] text-muted-foreground">
+                  Learners matched with you and requested a session.
+                </p>
+              </div>
+              <span className="num border-2 border-ink bg-gold px-2 py-0.5 text-[13px] font-bold text-ink">
+                {sessionRequests.length} new
+              </span>
+            </div>
+            <div className="mt-3 space-y-3">
+              {sessionRequests.map((req) => (
+                <div key={req.id} className="flex flex-col gap-3 border-b border-line/60 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-[14px] font-bold text-ink">{req.learner_name}</p>
+                    <p className="mt-0.5 text-[13px] text-muted-foreground">
+                      {req.subject} ({req.subject_code}) · {req.topic}
+                    </p>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">
+                      📅 {fmtLongDate(req.preferred_date)} at {req.preferred_time} · {req.location}
+                    </p>
+                    {req.note && <p className="mt-1 text-[12px] italic text-ink/70">"{req.note}"</p>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      disabled={actingRequestId === req.id}
+                      onClick={() => handleAcceptRequest(req.id, req.learner_name)}
+                    >
+                      {actingRequestId === req.id ? 'Accepting…' : 'Accept session'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={actingRequestId === req.id}
+                      onClick={() => handleDeclineRequest(req.id)}
+                    >
+                      Decline
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="panel min-w-0">
             <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-[#f8f1e2] px-5 py-4">
@@ -596,6 +730,15 @@ export default function Dashboard({ role, user, showToast }) {
                   <p className="num text-[13px] text-ink">{fmtLongDate(session.date)}</p>
                   <p className="mt-0.5 text-[13px] text-muted-foreground">{session.time} · {session.duration}</p>
                   <p className="mt-0.5 text-[13px] text-muted-foreground">{session.location}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    disabled={cancellingId === session.id}
+                    onClick={() => handleCancelSession(session.id)}
+                  >
+                    {cancellingId === session.id ? 'Cancelling…' : 'Cancel'}
+                  </Button>
                 </div>
               </div>
             ))}
@@ -744,6 +887,7 @@ export default function Dashboard({ role, user, showToast }) {
                   <th>Subject</th>
                   <th>When</th>
                   <th className="text-right">Status</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -756,6 +900,18 @@ export default function Dashboard({ role, user, showToast }) {
                     </td>
                     <td className="num whitespace-nowrap text-[13px] text-muted-foreground">{fmtLongDate(session.date)} · {session.time}</td>
                     <td className="text-right"><StatusPill status={session.status} /></td>
+                    <td className="text-right">
+                      {session.status === 'upcoming' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={cancellingId === session.id}
+                          onClick={() => handleCancelSession(session.id)}
+                        >
+                          {cancellingId === session.id ? 'Cancelling…' : 'Cancel'}
+                        </Button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -15,6 +15,7 @@ import express from 'express';
 import { query, withTransaction } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
+import { audit, requestIp } from '../lib/audit.js';
 
 const router = express.Router();
 
@@ -52,7 +53,12 @@ router.post('/rewards/:id/redeem', requireAuth, async (req, res, next) => {
   try {
     const voucher = voucherCode();
     const result = await withTransaction(async (client) => {
-      // 1+2. lock reward & check balance (FOR UPDATE on reward row)
+      // Lock the spender before reading the balance. Locking only the reward
+      // row still lets two different-reward redemptions read the same balance
+      // and overdraw the wallet.
+      await client.query(`SELECT id FROM users WHERE id = $1 FOR UPDATE`, [req.user.id]);
+
+      // 1+2. lock reward & check balance
       const { rows: rw } = await client.query(
         `SELECT id, name, cost, stock FROM rewards WHERE id = $1 FOR UPDATE`,
         [req.params.id]);
@@ -68,10 +74,11 @@ router.post('/rewards/:id/redeem', requireAuth, async (req, res, next) => {
       if (reward.stock <= 0) throw httpError(409, 'Reward out of stock');
       if (balance < reward.cost) throw httpError(409, `Not enough points — need ${reward.cost}, have ${balance}`);
 
-      // 4. decrement stock
+      // 4. decrement stock (conditional even under the row lock)
       const { rows: stockNow } = await client.query(
-        `UPDATE rewards SET stock = stock - 1 WHERE id = $1 RETURNING stock`,
+        `UPDATE rewards SET stock = stock - 1 WHERE id = $1 AND stock > 0 RETURNING stock`,
         [reward.id]);
+      if (!stockNow[0]) throw httpError(409, 'Reward out of stock');
 
       // 5. ledger debit (append-only; negatives only through this route)
       await client.query(
@@ -88,6 +95,16 @@ router.post('/rewards/:id/redeem', requireAuth, async (req, res, next) => {
       const { rows: newBal } = await client.query(
         `SELECT COALESCE(SUM(amount), 0)::int AS balance FROM points_ledger WHERE user_id = $1`,
         [req.user.id]);
+
+      await audit({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        action: 'reward.redeem',
+        entity: 'redemption',
+        entityId: red[0].voucher_code,
+        detail: { rewardId: reward.id, reward: reward.name, cost: reward.cost, balance: newBal[0].balance },
+        ip: requestIp(req),
+      }, client);
 
       return {
         voucher: red[0].voucher_code, reward: reward.name,

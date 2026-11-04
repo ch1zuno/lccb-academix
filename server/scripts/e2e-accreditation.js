@@ -113,9 +113,16 @@ const CORRECT = {};
   const again = await request('/accreditation/apply', { method: 'POST', token: learner.token, body: { subjectIds: subs.map(s => s.id) } });
   check('duplicate pending application rejected', again.status === 409, `${again.status}`);
 
+  const early = await request('/accreditation/exam', {
+    method: 'POST', token: learner.token, body: { answers: { '1': 1 } },
+  });
+  check('exam cannot be submitted before it is opened', early.status === 400, `${early.status} ${early.data.error}`);
+
   const exam = (await request('/accreditation/exam', { token: learner.token })).data;
   check('exam has 15 questions', exam.questions?.length === 15, `got ${exam.questions?.length}`);
   check('exam never leaks answers', !JSON.stringify(exam.questions?.[0] ?? {}).includes('"answer"'));
+  check('server starts a 30-minute exam clock', Boolean(exam.startedAt && exam.expiresAt) && exam.windowMinutes === 30,
+    `${exam.startedAt} -> ${exam.expiresAt}`);
 
   const answers = {};
   exam.questions.forEach(q => { answers[q.question_number] = CORRECT[q.question_number]; });

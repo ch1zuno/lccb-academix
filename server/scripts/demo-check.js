@@ -57,6 +57,11 @@ async function login(loginId) {
     health.status === 200 && health.data.ok === true && health.data.database === 'up',
     `${health.status}${health.data.latencyMs != null ? ` · ${health.data.latencyMs}ms` : ''}${health.data.error ? ` · ${health.data.error}` : ''}`,
   );
+  check(
+    'demo mode enabled for the demo accounts',
+    health.data.demoMode === true,
+    health.data.demoMode === true ? 'DEMO_MODE on' : 'set DEMO_MODE=1 on the deployment',
+  );
 
   const ROLES = [
     ['learner', 'TE-128'],
@@ -134,11 +139,24 @@ async function login(loginId) {
     Boolean(rejected),
     rejected ? rejected.referral_code : 'run npm run demo:stage',
   );
-  const upcoming = learnerSessions.find((s) => s.status === 'upcoming');
+  const ymd = (value = new Date()) => {
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+  const today = ymd();
+  const upcoming = learnerSessions.find((s) => s.status === 'upcoming' && ymd(s.date) >= today);
+  const staleUpcoming = learnerSessions.find((s) => s.status === 'upcoming' && ymd(s.date) < today);
   check(
     'upcoming session for the check-in act',
     Boolean(upcoming),
-    upcoming ? upcoming.session_code : 'run npm run demo:stage',
+    upcoming
+      ? `${upcoming.session_code} on ${ymd(upcoming.date)}`
+      : staleUpcoming
+        ? `${staleUpcoming.session_code} is stale (${ymd(staleUpcoming.date)}) — run npm run demo:stage`
+        : 'run npm run demo:stage',
   );
   const approvable = applications.find((a) => a.status === 'pending' && a.exam_score != null && (a.document_count ?? 0) > 0);
   check(

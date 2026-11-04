@@ -4,6 +4,7 @@ import { animate } from 'animejs';
 import { ArrowRight, ArrowLeft, Loader2, X } from 'lucide-react';
 import api from '../api';
 import { saveSession } from '../authToken';
+import { focusFirst, trapTabKey } from '../lib/focusTrap';
 import Logo2D from '../components/Logo2D';
 import './Landing.css';
 
@@ -238,6 +239,8 @@ export default function LandingPage({ onLogin }) {
   const railRef = useRef(null);
   const tickerRef = useRef(null);
   const stageRef = useRef(null);
+  const loginDialogRef = useRef(null);
+  const loginPreviousFocusRef = useRef(null);
 
   const totals = overview?.totals ?? null;
   const subjects = overview?.subjects ?? [];
@@ -311,12 +314,19 @@ export default function LandingPage({ onLogin }) {
   useEffect(() => {
     if (!showLogin) return undefined;
     const previous = document.body.style.overflow;
+    loginPreviousFocusRef.current = document.activeElement;
     document.body.style.overflow = 'hidden';
-    const onKey = (event) => { if (event.key === 'Escape') closeLogin(); };
+    const focusTimer = setTimeout(() => focusFirst(loginDialogRef.current, '#school-id'), 30);
+    const onKey = (event) => {
+      if (event.key === 'Escape') { closeLogin(); return; }
+      trapTabKey(event, loginDialogRef.current);
+    };
     window.addEventListener('keydown', onKey);
     return () => {
+      clearTimeout(focusTimer);
       document.body.style.overflow = previous;
       window.removeEventListener('keydown', onKey);
+      loginPreviousFocusRef.current?.focus?.();
     };
   }, [showLogin]);
 
@@ -342,8 +352,8 @@ export default function LandingPage({ onLogin }) {
     }
     setLoading(true);
     try {
-      const { token, user } = await api.post('/auth/login', { loginId: schoolId.trim(), password });
-      saveSession(token, user);
+      const { user } = await api.post('/auth/login', { loginId: schoolId.trim(), password });
+      saveSession(user);
       onLogin(user);
       setShowLogin(false);
     } catch (err) {
@@ -468,6 +478,8 @@ export default function LandingPage({ onLogin }) {
                     <span className="sep">·</span> <b>{fmtHours(totals.hours)}</b> hours
                     <span className="sep">·</span> <b>{fmt(totals.points_issued)}</b> points
                   </>
+                ) : overviewFailed ? (
+                  <>Ledger offline · sign-in still works</>
                 ) : (
                   <>Live ledger · reading the record…</>
                 )}
@@ -935,6 +947,7 @@ export default function LandingPage({ onLogin }) {
             onClick={closeLogin}
           >
             <motion.div
+              ref={loginDialogRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="login-title"
@@ -1012,6 +1025,12 @@ export default function LandingPage({ onLogin }) {
                     {loading ? 'Signing in…' : 'Sign in'}
                   </button>
                 </form>
+
+                <p className="login-consent">
+                  By signing in, you agree that session, referral, and accreditation records are
+                  stored for official LCCB use. Supporting documents are visible only to the
+                  applicant and reviewing staff.
+                </p>
 
                 {DEMO_ACCOUNTS.length > 0 && (
                   <div className="login-demo">

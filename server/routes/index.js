@@ -8,6 +8,7 @@ import rewardsRoutes from './rewards.js';
 import accreditationRoutes from './accreditation.js';
 import analyticsRoutes from './analytics.js';
 import notificationRoutes from './notifications.js';
+import auditRoutes from './audit.js';
 import publicRoutes from './public.js';
 
 const router = Router();
@@ -31,5 +32,7 @@ router.use(matchingRoutes);
 router.use(analyticsRoutes);
 // user notifications (list + mark all read)
 router.use(notificationRoutes);
+// append-only audit trail (superadmin read-only)
+router.use(auditRoutes);
 
 export default router;

@@ -2,6 +2,7 @@ import express from 'express';
 import { query } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
+import { audit, requestIp } from '../lib/audit.js';
 
 const router = express.Router();
 
@@ -48,6 +49,15 @@ router.delete('/referrals/:id', requireAuth, requireRole('superadmin'), async (r
       if (!found.rows[0]) throw httpError(404, 'Referral not found');
       throw httpError(409, 'Only rejected referrals can be removed');
     }
+    await audit({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: 'referral.delete',
+      entity: 'referral',
+      entityId: rows[0].id,
+      detail: { code: rows[0].referral_code },
+      ip: requestIp(req),
+    });
     res.json({ removed: true, referral: rows[0] });
   } catch (e) { next(e); }
 });
@@ -57,6 +67,51 @@ router.get('/referrals', requireAuth, async (req, res, next) => {
     const { sql, params } = whereFor(req.user);
     const { rows } = await query(`${SELECT_SQL} ${sql} ORDER BY r.created_at DESC`, params);
     res.json({ referrals: rows.map(reorder) });
+  } catch (e) { next(e); }
+});
+
+// GET /referrals/export.csv — faculty get their board, superadmin gets all.
+router.get('/referrals/export.csv', requireAuth, requireRole('faculty', 'superadmin'), async (req, res, next) => {
+  try {
+    const { sql, params } = whereFor(req.user);
+    const { rows } = await query(`${SELECT_SQL} ${sql} ORDER BY r.created_at DESC`, params);
+    const ymd = (value) => {
+      if (!value) return '';
+      const date = value instanceof Date ? value : new Date(value);
+      if (Number.isNaN(date.getTime())) return '';
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    };
+    const cell = (value) => {
+      let text = value == null ? '' : String(value);
+      // Neutralize spreadsheet formula injection.
+      if (/^[=+\-@]/.test(text)) text = `'${text}`;
+      return `"${text.replace(/"/g, '""')}"`;
+    };
+    const header = ['Referral', 'Learner', 'Learner ID', 'Subject', 'Topic', 'Urgency', 'Status',
+      'Date', 'Hours required', 'Hours remaining', 'Assigned tutor', 'Faculty', 'Notes'];
+    const lines = [header.map(cell).join(',')];
+    for (const row of rows) {
+      lines.push([
+        row.referral_code, row.learner, row.learner_code, row.subject_code, row.topic,
+        row.urgency, row.status, ymd(row.date), row.hours_required, row.hours_remaining,
+        row.assigned_tutor, row.faculty, row.notes,
+      ].map(cell).join(','));
+    }
+    await audit({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: 'referral.export',
+      entity: 'referral',
+      detail: { rows: rows.length },
+      ip: requestIp(req),
+    });
+    res.set({
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename="academix-referrals-${new Date().toISOString().slice(0, 10)}.csv"`,
+      'Cache-Control': 'private, no-store',
+    });
+    res.send(`\uFEFF${lines.join('\r\n')}\r\n`);
   } catch (e) { next(e); }
 });
 
@@ -96,6 +151,15 @@ router.post('/referrals', requireAuth, requireRole('faculty', 'superadmin'), asy
         learnerId, req.user.id, subjectId, String(topic).slice(0, 200), urgency, notes ? String(notes).slice(0, 500) : null, hours],
     );
     const full = await query(`${SELECT_SQL} WHERE r.id = $1`, [rows[0].id]);
+    await audit({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: 'referral.create',
+      entity: 'referral',
+      entityId: rows[0].id,
+      detail: { code: rows[0].referral_code, learnerId, subjectId, urgency, hours },
+      ip: requestIp(req),
+    });
     res.status(201).json({ referral: reorder(full.rows[0]) });
   } catch (e) {
     if (e.code === '23503') e.status = 400, e.message = 'Unknown learner or subject';
@@ -119,6 +183,15 @@ router.post('/referrals/:id/assign', requireAuth, requireRole('faculty'), async 
     );
     if (!rows[0]) throw httpError(404, 'Referral not found, not yours, or already resolved');
     await insertNotification(tutorId, 'referral', 'New peer tutoring referral assigned to you', rows[0].referral_code);
+    await audit({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: 'referral.assign',
+      entity: 'referral',
+      entityId: rows[0].id,
+      detail: { code: rows[0].referral_code, tutorId },
+      ip: requestIp(req),
+    });
     res.json({ referral: rows[0] });
   } catch (e) {
     if (e.code === '23503') e.status = 400, e.message = 'Unknown tutor';
@@ -156,6 +229,15 @@ router.patch('/referrals/:id/status', requireAuth, async (req, res, next) => {
     const applied = await query(
       `UPDATE referrals SET status = $1 WHERE id = $2 RETURNING id, status`,
       [status, req.params.id]);
+    await audit({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: 'referral.status',
+      entity: 'referral',
+      entityId: req.params.id,
+      detail: { from: cur.status, to: status },
+      ip: requestIp(req),
+    });
     res.json({ referral: applied.rows[0] });
   } catch (e) { next(e); }
 });

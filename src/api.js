@@ -1,6 +1,5 @@
-/* Tiny fetch wrapper for the LCCB Academix API. */
-import { useToken } from './authToken.js';
-
+/* Tiny fetch wrapper for the LCCB Academix API. Auth rides in an HttpOnly
+ * same-site cookie, so browser code never reads or stores the JWT. */
 const BASE = '/api';
 
 export class ApiError extends Error {
@@ -16,11 +15,10 @@ async function request(path, { method = 'GET', body, params } = {}) {
   const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
   const headers = {};
   if (!isForm) headers['Content-Type'] = 'application/json';
-  const token = useToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(`${BASE}${path}${qs}`, {
     method,
     headers,
+    credentials: 'include',
     body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
   });
   const type = res.headers.get('content-type') || '';
@@ -39,9 +37,7 @@ async function request(path, { method = 'GET', body, params } = {}) {
 /** Fetches an authenticated binary response (supporting-document previews). */
 async function requestBlob(path) {
   const headers = {};
-  const token = useToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(`${BASE}${path}`, { headers });
+  const res = await fetch(`${BASE}${path}`, { headers, credentials: 'include' });
   if (!res.ok) {
     if (res.status === 401) window.dispatchEvent(new Event('academix:unauthorized'));
     let message = `HTTP ${res.status}`;

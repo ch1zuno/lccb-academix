@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lccb_academix
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d lccb_academix"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/lccb_academix
+      JWT_SECRET: ci-only-jwt-secret
+      DEMO_MODE: "1"
+      PORT: 4000
+      FRONTEND_ORIGIN: http://localhost:5173
+      DEMO_API_BASE: http://localhost:4000
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Create schema and seed
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/schema.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/seed.sql
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Bundle budget
+        run: npm run check:bundle
+
+      - name: Start API
+        run: |
+          node server/index.js > /tmp/academix-api.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:4000/api/health > /tmp/health.json; then
+              cat /tmp/health.json
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/academix-api.log
+          exit 1
+
+      - name: End-to-end suite
+        run: node server/scripts/e2e-all.js
+
+      - name: Stage demo showcase and prove readiness
+        run: |
+          npm run demo:stage
+          npm run demo:check
+
+      - name: Upload API log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-log
+          path: /tmp/academix-api.log

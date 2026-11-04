@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import {
   BookOpen, Bell, ChevronDown, Check, LayoutDashboard, Search, Clock,
-  ShieldCheck, Users, Award, LogOut, Menu, X, Inbox,
+  ShieldCheck, Users, Award, LogOut, Menu, X, Inbox, KeyRound,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from './lib/utils';
@@ -11,15 +11,24 @@ import { Button } from './components/ui/button';
 import api from './api';
 import { loadSession, saveSession, clearSession } from './authToken';
 
-import SuperadminApprovals from './screens/SuperadminApprovals';
-import LearnerWizard from './screens/LearnerWizard';
-import Dashboard from './screens/Dashboard';
-import TutorExam from './screens/TutorExam';
-import TutorApplicant from './screens/TutorApplicant';
-import FacultyReferral from './screens/FacultyReferral';
-import SessionCheckIn from './screens/SessionCheckIn';
-import RewardCatalog from './screens/RewardCatalog';
 import Login from './screens/Login';
+import SecurityDialog from './components/SecurityDialog';
+
+/* Route-level code splitting keeps the landing bundle small; each role only
+ * downloads the workspace it can enter. */
+const SuperadminApprovals = React.lazy(() => import('./screens/SuperadminApprovals'));
+const LearnerWizard = React.lazy(() => import('./screens/LearnerWizard'));
+const Dashboard = React.lazy(() => import('./screens/Dashboard'));
+const TutorExam = React.lazy(() => import('./screens/TutorExam'));
+const TutorApplicant = React.lazy(() => import('./screens/TutorApplicant'));
+const FacultyReferral = React.lazy(() => import('./screens/FacultyReferral'));
+const SessionCheckIn = React.lazy(() => import('./screens/SessionCheckIn'));
+const RewardCatalog = React.lazy(() => import('./screens/RewardCatalog'));
+
+/* Production builds hide the demo switcher unless VITE_DEMO_MODE=1. Local dev
+ * keeps it on; VITE_DEMO_MODE=0 can disable it during a local production test. */
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === '1'
+  || (import.meta.env.DEV && import.meta.env.VITE_DEMO_MODE !== '0');
 
 export const ROLE_LABELS = {
   superadmin: 'Superadmin (Dean)',
@@ -67,6 +76,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
+  const [securityOpen, setSecurityOpen] = useState(false);
   const [role, setRole] = useState(user?.role ?? 'learner');
 
   const navigate = useNavigate();
@@ -81,9 +91,9 @@ export default function App() {
   // Revalidate the persisted session against the API on boot.
   useEffect(() => {
     const stored = loadSession();
-    if (!stored?.token) return;
+    if (!stored?.user) return;
     api.get('/auth/me')
-      .then(({ user: fresh }) => { setUser(fresh); setRole(fresh.role); saveSession(stored.token, fresh); })
+      .then(({ user: fresh }) => { setUser(fresh); setRole(fresh.role); saveSession(fresh); })
       .catch(() => { clearSession(); setUser(null); });
   }, []);
 
@@ -173,6 +183,9 @@ export default function App() {
   };
 
   const signOut = () => {
+    // Clearing the HttpOnly cookie requires a round trip; local state can drop
+    // immediately so the UI never looks signed in after the click.
+    api.post('/auth/logout').catch(() => {});
     clearSession();
     setUser(null);
     setShowRoleMenu(false);
@@ -295,44 +308,51 @@ export default function App() {
         <aside className="sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r-2 border-ink bg-[#f7f0e2] px-3 py-5 lg:flex">
           <div className="px-2 pb-6"><Wordmark /></div>
 
-          <div className="relative px-2 pb-6">
-            <button
-              onClick={() => setShowRoleMenu(v => !v)}
-              className="flex w-full items-center justify-between border-2 border-ink bg-paper px-3 py-2.5 text-left shadow-[3px_3px_0_#0f2942] transition-[transform,box-shadow] hover:-translate-y-px hover:shadow-[4px_4px_0_#0f2942]"
-              aria-expanded={showRoleMenu}
-            >
-              <div>
-                <p className="text-[12px] font-semibold uppercase leading-tight tracking-[0.04em] text-muted-foreground">Demo workspace</p>
-                <p className="mt-1 text-[13px] font-bold leading-tight">{ROLE_LABELS[role]}</p>
-              </div>
-              <ChevronDown className={cn('h-4 w-4 transition-transform', showRoleMenu && 'rotate-180')} strokeWidth={2.2} />
-            </button>
-            <AnimatePresence>
-              {showRoleMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.12 }}
-                  className="absolute left-2 right-2 top-full z-40 mt-1.5 border-2 border-ink bg-paper shadow-[5px_5px_0_#0f2942]"
-                >
-                  {DEMO_ROLES.map(({ role: rId, loginId }) => (
-                    <button
-                      key={rId}
-                      onClick={() => switchDemoRole(rId, loginId)}
-                      className={cn(
-                        'flex w-full items-center justify-between border-b border-ink/15 px-3 py-2.5 text-left text-[13px] last:border-b-0 hover:bg-gold',
-                        role === rId && 'bg-[#fff7d6] font-bold'
-                      )}
-                    >
-                      <span>{ROLE_LABELS[rId]}</span>
-                      {role === rId && <Check className="h-4 w-4" strokeWidth={2.4} />}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {DEMO_MODE ? (
+            <div className="relative px-2 pb-6">
+              <button
+                onClick={() => setShowRoleMenu(v => !v)}
+                className="flex w-full items-center justify-between border-2 border-ink bg-paper px-3 py-2.5 text-left shadow-[3px_3px_0_#0f2942] transition-[transform,box-shadow] hover:-translate-y-px hover:shadow-[4px_4px_0_#0f2942]"
+                aria-expanded={showRoleMenu}
+              >
+                <div>
+                  <p className="text-[12px] font-semibold uppercase leading-tight tracking-[0.04em] text-muted-foreground">Demo workspace</p>
+                  <p className="mt-1 text-[13px] font-bold leading-tight">{ROLE_LABELS[role]}</p>
+                </div>
+                <ChevronDown className={cn('h-4 w-4 transition-transform', showRoleMenu && 'rotate-180')} strokeWidth={2.2} />
+              </button>
+              <AnimatePresence>
+                {showRoleMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.12 }}
+                    className="absolute left-2 right-2 top-full z-40 mt-1.5 border-2 border-ink bg-paper shadow-[5px_5px_0_#0f2942]"
+                  >
+                    {DEMO_ROLES.map(({ role: rId, loginId }) => (
+                      <button
+                        key={rId}
+                        onClick={() => switchDemoRole(rId, loginId)}
+                        className={cn(
+                          'flex w-full items-center justify-between border-b border-ink/15 px-3 py-2.5 text-left text-[13px] last:border-b-0 hover:bg-gold',
+                          role === rId && 'bg-[#fff7d6] font-bold'
+                        )}
+                      >
+                        <span>{ROLE_LABELS[rId]}</span>
+                        {role === rId && <Check className="h-4 w-4" strokeWidth={2.4} />}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <div className="px-2 pb-6">
+              <p className="group-label uppercase tracking-[0.04em]">Workspace</p>
+              <p className="mt-1.5 text-[14px] font-bold leading-tight">{ROLE_LABELS[role]}</p>
+            </div>
+          )}
 
           <div className="flex-1"><NavList /></div>
 
@@ -347,9 +367,14 @@ export default function App() {
                   <p className="truncate text-[12px] leading-tight text-muted-foreground">{currentProfile.subtitle}</p>
                 </div>
               </div>
-              <button onClick={signOut} className="grid h-9 w-9 shrink-0 place-items-center border-2 border-transparent text-muted-foreground transition-colors hover:border-ink hover:bg-gold hover:text-ink" title="Sign out" aria-label="Sign out">
-                <LogOut className="h-[17px] w-[17px]" strokeWidth={2} />
-              </button>
+              <div className="flex shrink-0 items-center gap-0.5">
+                <button onClick={() => setSecurityOpen(true)} className="grid h-9 w-9 place-items-center border-2 border-transparent text-muted-foreground transition-colors hover:border-ink hover:bg-gold hover:text-ink" title="Account security" aria-label="Account security">
+                  <KeyRound className="h-[17px] w-[17px]" strokeWidth={2} />
+                </button>
+                <button onClick={signOut} className="grid h-9 w-9 place-items-center border-2 border-transparent text-muted-foreground transition-colors hover:border-ink hover:bg-gold hover:text-ink" title="Sign out" aria-label="Sign out">
+                  <LogOut className="h-[17px] w-[17px]" strokeWidth={2} />
+                </button>
+              </div>
             </div>
           </div>
         </aside>
@@ -366,7 +391,8 @@ export default function App() {
                 transition={{ duration: 0.16 }}
                 className="min-h-[calc(100vh-7rem)]"
               >
-                <Routes location={location} key={location.pathname}>
+                <React.Suspense fallback={<div className="panel empty">Opening workspace…</div>}>
+                  <Routes location={location} key={location.pathname}>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/wizard" element={gate('/wizard', <LearnerWizard showToast={showToast} />)} />
                   <Route path="/dashboard" element={gate('/dashboard', <Dashboard role={role} user={user} showToast={showToast} />)} />
@@ -391,7 +417,8 @@ export default function App() {
                       </div>
                     )}
                   />
-                </Routes>
+                  </Routes>
+                </React.Suspense>
               </motion.div>
             </AnimatePresence>
           </div>
@@ -418,31 +445,40 @@ export default function App() {
               </button>
             </div>
             <div className="flex h-[calc(100vh-4rem)] flex-col overflow-y-auto px-4 py-5">
-              <button
-                onClick={() => setShowRoleMenu(v => !v)}
-                className="mb-5 flex w-full items-center justify-between border-2 border-ink bg-paper px-3 py-2.5 text-left shadow-[3px_3px_0_#0f2942]"
-              >
-                <div>
-                  <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-muted-foreground">Demo workspace</p>
-                  <p className="mt-1 text-[14px] font-bold">{ROLE_LABELS[role]}</p>
-                </div>
-                <ChevronDown className="h-4 w-4" strokeWidth={2.2} />
-              </button>
-              {showRoleMenu && (
-                <div className="mb-5 -mt-3 border-2 border-ink bg-paper shadow-[4px_4px_0_#0f2942]">
-                  {DEMO_ROLES.map(({ role: rId, loginId }) => (
-                    <button
-                      key={rId}
-                      onClick={() => switchDemoRole(rId, loginId)}
-                      className={cn(
-                        'flex w-full items-center justify-between border-b border-ink/15 px-3 py-2.5 text-left text-[13px] last:border-b-0 hover:bg-gold',
-                        role === rId && 'bg-[#fff7d6] font-bold'
-                      )}
-                    >
-                      <span>{ROLE_LABELS[rId]}</span>
-                      {role === rId && <Check className="h-4 w-4" strokeWidth={2.4} />}
-                    </button>
-                  ))}
+              {DEMO_MODE ? (
+                <>
+                  <button
+                    onClick={() => setShowRoleMenu(v => !v)}
+                    className="mb-5 flex w-full items-center justify-between border-2 border-ink bg-paper px-3 py-2.5 text-left shadow-[3px_3px_0_#0f2942]"
+                  >
+                    <div>
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-muted-foreground">Demo workspace</p>
+                      <p className="mt-1 text-[14px] font-bold">{ROLE_LABELS[role]}</p>
+                    </div>
+                    <ChevronDown className="h-4 w-4" strokeWidth={2.2} />
+                  </button>
+                  {showRoleMenu && (
+                    <div className="mb-5 -mt-3 border-2 border-ink bg-paper shadow-[4px_4px_0_#0f2942]">
+                      {DEMO_ROLES.map(({ role: rId, loginId }) => (
+                        <button
+                          key={rId}
+                          onClick={() => switchDemoRole(rId, loginId)}
+                          className={cn(
+                            'flex w-full items-center justify-between border-b border-ink/15 px-3 py-2.5 text-left text-[13px] last:border-b-0 hover:bg-gold',
+                            role === rId && 'bg-[#fff7d6] font-bold'
+                          )}
+                        >
+                          <span>{ROLE_LABELS[rId]}</span>
+                          {role === rId && <Check className="h-4 w-4" strokeWidth={2.4} />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="mb-5">
+                  <p className="group-label uppercase tracking-[0.04em]">Workspace</p>
+                  <p className="mt-1.5 text-[14px] font-bold">{ROLE_LABELS[role]}</p>
                 </div>
               )}
               <NavList onNavigate={() => setMobileOpen(false)} />
@@ -457,7 +493,10 @@ export default function App() {
                       <p className="truncate text-[12px] text-muted-foreground">{currentProfile.subtitle}</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={signOut}><LogOut className="h-4 w-4" strokeWidth={2} /> Sign out</Button>
+                  <div className="flex flex-wrap justify-end gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => { setMobileOpen(false); setSecurityOpen(true); }}><KeyRound className="h-4 w-4" strokeWidth={2} /> Security</Button>
+                    <Button variant="ghost" size="sm" onClick={signOut}><LogOut className="h-4 w-4" strokeWidth={2} /> Sign out</Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -516,6 +555,14 @@ export default function App() {
           </>
         )}
       </AnimatePresence>
+
+      {securityOpen && (
+        <SecurityDialog
+          onClose={() => setSecurityOpen(false)}
+          onSignOut={signOut}
+          showToast={showToast}
+        />
+      )}
 
       {/* Toast */}
       <AnimatePresence>

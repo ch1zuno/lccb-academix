@@ -1,15 +1,24 @@
 {
   "name": "lccb-academix",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "main": "server/index.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server/index.js",
+    "test": "node --test server/lib/application-files.test.js server/lib/points.test.js",
+    "check:bundle": "node server/scripts/check-bundle.js",
     "db:reset": "node server/scripts/db-reset.js",
     "db:migrate": "node server/scripts/db-migrate.js",
+    "db:backup": "node server/scripts/db-backup.js",
+    "db:export": "node server/scripts/export-user.js",
+    "db:purge": "node server/scripts/purge-retention.js",
     "demo:stage": "node server/scripts/demo-stage.js",
     "demo:check": "node server/scripts/demo-check.js",
     "start": "node server/scripts/start.js"
@@ -57,8 +66,25 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router-dom": "^7.18.4",
-    "recharts": "^3.10.1",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.7"
-  }
+  },
+  "description": "Peer-tutoring, accreditation, rewards, and analytics for La Consolacion College Bacolod.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ch1zuno/lccb-academix.git"
+  },
+  "keywords": [
+    "peer-tutoring",
+    "education",
+    "postgresql",
+    "express",
+    "react"
+  ],
+  "author": "LCCB Academix contributors",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ch1zuno/lccb-academix/issues"
+  },
+  "homepage": "https://github.com/ch1zuno/lccb-academix#readme"
 }

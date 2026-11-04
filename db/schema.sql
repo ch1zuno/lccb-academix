@@ -32,6 +32,7 @@ CREATE TABLE users (
   is_available boolean DEFAULT true,
   hourly_rate numeric,
   certified_by_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  token_version int NOT NULL DEFAULT 0,
   created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -154,6 +155,8 @@ CREATE TABLE tutor_applications (
   application_code text UNIQUE,
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   exam_score int,
+  exam_started_at timestamptz,
+  exam_submitted_at timestamptz,
   grades jsonb,
   achievements jsonb,
   status application_status NOT NULL DEFAULT 'pending',
@@ -251,6 +254,30 @@ CREATE TABLE schema_migrations (
   applied_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE audit_log (
+  id bigserial PRIMARY KEY,
+  actor_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  actor_role text,
+  action text NOT NULL,
+  entity text NOT NULL,
+  entity_id text,
+  detail jsonb,
+  ip text,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_audit_log_created ON audit_log(created_at DESC);
+CREATE INDEX idx_audit_log_entity ON audit_log(entity, entity_id);
+
+CREATE FUNCTION forbid_audit_change() RETURNS trigger AS $$
+BEGIN
+  RAISE EXCEPTION 'audit_log is append-only';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER audit_log_append_only
+  BEFORE UPDATE OR DELETE ON audit_log
+  FOR EACH ROW EXECUTE FUNCTION forbid_audit_change();
+
 CREATE VIEW user_wallet_balances AS
 SELECT user_id, COALESCE(SUM(amount), 0) AS balance
 FROM points_ledger
@@ -277,6 +304,15 @@ CREATE INDEX idx_user_subjects_subject_id ON user_subjects(subject_id);
 CREATE INDEX idx_tutor_applications_status ON tutor_applications(status);
 CREATE INDEX idx_application_documents_application ON application_documents(application_id);
 CREATE INDEX idx_sessions_referral_id ON sessions(referral_id);
+CREATE INDEX idx_points_ledger_user_created ON points_ledger(user_id, created_at DESC);
+
+-- Integrity guards (mirrored by migration 005).
+CREATE UNIQUE INDEX uq_tutor_applications_one_pending
+  ON tutor_applications(user_id)
+  WHERE status = 'pending';
+CREATE UNIQUE INDEX uq_sessions_active_slot
+  ON sessions(tutor_id, date, time)
+  WHERE status IN ('upcoming', 'in-progress');
 CREATE INDEX idx_sessions_date_desc ON sessions(date DESC);
 CREATE INDEX idx_check_in_tokens_session_id ON check_in_tokens(session_id);
 CREATE INDEX idx_check_in_tokens_expires_at ON check_in_tokens(expires_at);

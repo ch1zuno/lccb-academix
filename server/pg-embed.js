@@ -1,6 +1,7 @@
 /* Boots an embedded Postgres (data dir .pgdata/) when the configured
  * DATABASE_URL (localhost only) is not reachable. No system Postgres needed. */
 import fs from 'node:fs';
+import net from 'node:net';
 import path from 'node:path';
 import url from 'node:url';
 import pgPkg from 'pg';
@@ -59,10 +60,25 @@ export function ensurePostgres() {
         },
       });
       runningPg = pg;
+      const initialised = fs.existsSync(path.join(DATA_DIR, 'PG_VERSION'));
       let started = false;
-      try { await pg.start(); started = true; }
-      catch { /* cluster not initialised yet */ }
+      let lastError;
+      // A one-shot script (db:reset, db:migrate) may have just stopped its own
+      // postmaster; the port can remain briefly bound on Windows. Retry before
+      // deciding the cluster is unusable.
+      for (let attempt = 0; attempt < 3 && !started; attempt++) {
+        try {
+          await pg.start();
+          started = true;
+        } catch (err) {
+          lastError = err;
+          if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      }
       if (!started) {
+        if (initialised) {
+          throw new Error(`Embedded Postgres exists at ${DATA_DIR} but did not start: ${lastError?.message ?? lastError}`);
+        }
         await pg.initialise();
         await pg.start();
       }
@@ -85,6 +101,16 @@ export function ensurePostgres() {
  * pg.stop() can hang forever on Windows when a postgres io_worker forkchild
  * refuses to exit — race it with a short timeout, then force-kill the
  * postmaster tree listening on our port. */
+function portIsOpen(port, timeoutMs = 500) {
+  return new Promise((resolve) => {
+    const socket = net.connect({ host: '127.0.0.1', port });
+    const done = (open) => { socket.destroy(); resolve(open); };
+    socket.setTimeout(timeoutMs, () => done(false));
+    socket.once('connect', () => done(true));
+    socket.once('error', () => done(false));
+  });
+}
+
 export async function stopEmbeddedPostgres() {
   if (!runningPg) return;
   const pg = runningPg;
@@ -98,7 +124,14 @@ export async function stopEmbeddedPostgres() {
       new Promise((_, reject) => setTimeout(() => reject(new Error('pg.stop() timed out')), 6000)),
     ]);
   } catch { /* fall through to force-kill */ }
-  if (stoppedCleanly) return;
+  if (stoppedCleanly) {
+    // pg.stop() can resolve while the postmaster is still waiting for an
+    // io_worker on Windows. Verify the port is actually free before returning.
+    for (let attempt = 0; attempt < 10; attempt++) {
+      if (!(await portIsOpen(port))) return;
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    }
+  }
 
   try {
     const { spawnSync } = await import('node:child_process');

@@ -5,6 +5,7 @@ import { query, withTransaction } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { config } from '../config.js';
+import { audit } from '../lib/audit.js';
 
 const router = express.Router();
 
@@ -73,8 +74,16 @@ router.post('/sessions/:id/check-in', requireAuth, tokenLimiter, async (req, res
     const row = rows[0];
     if (!row) throw httpError(400, 'Invalid or expired token');
     if (req.user.id !== row.learner_id && req.user.id !== row.tutor_id) throw httpError(403, 'Not your session');
+    if (row.status !== 'upcoming') throw httpError(409, 'This session is no longer open for check-in');
 
     const counted = await withTransaction(async (client) => {
+      // Serialize against cancellation so a cancelled session can never take a
+      // new check-in between the status read above and this insert.
+      const locked = await client.query(
+        `SELECT status FROM sessions WHERE id = $1 FOR UPDATE`, [row.id]);
+      if (locked.rows[0]?.status !== 'upcoming') {
+        throw httpError(409, 'This session is no longer open for check-in');
+      }
       await client.query(`UPDATE check_in_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = $1`, [row.token_id]);
       // one check-in per user per session (guarded insert)
       const ins = await client.query(
@@ -100,6 +109,52 @@ router.post('/sessions/:id/check-in', requireAuth, tokenLimiter, async (req, res
     });
   } catch (e) { next(e); }
 });
+
+/* ---------- POST /sessions/:id/cancel (participant, upcoming only) ---------- */
+router.post('/sessions/:id/cancel', requireAuth, async (req, res, next) => {
+  try {
+    const reason = String(req.body?.reason ?? '').trim().slice(0, 240) || null;
+    const result = await withTransaction(async (client) => {
+      const { rows } = await client.query(
+        `SELECT s.id, s.session_code, s.learner_id, s.tutor_id, s.status, sub.name AS subject
+           FROM sessions s JOIN subjects sub ON sub.id = s.subject_id
+          WHERE s.id = $1 FOR UPDATE`,
+        [req.params.id],
+      );
+      const session = rows[0];
+      if (!session) throw httpError(404, 'Session not found');
+      if (req.user.id !== session.learner_id && req.user.id !== session.tutor_id) {
+        throw httpError(403, 'Not your session');
+      }
+      if (session.status !== 'upcoming') {
+        throw httpError(409, 'Only an upcoming session can be cancelled');
+      }
+      await client.query(
+        `UPDATE sessions SET status = 'cancelled', cancel_reason = $2 WHERE id = $1`,
+        [session.id, reason],
+      );
+      const otherId = req.user.id === session.learner_id ? session.tutor_id : session.learner_id;
+      await client.query(
+        `INSERT INTO notifications (user_id, title, message, type)
+         VALUES ($1, 'Session cancelled', $2, 'warning')`,
+        [otherId, `${req.user.name} cancelled ${session.session_code} (${session.subject})${reason ? ` — ${reason}` : ''}`],
+      );
+      return session;
+    });
+
+    await audit({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: 'session.cancel',
+      entity: 'session',
+      entityId: result.id,
+      detail: { code: result.session_code, reason },
+    });
+    res.json({ session: { id: result.id, status: 'cancelled' } });
+  } catch (e) { next(e); }
+});
+
+
 
 /* ================= Biometric device endpoints (X-Device-Key) ================= */
 
@@ -166,6 +221,11 @@ router.post('/device/verify', requireDeviceKey, async (req, res, next) => {
       return res.json({ user: { id: r.user_id, name: r.name, role: r.role }, session: null });
     }
     const count = await withTransaction(async (client) => {
+      const locked = await client.query(
+        `SELECT status FROM sessions WHERE id = $1 FOR UPDATE`, [r.session_id]);
+      if (locked.rows[0]?.status !== 'upcoming') {
+        throw httpError(409, 'This session is no longer open for check-in');
+      }
       await client.query(
         `INSERT INTO session_check_ins (session_id, user_id, method)
          SELECT $1, $2, 'fingerprint'

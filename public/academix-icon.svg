@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="LCCB Academix">
+  <rect width="512" height="512" rx="48" fill="#0F2942"/>
+  <rect x="40" y="40" width="432" height="432" rx="24" fill="none" stroke="#D4AC0D" stroke-width="18"/>
+  <path d="M256 118 352 394h-58l-20-62h-96l-20 62h-56L256 118Zm-14 164h52l-26-82-26 82Z" fill="#D4AC0D"/>
+  <rect x="118" y="420" width="276" height="18" fill="#F2EDE1"/>
+</svg>

@@ -23,6 +23,15 @@ await psql.connect();
     throw new Error('Direct SQL target does not match the API database — set E2E_DATABASE_URL or run the API against the same local database.');
   }
   const mine = (await request('/sessions/mine', { token: tutor.token })).data.sessions;
+  // Negative control: booked-but-unconfirmed sessions must not be farmable.
+  const unconfirmed = mine.find((s) => s.status === 'upcoming' && Number(s.check_in_count) === 0);
+  if (unconfirmed) {
+    const cheat = await request(`/sessions/${unconfirmed.id}/wrap-up`, {
+      method: 'POST', token: tutor.token, body: { rating: 5, notes: 'no check-in' },
+    });
+    console.log('wrap without check-ins ->', cheat.status, cheat.data.error);
+    if (cheat.status !== 409) throw new Error('wrap-up without check-ins should be 409');
+  }
   const inProgress = mine.find(s => s.status === 'in-progress');
   if (!inProgress) { console.log('no in-progress session; abort — run e2e-checkin first'); process.exit(0); }
   console.log('wrapping', inProgress.session_code, 'learner:', inProgress.learner_name);

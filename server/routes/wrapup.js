@@ -1,7 +1,14 @@
 import express from 'express';
-import { query, withTransaction } from '../db.js';
+import { withTransaction } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
+import { audit, requestIp } from '../lib/audit.js';
+import {
+  awardWithinCap,
+  SESSION_POINTS_EARNED_SQL,
+  WEEKLY_LEARNER_SESSION_CAP,
+  WEEKLY_TUTOR_SESSION_CAP,
+} from '../lib/points.js';
 
 const router = express.Router();
 
@@ -26,7 +33,6 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       throw httpError(400, 'rating (integer 1-5) is required');
     }
-    const pointsToAward = 50; // simple flat rate for peer sessions (single-project decision.)
 
     const wrap = await withTransaction(async (client) => {
       // lock row for safe transitions
@@ -41,6 +47,16 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
       }
       if (session.status === 'completed') throw httpError(409, 'Session already completed');
       if (session.status === 'cancelled') throw httpError(409, 'Cancelled sessions cannot be wrap-up');
+
+      // A session is only real after both parties check in. Without this gate
+      // a tutor could create a booking and immediately wrap it up for points.
+      const confirmations = (await client.query(
+        `SELECT count(DISTINCT user_id)::int AS n FROM session_check_ins WHERE session_id = $1`,
+        [sessionId],
+      )).rows[0].n;
+      if (confirmations < 2 || session.status !== 'in-progress') {
+        throw httpError(409, 'Both the tutor and the learner must check in before wrap-up');
+      }
 
       await client.query(
         `UPDATE sessions SET status = 'completed', notes = $1, rating = $2 WHERE id = $3`,
@@ -67,20 +83,34 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
         }
       }
 
-      await client.query(
-        `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, 'Rating submitted', $2, 'success')`,
-        [session.learner_id, `Your ${pointsToAward}-point session was rated ${rating}/5.`]);
+      // Rolling weekly caps limit self-dealing without blocking the academic
+      // record: the session still completes, only the ledger credit is capped.
+      const tutorEarned = (await client.query(SESSION_POINTS_EARNED_SQL, [session.tutor_id])).rows[0].earned;
+      const learnerEarned = (await client.query(SESSION_POINTS_EARNED_SQL, [session.learner_id])).rows[0].earned;
+      const pointsToAward = awardWithinCap(50, tutorEarned, WEEKLY_TUTOR_SESSION_CAP);
+      const learnerPoints = awardWithinCap(25, learnerEarned, WEEKLY_LEARNER_SESSION_CAP);
 
-      const { rows: ledgerRow } = await client.query(
-        `INSERT INTO points_ledger (user_id, amount, description)
-         VALUES ($1, $2, $3) RETURNING amount`,
-        [session.tutor_id, pointsToAward, `Session wrap-up — ${session.id.slice(0, 8)} (${rating}★)`]);
+      await client.query(
+        `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, 'Session wrapped up', $2, 'success')`,
+        [session.learner_id, `Your session was rated ${rating}/5${learnerPoints ? ` and earned ${learnerPoints} attendance points` : ''}.`]);
+      await client.query(
+        `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, 'Session wrapped up', $2, 'success')`,
+        [session.tutor_id, `${pointsToAward} points posted for session ${session.id.slice(0, 8)}.`]);
+
+      if (pointsToAward > 0) {
+        await client.query(
+          `INSERT INTO points_ledger (user_id, amount, description)
+           VALUES ($1, $2, $3)`,
+          [session.tutor_id, pointsToAward, `Session wrap-up — ${session.id.slice(0, 8)} (${rating}★)`]);
+      }
 
       // learner attendance credit (same transaction)
-      await client.query(
-        `INSERT INTO points_ledger (user_id, amount, description)
-         VALUES ($1, $2, $3)`,
-        [session.learner_id, 25, `Attendance credit — ${session.id.slice(0, 8)}`]);
+      if (learnerPoints > 0) {
+        await client.query(
+          `INSERT INTO points_ledger (user_id, amount, description)
+           VALUES ($1, $2, $3)`,
+          [session.learner_id, learnerPoints, `Attendance credit — ${session.id.slice(0, 8)}`]);
+      }
 
       // badge unlocks (safe idempotent)
       const { rows: completedCount } = await client.query(
@@ -98,12 +128,33 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
       };
       if (totalDone >= 1) await pushBadge('BG-001');
       if (totalDone >= 10) await pushBadge('BG-003');
+
+      await audit({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        action: 'session.wrap_up',
+        entity: 'session',
+        entityId: sessionId,
+        detail: {
+          rating,
+          tutorPoints: pointsToAward,
+          learnerPoints,
+          referralResolved,
+          capped: pointsToAward < 50 || learnerPoints < 25,
+        },
+        ip: requestIp(req),
+      }, client);
+
       return {
         session: { id: sessionId, status: 'completed', notes },
         tutorBalance: (await client.query(
           `SELECT COALESCE(SUM(amount),0)::int AS balance FROM points_ledger WHERE user_id = $1`,
         [session.tutor_id])).rows[0].balance,
-        referralResolved, points: ledgerRow.amount, badges: unlocks,
+        referralResolved,
+        points: pointsToAward,
+        learnerPoints,
+        capped: pointsToAward < 50 || learnerPoints < 25,
+        badges: unlocks,
       };
     });
     res.json(wrap);

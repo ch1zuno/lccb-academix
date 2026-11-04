@@ -19,18 +19,22 @@ One page for rehearsals and showtime. Everything here is non-destructive:
 
 The sidebar **Demo role** switcher changes roles without retyping credentials —
 that is intentional for the presentation (the quick-login chips on the sign-in
-card are dev-only).
+card are dev-only). On a hosted demo it only appears when the build was made
+with `VITE_DEMO_MODE=1`; local dev turns it on automatically.
 
 ## 15 minutes before
 
 1. Confirm the Vercel project has `DATABASE_URL`, `JWT_SECRET` and
    `FRONTEND_ORIGIN` set (Project → Settings → Environment Variables), then
-   redeploy if you just added them.
+   redeploy if you just added them. **For a hosted demo also set
+   `DEMO_MODE=1` and `VITE_DEMO_MODE=1`.** Without them the production build
+   hides the role switcher and the API rejects `demo1234` by design.
 
    **After this release:** run `npm run db:migrate` once against the hosted
    database (with its `DATABASE_URL` set). Migration 004 adds
-   `application_documents`; without it, uploads and the approvals file panel
-   fail even when the env vars are in place.
+   `application_documents`; migration 005 adds token revocation, the exam
+   clock, booking/application guards, and the audit log. Without 004/005,
+   uploads, approvals, and audit reads fail even when the env vars are in place.
 2. Stage the showcase data and run the readiness gate:
 
    ```powershell
@@ -65,9 +69,11 @@ the session is now *upcoming*.
 **Act 2 — Verified check-in and wrap-up (2 min).** As **Tutor** → *Check-in* →
 stage an OTP for the session and show it. As **Learner** → *Check-in* → enter
 the OTP. Back as **Tutor** → confirm with a fresh OTP. The session flips to
-*in progress*; wrap it up with notes + a rating. The learner instantly gains
-25 points, the tutor 50 — both are append-only ledger rows. Finish in
-*Rewards* by redeeming the 100-point library pass (staged balance covers it).
+*in progress*; wrap it up with notes + a rating. Both check-ins are required
+before the API accepts wrap-up. The learner instantly gains 25 points, the
+tutor 50 — both are append-only ledger rows (a rolling weekly cap can trim
+these on a much-rehearsed local database). Finish in *Rewards* by redeeming
+the 100-point library pass (staged balance covers it).
 
 **Act 3 — Referral pipeline (1.5 min).** As **Faculty** → **Referral board** in
 the sidebar. The board has five columns. Assign a tutor to the `DEMO: Flagged`
@@ -95,6 +101,12 @@ accept/check-in/redeem/approve.
   it only applies pending files and never drops data.
 - If a login returns **429**, the per-IP limiter counted repeated failures;
   wait a minute. Successful logins do not count.
+- A 403 saying **Demo accounts are disabled** means the deployment is missing
+  `DEMO_MODE=1`; a 401 after a password change is expected because every old
+  JWT is revoked by `token_version`.
+- If the exam says the **30-minute window has closed**, a superadmin can call
+  `POST /api/accreditation/:id/reset-exam` (or re-run staging on a fresh local
+  reset) without discarding the application or its files.
 - If `demo:check` reports `health` failing with `database unreachable`, the
   hosted database is asleep/unreachable or `DATABASE_URL` is wrong — retry once,
   then check the Vercel env vars.
