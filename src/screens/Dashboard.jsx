@@ -753,6 +753,13 @@ export default function Dashboard({ role, user, showToast }) {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => navigate(`/messages?with=${req.learner_id}`)}
+                    >
+                      Message
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       disabled={actingRequestId === req.id}
                       onClick={() => handleDeclineRequest(req.id)}
                     >
@@ -912,14 +919,23 @@ export default function Dashboard({ role, user, showToast }) {
                   </p>
                   {req.note && <p className="mt-1 text-[12px] italic text-ink/70">"{req.note}"</p>}
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={cancellingRequestId === req.id}
-                  onClick={() => handleCancelRequest(req.id)}
-                >
-                  {cancellingRequestId === req.id ? 'Withdrawing…' : 'Withdraw request'}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={cancellingRequestId === req.id}
+                    onClick={() => handleCancelRequest(req.id)}
+                  >
+                    {cancellingRequestId === req.id ? 'Withdrawing…' : 'Withdraw request'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/messages?with=${req.tutor_id}`)}
+                  >
+                    Message
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

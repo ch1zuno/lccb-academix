@@ -205,6 +205,27 @@ await step('upcoming session for the check-in act', async () => {
   return `scheduled ${accepted.data.session.session_code} (${subject.code})`;
 });
 
+await step('sample conversation for the messaging act', async () => {
+  const inbox = (await request('/conversations', { token: learner.token })).data.conversations ?? [];
+  const existing = inbox.find((c) => c.other_id === tutor.user.id);
+  if (existing?.last_body) return `already open with ${TUTOR}`;
+
+  const first = await request(`/conversations/${tutor.user.id}/messages`, {
+    method: 'POST',
+    token: learner.token,
+    body: { body: 'Hi! I booked the DEMO check-in walkthrough. Is Library Study Room A okay?' },
+  });
+  if (first.status !== 201) throw new Error(first.data.error || `learner message ${first.status}`);
+
+  const reply = await request(`/conversations/${learner.user.id}/messages`, {
+    method: 'POST',
+    token: tutor.token,
+    body: { body: 'Perfect — bring your student ID. I will meet you 10 minutes early.' },
+  });
+  if (reply.status !== 201) throw new Error(reply.data.error || `tutor reply ${reply.status}`);
+  return 'seeded learner ↔ tutor conversation';
+});
+
 await step('pending, exam-ready tutor application for approvals', async () => {
   for (const candidate of COHORT_APPLICANTS) {
     const who = await login(candidate);

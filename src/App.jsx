@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import {
   BookOpen, Bell, ChevronDown, Check, LayoutDashboard, Search, Clock,
-  ShieldCheck, Users, Award, LogOut, Menu, X, Inbox, KeyRound,
+  ShieldCheck, Users, Award, LogOut, Menu, X, Inbox, KeyRound, MessageSquare,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from './lib/utils';
@@ -24,6 +24,7 @@ const TutorApplicant = React.lazy(() => import('./screens/TutorApplicant'));
 const FacultyReferral = React.lazy(() => import('./screens/FacultyReferral'));
 const SessionCheckIn = React.lazy(() => import('./screens/SessionCheckIn'));
 const RewardCatalog = React.lazy(() => import('./screens/RewardCatalog'));
+const Messages = React.lazy(() => import('./screens/Messages'));
 
 /* Production builds hide the demo switcher unless VITE_DEMO_MODE=1. Local dev
  * keeps it on; VITE_DEMO_MODE=0 can disable it during a local production test. */
@@ -54,6 +55,7 @@ const ROLE_ROUTES = {
   '/referral': ['faculty'],
   '/checkin': ['learner', 'tutor'],
   '/rewards': ['learner', 'tutor'],
+  '/messages': ['learner', 'tutor'],
   '/approvals': ['superadmin'],
 };
 
@@ -167,6 +169,27 @@ export default function App() {
     api.patch('/notifications', {}).then(refreshNotifications).catch(() => {});
   };
 
+  // Chat badge: same idea as notifications — no socket, focus + 15s poll.
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  const refreshUnreadMessages = () => {
+    if (role !== 'learner' && role !== 'tutor') { setUnreadMessages(0); return; }
+    api.get('/messages/unread')
+      .then(({ unread }) => setUnreadMessages(unread ?? 0))
+      .catch(() => {});
+  };
+
+  useEffect(() => { if (user) refreshUnreadMessages(); }, [user?.id, role]);
+
+  useEffect(() => {
+    if (!user || (role !== 'learner' && role !== 'tutor')) return undefined;
+    const timer = setInterval(refreshUnreadMessages, 15_000);
+    const onFocus = () => refreshUnreadMessages();
+    window.addEventListener('focus', onFocus);
+    return () => { clearInterval(timer); window.removeEventListener('focus', onFocus); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, role]);
+
   const switchDemoRole = async (rId, loginId) => {
     try {
       const { token, user: fresh } = await api.post('/auth/login', { loginId, password: 'demo1234' });
@@ -208,6 +231,7 @@ export default function App() {
       case 'tutor':
         return [
           { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+          { id: 'messages', label: 'Messages', icon: MessageSquare },
           { id: 'checkin', label: 'Session check-in', icon: Clock },
           { id: 'rewards', label: 'Rewards catalog', icon: Award },
           { id: 'exam', label: 'Qualification exam', icon: BookOpen },
@@ -216,6 +240,7 @@ export default function App() {
         return [
           { id: 'wizard', label: 'Find a tutor', icon: Search },
           { id: 'dashboard', label: 'My progress', icon: LayoutDashboard },
+          { id: 'messages', label: 'Messages', icon: MessageSquare },
           { id: 'checkin', label: 'Session check-in', icon: Clock },
           { id: 'exam', label: 'Become a tutor', icon: Award },
         ];
@@ -255,6 +280,11 @@ export default function App() {
           >
             <item.icon />
             <span>{item.label}</span>
+            {item.id === 'messages' && unreadMessages > 0 && (
+              <span className="num ml-auto grid h-5 min-w-5 place-items-center border-2 border-ink bg-gold px-1 text-[13px] leading-none text-ink">
+                {unreadMessages}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -401,6 +431,7 @@ export default function App() {
                   <Route path="/referral" element={gate('/referral', <FacultyReferral showToast={showToast} user={user} />)} />
                   <Route path="/checkin" element={gate('/checkin', <SessionCheckIn role={role} user={user} showToast={showToast} />)} />
                   <Route path="/rewards" element={gate('/rewards', <RewardCatalog showToast={showToast} />)} />
+                  <Route path="/messages" element={gate('/messages', <Messages user={user} showToast={showToast} onRead={refreshUnreadMessages} />)} />
                   <Route path="/approvals" element={gate('/approvals', <SuperadminApprovals showToast={showToast} />)} />
                   <Route
                     path="*"

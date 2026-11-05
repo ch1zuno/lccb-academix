@@ -137,6 +137,7 @@ All seeded users share the password **`demo1234`** while demo mode is enabled. S
 | `/device/import-roster` · `/device/roster` · `/device/verify` | POST GET | `X-Device-Key` | physical check-in via device fingerprint |
 | `/rewards` · `/rewards/:id/redeem` · `/wallet` | GET POST | authed | catalog, server-side grading redemption (`FOR UPDATE` stock, ledger debit, voucher) |
 | `/notifications` | GET PATCH | authed | per-user feed + mark-all-read |
+| `/conversations` · `/conversations/:userId/messages` · `/conversations/:userId/read` · `/messages/unread` | GET POST | learner/tutor | booking-gated 1:1 chat: inbox, thread, send (1,000 chars, 30/min), mark read, nav badge |
 | `/accreditation/apply` · `/accreditation/exam` · `/accreditation/mine` | GET POST | learner/authed | apply with subjects + academic-record notes (`achievements` jsonb); exam questions never expose answers; grading is one-shot |
 | `/accreditation/:id/documents` · `/accreditation/documents/:id` | GET POST DELETE | owner/superadmin | supporting files stored in Postgres (`bytea`): multipart `document`, 4 MB each, 5 per application; owner may withdraw while pending; superadmin reads for review |
 | `/accreditation/applications` · `/:id/approve` · `/:id/reject` | GET POST | superadmin | approve requires the exam **and** ≥1 attached file; sets `is_verified` + `certified_by_id` |

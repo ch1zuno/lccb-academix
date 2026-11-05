@@ -8,6 +8,7 @@ const scripts = [
   'e2e-referrals.js',
   'e2e-matching.js',
   'e2e-cancel.js',
+  'e2e-messages.js',
   'e2e-checkin.js',
   'e2e-wrapup.js',
   'e2e-rewards.js',
