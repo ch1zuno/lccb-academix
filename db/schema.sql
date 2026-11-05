@@ -334,7 +334,7 @@ CREATE TABLE session_requests (
   note text,
   location text NOT NULL,
   status text NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending','accepted','declined')),
+    CHECK (status IN ('pending','accepted','declined','cancelled')),
   session_id uuid REFERENCES sessions(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

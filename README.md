@@ -130,7 +130,8 @@ All seeded users share the password **`demo1234`** while demo mode is enabled. S
 | `/auth/login` · `/auth/me` · `/auth/dev-accounts` | POST · GET | public / authed | bcrypt auth; the JWT rides in an **HttpOnly, SameSite=Strict cookie** (API scripts may use `Authorization: Bearer`); dev-accounts only in dev + demo mode |
 | `/auth/change-password` · `/auth/logout` · `/auth/logout-all` | POST | authed | rotates the password / clears this browser / bumps `token_version` so every older JWT is rejected |
 | `/referrals` · `/referrals/:id/assign` · `/referrals/:id/status` · `DELETE /referrals/:id` · `/referrals/search-students` · `/referrals/export.csv` | GET POST PATCH DELETE | faculty/superadmin · scoped | referral lifecycle: flagged → assigned → in-progress → resolved; faculty may reject a flagged one; superadmin may hard-delete **rejected** referrals only (codes auto-renumber from the highest existing); board export is formula-safe CSV |
-| `/subjects` · `/tutors` · `/session-requests` | GET POST | authed · accept/decline | matching: accreditation-gated requests, double-accept blocked |
+| `/subjects` · `/tutors` · `/tutors/me/availability` | GET PATCH | authed · tutor | matching directory; tutors pause/resume new requests |
+| `/session-requests` · `/:id/accept` · `/:id/decline` · `/:id/cancel` | GET POST | learner/tutor | accreditation-gated requests; learners withdraw their own pending request; double-accept/cancel blocked |
 | `/sessions/mine` · `/sessions/:id/stage-token` · `/sessions/:id/check-in` | GET POST | tutor/participant | check-in tokens (10-min TTL, one-shot), 2 confirmations start session |
 | `/sessions/:id/wrap-up` | POST | participant | **one transaction**: end, notes, rating, hours-debit, auto-resolve, points, badges |
 | `/device/import-roster` · `/device/roster` · `/device/verify` | POST GET | `X-Device-Key` | physical check-in via device fingerprint |

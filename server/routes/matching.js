@@ -67,6 +67,29 @@ router.get('/subjects', requireAuth, async (_req, res, next) => {
   } catch (e) { next(e); }
 });
 
+/** PATCH /tutors/me/availability — tutor pauses or resumes new requests. */
+router.patch('/tutors/me/availability', requireAuth, requireRole('tutor'), async (req, res, next) => {
+  try {
+    const { available } = req.body ?? {};
+    if (typeof available !== 'boolean') throw httpError(400, 'available must be true or false');
+    const { rows } = await query(
+      `UPDATE users SET is_available = $2
+        WHERE id = $1 AND role = 'tutor'
+        RETURNING id, is_available`, [req.user.id, available]);
+    if (!rows[0]) throw httpError(404, 'Tutor profile not found');
+    await audit({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: 'tutor.availability',
+      entity: 'user',
+      entityId: req.user.id,
+      detail: { available },
+      ip: requestIp(req),
+    });
+    res.json({ user: rows[0] });
+  } catch (e) { next(e); }
+});
+
 /** POST /session-requests — learner books a session request; tutor is notified. */
 router.post('/session-requests', requireAuth, requireRole('learner'), async (req, res, next) => {
   try {
@@ -220,6 +243,40 @@ router.post('/session-requests/:id/decline', requireAuth, requireRole('tutor'), 
       ip: requestIp(req),
     });
     res.json({ request: rows[0] });
+  } catch (e) { next(e); }
+});
+
+/** POST /session-requests/:id/cancel — learner withdraws their own pending request. */
+router.post('/session-requests/:id/cancel', requireAuth, requireRole('learner'), async (req, res, next) => {
+  try {
+    const { rows } = await query(
+      `UPDATE session_requests SET status = 'cancelled'
+        WHERE id = $1 AND learner_id = $2 AND status = 'pending'
+        RETURNING id, tutor_id, subject_id, preferred_date, preferred_time`,
+      [req.params.id, req.user.id]);
+    if (!rows[0]) {
+      const { rows: existing } = await query(
+        `SELECT status FROM session_requests WHERE id = $1 AND learner_id = $2`,
+        [req.params.id, req.user.id]);
+      if (!existing[0]) throw httpError(404, 'Request not found');
+      throw httpError(409, `Only a pending request can be cancelled (currently ${existing[0].status})`);
+    }
+    const run = rows[0];
+    await query(
+      `INSERT INTO notifications (user_id, title, message, type)
+       SELECT $1, 'Session request withdrawn', $2 || ' withdrew a request for ' || s.name || ' on ' || $3, 'warning'
+       FROM subjects s WHERE s.id = $4`,
+      [run.tutor_id, req.user.name, run.preferred_date, run.subject_id]).catch(() => {});
+    await audit({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: 'session.cancel_request',
+      entity: 'session_request',
+      entityId: run.id,
+      detail: { tutorId: run.tutor_id, date: run.preferred_date, time: run.preferred_time },
+      ip: requestIp(req),
+    });
+    res.json({ request: { id: run.id, status: 'cancelled' } });
   } catch (e) { next(e); }
 });
 
