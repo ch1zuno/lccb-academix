@@ -21,7 +21,7 @@ export const app = express();
 // without this the per-IP login limiter would bucket every visitor together.
 app.set('trust proxy', 1);
 app.use(helmet());
-app.use(cors({ origin: config.frontendOrigin, credentials: true }));
+app.use(cors({ origin: config.frontendOrigins, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('tiny'));
 
