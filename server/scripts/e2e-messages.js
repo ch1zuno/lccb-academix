@@ -1,7 +1,7 @@
 /* Messaging e2e: booking gate → send → unread → read → reply → limits.
  * A conversation is only allowed between a learner and a tutor who share a
  * pending/accepted request or a session. */
-const BASE = 'http://localhost:4000/api';
+const BASE = (process.env.E2E_API_BASE || 'http://localhost:4000').replace(/\/+$/, '') + '/api';
 
 async function request(path, { method = 'GET', token, body } = {}) {
   const res = await fetch(BASE + path, {

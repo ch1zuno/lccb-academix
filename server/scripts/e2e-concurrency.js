@@ -5,7 +5,7 @@
 import pg from 'pg';
 import { E2E_DATABASE_URL } from './e2e-db.js';
 
-const BASE = 'http://localhost:4000/api';
+const BASE = (process.env.E2E_API_BASE || 'http://localhost:4000').replace(/\/+$/, '') + '/api';
 const client = new pg.Client({ connectionString: E2E_DATABASE_URL });
 await client.connect();
 

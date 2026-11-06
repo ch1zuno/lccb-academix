@@ -6,7 +6,7 @@
  * A guard below aborts if the SQL target and the API user do not match. */
 import pg from 'pg';
 import { E2E_DATABASE_URL } from './e2e-db.js';
-const BASE = 'http://localhost:4000/api';
+const BASE = (process.env.E2E_API_BASE || 'http://localhost:4000').replace(/\/+$/, '') + '/api';
 
 const DEMO_PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAJElEQVR4nGPg13S6soYXgpDZDFhF+TWdGLCKQnVgNY2BDnYAADMIUhFiMs0JAAAAAElFTkSuQmCC',
