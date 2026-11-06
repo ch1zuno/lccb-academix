@@ -42,3 +42,6 @@ build/
 backups/
 exports/
 
+
+.vercel
+.env*
