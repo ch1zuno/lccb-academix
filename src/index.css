@@ -46,6 +46,49 @@
   --radius-sm: 0px;
 }
 
+/* Dark mode colors - applied via .dark-mode class */
+:root.dark-mode {
+  --color-background: #0f2942;
+  --color-foreground: #f3eddf;
+
+  --color-card: #162c45;
+  --color-card-foreground: #f3eddf;
+
+  --color-popover: #162c45;
+  --color-popover-foreground: #f3eddf;
+
+  --color-primary: #f3eddf;
+  --color-primary-foreground: #0f2942;
+
+  --color-secondary: #e3bb19;
+  --color-secondary-foreground: #0f2942;
+
+  --color-muted: #2d3e50;
+  --color-muted-foreground: #9ca3af;
+
+  --color-accent: #e3bb19;
+  --color-accent-foreground: #0f2942;
+
+  --color-destructive: #f87171;
+  --color-destructive-foreground: #0f2942;
+
+  --color-border: #3b4552;
+  --color-input: #f3eddf;
+  --color-ring: #e3bb19;
+
+  --color-ink: #f3eddf;
+  --color-ink-soft: #9ca3af;
+  --color-line: #3b4552;
+  --color-stone: #0f2942;
+  --color-paper: #162c45;
+  --color-gold: #e3bb19;
+  --color-gold-ink: #0f2942;
+  --color-emerald: #10b981;
+  --color-amber: #fbbf24;
+  --color-crimson: #ef4444;
+  --color-charcoal: #f3eddf;
+}
+
 @layer base {
   * {
     border-color: var(--color-border);

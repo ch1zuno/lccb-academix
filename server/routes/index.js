@@ -10,6 +10,8 @@ import analyticsRoutes from './analytics.js';
 import notificationRoutes from './notifications.js';
 import auditRoutes from './audit.js';
 import publicRoutes from './public.js';
+import chatRoutes from './chat.js';
+import aiRoutes from './ai.js';
 
 const router = Router();
 
@@ -20,6 +22,10 @@ router.use('/auth', authRoutes);
 router.use(referralRoutes);
 // sessions.js registers /sessions/... and /device/... — no prefix needed
 router.use(sessionRoutes);
+// Session chat messaging & history
+router.use(chatRoutes);
+// Antigravity AI assistant hooks (real-time hints & lesson wrap-up synthesis)
+router.use(aiRoutes);
 // wrap-up endpoints registered on /sessions/:id/wrap-up — no prefix needed
 router.use(wrapUpRoutes);
 // rewards catalog/wallet/redemption — no prefix needed

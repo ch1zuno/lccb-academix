@@ -1,0 +1,64 @@
+import React from 'react';
+import { PhoneOff, Clock } from 'lucide-react';
+import { Button } from '../ui/button';
+import DualPurposeChat from './DualPurposeChat';
+
+export default function LiveClassroom({ session, user, role, seconds, onEnd, showToast }) {
+  const formatTimer = (totalSeconds = 0) => {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return `${h > 0 ? `${h}:` : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-[1200px]">
+      {/* Session Banner */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-2 border-ink bg-[#f8f1e2] p-3 shadow-[4px_4px_0_#0f2942]">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center border-2 border-ink bg-gold font-display text-[14px] font-extrabold text-ink shadow-[2px_2px_0_#0f2942]">
+            LIVE
+          </span>
+          <div>
+            <p className="font-display text-[16px] font-bold leading-tight text-ink">
+              {session.subject} · {session.topic}
+            </p>
+            <p className="text-[12px] text-muted-foreground">
+              {session.session_code} · {role === 'tutor' ? `Learner: ${session.learner_name}` : `Tutor: ${session.tutor_name}`}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 border-2 border-ink bg-paper px-3 py-1 text-ink shadow-[2px_2px_0_#0f2942]">
+            <Clock className="h-4 w-4 text-emerald" />
+            <span className="num text-[18px] font-extrabold">{formatTimer(seconds)}</span>
+          </div>
+          <Button variant="destructive" size="sm" onClick={onEnd} className="h-9">
+            <PhoneOff className="mr-1.5 h-4 w-4" /> End Session
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Classroom Layout: Left Video Stage / Right Dual Chat */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 min-h-[580px]">
+        {/* Left Video Stage (7 cols) */}
+        <div className="flex flex-col border-2 border-ink bg-paper shadow-[4px_4px_0_#0f2942] lg:col-span-7 xl:col-span-8">
+          <div className="flex-1 overflow-hidden">
+            <div id="video-container" className="h-full min-h-[420px] w-full" />
+          </div>
+        </div>
+
+        {/* Right Dual-Purpose Chat (5 cols) */}
+        <div className="lg:col-span-5 xl:col-span-4 h-full min-h-[500px]">
+          <DualPurposeChat
+            sessionId={session.id}
+            user={user}
+            role={role}
+            showToast={showToast}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}

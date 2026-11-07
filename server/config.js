@@ -18,5 +18,6 @@ export const config = {
   deviceApiKey: process.env.DEVICE_API_KEY || 'dev-device-key',
   frontendOrigins: allowedOrigins,
   demoMode: process.env.DEMO_MODE === '1' || (process.env.DEMO_MODE !== '0' && !isProd),
+  geminiApiKey: process.env.GEMINI_API_KEY || '',
   isProd,
 };

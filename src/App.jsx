@@ -13,6 +13,8 @@ import { loadSession, saveSession, clearSession } from './authToken';
 
 import Login from './screens/Login';
 import SecurityDialog from './components/SecurityDialog';
+import SplashScreen from './components/SplashScreen';
+import DarkModeToggle from './components/DarkModeToggle';
 
 /* Route-level code splitting keeps the landing bundle small; each role only
  * downloads the workspace it can enter. */
@@ -78,6 +80,7 @@ export default function App() {
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [role, setRole] = useState(user?.role ?? 'learner');
+  const [showSplash, setShowSplash] = useState(true);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -277,8 +280,14 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-stone text-ink">
-      {/* Mobile bar */}
+    <>
+      <AnimatePresence>
+        {showSplash && (
+          <SplashScreen onComplete={() => setShowSplash(false)} duration={2000} />
+        )}
+      </AnimatePresence>
+      <div className={cn("min-h-screen bg-stone text-ink", showSplash && 'hidden')}>
+        {/* Mobile bar */}
       <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b-2 border-ink bg-[#f7f0e2] px-4 lg:hidden">
         <Wordmark compact />
         <div className="flex items-center gap-1.5">
@@ -355,6 +364,11 @@ export default function App() {
           )}
 
           <div className="flex-1"><NavList /></div>
+
+          {/* Dark mode toggle */}
+          <div className="mt-4 px-2">
+            <DarkModeToggle />
+          </div>
 
           <div className="mt-4 border-t-2 border-ink px-2 pt-4">
             <div className="flex items-center justify-between gap-2">
@@ -584,5 +598,6 @@ export default function App() {
         )}
       </AnimatePresence>
     </div>
+    </>
   );
 }

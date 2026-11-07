@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Copy, Check, Loader2, Star } from 'lucide-react';
+import { Copy, Check, Loader2, Star, Sparkles, BookOpen } from 'lucide-react';
 import { cn } from '../lib/utils';
 import api from '../api';
+
+const LiveClassroom = React.lazy(() => import('../components/classroom/LiveClassroom'));
+const SessionQuizModal = React.lazy(() => import('../components/classroom/SessionQuizModal'));
 
 const formatTime = (totalSeconds) => {
   const h = Math.floor(totalSeconds / 3600);
@@ -30,7 +33,7 @@ const SessionStatus = ({ status, active }) => {
   );
 };
 
-export default function SessionCheckIn({ role, showToast }) {
+export default function SessionCheckIn({ role, user, showToast }) {
   const [active, setActive] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [sessions, setSessions] = useState(null);
@@ -46,6 +49,9 @@ export default function SessionCheckIn({ role, showToast }) {
   const [wrapNotes, setWrapNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [wrapResult, setWrapResult] = useState(null);
+  const [aiSynthesis, setAiSynthesis] = useState(null);
+  const [loadingAiWrap, setLoadingAiWrap] = useState(false);
+  const [showQuizModal, setShowQuizModal] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,11 +89,12 @@ export default function SessionCheckIn({ role, showToast }) {
     }
   };
 
-  const handleCheckIn = async () => {
-    if (!target || !otp.trim()) return;
+  const handleCheckIn = async (explicitToken) => {
+    const tokenValue = typeof explicitToken === 'string' ? explicitToken.trim() : otp.trim();
+    if (!target || !tokenValue) return;
     setCheckingIn(true);
     try {
-      const res = await api.post(`/sessions/${target.id}/check-in`, { token: otp.trim(), method: 'otp' });
+      const res = await api.post(`/sessions/${target.id}/check-in`, { token: tokenValue, method: 'otp' });
       setConfirmations(res.confirmations);
       if (res.sessionStarted) {
         setActive(true);
@@ -111,6 +118,18 @@ export default function SessionCheckIn({ role, showToast }) {
     setFinished(true);
     setActive(false);
     showToast(`Session ended at ${formatTime(seconds)}. Complete the wrap-up.`, 'success');
+    if (target?.id) {
+      setLoadingAiWrap(true);
+      api.post(`/sessions/${target.id}/ai/wrap-up-assist`)
+        .then((data) => {
+          setAiSynthesis(data);
+          showToast('Antigravity AI generated session synthesis and quiz.', 'success');
+        })
+        .catch((err) => {
+          console.warn('AI wrap-up error:', err.message);
+        })
+        .finally(() => setLoadingAiWrap(false));
+    }
   };
 
   const handleSubmitWrap = async () => {
@@ -200,6 +219,58 @@ export default function SessionCheckIn({ role, showToast }) {
             </div>
           )}
 
+          {/* Antigravity AI End-of-Session Synthesis & Quiz Section */}
+          <div className="mt-6 border-t-2 border-ink pt-5">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="flex items-center gap-1.5 text-[13px] font-bold text-ink">
+                <Sparkles className="h-4 w-4 text-gold-ink" /> Antigravity AI Synthesis
+              </span>
+              {loadingAiWrap && (
+                <span className="text-[12px] text-muted-foreground flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Synthesizing transcript…
+                </span>
+              )}
+            </div>
+
+            {aiSynthesis?.summary ? (
+              <div className="border-2 border-ink bg-[#f8f1e2] p-4 text-[13px] leading-relaxed shadow-[2px_2px_0_#0f2942]">
+                <div className="prose prose-sm max-w-none text-ink whitespace-pre-line mb-3">
+                  {aiSynthesis.summary}
+                </div>
+                {Array.isArray(aiSynthesis.quiz) && aiSynthesis.quiz.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowQuizModal(true)}
+                    className="border-2 border-ink bg-gold text-ink font-bold shadow-[2px_2px_0_#0f2942] hover:bg-[#e3bb19]"
+                  >
+                    <BookOpen className="mr-1.5 h-3.5 w-3.5" />
+                    Review Custom Quiz ({aiSynthesis.quiz.length} Questions)
+                  </Button>
+                )}
+              </div>
+            ) : !loadingAiWrap && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (!target?.id) return;
+                  setLoadingAiWrap(true);
+                  api.post(`/sessions/${target.id}/ai/wrap-up-assist`)
+                    .then((data) => setAiSynthesis(data))
+                    .catch(() => {})
+                    .finally(() => setLoadingAiWrap(false));
+                }}
+                className="w-full border-2 border-ink bg-[#fff7d6] text-ink font-bold"
+              >
+                <Sparkles className="mr-1.5 h-3.5 w-3.5 text-gold-ink" />
+                Generate AI Lesson Summary & Review Quiz
+              </Button>
+            )}
+          </div>
+
           {!wrapResult && (
             <div className="mt-5 flex flex-wrap items-baseline justify-between gap-2 border-2 border-ink bg-gold px-4 py-3">
               <p className="text-[13px] font-semibold text-ink">On submit: <span className="num">+50</span> points to the tutor, <span className="num">+25</span> attendance points to the learner.</p>
@@ -225,7 +296,33 @@ export default function SessionCheckIn({ role, showToast }) {
             </Button>
           )}
         </div>
+
+        {showQuizModal && aiSynthesis?.quiz && (
+          <React.Suspense fallback={null}>
+            <SessionQuizModal
+              quiz={aiSynthesis.quiz}
+              summary={aiSynthesis.summary}
+              onClose={() => setShowQuizModal(false)}
+            />
+          </React.Suspense>
+        )}
       </div>
+    );
+  }
+
+  // Active Live Classroom View
+  if ((active || target?.status === 'in-progress') && !finished && target) {
+    return (
+      <React.Suspense fallback={<div className="panel empty p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-ink" />Opening classroom…</div>}>
+        <LiveClassroom
+          session={target}
+          user={user}
+          role={role}
+          seconds={seconds}
+          onEnd={handleEnd}
+          showToast={showToast}
+        />
+      </React.Suspense>
     );
   }
 
@@ -334,9 +431,13 @@ export default function SessionCheckIn({ role, showToast }) {
                       </Button>
                     </div>
                     <p className="mt-3 text-[13px] text-muted-foreground" aria-live="polite">
-                      {confirmations}/2 confirmed · waiting for the learner
+                      {confirmations}/2 confirmed · both devices must verify
                     </p>
-                    <Button className="mt-5 w-full" variant="outline" onClick={handleStage} disabled={staging}>
+                    <Button className="mt-4 w-full" onClick={() => handleCheckIn(stagedToken)} disabled={checkingIn || active}>
+                      {checkingIn ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : <Check className="h-4 w-4" strokeWidth={2} />}
+                      {checkingIn ? 'Verifying…' : 'Confirm on tutor device'}
+                    </Button>
+                    <Button className="mt-2.5 w-full" variant="outline" onClick={handleStage} disabled={staging}>
                       {staging ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : null}
                       Issue a new code
                     </Button>
@@ -394,7 +495,7 @@ export default function SessionCheckIn({ role, showToast }) {
                       onChange={(e) => setOtp(e.target.value.replace(/[^0-9-]/g, '').slice(0, 13))}
                     />
                     <p className="mt-2 text-[13px] text-muted-foreground">Ask your tutor for the code. It expires after ten minutes.</p>
-                    <Button className="mt-5 w-full" disabled={checkingIn || !otp.trim()} onClick={handleCheckIn}>
+                    <Button className="mt-5 w-full" disabled={checkingIn || !otp.trim()} onClick={() => handleCheckIn()}>
                       {checkingIn ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : <Check className="h-4 w-4" strokeWidth={2} />}
                       {checkingIn ? 'Verifying…' : 'Verify check-in'}
                     </Button>
