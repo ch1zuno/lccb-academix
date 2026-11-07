@@ -34,11 +34,6 @@ router.post('/login', async (req, res, next) => {
     if (!user || !bcrypt.compareSync(password, user.password_hash)) {
       return res.status(401).json({ error: 'Invalid school ID / email or password' });
     }
-    if (!config.demoMode && password === 'demo1234') {
-      return res.status(403).json({
-        error: 'Demo accounts are disabled on this deployment. Use your institutional password.',
-      });
-    }
     const token = signToken(user);
     delete user.password_hash;
     delete user.token_version;
