@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
+import { RealtimeProvider } from './services/realtime'
 
 /* Last line of defence: a render crash must never show a blank white screen
  * during a demo. The fallback keeps the house style and offers a reload. */
@@ -46,7 +47,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <ErrorBoundary>
-        <App />
+        <RealtimeProvider>
+          <App />
+        </RealtimeProvider>
       </ErrorBoundary>
     </BrowserRouter>
   </React.StrictMode>,

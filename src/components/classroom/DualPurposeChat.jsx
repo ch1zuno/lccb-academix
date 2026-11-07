@@ -36,11 +36,11 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
     return () => { alive = false; };
   }, [sessionId]);
 
-  // 2. Listen for instant messages from the mock real-time layer
+  // 2. Listen for instant messages from the real-time layer
   useEffect(() => {
     const unsubscribe = onMessage((rtMsg) => {
       setMessages((prev) => {
-        if (prev.some((m) => m.id === rtMsg.id)) return prev;
+        if (prev.some((m) => String(m.id) === String(rtMsg.id))) return prev;
         return [
           ...prev,
           {
@@ -48,7 +48,7 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
             session_id: sessionId,
             sender_id: rtMsg.senderId,
             sender_name: rtMsg.senderName,
-            sender_role: rtMsg.senderId === 'ai' ? 'ai' : role === 'tutor' ? 'tutor' : 'student',
+            sender_role: rtMsg.senderRole || (rtMsg.senderId === 'ai' ? 'ai' : role === 'tutor' ? 'tutor' : 'student'),
             recipient_role: 'all',
             content: rtMsg.text,
             created_at: rtMsg.timestamp,
@@ -87,8 +87,8 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
       setMessages((prev) => [...prev, savedMsg]);
       setInputText('');
 
-      // Broadcast through mock realtime layer
-      broadcastRealtimeMessage(content, { id: user.id, name: user.name });
+      // Broadcast through realtime layer
+      broadcastRealtimeMessage({ text: content, id: String(savedMsg.id) }, { id: user.id, name: user.name });
 
       // If user directed question to AI, trigger automatic AI hint response
       if (activeTab === 'ai') {
@@ -111,7 +111,7 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
       });
       const aiMsg = res.message;
       setMessages((prev) => [...prev, aiMsg]);
-      broadcastRealtimeMessage(aiMsg.content, { id: 'ai', name: 'Antigravity AI' });
+      broadcastRealtimeMessage({ text: aiMsg.content, id: String(aiMsg.id) }, { id: 'ai', name: 'Antigravity AI' });
       showToast?.('Antigravity AI hint posted.', 'success');
     } catch (err) {
       showToast?.(err.message || 'AI assistant request failed', 'error');

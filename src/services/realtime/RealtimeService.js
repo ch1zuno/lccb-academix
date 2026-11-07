@@ -1,5 +1,5 @@
 /**
- * @typedef {'idle' | 'connecting' | 'connected' | 'error'} RealtimeStatus
+ * @typedef {'idle' | 'connecting' | 'connected' | 'reconnecting' | 'error'} RealtimeStatus
  *
  * @typedef {Object} IdeCursor
  * @property {number} line
@@ -15,14 +15,15 @@
  * @property {string} text
  * @property {string} [senderId]
  * @property {string} [senderName]
+ * @property {string} [senderRole]
+ * @property {string} [senderAvatar]
  * @property {string} timestamp
  *
  * @typedef {() => void} Unsubscribe
  */
 
 /**
- * Interface definition reference for RealtimeService.
- * Implementations should provide chat, IDE synchronization, and session lifecycle.
+ * In-memory Mock Realtime Service for development, offline testing, and fallback.
  */
 export class MockRealtimeService {
   /**
@@ -32,6 +33,7 @@ export class MockRealtimeService {
     this.sessionId = sessionId || null;
     /** @type {RealtimeStatus} */
     this.status = 'idle';
+    this.accessDenied = false;
     /** @type {RealtimeChatMessage[]} */
     this.messages = [];
     /** @type {IdeState} */
@@ -41,21 +43,28 @@ export class MockRealtimeService {
       cursor: null,
     };
 
+    this.presenceList = [
+      { id: 'mock-tutor', name: 'Accredited Tutor', role: 'tutor', online: true },
+      { id: 'mock-student', name: 'Learner', role: 'student', online: true },
+    ];
+
     /** @type {Set<(msg: RealtimeChatMessage) => void>} */
     this.messageListeners = new Set();
-    /** @type {Set<(state: IdeState) => void>} */
+    /** @type {Set<(state: IdeState, meta?: Object) => void>} */
     this.ideListeners = new Set();
     /** @type {Set<(status: RealtimeStatus) => void>} */
     this.statusListeners = new Set();
+    /** @type {Set<(presence: any[]) => void>} */
+    this.presenceListeners = new Set();
+    /** @type {Set<(denied: boolean) => void>} */
+    this.accessListeners = new Set();
 
     this._connectTimeout = null;
     this._refCount = 0;
   }
 
-  /**
-   * Connect to session real-time channel.
-   * @param {string} [sessionId]
-   */
+  setCurrentUser() {}
+
   connect(sessionId) {
     if (sessionId) this.sessionId = sessionId;
     this._refCount += 1;
@@ -65,15 +74,12 @@ export class MockRealtimeService {
     this._setStatus('connecting');
     if (this._connectTimeout) clearTimeout(this._connectTimeout);
 
-    // Simulated async connection hand-shake
     this._connectTimeout = setTimeout(() => {
       this._setStatus('connected');
+      this._notifyPresence();
     }, 50);
   }
 
-  /**
-   * Disconnect from session real-time channel.
-   */
   disconnect() {
     this._refCount = Math.max(0, this._refCount - 1);
     if (this._refCount > 0) return;
@@ -82,19 +88,12 @@ export class MockRealtimeService {
     this._setStatus('idle');
   }
 
-  /**
-   * Force disconnect regardless of reference count.
-   */
   forceDisconnect() {
     this._refCount = 0;
     if (this._connectTimeout) clearTimeout(this._connectTimeout);
     this._setStatus('idle');
   }
 
-  /**
-   * Internal status updater with subscriber notification.
-   * @param {RealtimeStatus} next
-   */
   _setStatus(next) {
     this.status = next;
     for (const listener of this.statusListeners) {
@@ -106,11 +105,16 @@ export class MockRealtimeService {
     }
   }
 
-  /**
-   * Subscribe to connection status changes.
-   * @param {(status: RealtimeStatus) => void} cb
-   * @returns {Unsubscribe}
-   */
+  _notifyPresence() {
+    for (const listener of this.presenceListeners) {
+      try {
+        listener(this.presenceList);
+      } catch (err) {
+        console.warn('Realtime presence listener error:', err);
+      }
+    }
+  }
+
   onStatusChange(cb) {
     this.statusListeners.add(cb);
     cb(this.status);
@@ -119,23 +123,68 @@ export class MockRealtimeService {
     };
   }
 
-  /**
-   * Send a chat message through mock real-time channel.
-   * @param {string} text
-   * @param {{ id?: string, name?: string }} [sender]
-   * @returns {RealtimeChatMessage}
-   */
-  sendMessage(text, sender = {}) {
+  onPresence(roomIdOrCb, cb) {
+    const callback = typeof roomIdOrCb === 'function' ? roomIdOrCb : cb;
+    this.presenceListeners.add(callback);
+    callback(this.presenceList);
+    return () => {
+      this.presenceListeners.delete(callback);
+    };
+  }
+
+  onAccessDenied(roomIdOrCb, cb) {
+    const callback = typeof roomIdOrCb === 'function' ? roomIdOrCb : cb;
+    this.accessListeners.add(callback);
+    callback(this.accessDenied);
+    return () => {
+      this.accessListeners.delete(callback);
+    };
+  }
+
+  isUserOnline(roomIdOrUserId, maybeUserId) {
+    const userId = maybeUserId || roomIdOrUserId;
+    return this.presenceList.some((p) => p.id === userId && p.online);
+  }
+
+  isRoleOnline(roomIdOrRole, maybeRole) {
+    const role = maybeRole || roomIdOrRole;
+    return this.presenceList.some((p) => p.role === role && p.online);
+  }
+
+  subscribeToRoom(roomId) {
+    this.connect(roomId);
+    return this;
+  }
+
+  unsubscribeFromRoom() {
+    this.disconnect();
+  }
+
+  async sendMessage(param1, param2) {
+    let text = '';
+    let sender = {};
+    let msgId = `rt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+    if (typeof param1 === 'object' && param1 !== null) {
+      text = param1.text || '';
+      msgId = param1.id || msgId;
+      sender = param2 || {};
+    } else {
+      text = param1;
+      sender = param2 || {};
+    }
+
     const msg = {
-      id: `rt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      id: msgId,
       text,
       senderId: sender.id || 'anonymous',
       senderName: sender.name || 'Participant',
+      senderRole: sender.role || 'student',
+      senderAvatar: sender.avatar || null,
       timestamp: new Date().toISOString(),
     };
     this.messages.push(msg);
 
-    // Simulated async network broadcast
     setTimeout(() => {
       for (const listener of this.messageListeners) {
         try {
@@ -149,32 +198,26 @@ export class MockRealtimeService {
     return msg;
   }
 
-  /**
-   * Subscribe to new real-time messages.
-   * @param {(msg: RealtimeChatMessage) => void} cb
-   * @returns {Unsubscribe}
-   */
-  onMessage(cb) {
-    this.messageListeners.add(cb);
+  onMessage(roomIdOrCb, cb) {
+    const callback = typeof roomIdOrCb === 'function' ? roomIdOrCb : cb;
+    this.messageListeners.add(callback);
     return () => {
-      this.messageListeners.delete(cb);
+      this.messageListeners.delete(callback);
     };
   }
 
-  /**
-   * Push collaborative IDE editor changes.
-   * @param {Partial<IdeState>} partialState
-   */
-  pushIdeState(partialState) {
-    this.ideState = {
-      ...this.ideState,
-      ...partialState,
-    };
+  async pushIdeState(partialOrParam) {
+    if (partialOrParam && typeof partialOrParam === 'object' && 'code' in partialOrParam) {
+      this.ideState = {
+        ...this.ideState,
+        ...partialOrParam,
+      };
+    }
 
     setTimeout(() => {
       for (const listener of this.ideListeners) {
         try {
-          listener(this.ideState);
+          listener(this.ideState, { isRemote: false, seq: 1 });
         } catch (err) {
           console.warn('Realtime IDE listener error:', err);
         }
@@ -182,30 +225,18 @@ export class MockRealtimeService {
     }, 15);
   }
 
-  /**
-   * Subscribe to IDE state updates.
-   * @param {(state: IdeState) => void} cb
-   * @returns {Unsubscribe}
-   */
-  onIdeState(cb) {
-    this.ideListeners.add(cb);
+  onIdeState(roomIdOrCb, cb) {
+    const callback = typeof roomIdOrCb === 'function' ? roomIdOrCb : cb;
+    this.ideListeners.add(callback);
+    callback(this.ideState, { isRemote: false, seq: 1 });
     return () => {
-      this.ideListeners.delete(cb);
+      this.ideListeners.delete(callback);
     };
   }
 }
 
-/**
- * In-memory session registry so peers on same session share instance.
- * @type {Map<string, MockRealtimeService>}
- */
 const servicesBySession = new Map();
 
-/**
- * Access or create RealtimeService for given sessionId.
- * @param {string} sessionId
- * @returns {MockRealtimeService}
- */
 export function getRealtimeService(sessionId = 'default') {
   if (!servicesBySession.has(sessionId)) {
     servicesBySession.set(sessionId, new MockRealtimeService(sessionId));

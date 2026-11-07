@@ -1,9 +1,19 @@
 import React from 'react';
-import { PhoneOff, Clock } from 'lucide-react';
+import { PhoneOff, Clock, Wifi, WifiOff, AlertTriangle } from 'lucide-react';
 import { Button } from '../ui/button';
+import { cn } from '../../lib/utils';
+import { useRealtime } from '../../services/realtime';
 import DualPurposeChat from './DualPurposeChat';
 
 export default function LiveClassroom({ session, user, role, seconds, onEnd, showToast }) {
+  const { isReconnecting, accessDenied, isOnline, isRoleOnline } = useRealtime(session?.id);
+
+  const peerId = role === 'tutor' ? session?.learner_id : session?.tutor_id;
+  const peerRole = role === 'tutor' ? 'learner' : 'tutor';
+  const peerName = role === 'tutor' ? session?.learner_name : session?.tutor_name;
+
+  const isPeerOnline = peerId ? isOnline(peerId) : isRoleOnline(peerRole);
+
   const formatTimer = (totalSeconds = 0) => {
     const h = Math.floor(totalSeconds / 3600);
     const m = Math.floor((totalSeconds % 3600) / 60);
@@ -20,12 +30,35 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
             LIVE
           </span>
           <div>
-            <p className="font-display text-[16px] font-bold leading-tight text-ink">
-              {session.subject} · {session.topic}
-            </p>
-            <p className="text-[12px] text-muted-foreground">
-              {session.session_code} · {role === 'tutor' ? `Learner: ${session.learner_name}` : `Tutor: ${session.tutor_name}`}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="font-display text-[16px] font-bold leading-tight text-ink">
+                {session.subject} · {session.topic}
+              </p>
+              {isReconnecting && (
+                <span className="inline-flex items-center gap-1 border border-amber-600 bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-900">
+                  <WifiOff className="h-3 w-3 animate-pulse" /> Reconnecting
+                </span>
+              )}
+              {accessDenied && (
+                <span className="inline-flex items-center gap-1 border border-red-600 bg-red-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-900">
+                  <AlertTriangle className="h-3 w-3" /> Access Denied
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+              <span>{session.session_code}</span>
+              <span>·</span>
+              <span className="inline-flex items-center gap-1.5">
+                <span>{role === 'tutor' ? `Learner: ${peerName}` : `Tutor: ${peerName}`}</span>
+                <span
+                  title={isPeerOnline ? 'Participant is online' : 'Participant is offline'}
+                  className={cn(
+                    'inline-block h-2 w-2 rounded-full border border-ink',
+                    isPeerOnline ? 'bg-emerald' : 'bg-gray-300'
+                  )}
+                />
+              </span>
+            </div>
           </div>
         </div>
 
