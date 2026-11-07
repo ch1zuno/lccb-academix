@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
 import { useRealtime } from '../../services/realtime';
 import DualPurposeChat from './DualPurposeChat';
+import JitsiMeetingRoom from './JitsiMeetingRoom';
 
 export default function LiveClassroom({ session, user, role, seconds, onEnd, showToast }) {
   const { isReconnecting, accessDenied, isOnline, isRoleOnline } = useRealtime(session?.id);
@@ -78,7 +79,12 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
         {/* Left Video Stage (7 cols) */}
         <div className="flex flex-col border-2 border-ink bg-paper shadow-[4px_4px_0_#0f2942] lg:col-span-7 xl:col-span-8">
           <div className="flex-1 overflow-hidden">
-            <div id="video-container" className="h-full min-h-[420px] w-full" />
+            <JitsiMeetingRoom
+              roomId={session.id}
+              user={{ displayName: user?.name || 'Participant' }}
+              active={true}
+              onHangup={onEnd}
+            />
           </div>
         </div>
 

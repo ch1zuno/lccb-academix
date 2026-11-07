@@ -13,6 +13,7 @@ import publicRoutes from './public.js';
 import chatRoutes from './chat.js';
 import aiRoutes from './ai.js';
 import realtimeRoutes from './realtime.js';
+import videoRoutes from './video.js';
 
 const router = Router();
 
@@ -29,6 +30,8 @@ router.use(chatRoutes);
 router.use(aiRoutes);
 // Centrifugo real-time token & subscribe proxy authorization
 router.use('/realtime', realtimeRoutes);
+// Jitsi Meet video room authorization & room name derivation
+router.use('/video', videoRoutes);
 // wrap-up endpoints registered on /sessions/:id/wrap-up — no prefix needed
 router.use(wrapUpRoutes);
 // rewards catalog/wallet/redemption — no prefix needed

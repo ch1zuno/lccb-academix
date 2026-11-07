@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { query } from '../db.js';
 import { config } from '../config.js';
 import { signConnectionToken } from '../lib/centrifugo.js';
+import { verifyRoomMembership } from '../lib/room-membership.js';
 
 const router = express.Router();
 
@@ -101,45 +102,15 @@ router.post('/proxy/subscribe', async (req, res, next) => {
 
     const roomId = match[1].trim();
 
-    // 3. Query PostgreSQL sessions table for membership
-    const { rows: [session] } = await query(
-      `SELECT s.id, s.session_code, s.tutor_id, s.learner_id, s.status
-         FROM sessions s
-        WHERE (s.id::text = $1 OR s.session_code = $1)`,
-      [roomId],
-    );
-
-    if (!session) {
+    // 3. Verify membership using shared verifier
+    const check = await verifyRoomMembership(roomId, userId);
+    if (!check.authorized) {
       return res.json({
-        error: { code: 104, message: 'Room not found' },
+        error: { code: check.code || 103, message: check.message || 'Permission denied' },
       });
     }
 
-    // 4. Verify session is currently active
-    if (session.status !== 'upcoming' && session.status !== 'in-progress') {
-      return res.json({
-        error: { code: 103, message: `Session is ${session.status} and not active` },
-      });
-    }
-
-    // 5. Query user role to check superadmin supervisor status if not direct participant
-    const isLearner = String(userId) === String(session.learner_id);
-    const isTutor = String(userId) === String(session.tutor_id);
-
-    if (!isLearner && !isTutor) {
-      const { rows: [userRecord] } = await query(
-        `SELECT role FROM users WHERE id::text = $1`,
-        [String(userId)],
-      );
-
-      if (userRecord?.role !== 'superadmin') {
-        return res.json({
-          error: { code: 103, message: 'Permission denied: user is not assigned to this tutoring room' },
-        });
-      }
-    }
-
-    // 6. Authorized: return empty result object to accept subscription
+    // 4. Authorized: return empty result object to accept subscription
     return res.json({
       result: {},
     });
@@ -149,3 +120,4 @@ router.post('/proxy/subscribe', async (req, res, next) => {
 });
 
 export default router;
+
