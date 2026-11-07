@@ -7,9 +7,14 @@ import rateLimit from 'express-rate-limit';
 import { config } from './config.js';
 import { query } from './db.js';
 // Pre-load error middleware so unhandled API errors stay JSON.
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { notFound, errorHandler } from './middleware/errors.js';
 // Route registration happens in server/routes/index.js
 import routes from './routes/index.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const distPath = path.resolve(__dirname, '../dist');
 
 /* The assembled Express app — shared by `node server/index.js` (long-running
  * local/dev server) and the Vercel serverless entry (`api/index.js`). The pg
@@ -65,6 +70,15 @@ app.get('/api/health', async (_req, res) => {
       latencyMs: Date.now() - started,
     });
   }
+});
+
+// Serve Vite production build when running as a standalone server (e.g. on Render)
+app.use(express.static(distPath));
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/realtime-ws')) return next();
+  res.sendFile(path.join(distPath, 'index.html'), (err) => {
+    if (err) next();
+  });
 });
 
 app.use(notFound);
