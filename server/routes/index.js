@@ -12,6 +12,7 @@ import auditRoutes from './audit.js';
 import publicRoutes from './public.js';
 import chatRoutes from './chat.js';
 import aiRoutes from './ai.js';
+import realtimeRoutes from './realtime.js';
 
 const router = Router();
 
@@ -26,6 +27,8 @@ router.use(sessionRoutes);
 router.use(chatRoutes);
 // Antigravity AI assistant hooks (real-time hints & lesson wrap-up synthesis)
 router.use(aiRoutes);
+// Centrifugo real-time token & subscribe proxy authorization
+router.use('/realtime', realtimeRoutes);
 // wrap-up endpoints registered on /sessions/:id/wrap-up — no prefix needed
 router.use(wrapUpRoutes);
 // rewards catalog/wallet/redemption — no prefix needed

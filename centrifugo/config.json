@@ -1,0 +1,36 @@
+{
+  "client": {
+    "token": {
+      "hmac_secret_key": "change-me-to-a-very-long-secret-key-at-least-32-chars"
+    },
+    "allowed_origins": [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:5174"
+    ]
+  },
+  "channel": {
+    "proxy": {
+      "subscribe": {
+        "endpoint": "http://host.docker.internal:4000/api/realtime/proxy/subscribe",
+        "transport": "http",
+        "static_headers": {
+          "X-Centrifugo-Proxy-Secret": "change-me-proxy-secret-key-at-least-32-chars"
+        },
+        "timeout": "5s"
+      }
+    },
+    "namespaces": [
+      {
+        "name": "tutoring-room",
+        "subscribe_proxy_enabled": true,
+        "allow_publish_for_subscriber": true,
+        "presence": true,
+        "join_leave": true,
+        "history_size": 100,
+        "history_ttl": "300s"
+      }
+    ]
+  }
+}

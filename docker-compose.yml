@@ -1,0 +1,18 @@
+services:
+  centrifugo:
+    image: centrifugo/centrifugo:v6
+    container_name: academix-centrifugo
+    restart: unless-stopped
+    volumes:
+      - ./centrifugo/config.json:/centrifugo/config.json:ro
+    command: centrifugo -c config.json
+    ports:
+      - "8000:8000"
+    environment:
+      - CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KEY=${CENTRIFUGO_SECRET:-change-me-to-a-very-long-secret-key-at-least-32-chars}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144

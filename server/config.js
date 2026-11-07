@@ -19,5 +19,7 @@ export const config = {
   frontendOrigins: allowedOrigins,
   demoMode: process.env.DEMO_MODE === '1' || (process.env.DEMO_MODE !== '0' && !isProd),
   geminiApiKey: process.env.GEMINI_API_KEY || '',
+  centrifugoSecret: process.env.CENTRIFUGO_SECRET || '',
+  centrifugoProxySecret: process.env.CENTRIFUGO_PROXY_SECRET || '',
   isProd,
 };
