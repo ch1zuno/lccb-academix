@@ -1,5 +1,5 @@
 import express from 'express';
-import { query } from '../db.js';
+import { query, withTransaction } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { audit, requestIp } from '../lib/audit.js';
@@ -142,22 +142,29 @@ router.post('/referrals', requireAuth, requireRole('faculty', 'superadmin'), asy
       throw httpError(400, 'learnerId, subjectId, topic and hoursRequired (> 0) are required');
     }
     if (!isValidUrgency(urgency)) throw httpError(400, 'urgency must be low, medium or high');
-    const { rows } = await query(
-      `INSERT INTO referrals
-         (referral_code, learner_id, faculty_id, subject_id, topic, urgency, notes, hours_required, hours_remaining, date)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$8,CURRENT_DATE)
-       RETURNING id, referral_code, status`,
-      [`REF-${String(await nextReferralNumber()).padStart(3, '0')}`,
-        learnerId, req.user.id, subjectId, String(topic).slice(0, 200), urgency, notes ? String(notes).slice(0, 500) : null, hours],
-    );
-    const full = await query(`${SELECT_SQL} WHERE r.id = $1`, [rows[0].id]);
+    const created = await withTransaction(async (client) => {
+      await client.query('SELECT pg_advisory_xact_lock(7281901)');
+      const { rows: seq } = await client.query(
+        `SELECT COALESCE(max(NULLIF(regexp_replace(referral_code, '[^0-9]', '', 'g'), '')::int), 0) + 1 AS n FROM referrals`,
+      );
+      const { rows } = await client.query(
+        `INSERT INTO referrals
+           (referral_code, learner_id, faculty_id, subject_id, topic, urgency, notes, hours_required, hours_remaining, date)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$8,CURRENT_DATE)
+         RETURNING id, referral_code, status`,
+        [`REF-${String(seq[0].n).padStart(3, '0')}`,
+          learnerId, req.user.id, subjectId, String(topic).slice(0, 200), urgency, notes ? String(notes).slice(0, 500) : null, hours],
+      );
+      return rows[0];
+    });
+    const full = await query(`${SELECT_SQL} WHERE r.id = $1`, [created.id]);
     await audit({
       actorId: req.user.id,
       actorRole: req.user.role,
       action: 'referral.create',
       entity: 'referral',
-      entityId: rows[0].id,
-      detail: { code: rows[0].referral_code, learnerId, subjectId, urgency, hours },
+      entityId: created.id,
+      detail: { code: created.referral_code, learnerId, subjectId, urgency, hours },
       ip: requestIp(req),
     });
     res.status(201).json({ referral: reorder(full.rows[0]) });
@@ -168,18 +175,23 @@ router.post('/referrals', requireAuth, requireRole('faculty', 'superadmin'), asy
 });
 
 /** POST /referrals/:id/assign — faculty assigns a tutor; flagged → assigned + notify tutor */
-router.post('/referrals/:id/assign', requireAuth, requireRole('faculty'), async (req, res, next) => {
+router.post('/referrals/:id/assign', requireAuth, requireRole('faculty', 'superadmin'), async (req, res, next) => {
   try {
     const { tutorId } = req.body ?? {};
     if (!tutorId) throw httpError(400, 'tutorId required');
+    const { rows: [tutor] } = await query(
+      `SELECT id FROM users WHERE id = $1 AND role = 'tutor' AND is_verified = true`,
+      [tutorId],
+    );
+    if (!tutor) throw httpError(400, 'Selected user is not a verified tutor');
     const { rows } = await query(
       `UPDATE referrals
          SET assigned_tutor_id = $1,
              status = CASE WHEN status = 'flagged' THEN 'assigned' ELSE status END,
              hours_remaining = COALESCE(hours_remaining, hours_required)
-       WHERE id = $2 AND faculty_id = $3 AND status <> 'resolved'
+       WHERE id = $2 AND (faculty_id = $3 OR $4 = 'superadmin') AND status <> 'resolved'
        RETURNING id, status, referral_code`,
-      [tutorId, req.params.id, req.user.id],
+      [tutorId, req.params.id, req.user.id, req.user.role],
     );
     if (!rows[0]) throw httpError(404, 'Referral not found, not yours, or already resolved');
     await insertNotification(tutorId, 'referral', 'New peer tutoring referral assigned to you', rows[0].referral_code);
@@ -261,15 +273,6 @@ router.get('/referrals/:id', requireAuth, async (req, res, next) => {
 export default router;
 
 // helpers ------------------------------------------------------------
-async function nextReferralNumber() {
-  // count(*)-based numbering collides once rows can be removed (delete REF-006,
-  // next create would try REF-006 again) — derive it from the highest code instead.
-  const { rows } = await query(
-    `SELECT COALESCE(max(NULLIF(regexp_replace(referral_code, '[^0-9]', '', 'g'), '')::int), 0) + 1 AS n FROM referrals`,
-  );
-  return rows[0].n;
-}
-
 function insertNotification(userId, kind, message, code) {
   const title = kind === 'referral' ? 'New referral assigned' : 'Update';
   return query(

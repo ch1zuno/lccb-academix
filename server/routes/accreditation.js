@@ -413,9 +413,10 @@ router.post('/accreditation/:id/approve', requireAuth, requireRole('superadmin')
       }
 
       await client.query(`UPDATE tutor_applications SET status = 'approved' WHERE id = $1`, [req.params.id]);
-      // tutor status + certifier (role is NOT changed — a learner becomes a *verified tutor candidate*)
+      // Grant tutor role + verified status + certifier so the applicant appears
+      // in /tutors, can accept session requests, and can stage check-in tokens.
       await client.query(
-        `UPDATE users SET is_verified = true, certified_by_id = $1 WHERE id = $2`,
+        `UPDATE users SET role = 'tutor', is_verified = true, certified_by_id = $1 WHERE id = $2`,
         [req.user.id, app.user_id]);
       await client.query(
         `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, 'Application approved', $2, 'success')`,

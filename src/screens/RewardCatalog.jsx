@@ -125,11 +125,12 @@ export default function RewardCatalog({ showToast }) {
         </div>
       )}
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter rewards by category">
         {categories.map(category => (
           <button
             key={category}
             type="button"
+            aria-pressed={filter === category}
             onClick={() => setFilter(category)}
             className={cn(
               'h-9 border-2 border-ink px-3 text-[13px] font-bold shadow-[2px_2px_0_#0f2942] transition-[background-color,transform]',

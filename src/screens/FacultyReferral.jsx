@@ -137,6 +137,8 @@ export default function FacultyReferral({ showToast, user }) {
             <div className="relative mt-4">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.6} />
               <Input
+                id="referral-student-search"
+                aria-label="Search student by name or school ID"
                 placeholder="e.g. Julian or TE-128"
                 className="pl-9"
                 value={student}

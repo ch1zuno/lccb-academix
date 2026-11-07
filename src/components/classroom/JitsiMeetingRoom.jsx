@@ -85,6 +85,14 @@ const JitsiMeetingRoom = forwardRef(function JitsiMeetingRoom(
     [dispose]
   );
 
+  // Auto-dismiss loading overlay after 3.5s so Jitsi prompt or prejoin is never covered
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => setLoading(false), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
   useEffect(() => {
     if (!active) {
       dispose();
@@ -158,6 +166,7 @@ const JitsiMeetingRoom = forwardRef(function JitsiMeetingRoom(
 
         const jitsi = new JitsiAPI(domain, options);
         apiRef.current = jitsi;
+        setLoading(false);
 
         // 4. Attach event listeners
         jitsi.addListener('videoConferenceJoined', () => {
@@ -288,3 +297,4 @@ const JitsiMeetingRoom = forwardRef(function JitsiMeetingRoom(
 });
 
 export default JitsiMeetingRoom;
+

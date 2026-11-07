@@ -1,12 +1,14 @@
-import React from 'react';
-import { PhoneOff, Clock, Wifi, WifiOff, AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { PhoneOff, Clock, Wifi, WifiOff, AlertTriangle, Video, Globe } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
 import { useRealtime } from '../../services/realtime';
 import DualPurposeChat from './DualPurposeChat';
 import JitsiMeetingRoom from './JitsiMeetingRoom';
+import NativeVideoRoom from './NativeVideoRoom';
 
 export default function LiveClassroom({ session, user, role, seconds, onEnd, showToast }) {
+  const [videoEngine, setVideoEngine] = useState('jitsi'); // 'jitsi' (default) | 'webrtc'
   const { isReconnecting, accessDenied, isOnline, isRoleOnline } = useRealtime(session?.id);
 
   const peerId = role === 'tutor' ? session?.learner_id : session?.tutor_id;
@@ -78,13 +80,58 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 min-h-[580px]">
         {/* Left Video Stage (7 cols) */}
         <div className="flex flex-col border-2 border-ink bg-paper shadow-[4px_4px_0_#0f2942] lg:col-span-7 xl:col-span-8">
+          {/* Video Header & Mode Switcher */}
+          <div className="flex flex-wrap items-center justify-between border-b-2 border-ink bg-[#f5ecda] px-3 py-1.5 text-xs">
+            <span className="font-display font-bold uppercase tracking-wider text-ink flex items-center gap-1.5">
+              <Video className="h-3.5 w-3.5 text-ink" /> Live Classroom Video
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setVideoEngine('webrtc')}
+                className={cn(
+                  'rounded px-2 py-0.5 text-[11px] font-bold border transition-colors',
+                  videoEngine === 'webrtc'
+                    ? 'border-ink bg-emerald text-ink shadow-[1px_1px_0_#0f2942]'
+                    : 'border-transparent text-muted-foreground hover:text-ink'
+                )}
+                title="Direct WebRTC Peer-to-Peer over local Wi-Fi (instant connect, no third-party login)"
+              >
+                Direct WebRTC (Fast LAN)
+              </button>
+              <button
+                type="button"
+                onClick={() => setVideoEngine('jitsi')}
+                className={cn(
+                  'rounded px-2 py-0.5 text-[11px] font-bold border transition-colors',
+                  videoEngine === 'jitsi'
+                    ? 'border-ink bg-gold text-ink shadow-[1px_1px_0_#0f2942]'
+                    : 'border-transparent text-muted-foreground hover:text-ink'
+                )}
+                title="Jitsi Meet iframe external room"
+              >
+                Jitsi Meet
+              </button>
+            </div>
+          </div>
+
           <div className="flex-1 overflow-hidden">
-            <JitsiMeetingRoom
-              roomId={session.id}
-              user={{ displayName: user?.name || 'Participant' }}
-              active={true}
-              onHangup={onEnd}
-            />
+            {videoEngine === 'webrtc' ? (
+              <NativeVideoRoom
+                roomId={session.id}
+                user={user}
+                peerName={peerName}
+                isPeerOnline={isPeerOnline}
+                onHangup={onEnd}
+              />
+            ) : (
+              <JitsiMeetingRoom
+                roomId={session.id}
+                user={{ displayName: user?.name || 'Participant' }}
+                active={true}
+                onHangup={onEnd}
+              />
+            )}
           </div>
         </div>
 

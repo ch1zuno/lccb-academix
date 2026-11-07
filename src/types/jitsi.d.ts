@@ -33,3 +33,4 @@ declare global {
     JitsiMeetExternalAPI?: any;
   }
 }
+

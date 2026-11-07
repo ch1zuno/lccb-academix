@@ -1,12 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 
 // The API server binds to PORT from .env (default 4000).
 const API_PORT = process.env.PORT || 4000
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), basicSsl()],
   build: {
     rollupOptions: {
       output: {
@@ -22,7 +23,14 @@ export default defineConfig({
     host: true,
     allowedHosts: true,
     proxy: {
-      '/api': `http://localhost:${API_PORT}`,
+      '/api': {
+        target: `http://localhost:${API_PORT}`,
+        changeOrigin: true,
+      },
+      '/realtime-ws': {
+        target: `ws://localhost:${API_PORT}`,
+        ws: true,
+      },
     },
   },
 })

@@ -41,3 +41,4 @@ export function signConnectionToken({ userId, info = {}, ttlSeconds = 600, secre
     algorithm: 'HS256',
   });
 }
+

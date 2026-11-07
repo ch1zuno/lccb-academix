@@ -226,6 +226,7 @@ export default function TutorExam({ showToast, user }) {
                 <div className="flex items-center gap-2">
                   <span className="num grid h-6 w-6 shrink-0 place-items-center border-2 border-ink bg-gold text-[13px] font-bold text-ink">{index + 1}</span>
                   <Input
+                    aria-label={`Note ${index + 1} title`}
                     placeholder="Note title — e.g. Dean's Lister, 1st Sem AY 2025–2026"
                     value={doc.title}
                     onChange={(event) => setDoc(index, 'title', event.target.value)}
@@ -244,11 +245,13 @@ export default function TutorExam({ showToast, user }) {
                 </div>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
                   <Input
+                    aria-label={`Note ${index + 1} details`}
                     placeholder="Details — e.g. GWA 1.45, certified copy on file"
                     value={doc.detail}
                     onChange={(event) => setDoc(index, 'detail', event.target.value)}
                   />
                   <Input
+                    aria-label={`Note ${index + 1} optional link`}
                     placeholder="Optional link — https://…"
                     value={doc.link}
                     onChange={(event) => setDoc(index, 'link', event.target.value)}

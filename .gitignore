@@ -42,3 +42,17 @@ build/
 backups/
 exports/
 
+# Cache & skills
+graphify-out/cache/
+graphify-out/2026*/
+graphify-out/*.sig
+.taste-skill/
+.agents/
+.vercel/
+disktree/
+*.tmp
+*.bak
+mod.wh.cpp*
+old_Landing.css
+
+

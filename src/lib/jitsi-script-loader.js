@@ -72,3 +72,4 @@ export function loadJitsiScript(domain = 'meet.jit.si') {
 export function _resetScriptLoader() {
   scriptPromise = null;
 }
+

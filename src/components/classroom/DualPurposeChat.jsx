@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Sparkles, Bot, User, HelpCircle, Loader2, Play } from 'lucide-react';
+import { Send, Sparkles, Bot, User, HelpCircle, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { cn } from '../../lib/utils';
@@ -23,17 +23,33 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
   // Real-time collaborative service hook
   const { sendMessage: broadcastRealtimeMessage, onMessage } = useRealtime(sessionId);
 
-  // 1. Initial message load from database ledger
+  // 1. Initial message load and periodic ledger sync (bulletproof against network drops)
   useEffect(() => {
     let alive = true;
-    api.get(`/sessions/${sessionId}/messages`)
-      .then(({ messages: rows }) => {
-        if (alive) setMessages(rows || []);
-      })
-      .catch((e) => {
-        console.warn('Could not load chat messages:', e.message);
-      });
-    return () => { alive = false; };
+    const fetchMessages = () => {
+      api.get(`/sessions/${sessionId}/messages`)
+        .then(({ messages: rows }) => {
+          if (alive && rows) {
+            setMessages((prev) => {
+              // Merge rows while preserving local real-time additions
+              const existingIds = new Set(prev.map((m) => String(m.id)));
+              const newRows = rows.filter((r) => !existingIds.has(String(r.id)));
+              if (newRows.length === 0) return prev;
+              return [...prev, ...newRows];
+            });
+          }
+        })
+        .catch((e) => {
+          console.warn('Could not sync chat messages:', e.message);
+        });
+    };
+
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 3000);
+    return () => {
+      alive = false;
+      clearInterval(interval);
+    };
   }, [sessionId]);
 
   // 2. Listen for instant messages from the real-time layer
@@ -120,67 +136,6 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
     }
   };
 
-  const [simulating, setSimulating] = useState(false);
-
-  // Automated multi-party research demo conversation
-  const handleAutoDemoSimulation = async () => {
-    if (simulating) return;
-    setSimulating(true);
-    showToast?.('Running live research demo conversation...', 'info');
-
-    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-    try {
-      // 1. Student asks about Data Structures
-      const res1 = await api.post(`/sessions/${sessionId}/messages`, {
-        content: "Hi Sir Mark! I'm reviewing Binary Search Trees for finals. Can we review how self-balancing trees like AVL trees work?",
-        demoSenderRole: 'student',
-        demoSenderName: 'Julian Gemelo (Learner)',
-        recipientRole: 'all',
-      });
-      const m1 = res1.message;
-      setMessages((prev) => (prev.some((m) => String(m.id) === String(m1.id)) ? prev : [...prev, m1]));
-      broadcastRealtimeMessage({ text: m1.content, id: String(m1.id) });
-
-      await sleep(1800);
-
-      // 2. Tutor responds with conceptual framing
-      const res2 = await api.post(`/sessions/${sessionId}/messages`, {
-        content: "Hello Julian! Great topic. An AVL tree is a self-balancing BST where the height difference between left and right subtrees cannot exceed 1. Let's ask our AI Assistant for an intuitive analogy.",
-        demoSenderRole: 'tutor',
-        demoSenderName: 'Mark Antipo (Tutor)',
-        recipientRole: 'all',
-      });
-      const m2 = res2.message;
-      setMessages((prev) => (prev.some((m) => String(m.id) === String(m2.id)) ? prev : [...prev, m2]));
-      broadcastRealtimeMessage({ text: m2.content, id: String(m2.id) });
-
-      await sleep(1800);
-
-      // 3. AI Assistant hint is dynamically generated
-      await handleTriggerAiHint('Can you provide an intuitive real-world analogy for why AVL tree balancing is needed?');
-
-      await sleep(2200);
-
-      // 4. Student concludes with understanding
-      const res3 = await api.post(`/sessions/${sessionId}/messages`, {
-        content: "Thank you Sir Mark and Antigravity AI! The library shelf analogy makes rotation cases very clear. I'm ready for the wrap-up quiz!",
-        demoSenderRole: 'student',
-        demoSenderName: 'Julian Gemelo (Learner)',
-        recipientRole: 'all',
-      });
-      const m3 = res3.message;
-      setMessages((prev) => (prev.some((m) => String(m.id) === String(m3.id)) ? prev : [...prev, m3]));
-      broadcastRealtimeMessage({ text: m3.content, id: String(m3.id) });
-
-      showToast?.('Research demo conversation completed successfully!', 'success');
-    } catch (err) {
-      showToast?.(err.message || 'Demo simulation error', 'error');
-    } finally {
-      setSimulating(false);
-    }
-  };
-
   // Filter messages by active view
   const visibleMessages = messages.filter((m) => {
     if (activeTab === 'ai') {
@@ -228,25 +183,13 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
           </span>
         </div>
 
-        {/* Quick Socratic Prompt Buttons & Auto-Demo Button */}
-        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+        {/* Quick Socratic Prompt Buttons */}
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
           <Button
             type="button"
             variant="outline"
             size="sm"
-            disabled={simulating || askingAi}
-            onClick={handleAutoDemoSimulation}
-            className="h-7 border-2 border-ink bg-emerald text-ink px-2.5 text-[11px] font-bold shadow-[2px_2px_0_#0f2942] hover:bg-emerald/90"
-            title="Automatically simulate a live multi-role group chat with Tutor, Learner, and AI for your demo"
-          >
-            {simulating ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Play className="mr-1 h-3 w-3 fill-current" />}
-            Auto-Demo Chat
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={askingAi || simulating}
+            disabled={askingAi}
             onClick={() => handleTriggerAiHint('Give me a conceptual hint on this problem.')}
             className="h-7 border border-ink bg-paper px-2 text-[11px] font-semibold shadow-none hover:bg-gold"
           >
@@ -257,7 +200,7 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
             type="button"
             variant="outline"
             size="sm"
-            disabled={askingAi || simulating}
+            disabled={askingAi}
             onClick={() => handleTriggerAiHint('Can you explain this with a simple real-world analogy?')}
             className="h-7 border border-ink bg-paper px-2 text-[11px] font-semibold shadow-none hover:bg-gold"
           >

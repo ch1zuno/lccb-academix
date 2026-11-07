@@ -73,7 +73,7 @@ export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty
             <button
               type="button"
               onClick={() => onOpen(item)}
-              className="inline-flex shrink-0 items-center gap-1 border-2 border-ink bg-gold px-2 py-1 text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-[#e3bb19]"
+              className="inline-flex min-h-9 shrink-0 items-center gap-1 border-2 border-ink bg-gold px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-[#e3bb19]"
             >
               <ExternalLink className="h-3 w-3" /> Open
             </button>
@@ -83,16 +83,16 @@ export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty
               type="button"
               onClick={() => onDownload(item)}
               aria-label={`Download ${item.name}`}
-              className="hidden h-7 w-7 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-[#f0e7d5] sm:grid"
+              className="hidden h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-[#f0e7d5] sm:grid"
             >
-              <Download className="h-3.5 w-3.5" />
+              <Download className="h-4 w-4" />
             </button>
           ) : null}
           {!item.busy && onDownload && item.doc && !canPreviewFile(item.mime) ? (
             <button
               type="button"
               onClick={() => onDownload(item)}
-              className="inline-flex shrink-0 items-center gap-1 border-2 border-ink bg-gold px-2 py-1 text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-[#e3bb19]"
+              className="inline-flex min-h-9 shrink-0 items-center gap-1 border-2 border-ink bg-gold px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-[#e3bb19]"
             >
               <Download className="h-3 w-3" /> Download
             </button>
@@ -102,9 +102,9 @@ export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty
               type="button"
               onClick={() => onRemove(item.id)}
               aria-label={`Remove ${item.name}`}
-              className="grid h-7 w-7 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-[#f6d7d2]"
+              className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-[#f6d7d2]"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-4 w-4" />
             </button>
           ) : null}
         </li>

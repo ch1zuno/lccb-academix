@@ -974,6 +974,7 @@ export default function LandingPage({ onLogin }) {
                     <button
                       key={role}
                       type="button"
+                      aria-pressed={loginRole === role}
                       className={`login-role${loginRole === role ? ' active' : ''}`}
                       onClick={() => setLoginRole(role)}
                     >

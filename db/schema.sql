@@ -92,6 +92,8 @@ CREATE TABLE sessions (
   location text NOT NULL,
   rating numeric CHECK (rating >= 1 AND rating <= 5),
   cancel_reason text,
+  ai_summary text,
+  ai_quiz jsonb,
   created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -341,5 +343,19 @@ CREATE TABLE session_requests (
 CREATE INDEX idx_session_requests_tutor_id ON session_requests(tutor_id);
 CREATE INDEX idx_session_requests_learner_id ON session_requests(learner_id);
 CREATE INDEX idx_session_requests_status ON session_requests(status);
+
+-- ── Real-time session chat & Antigravity AI assistant logs ──
+CREATE TABLE session_messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id uuid NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+  sender_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  sender_role text NOT NULL CHECK (sender_role IN ('student', 'tutor', 'ai')),
+  sender_name text NOT NULL,
+  recipient_role text NOT NULL DEFAULT 'all' CHECK (recipient_role IN ('all', 'tutor', 'student', 'ai')),
+  content text NOT NULL,
+  meta jsonb DEFAULT '{}'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_session_messages_session_id ON session_messages(session_id, created_at ASC);
 
 COMMIT;

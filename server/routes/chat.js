@@ -66,17 +66,7 @@ router.post('/sessions/:id/messages', requireAuth, async (req, res, next) => {
       throw httpError(403, 'You are not a participant in this session');
     }
 
-    let senderRole = req.user.role === 'learner' ? 'student' : req.user.role === 'tutor' ? 'tutor' : 'tutor';
-    let senderName = req.user.name;
-    let senderId = req.user.id;
-
-    // In demo mode, permit simulation to send as assigned peer for research presentation
-    if (req.body.demoSenderRole && (req.body.demoSenderRole === 'student' || req.body.demoSenderRole === 'tutor')) {
-      senderRole = req.body.demoSenderRole;
-      senderName = req.body.demoSenderName || (senderRole === 'tutor' ? 'Mark Antipo (Tutor)' : 'Julian Gemelo (Learner)');
-      senderId = senderRole === 'tutor' ? session.tutor_id : session.learner_id;
-    }
-
+    const senderRole = req.user.role === 'learner' ? 'student' : req.user.role === 'tutor' ? 'tutor' : 'tutor';
     const cleanRecipientRole = ['all', 'tutor', 'student', 'ai'].includes(recipientRole)
       ? recipientRole
       : 'all';
@@ -88,9 +78,9 @@ router.post('/sessions/:id/messages', requireAuth, async (req, res, next) => {
        RETURNING id, session_id, sender_id, sender_role, sender_name, recipient_role, content, meta, created_at`,
       [
         sessionId,
-        senderId,
+        req.user.id,
         senderRole,
-        senderName,
+        req.user.name,
         cleanRecipientRole,
         String(content).trim().slice(0, 4000),
         JSON.stringify(meta),

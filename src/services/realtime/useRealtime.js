@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRealtimeContext } from './RealtimeProvider';
 import { getCentrifugoService } from './CentrifugoService';
+import { getWsRealtimeService } from './WsRealtimeService';
 import { getRealtimeService as getMockService } from './RealtimeService';
 
 /**
  * Universal React hook for realtime room channel interaction.
- * Works with Centrifugo (default) or Mock fallback.
+ * Works with native WebSocket (default for Wi-Fi/LAN), Centrifugo, or Mock.
  *
  * @param {string} sessionId Room / session identifier
  * @param {Object} [options]
- * @param {string} [options.backend] Explicit backend override ('centrifugo' | 'mock')
+ * @param {string} [options.backend] Explicit backend override ('websocket' | 'centrifugo' | 'mock')
  */
 export function useRealtime(sessionId, options = {}) {
   const context = useRealtimeContext();
@@ -18,12 +19,13 @@ export function useRealtime(sessionId, options = {}) {
     options.backend ||
     context?.backend ||
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_REALTIME_BACKEND) ||
-    'centrifugo';
+    'websocket';
 
   const service = useMemo(() => {
     if (context?.service) return context.service;
     if (backend === 'mock') return getMockService(sessionId);
-    return getCentrifugoService();
+    if (backend === 'centrifugo') return getCentrifugoService();
+    return getWsRealtimeService();
   }, [context?.service, backend, sessionId]);
 
   const [status, setStatus] = useState(service.status || 'idle');
@@ -141,6 +143,22 @@ export function useRealtime(sessionId, options = {}) {
     [sessionId, service]
   );
 
+  const sendSignal = useCallback(
+    (signal) => {
+      if (!sessionId) return;
+      return service.sendSignal?.(sessionId, signal);
+    },
+    [sessionId, service]
+  );
+
+  const onSignal = useCallback(
+    (cb) => {
+      if (!sessionId) return () => {};
+      return service.onSignal?.(sessionId, cb);
+    },
+    [sessionId, service]
+  );
+
   return {
     service,
     status,
@@ -153,6 +171,8 @@ export function useRealtime(sessionId, options = {}) {
     isRemoteUpdate,
     sendMessage,
     pushIdeState,
+    sendSignal,
+    onSignal,
     onMessage,
     onIdeState,
     onPresence,
