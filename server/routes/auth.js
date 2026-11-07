@@ -10,7 +10,7 @@ const router = express.Router();
 const DEV = !config.isProd;
 
 const PUBLIC_COLUMNS = `id, custom_id, name, email, role, avatar, program, department, title,
-                        is_verified, certified_by_id, token_version`;
+                        is_verified, is_available, certified_by_id, token_version`;
 
 /**
  * POST /api/auth/login { loginId, password }
@@ -25,7 +25,7 @@ router.post('/login', async (req, res, next) => {
     const key = String(loginId).trim();
     const { rows } = await query(
       `SELECT id, custom_id, name, email, role, avatar, program, department, title,
-              is_verified, certified_by_id, token_version, password_hash
+              is_verified, is_available, certified_by_id, token_version, password_hash
        FROM users
        WHERE custom_id ILIKE $1 OR email = $2`,
       [key, key.includes('@') ? key : null],
@@ -61,7 +61,7 @@ router.get('/me', requireAuth, async (req, res, next) => {
   try {
     const { rows } = await query(
       `SELECT id, custom_id, name, email, role, avatar, program, department, title,
-              is_verified, certified_by_id
+              is_verified, is_available, certified_by_id
        FROM users WHERE id = $1`, [req.user.id],
     );
     res.json({ user: rows[0] });

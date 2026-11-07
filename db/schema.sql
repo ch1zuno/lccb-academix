@@ -224,6 +224,19 @@ CREATE TABLE notifications (
   created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  recipient_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body text NOT NULL CHECK (char_length(body) BETWEEN 1 AND 1000),
+  read_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CHECK (sender_id <> recipient_id)
+);
+CREATE INDEX idx_messages_pair_created ON messages (sender_id, recipient_id, created_at DESC);
+CREATE INDEX idx_messages_recipient_created ON messages (recipient_id, created_at DESC);
+CREATE INDEX idx_messages_unread ON messages (recipient_id, read_at) WHERE read_at IS NULL;
+
 CREATE TABLE device_fingerprints (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   fingerprint_id text NOT NULL UNIQUE,
@@ -336,7 +349,7 @@ CREATE TABLE session_requests (
   note text,
   location text NOT NULL,
   status text NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending','accepted','declined')),
+    CHECK (status IN ('pending','accepted','declined','cancelled')),
   session_id uuid REFERENCES sessions(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

@@ -14,6 +14,7 @@ import chatRoutes from './chat.js';
 import aiRoutes from './ai.js';
 import realtimeRoutes from './realtime.js';
 import videoRoutes from './video.js';
+import messageRoutes from './messages.js';
 
 const router = Router();
 
@@ -44,6 +45,8 @@ router.use(matchingRoutes);
 router.use(analyticsRoutes);
 // user notifications (list + mark all read)
 router.use(notificationRoutes);
+// 1:1 learner↔tutor messaging (booking-gated, text only)
+router.use(messageRoutes);
 // append-only audit trail (superadmin read-only)
 router.use(auditRoutes);
 

@@ -1,5 +1,5 @@
 /* Auth revocation e2e: logout-all bumps token_version and kills old JWTs. */
-const BASE = 'http://localhost:4000/api';
+const BASE = (process.env.E2E_API_BASE || 'http://localhost:4000').replace(/\/+$/, '') + '/api';
 
 async function request(path, { method = 'GET', token, cookie, body } = {}) {
   const res = await fetch(BASE + path, {

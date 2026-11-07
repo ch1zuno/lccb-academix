@@ -119,6 +119,9 @@ export default function Dashboard({ role, user, showToast }) {
   const [sessionRequests, setSessionRequests] = useState(null);
   const [actingRequestId, setActingRequestId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
+  const [cancellingRequestId, setCancellingRequestId] = useState(null);
+  const [tutorAvailable, setTutorAvailable] = useState(user?.is_available !== false);
+  const [savingAvailability, setSavingAvailability] = useState(false);
 
   const reloadSessions = () => {
     api.get('/sessions/mine')
@@ -127,7 +130,7 @@ export default function Dashboard({ role, user, showToast }) {
   };
 
   const reloadRequests = () => {
-    if (role === 'tutor') {
+    if (role === 'tutor' || role === 'learner') {
       api.get('/session-requests')
         .then(({ requests }) => setSessionRequests(requests.filter(r => r.status === 'pending')))
         .catch(() => setSessionRequests([]));
@@ -149,6 +152,8 @@ export default function Dashboard({ role, user, showToast }) {
     }
     if (role === 'tutor') {
       api.get('/wallet').then(({ balance }) => { if (!cancelled) setWalletBalance(balance); }).catch(() => {});
+    }
+    if (role === 'tutor' || role === 'learner') {
       api.get('/session-requests')
         .then(({ requests }) => { if (!cancelled) setSessionRequests(requests.filter(r => r.status === 'pending')); })
         .catch(() => { if (!cancelled) setSessionRequests([]); });
@@ -180,6 +185,34 @@ export default function Dashboard({ role, user, showToast }) {
       showToast(e.message || 'Could not decline session request', 'error');
     } finally {
       setActingRequestId(null);
+    }
+  };
+
+  const handleCancelRequest = async (requestId) => {
+    if (!window.confirm('Withdraw this session request? The tutor will be notified.')) return;
+    setCancellingRequestId(requestId);
+    try {
+      await api.post(`/session-requests/${requestId}/cancel`);
+      showToast('Session request withdrawn. The tutor has been notified.', 'info');
+      reloadRequests();
+    } catch (e) {
+      showToast(e.message || 'Could not withdraw session request', 'error');
+    } finally {
+      setCancellingRequestId(null);
+    }
+  };
+
+  const handleToggleAvailability = async () => {
+    const next = !tutorAvailable;
+    setSavingAvailability(true);
+    try {
+      await api.patch('/tutors/me/availability', { available: next });
+      setTutorAvailable(next);
+      showToast(next ? 'You are accepting new session requests.' : 'New session requests are paused.', 'success');
+    } catch (e) {
+      showToast(e.message || 'Could not update availability', 'error');
+    } finally {
+      setSavingAvailability(false);
     }
   };
 
@@ -597,6 +630,31 @@ export default function Dashboard({ role, user, showToast }) {
           )}
         />
 
+        <div className="panel flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[13px] font-semibold text-muted-foreground">Tutor availability</p>
+            <p className="mt-0.5 text-[14px] text-ink">
+              {tutorAvailable
+                ? 'Accepting new session requests from learners.'
+                : 'Paused — learners cannot send you new session requests.'}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="status-pill">
+              <span className={cn('status-dot', tutorAvailable ? 'bg-emerald' : 'bg-crimson')} />
+              {tutorAvailable ? 'Available' : 'Paused'}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={savingAvailability}
+              onClick={handleToggleAvailability}
+            >
+              {savingAvailability ? 'Saving…' : tutorAvailable ? 'Pause requests' : 'Resume requests'}
+            </Button>
+          </div>
+        </div>
+
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="panel p-5 lg:col-span-2">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -691,6 +749,13 @@ export default function Dashboard({ role, user, showToast }) {
                       onClick={() => handleAcceptRequest(req.id, req.learner_name)}
                     >
                       {actingRequestId === req.id ? 'Accepting…' : 'Accept session'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/messages?with=${req.learner_id}`)}
+                    >
+                      Message
                     </Button>
                     <Button
                       variant="outline"
@@ -822,6 +887,57 @@ export default function Dashboard({ role, user, showToast }) {
               </div>
             </div>
             <Button variant="outline" onClick={() => navigate('/wizard')}>Book a session</Button>
+          </div>
+        </div>
+      )}
+
+      {sessionRequests && sessionRequests.length > 0 && (
+        <div className="panel border-2 border-gold bg-[#fffdf6] p-5">
+          <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
+            <div>
+              <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
+                Pending session requests
+              </h2>
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
+                Waiting on a tutor. You can withdraw a request while it is still pending.
+              </p>
+            </div>
+            <span className="num border-2 border-ink bg-gold px-2 py-0.5 text-[13px] font-bold text-ink">
+              {sessionRequests.length} open
+            </span>
+          </div>
+          <div className="mt-3 space-y-3">
+            {sessionRequests.map((req) => (
+              <div key={req.id} className="flex flex-col gap-3 border-b border-line/60 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-[14px] font-bold text-ink">{req.tutor_name}</p>
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">
+                    {req.subject} ({req.subject_code}) · {req.topic}
+                  </p>
+                  <p className="mt-0.5 text-[12px] text-muted-foreground">
+                    📅 {fmtLongDate(req.preferred_date)} at {req.preferred_time} · {req.location}
+                  </p>
+                  {req.note && <p className="mt-1 text-[12px] italic text-ink/70">"{req.note}"</p>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={cancellingRequestId === req.id}
+                    onClick={() => handleCancelRequest(req.id)}
+                  >
+                    {cancellingRequestId === req.id ? 'Withdrawing…' : 'Withdraw request'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/messages?with=${req.tutor_id}`)}
+                  >
+                    Message
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

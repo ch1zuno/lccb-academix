@@ -54,5 +54,4 @@ disktree/
 *.bak
 mod.wh.cpp*
 old_Landing.css
-
-
+.env*

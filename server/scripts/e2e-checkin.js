@@ -1,5 +1,5 @@
 /* Check-in e2e: tutor stages token → learner + tutor verify → device verify fallback. */
-const BASE = 'http://localhost:4000/api';
+const BASE = (process.env.E2E_API_BASE || 'http://localhost:4000').replace(/\/+$/, '') + '/api';
 const DEVICE_KEY = process.env.DEVICE_API_KEY || 'dev-device-key';
 
 async function request(path, { method = 'GET', token, body, headers = {} } = {}) {

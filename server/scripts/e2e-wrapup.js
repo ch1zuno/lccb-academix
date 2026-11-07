@@ -1,7 +1,7 @@
 /* Wrap-up e2e: validates single-transaction session wrap (notes + rating + hours + points). */
 import pg from 'pg';
 import { E2E_DATABASE_URL } from './e2e-db.js';
-const BASE = 'http://localhost:4000/api';
+const BASE = (process.env.E2E_API_BASE || 'http://localhost:4000').replace(/\/+$/, '') + '/api';
 
 async function request(path, { method = 'GET', token, body } = {}) {
   const res = await fetch(BASE + path, {
