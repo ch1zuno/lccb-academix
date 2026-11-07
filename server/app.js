@@ -74,7 +74,8 @@ app.get('/api/health', async (_req, res) => {
 
 // Serve Vite production build when running as a standalone server (e.g. on Render)
 app.use(express.static(distPath));
-app.get('*', (req, res, next) => {
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
   if (req.path.startsWith('/api') || req.path.startsWith('/realtime-ws')) return next();
   res.sendFile(path.join(distPath, 'index.html'), (err) => {
     if (err) next();
