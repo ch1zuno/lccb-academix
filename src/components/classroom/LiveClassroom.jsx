@@ -130,6 +130,7 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
                 user={{ displayName: user?.name || 'Participant' }}
                 active={true}
                 onHangup={onEnd}
+                onSwitchEngine={setVideoEngine}
               />
             )}
           </div>

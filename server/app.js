@@ -22,10 +22,61 @@ const distPath = path.resolve(__dirname, '../dist');
  * touches the database. */
 export const app = express();
 
-// Vercel terminates TLS and forwards the client IP via X-Forwarded-For;
-// without this the per-IP login limiter would bucket every visitor together.
+// Vercel / Cloud reverse proxy TLS termination
 app.set('trust proxy', 1);
-app.use(helmet());
+
+// Configure Helmet with CSP allowing Jitsi Meet external API script and iframe embeds
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "'unsafe-eval'",
+          'blob:',
+          'https://meet.jit.si',
+          'https://*.jit.si',
+          'https://*.jitsi.net',
+          'https://8x8.vc',
+          'https://*.8x8.vc',
+        ],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        connectSrc: [
+          "'self'",
+          'https://*.supabase.co',
+          'wss://*.supabase.co',
+          'https://meet.jit.si',
+          'wss://meet.jit.si',
+          'https://*.jit.si',
+          'wss://*.jit.si',
+          'https://*.jitsi.net',
+          'wss://*.jitsi.net',
+          'https://8x8.vc',
+          'https://*.8x8.vc',
+          'wss://*.8x8.vc',
+          'ws:',
+          'wss:',
+        ],
+        frameSrc: [
+          "'self'",
+          'https://meet.jit.si',
+          'https://*.jit.si',
+          'https://*.jitsi.net',
+          'https://8x8.vc',
+          'https://*.8x8.vc',
+        ],
+        mediaSrc: ["'self'", 'blob:', 'data:', 'https://meet.jit.si', 'https://*.jit.si'],
+        workerSrc: ["'self'", 'blob:'],
+        childSrc: ["'self'", 'blob:', 'https://meet.jit.si', 'https://*.jit.si'],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+);
 app.use(cors({ origin: config.frontendOrigins, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('tiny'));

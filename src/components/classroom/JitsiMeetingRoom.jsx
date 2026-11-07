@@ -26,6 +26,7 @@ const JitsiMeetingRoom = forwardRef(function JitsiMeetingRoom(
     onParticipantLeft,
     onHangup,
     onError,
+    onSwitchEngine,
   },
   ref
 ) {
@@ -256,14 +257,26 @@ const JitsiMeetingRoom = forwardRef(function JitsiMeetingRoom(
           <AlertTriangle className="mb-3 h-12 w-12 text-gold" />
           <h3 className="font-display text-lg font-bold text-paper">Connection Failed</h3>
           <p className="mt-1 text-xs text-[#a0aec0]">{error}</p>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setRetryCount((c) => c + 1)}
-            className="mt-4 border-paper bg-transparent text-paper hover:bg-paper hover:text-ink"
-          >
-            <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry Video
-          </Button>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setRetryCount((c) => c + 1)}
+              className="border-paper bg-transparent text-paper hover:bg-paper hover:text-ink"
+            >
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry Jitsi
+            </Button>
+            {onSwitchEngine && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onSwitchEngine('webrtc')}
+                className="border-gold bg-gold text-ink font-bold hover:bg-gold/90 shadow-[2px_2px_0_#000]"
+              >
+                Switch to Direct WebRTC
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
