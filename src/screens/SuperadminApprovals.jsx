@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { downloadApplicationDocument, openApplicationDocument, MAX_APPLICATION_FILES } from '../lib/applicationFiles';
 import { cn } from '../lib/utils';
 import { trapTabKey } from '../lib/focusTrap';
+import Pagination from '../components/ui/Pagination';
 import api from '../api';
 
 const fmtDate = (value) => {
@@ -27,6 +28,7 @@ export default function SuperadminApprovals({ showToast }) {
   const [selectedDocs, setSelectedDocs] = useState(null);
   const [busy, setBusy] = useState(null);
   const [auditEntries, setAuditEntries] = useState(null);
+  const [page, setPage] = useState(1);
   const dialogRef = useRef(null);
   const closeButtonRef = useRef(null);
   const previousFocusRef = useRef(null);
@@ -137,87 +139,104 @@ export default function SuperadminApprovals({ showToast }) {
         </div>
       )}
 
-      {applications !== null && applications.length > 0 && (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <AnimatePresence initial={false}>
-            {applications.map(app => {
-              const fileCount = app.document_count ?? 0;
-              const noFiles = fileCount === 0;
-              return (
-                <motion.article
-                  layout
-                  key={app.id}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.985 }}
-                  transition={{ duration: 0.18 }}
-                  className="panel flex flex-col p-5 transition-transform hover:-translate-y-1"
-                >
-                  <div className="flex items-start gap-3">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/profile/${app.custom_id || app.user_id || app.id}`);
-                      }}
-                      className="grid h-10 w-10 shrink-0 place-items-center border-2 border-ink bg-gold text-[13px] font-bold text-ink shadow-[2px_2px_0_var(--color-ink)] transition-transform hover:scale-105"
-                      title={`View ${app.name}'s public profile`}
+      {applications !== null && applications.length > 0 && (() => {
+        const pageSize = 4;
+        const total = applications.length;
+        const maxPage = Math.max(1, Math.ceil(total / pageSize));
+        const currentPage = Math.min(page, maxPage);
+        const pagedApplications = applications.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <AnimatePresence initial={false}>
+                {pagedApplications.map(app => {
+                  const fileCount = app.document_count ?? 0;
+                  const noFiles = fileCount === 0;
+                  return (
+                    <motion.article
+                      layout
+                      key={app.id}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.985 }}
+                      transition={{ duration: 0.18 }}
+                      className="panel flex flex-col p-5 transition-transform hover:-translate-y-1"
                     >
-                      {initials(app.name)}
-                    </button>
-                    <div className="min-w-0 flex-1">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/profile/${app.custom_id || app.user_id || app.id}`);
-                        }}
-                        className="truncate text-left font-display text-[16px] font-bold leading-tight text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
-                      >
-                        {app.name}
-                      </button>
-                      <p className="mt-0.5 truncate text-[13px] text-muted-foreground">{app.program || app.department}</p>
-                    </div>
-                    <span className="status-pill shrink-0">
-                      <span className="status-dot bg-amber" />
-                      Pending
-                    </span>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-2 border-t-2 border-ink pt-4">
-                    <div className="border-2 border-ink bg-surface-quiet p-2">
-                      <p className="text-[13px] font-semibold text-muted-foreground">Exam score</p>
-                      <p className="num mt-1 text-[22px] leading-none text-ink">{app.exam_score == null ? '—' : `${app.exam_score}%`}</p>
-                    </div>
-                    <div className={cn('border-2 border-ink p-2 text-right', noFiles ? 'bg-surface-alert' : 'bg-surface-quiet')}>
-                      <p className="text-[13px] font-semibold text-muted-foreground">Files</p>
-                      <div className="mt-1 flex items-baseline justify-end gap-1.5">
-                        <p className={cn('num text-[22px] leading-none', noFiles ? 'text-crimson' : 'text-ink')}>{fileCount}</p>
-                        {noFiles && <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-crimson">Needs file</span>}
+                      <div className="flex items-start gap-3">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/profile/${app.custom_id || app.user_id || app.id}`);
+                          }}
+                          className="grid h-10 w-10 shrink-0 place-items-center border-2 border-ink bg-gold text-[13px] font-bold text-ink shadow-[2px_2px_0_var(--color-ink)] transition-transform hover:scale-105"
+                          title={`View ${app.name}'s public profile`}
+                        >
+                          {initials(app.name)}
+                        </button>
+                        <div className="min-w-0 flex-1">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/profile/${app.custom_id || app.user_id || app.id}`);
+                            }}
+                            className="truncate text-left font-display text-[16px] font-bold leading-tight text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                          >
+                            {app.name}
+                          </button>
+                          <p className="mt-0.5 truncate text-[13px] text-muted-foreground">{app.program || app.department}</p>
+                        </div>
+                        <span className="status-pill shrink-0">
+                          <span className="status-dot bg-amber" />
+                          Pending
+                        </span>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {(app.subjects ?? []).map(subject => (
-                      <span key={subjectCode(subject)} className="inline-flex h-6 items-center border-2 border-ink bg-surface-highlight px-2 text-[13px] font-semibold text-ink">
-                        {subjectCode(subject)}
-                      </span>
-                    ))}
-                  </div>
+                      <div className="mt-4 grid grid-cols-2 gap-2 border-t-2 border-ink pt-4">
+                        <div className="border-2 border-ink bg-surface-quiet p-2">
+                          <p className="text-[13px] font-semibold text-muted-foreground">Exam score</p>
+                          <p className="num mt-1 text-[22px] leading-none text-ink">{app.exam_score == null ? '—' : `${app.exam_score}%`}</p>
+                        </div>
+                        <div className={cn('border-2 border-ink p-2 text-right', noFiles ? 'bg-surface-alert' : 'bg-surface-quiet')}>
+                          <p className="text-[13px] font-semibold text-muted-foreground">Files</p>
+                          <div className="mt-1 flex items-baseline justify-end gap-1.5">
+                            <p className={cn('num text-[22px] leading-none', noFiles ? 'text-crimson' : 'text-ink')}>{fileCount}</p>
+                            {noFiles && <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-crimson">Needs file</span>}
+                          </div>
+                        </div>
+                      </div>
 
-                  <div className="mt-auto flex items-end justify-between gap-3 pt-5">
-                    <p className="text-[13px] text-muted-foreground">Applied {fmtDate(app.date_applied)}</p>
-                    <Button size="sm" variant="outline" onClick={() => setSelectedApp(app)}>
-                      Review application
-                    </Button>
-                  </div>
-                </motion.article>
-              );
-            })}
-          </AnimatePresence>
-        </div>
-      )}
+                      <div className="mt-4 flex flex-wrap gap-1.5">
+                        {(app.subjects ?? []).map(subject => (
+                          <span key={subjectCode(subject)} className="inline-flex h-6 items-center border-2 border-ink bg-surface-highlight px-2 text-[13px] font-semibold text-ink">
+                            {subjectCode(subject)}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="mt-auto flex items-end justify-between gap-3 pt-5">
+                        <p className="text-[13px] text-muted-foreground">Applied {fmtDate(app.date_applied)}</p>
+                        <Button size="sm" variant="outline" onClick={() => setSelectedApp(app)}>
+                          Review application
+                        </Button>
+                      </div>
+                    </motion.article>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalItems={total}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              itemName="applicants"
+            />
+          </div>
+        );
+      })()}
 
       {auditEntries && auditEntries.length > 0 && (
         <section className="mt-8">

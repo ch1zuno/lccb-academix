@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
 import { localYmd } from '../lib/dates';
 import GoogleClassroomSessions from '../components/classroom/GoogleClassroomSessions';
+import Pagination from '../components/ui/Pagination';
 import api from '../api';
 
 /**
@@ -123,6 +124,9 @@ export default function Dashboard({ role, user, showToast }) {
   const [cancellingRequestId, setCancellingRequestId] = useState(null);
   const [tutorAvailable, setTutorAvailable] = useState(user?.is_available !== false);
   const [savingAvailability, setSavingAvailability] = useState(false);
+  const [requestsPage, setRequestsPage] = useState(1);
+  const [tutorRequestsPage, setTutorRequestsPage] = useState(1);
+  const [upcomingPage, setUpcomingPage] = useState(1);
 
   const reloadSessions = () => {
     api.get('/sessions/mine')
@@ -749,69 +753,85 @@ export default function Dashboard({ role, user, showToast }) {
           </div>
         </div>
 
-        {sessionRequests && sessionRequests.length > 0 && (
-          <div className="panel border-2 border-gold bg-card p-5">
-            <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
-              <div>
-                <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
-                  Pending session requests
-                </h2>
-                <p className="mt-0.5 text-[13px] text-muted-foreground">
-                  Learners matched with you and requested a session.
-                </p>
-              </div>
-              <span className="num border-2 border-ink bg-gold px-2 py-0.5 text-[13px] font-bold text-ink">
-                {sessionRequests.length} new
-              </span>
-            </div>
-            <div className="mt-3 space-y-3">
-              {sessionRequests.map((req) => (
-                <div key={req.id} className="flex flex-col gap-3 border-b border-line/60 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/profile/${req.learner_custom_id || req.learner_id}`)}
-                      className="font-display text-left text-[14px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
-                    >
-                      {req.learner_name}
-                    </button>
-                    <p className="mt-0.5 text-[13px] text-muted-foreground">
-                      {req.subject} ({req.subject_code}) · {req.topic}
-                    </p>
-                    <p className="mt-0.5 text-[12px] text-muted-foreground">
-                      📅 {fmtLongDate(req.preferred_date)} at {req.preferred_time} · {req.location}
-                    </p>
-                    {req.note && <p className="mt-1 text-[12px] italic text-ink/70">"{req.note}"</p>}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      disabled={actingRequestId === req.id}
-                      onClick={() => handleAcceptRequest(req.id, req.learner_name)}
-                    >
-                      {actingRequestId === req.id ? 'Accepting…' : 'Accept session'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/messages?with=${req.learner_id}`)}
-                    >
-                      Message
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={actingRequestId === req.id}
-                      onClick={() => handleDeclineRequest(req.id)}
-                    >
-                      Decline
-                    </Button>
-                  </div>
+        {sessionRequests && sessionRequests.length > 0 && (() => {
+          const pageSize = 3;
+          const total = sessionRequests.length;
+          const maxPage = Math.max(1, Math.ceil(total / pageSize));
+          const currentPage = Math.min(tutorRequestsPage, maxPage);
+          const pagedRequests = sessionRequests.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+          return (
+            <div className="panel border-2 border-gold bg-card p-5">
+              <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
+                <div>
+                  <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
+                    Pending session requests
+                  </h2>
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">
+                    Learners matched with you and requested a session.
+                  </p>
                 </div>
-              ))}
+                <span className="num border-2 border-ink bg-gold px-2 py-0.5 text-[13px] font-bold text-ink">
+                  {total} new
+                </span>
+              </div>
+              <div className="mt-3 space-y-3">
+                {pagedRequests.map((req) => (
+                  <div key={req.id} className="flex flex-col gap-3 border-b border-line/60 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/profile/${req.learner_custom_id || req.learner_id}`)}
+                        className="font-display text-left text-[14px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                      >
+                        {req.learner_name}
+                      </button>
+                      <p className="mt-0.5 text-[13px] text-muted-foreground">
+                        {req.subject} ({req.subject_code}) · {req.topic}
+                      </p>
+                      <p className="mt-0.5 text-[12px] text-muted-foreground">
+                        📅 {fmtLongDate(req.preferred_date)} at {req.preferred_time} · {req.location}
+                      </p>
+                      {req.note && <p className="mt-1 text-[12px] italic text-ink/70">"{req.note}"</p>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        disabled={actingRequestId === req.id}
+                        onClick={() => handleAcceptRequest(req.id, req.learner_name)}
+                      >
+                        {actingRequestId === req.id ? 'Accepting…' : 'Accept session'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/messages?with=${req.learner_id}`)}
+                      >
+                        Message
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={actingRequestId === req.id}
+                        onClick={() => handleDeclineRequest(req.id)}
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalItems={total}
+                pageSize={pageSize}
+                onPageChange={setTutorRequestsPage}
+                itemName="requests"
+                className="mt-3"
+              />
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="panel min-w-0">
@@ -821,44 +841,68 @@ export default function Dashboard({ role, user, showToast }) {
             </div>
             {sessionsMine === null && <div className="empty">Reading your sessions…</div>}
             {sessionsMine !== null && upcoming.length === 0 && <div className="empty">No upcoming sessions booked.</div>}
-            {[...upcoming].sort((a, b) => String(a.date).localeCompare(String(b.date))).map(session => (
-              <div key={session.id} className="flex items-start justify-between gap-4 border-b border-line px-5 py-3.5 last:border-0">
-                <div className="flex min-w-0 items-start gap-3">
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/profile/${session.learner_custom_id || session.learner_id}`)}
-                    className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-surface-highlight text-[13px] font-bold text-ink transition-transform hover:scale-105"
-                    title={`View ${session.learner_name}'s profile`}
-                  >
-                    {initialsOf(session.learner_name)}
-                  </button>
-                  <div className="min-w-0">
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/profile/${session.learner_custom_id || session.learner_id}`)}
-                      className="truncate text-left text-[14px] font-medium leading-tight text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
-                    >
-                      {session.learner_name}
-                    </button>
-                    <p className="mt-0.5 truncate text-[13px] leading-tight text-muted-foreground">{session.subject} · {session.topic}</p>
-                  </div>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="num text-[13px] text-ink">{fmtLongDate(session.date)}</p>
-                  <p className="mt-0.5 text-[13px] text-muted-foreground">{session.time} · {session.duration}</p>
-                  <p className="mt-0.5 text-[13px] text-muted-foreground">{session.location}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    disabled={cancellingId === session.id}
-                    onClick={() => handleCancelSession(session.id)}
-                  >
-                    {cancellingId === session.id ? 'Cancelling…' : 'Cancel'}
-                  </Button>
-                </div>
-              </div>
-            ))}
+            {(() => {
+              const sorted = [...upcoming].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+              const pageSize = 3;
+              const total = sorted.length;
+              const maxPage = Math.max(1, Math.ceil(total / pageSize));
+              const currentPage = Math.min(upcomingPage, maxPage);
+              const pagedUpcoming = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+              return (
+                <>
+                  {pagedUpcoming.map(session => (
+                    <div key={session.id} className="flex items-start justify-between gap-4 border-b border-line px-5 py-3.5 last:border-0">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/profile/${session.learner_custom_id || session.learner_id}`)}
+                          className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-surface-highlight text-[13px] font-bold text-ink transition-transform hover:scale-105"
+                          title={`View ${session.learner_name}'s profile`}
+                        >
+                          {initialsOf(session.learner_name)}
+                        </button>
+                        <div className="min-w-0">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/profile/${session.learner_custom_id || session.learner_id}`)}
+                            className="truncate text-left text-[14px] font-medium leading-tight text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                          >
+                            {session.learner_name}
+                          </button>
+                          <p className="mt-0.5 truncate text-[13px] leading-tight text-muted-foreground">{session.subject} · {session.topic}</p>
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="num text-[13px] text-ink">{fmtLongDate(session.date)}</p>
+                        <p className="mt-0.5 text-[13px] text-muted-foreground">{session.time} · {session.duration}</p>
+                        <p className="mt-0.5 text-[13px] text-muted-foreground">{session.location}</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                          disabled={cancellingId === session.id}
+                          onClick={() => handleCancelSession(session.id)}
+                        >
+                          {cancellingId === session.id ? 'Cancelling…' : 'Cancel'}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {total > pageSize && (
+                    <div className="p-4">
+                      <Pagination
+                        currentPage={currentPage}
+                        totalItems={total}
+                        pageSize={pageSize}
+                        onPageChange={setUpcomingPage}
+                        itemName="sessions"
+                      />
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
 
           <div className="space-y-3 min-w-0">
@@ -912,62 +956,78 @@ export default function Dashboard({ role, user, showToast }) {
         </div>
       )}
 
-      {sessionRequests && sessionRequests.length > 0 && (
-        <div className="panel border-2 border-gold bg-card p-5">
-          <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
-            <div>
-              <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
-                Pending session requests
-              </h2>
-              <p className="mt-0.5 text-[13px] text-muted-foreground">
-                Waiting on a tutor. You can withdraw a request while it is still pending.
-              </p>
-            </div>
-            <span className="num border-2 border-ink bg-gold px-2 py-0.5 text-[13px] font-bold text-ink">
-              {sessionRequests.length} open
-            </span>
-          </div>
-          <div className="mt-3 space-y-3">
-            {sessionRequests.map((req) => (
-              <div key={req.id} className="flex flex-col gap-3 border-b border-line/60 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/profile/${req.tutor_custom_id || req.tutor_id}`)}
-                    className="font-display text-left text-[14px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
-                  >
-                    {req.tutor_name}
-                  </button>
-                  <p className="mt-0.5 text-[13px] text-muted-foreground">
-                    {req.subject} ({req.subject_code}) · {req.topic}
-                  </p>
-                  <p className="mt-0.5 text-[12px] text-muted-foreground">
-                    📅 {fmtLongDate(req.preferred_date)} at {req.preferred_time} · {req.location}
-                  </p>
-                  {req.note && <p className="mt-1 text-[12px] italic text-ink/70">"{req.note}"</p>}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={cancellingRequestId === req.id}
-                    onClick={() => handleCancelRequest(req.id)}
-                  >
-                    {cancellingRequestId === req.id ? 'Withdrawing…' : 'Withdraw request'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/messages?with=${req.tutor_id}`)}
-                  >
-                    Message
-                  </Button>
-                </div>
+      {sessionRequests && sessionRequests.length > 0 && (() => {
+        const pageSize = 3;
+        const total = sessionRequests.length;
+        const maxPage = Math.max(1, Math.ceil(total / pageSize));
+        const currentPage = Math.min(requestsPage, maxPage);
+        const pagedRequests = sessionRequests.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+        return (
+          <div className="panel border-2 border-gold bg-card p-5">
+            <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
+              <div>
+                <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
+                  Pending session requests
+                </h2>
+                <p className="mt-0.5 text-[13px] text-muted-foreground">
+                  Waiting on a tutor. You can withdraw a request while it is still pending.
+                </p>
               </div>
-            ))}
+              <span className="num border-2 border-ink bg-gold px-2 py-0.5 text-[13px] font-bold text-ink">
+                {total} open
+              </span>
+            </div>
+            <div className="mt-3 space-y-3">
+              {pagedRequests.map((req) => (
+                <div key={req.id} className="flex flex-col gap-3 border-b border-line/60 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/profile/${req.tutor_custom_id || req.tutor_id}`)}
+                      className="font-display text-left text-[14px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                    >
+                      {req.tutor_name}
+                    </button>
+                    <p className="mt-0.5 text-[13px] text-muted-foreground">
+                      {req.subject} ({req.subject_code}) · {req.topic}
+                    </p>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">
+                      📅 {fmtLongDate(req.preferred_date)} at {req.preferred_time} · {req.location}
+                    </p>
+                    {req.note && <p className="mt-1 text-[12px] italic text-ink/70">"{req.note}"</p>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={cancellingRequestId === req.id}
+                      onClick={() => handleCancelRequest(req.id)}
+                    >
+                      {cancellingRequestId === req.id ? 'Withdrawing…' : 'Withdraw request'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/messages?with=${req.tutor_id}`)}
+                    >
+                      Message
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalItems={total}
+              pageSize={pageSize}
+              onPageChange={setRequestsPage}
+              itemName="requests"
+              className="mt-3"
+            />
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="panel p-5 lg:col-span-2">

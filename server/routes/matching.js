@@ -248,16 +248,34 @@ router.get('/session-requests', requireAuth, async (req, res, next) => {
   try {
     const col = req.user.role === 'learner' ? 'sr.learner_id' : req.user.role === 'tutor' ? 'sr.tutor_id' : null;
     if (!col) throw httpError(403, 'Learners and tutors only');
-    const { rows } = await query(
-      `SELECT sr.*, u.custom_id AS tutor_custom_id, t.custom_id AS learner_custom_id,
-              u.name AS tutor_name, t.name AS learner_name, s.name AS subject, s.code AS subject_code
-       FROM session_requests sr
-       JOIN users u ON u.id = sr.tutor_id
-       JOIN users t ON t.id = sr.learner_id
-       JOIN subjects s ON s.id = sr.subject_id
-       WHERE ${col} = $1
-       ORDER BY sr.created_at DESC`, [req.user.id]);
-    res.json({ requests: rows });
+
+    const limit = req.query.limit ? Math.min(100, Math.max(1, parseInt(req.query.limit, 10))) : null;
+    const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
+
+    let sql = `SELECT sr.*, u.custom_id AS tutor_custom_id, t.custom_id AS learner_custom_id,
+                      u.name AS tutor_name, t.name AS learner_name, s.name AS subject, s.code AS subject_code,
+                      count(*) OVER()::int AS total_count
+               FROM session_requests sr
+               JOIN users u ON u.id = sr.tutor_id
+               JOIN users t ON t.id = sr.learner_id
+               JOIN subjects s ON s.id = sr.subject_id
+               WHERE ${col} = $1
+               ORDER BY sr.created_at DESC`;
+    const params = [req.user.id];
+
+    if (limit) {
+      params.push(limit, offset);
+      sql += ` LIMIT $2 OFFSET $3`;
+    }
+
+    const { rows } = await query(sql, params);
+    const total = rows[0]?.total_count ?? (limit ? 0 : rows.length);
+
+    res.json({
+      requests: rows,
+      total,
+      hasMore: limit ? (offset + rows.length) < total : false,
+    });
   } catch (e) { next(e); }
 });
 

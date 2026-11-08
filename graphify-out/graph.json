@@ -7,6 +7,19 @@
   },
   "nodes": [
     {
+      "id": "src_api_apierror",
+      "label": "ApiError",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "SuperadminApprovals.jsx",
+      "file_type": "code",
+      "norm_label": "apierror",
+      "source_file": "src/api.js",
+      "source_location": "L5"
+    },
+    {
       "id": "src_types_jitsi_d_jitsierrorevent",
       "label": "JitsiErrorEvent",
       "_callable": true,
@@ -85,19 +98,6 @@
       "source_location": "L4"
     },
     {
-      "id": "src_main_errorboundary",
-      "label": "ErrorBoundary",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "CentrifugoService",
-      "file_type": "code",
-      "norm_label": "errorboundary",
-      "source_file": "src/main.jsx",
-      "source_location": "L10"
-    },
-    {
       "id": "src_services_realtime_centrifugoservice_centrifugoservice",
       "label": "CentrifugoService",
       "_callable": true,
@@ -124,17 +124,17 @@
       "source_location": "L28"
     },
     {
-      "id": "src_api_apierror",
-      "label": "ApiError",
+      "id": "src_main_errorboundary",
+      "label": "ErrorBoundary",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 50,
-      "community_name": "api.js",
+      "community": 62,
+      "community_name": "ErrorBoundary",
       "file_type": "code",
-      "norm_label": "apierror",
-      "source_file": "src/api.js",
-      "source_location": "L5"
+      "norm_label": "errorboundary",
+      "source_file": "src/main.jsx",
+      "source_location": "L10"
     },
     {
       "id": "src_services_realtime_wsrealtimeservice_wsrealtimeservice",
@@ -162,52 +162,16 @@
       "source_location": "L4"
     },
     {
-      "id": "src_components_ui_badgedisplay_badgedisplay",
-      "label": "BadgeDisplay()",
+      "id": "src_components_ui_pagination_pagination",
+      "label": "Pagination()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "badgedisplay()",
-      "source_file": "src/components/ui/BadgeDisplay.jsx",
-      "source_location": "L4"
-    },
-    {
-      "id": "src_components_ui_badgedisplay_badgelist",
-      "label": "BadgeList()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "badgelist()",
-      "source_file": "src/components/ui/BadgeDisplay.jsx",
-      "source_location": "L46"
-    },
-    {
-      "id": "src_components_ui_profileavatar_getinitials",
-      "label": "getInitials()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "getinitials()",
-      "source_file": "src/components/ui/ProfileAvatar.jsx",
-      "source_location": "L4"
-    },
-    {
-      "id": "src_components_ui_profileavatar_profileavatar",
-      "label": "ProfileAvatar()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "profileavatar()",
-      "source_file": "src/components/ui/ProfileAvatar.jsx",
-      "source_location": "L14"
+      "norm_label": "pagination()",
+      "source_file": "src/components/ui/Pagination.jsx",
+      "source_location": "L5"
     },
     {
       "id": "src_lib_utils_cn",
@@ -222,76 +186,112 @@
       "source_location": "L4"
     },
     {
-      "id": "src_screens_facultyreferral_facultyreferral",
-      "label": "FacultyReferral()",
+      "id": "src_screens_dashboard_dashboard",
+      "label": "Dashboard()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "facultyreferral()",
-      "source_file": "src/screens/FacultyReferral.jsx",
-      "source_location": "L38"
+      "norm_label": "dashboard()",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L113"
     },
     {
-      "id": "src_screens_facultyreferral_initials",
-      "label": "initials()",
+      "id": "src_screens_dashboard_fmtdate",
+      "label": "fmtDate()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "initials()",
-      "source_file": "src/screens/FacultyReferral.jsx",
-      "source_location": "L15"
+      "norm_label": "fmtdate()",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L35"
     },
     {
-      "id": "src_screens_facultyreferral_studentrow",
-      "label": "StudentRow()",
+      "id": "src_screens_dashboard_fmtlongdate",
+      "label": "fmtLongDate()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "studentrow()",
-      "source_file": "src/screens/FacultyReferral.jsx",
-      "source_location": "L19"
+      "norm_label": "fmtlongdate()",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L43"
     },
     {
-      "id": "src_screens_profilescreen_profilescreen",
-      "label": "ProfileScreen()",
+      "id": "src_screens_dashboard_fmtpoints",
+      "label": "fmtPoints()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "profilescreen()",
-      "source_file": "src/screens/ProfileScreen.jsx",
-      "source_location": "L10"
+      "norm_label": "fmtpoints()",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L51"
     },
     {
-      "id": "src_screens_tutorexam_nextfileid",
-      "label": "nextFileId()",
+      "id": "src_screens_dashboard_initialsof",
+      "label": "initialsOf()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "nextfileid()",
-      "source_file": "src/screens/TutorExam.jsx",
-      "source_location": "L10"
+      "norm_label": "initialsof()",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L53"
     },
     {
-      "id": "src_screens_tutorexam_tutorexam",
-      "label": "TutorExam()",
+      "id": "src_screens_dashboard_metrics",
+      "label": "Metrics()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "tutorexam()",
-      "source_file": "src/screens/TutorExam.jsx",
-      "source_location": "L17"
+      "norm_label": "metrics()",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L82"
+    },
+    {
+      "id": "src_screens_dashboard_sectionheading",
+      "label": "SectionHeading()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "sectionheading()",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L101"
+    },
+    {
+      "id": "src_screens_dashboard_statuspill",
+      "label": "StatusPill()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "statuspill()",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L73"
+    },
+    {
+      "id": "src_screens_dashboard_usereferrals",
+      "label": "useReferrals()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "usereferrals()",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L16"
     },
     {
       "id": "server_scripts_e2e_accreditation_check",
@@ -678,16 +678,52 @@
       "source_location": "L4"
     },
     {
-      "id": "server_lib_room_membership_verifyroommembership",
-      "label": "verifyRoomMembership()",
+      "id": "server_lib_publicprofile_topublicprofile",
+      "label": "toPublicProfile()",
       "_callable": true,
       "_origin": "ast",
       "community": 16,
       "community_name": "routes/index.js",
       "file_type": "code",
-      "norm_label": "verifyroommembership()",
-      "source_file": "server/lib/room-membership.js",
-      "source_location": "L10"
+      "norm_label": "topublicprofile()",
+      "source_file": "server/lib/publicProfile.js",
+      "source_location": "L14"
+    },
+    {
+      "id": "server_routes_matching_timetominutes",
+      "label": "timeToMinutes()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "routes/index.js",
+      "file_type": "code",
+      "norm_label": "timetominutes()",
+      "source_file": "server/routes/matching.js",
+      "source_location": "L13"
+    },
+    {
+      "id": "server_routes_matching_todayymd",
+      "label": "todayYmd()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "routes/index.js",
+      "file_type": "code",
+      "norm_label": "todayymd()",
+      "source_file": "server/routes/matching.js",
+      "source_location": "L20"
+    },
+    {
+      "id": "server_routes_matching_tutor_sql",
+      "label": "TUTOR_SQL()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "routes/index.js",
+      "file_type": "code",
+      "norm_label": "tutor_sql()",
+      "source_file": "server/routes/matching.js",
+      "source_location": "L26"
     },
     {
       "id": "server_scripts_e2e_auth_assert",
@@ -796,6 +832,42 @@
       "norm_label": "request()",
       "source_file": "server/scripts/e2e-rewards.js",
       "source_location": "L4"
+    },
+    {
+      "id": "src_api_apierror_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "SuperadminApprovals.jsx",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/api.js",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_api_request",
+      "label": "request()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "SuperadminApprovals.jsx",
+      "file_type": "code",
+      "norm_label": "request()",
+      "source_file": "src/api.js",
+      "source_location": "L13"
+    },
+    {
+      "id": "src_api_requestblob",
+      "label": "requestBlob()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "SuperadminApprovals.jsx",
+      "file_type": "code",
+      "norm_label": "requestblob()",
+      "source_file": "src/api.js",
+      "source_location": "L38"
     },
     {
       "id": "src_components_applicationdocumentpicker_applicationdocumentpicker",
@@ -927,7 +999,7 @@
       "file_type": "code",
       "norm_label": "fmtdate()",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L12"
+      "source_location": "L13"
     },
     {
       "id": "src_screens_superadminapprovals_initials",
@@ -939,7 +1011,7 @@
       "file_type": "code",
       "norm_label": "initials()",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L20"
+      "source_location": "L21"
     },
     {
       "id": "src_screens_superadminapprovals_subjectcode",
@@ -951,7 +1023,7 @@
       "file_type": "code",
       "norm_label": "subjectcode()",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L21"
+      "source_location": "L22"
     },
     {
       "id": "src_screens_superadminapprovals_superadminapprovals",
@@ -963,7 +1035,7 @@
       "file_type": "code",
       "norm_label": "superadminapprovals()",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L23"
+      "source_location": "L24"
     },
     {
       "id": "src_screens_tutorapplicant_nextfileid",
@@ -995,7 +1067,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
+      "community_name": "LearnerWizard.jsx",
       "file_type": "code",
       "norm_label": "adddaysymd()",
       "source_file": "src/lib/dates.js",
@@ -1007,119 +1079,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
+      "community_name": "LearnerWizard.jsx",
       "file_type": "code",
       "norm_label": "localymd()",
       "source_file": "src/lib/dates.js",
       "source_location": "L5"
-    },
-    {
-      "id": "src_screens_dashboard_dashboard",
-      "label": "Dashboard()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
-      "file_type": "code",
-      "norm_label": "dashboard()",
-      "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L112"
-    },
-    {
-      "id": "src_screens_dashboard_fmtdate",
-      "label": "fmtDate()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
-      "file_type": "code",
-      "norm_label": "fmtdate()",
-      "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L34"
-    },
-    {
-      "id": "src_screens_dashboard_fmtlongdate",
-      "label": "fmtLongDate()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
-      "file_type": "code",
-      "norm_label": "fmtlongdate()",
-      "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L42"
-    },
-    {
-      "id": "src_screens_dashboard_fmtpoints",
-      "label": "fmtPoints()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
-      "file_type": "code",
-      "norm_label": "fmtpoints()",
-      "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L50"
-    },
-    {
-      "id": "src_screens_dashboard_initialsof",
-      "label": "initialsOf()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
-      "file_type": "code",
-      "norm_label": "initialsof()",
-      "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L52"
-    },
-    {
-      "id": "src_screens_dashboard_metrics",
-      "label": "Metrics()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
-      "file_type": "code",
-      "norm_label": "metrics()",
-      "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L81"
-    },
-    {
-      "id": "src_screens_dashboard_sectionheading",
-      "label": "SectionHeading()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
-      "file_type": "code",
-      "norm_label": "sectionheading()",
-      "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L100"
-    },
-    {
-      "id": "src_screens_dashboard_statuspill",
-      "label": "StatusPill()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
-      "file_type": "code",
-      "norm_label": "statuspill()",
-      "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L72"
-    },
-    {
-      "id": "src_screens_dashboard_usereferrals",
-      "label": "useReferrals()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
-      "file_type": "code",
-      "norm_label": "usereferrals()",
-      "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L15"
     },
     {
       "id": "src_screens_learnerwizard_learnerwizard",
@@ -1127,7 +1091,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
+      "community_name": "LearnerWizard.jsx",
       "file_type": "code",
       "norm_label": "learnerwizard()",
       "source_file": "src/screens/LearnerWizard.jsx",
@@ -1139,7 +1103,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
+      "community_name": "LearnerWizard.jsx",
       "file_type": "code",
       "norm_label": "optionrow()",
       "source_file": "src/screens/LearnerWizard.jsx",
@@ -1216,6 +1180,90 @@
       "norm_label": "savesession()",
       "source_file": "src/authToken.js",
       "source_location": "L7"
+    },
+    {
+      "id": "src_components_logo2d_logo2d",
+      "label": "Logo2D()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "logo2d()",
+      "source_file": "src/components/Logo2D.jsx",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_components_splashscreen_splashscreen",
+      "label": "SplashScreen()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "splashscreen()",
+      "source_file": "src/components/SplashScreen.jsx",
+      "source_location": "L10"
+    },
+    {
+      "id": "src_screens_login_fmt",
+      "label": "fmt()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "fmt()",
+      "source_file": "src/screens/Login.jsx",
+      "source_location": "L208"
+    },
+    {
+      "id": "src_screens_login_fmthours",
+      "label": "fmtHours()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "fmthours()",
+      "source_file": "src/screens/Login.jsx",
+      "source_location": "L209"
+    },
+    {
+      "id": "src_screens_login_hscube",
+      "label": "HsCube()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "hscube()",
+      "source_file": "src/screens/Login.jsx",
+      "source_location": "L28"
+    },
+    {
+      "id": "src_screens_login_landingpage",
+      "label": "LandingPage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "landingpage()",
+      "source_file": "src/screens/Login.jsx",
+      "source_location": "L215"
+    },
+    {
+      "id": "src_screens_login_plural",
+      "label": "plural()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "plural()",
+      "source_file": "src/screens/Login.jsx",
+      "source_location": "L213"
     },
     {
       "id": "vite_config_manualchunks",
@@ -1312,6 +1360,30 @@
       "norm_label": "withtransaction()",
       "source_file": "server/db.js",
       "source_location": "L41"
+    },
+    {
+      "id": "server_routes_accreditation_readableapplication",
+      "label": "readableApplication()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "query",
+      "file_type": "code",
+      "norm_label": "readableapplication()",
+      "source_file": "server/routes/accreditation.js",
+      "source_location": "L42"
+    },
+    {
+      "id": "server_routes_rewards_vouchercode",
+      "label": "voucherCode()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "query",
+      "file_type": "code",
+      "norm_label": "vouchercode()",
+      "source_file": "server/routes/rewards.js",
+      "source_location": "L119"
     },
     {
       "id": "server_scripts_setup_cemer_ady_main",
@@ -1811,7 +1883,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "dualpurposechat()",
       "source_file": "src/components/classroom/DualPurposeChat.jsx",
@@ -1823,7 +1895,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "liveclassroom()",
       "source_file": "src/components/classroom/LiveClassroom.jsx",
@@ -1835,7 +1907,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "nativevideoroom()",
       "source_file": "src/components/classroom/NativeVideoRoom.jsx",
@@ -1847,7 +1919,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "startmedia()",
       "source_file": "src/components/classroom/NativeVideoRoom.jsx",
@@ -1859,11 +1931,131 @@
       "_callable": true,
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "sessionquizmodal()",
       "source_file": "src/components/classroom/SessionQuizModal.jsx",
       "source_location": "L6"
+    },
+    {
+      "id": "src_components_ui_badgedisplay_badgedisplay",
+      "label": "BadgeDisplay()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "badgedisplay()",
+      "source_file": "src/components/ui/BadgeDisplay.jsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_components_ui_badgedisplay_badgelist",
+      "label": "BadgeList()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "badgelist()",
+      "source_file": "src/components/ui/BadgeDisplay.jsx",
+      "source_location": "L46"
+    },
+    {
+      "id": "src_components_ui_profileavatar_getinitials",
+      "label": "getInitials()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "getinitials()",
+      "source_file": "src/components/ui/ProfileAvatar.jsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_components_ui_profileavatar_profileavatar",
+      "label": "ProfileAvatar()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "profileavatar()",
+      "source_file": "src/components/ui/ProfileAvatar.jsx",
+      "source_location": "L14"
+    },
+    {
+      "id": "src_screens_facultyreferral_facultyreferral",
+      "label": "FacultyReferral()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "facultyreferral()",
+      "source_file": "src/screens/FacultyReferral.jsx",
+      "source_location": "L38"
+    },
+    {
+      "id": "src_screens_facultyreferral_initials",
+      "label": "initials()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "initials()",
+      "source_file": "src/screens/FacultyReferral.jsx",
+      "source_location": "L15"
+    },
+    {
+      "id": "src_screens_facultyreferral_studentrow",
+      "label": "StudentRow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "studentrow()",
+      "source_file": "src/screens/FacultyReferral.jsx",
+      "source_location": "L19"
+    },
+    {
+      "id": "src_screens_profilescreen_profilescreen",
+      "label": "ProfileScreen()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "profilescreen()",
+      "source_file": "src/screens/ProfileScreen.jsx",
+      "source_location": "L10"
+    },
+    {
+      "id": "src_screens_rewardcatalog_fmt",
+      "label": "fmt()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "fmt()",
+      "source_file": "src/screens/RewardCatalog.jsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "src_screens_rewardcatalog_rewardcatalog",
+      "label": "RewardCatalog()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "rewardcatalog()",
+      "source_file": "src/screens/RewardCatalog.jsx",
+      "source_location": "L10"
     },
     {
       "id": "src_screens_sessioncheckin_fmtdate",
@@ -1871,7 +2063,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "fmtdate()",
       "source_file": "src/screens/SessionCheckIn.jsx",
@@ -1883,7 +2075,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "formattime()",
       "source_file": "src/screens/SessionCheckIn.jsx",
@@ -1895,7 +2087,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "sessioncheckin()",
       "source_file": "src/screens/SessionCheckIn.jsx",
@@ -1907,11 +2099,35 @@
       "_callable": true,
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "sessionstatus()",
       "source_file": "src/screens/SessionCheckIn.jsx",
       "source_location": "L27"
+    },
+    {
+      "id": "src_screens_tutorexam_nextfileid",
+      "label": "nextFileId()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "nextfileid()",
+      "source_file": "src/screens/TutorExam.jsx",
+      "source_location": "L10"
+    },
+    {
+      "id": "src_screens_tutorexam_tutorexam",
+      "label": "TutorExam()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "tutorexam()",
+      "source_file": "src/screens/TutorExam.jsx",
+      "source_location": "L17"
     },
     {
       "id": "server_lib_application_files_contentmatchesextension",
@@ -1960,6 +2176,18 @@
       "norm_label": "validateapplicationfile()",
       "source_file": "server/lib/application-files.js",
       "source_location": "L92"
+    },
+    {
+      "id": "server_lib_points_awardwithincap",
+      "label": "awardWithinCap()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 404,
+      "community_name": "application-files.js",
+      "file_type": "code",
+      "norm_label": "awardwithincap()",
+      "source_file": "server/lib/points.js",
+      "source_location": "L12"
     },
     {
       "id": "server_routes_video_derivejitsiroomname",
@@ -2106,30 +2334,6 @@
       "source_location": "L9"
     },
     {
-      "id": "server_lib_aiassistant_generatetutoringhint",
-      "label": "generateTutoringHint()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "app.js",
-      "file_type": "code",
-      "norm_label": "generatetutoringhint()",
-      "source_file": "server/lib/aiAssistant.js",
-      "source_location": "L16"
-    },
-    {
-      "id": "server_lib_aiassistant_generatewrapupsynthesis",
-      "label": "generateWrapUpSynthesis()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "app.js",
-      "file_type": "code",
-      "norm_label": "generatewrapupsynthesis()",
-      "source_file": "server/lib/aiAssistant.js",
-      "source_location": "L66"
-    },
-    {
       "id": "server_lib_ws_realtime_setupwebsocketserver",
       "label": "setupWebSocketServer()",
       "_callable": true,
@@ -2176,6 +2380,18 @@
       "norm_label": "notfound()",
       "source_file": "server/middleware/errors.js",
       "source_location": "L2"
+    },
+    {
+      "id": "server_routes_sessions_requiredevicekey",
+      "label": "requireDeviceKey()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 41,
+      "community_name": "app.js",
+      "file_type": "code",
+      "norm_label": "requiredevicekey()",
+      "source_file": "server/routes/sessions.js",
+      "source_location": "L221"
     },
     {
       "id": "scratch_generate_cfd_entity_box",
@@ -2502,64 +2718,88 @@
       "source_location": "L16"
     },
     {
-      "id": "server_lib_publicprofile_topublicprofile",
-      "label": "toPublicProfile()",
+      "id": "server_lib_room_membership_verifyroommembership",
+      "label": "verifyRoomMembership()",
       "_callable": true,
       "_origin": "ast",
       "community": 44,
-      "community_name": "matching.js",
+      "community_name": "realtime.js",
       "file_type": "code",
-      "norm_label": "topublicprofile()",
-      "source_file": "server/lib/publicProfile.js",
-      "source_location": "L14"
+      "norm_label": "verifyroommembership()",
+      "source_file": "server/lib/room-membership.js",
+      "source_location": "L10"
     },
     {
-      "id": "server_routes_matching_timetominutes",
-      "label": "timeToMinutes()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 44,
-      "community_name": "matching.js",
-      "file_type": "code",
-      "norm_label": "timetominutes()",
-      "source_file": "server/routes/matching.js",
-      "source_location": "L13"
-    },
-    {
-      "id": "server_routes_matching_todayymd",
-      "label": "todayYmd()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 44,
-      "community_name": "matching.js",
-      "file_type": "code",
-      "norm_label": "todayymd()",
-      "source_file": "server/routes/matching.js",
-      "source_location": "L20"
-    },
-    {
-      "id": "server_routes_matching_tutor_sql",
-      "label": "TUTOR_SQL()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 44,
-      "community_name": "matching.js",
-      "file_type": "code",
-      "norm_label": "tutor_sql()",
-      "source_file": "server/routes/matching.js",
-      "source_location": "L26"
-    },
-    {
-      "id": "server_lib_points_awardwithincap",
-      "label": "awardWithinCap()",
+      "id": "scratch_capture_pagination_screenshots_run",
+      "label": "run()",
       "_callable": true,
       "_origin": "ast",
       "community": 46,
-      "community_name": "wrapup.js",
+      "community_name": "capture_pagination_screenshots.js",
       "file_type": "code",
-      "norm_label": "awardwithincap()",
-      "source_file": "server/lib/points.js",
-      "source_location": "L12"
+      "norm_label": "run()",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L11"
+    },
+    {
+      "id": "scratch_capture_pagination_screenshots_run_capture",
+      "label": "capture()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "capture_pagination_screenshots.js",
+      "file_type": "code",
+      "norm_label": "capture()",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L86"
+    },
+    {
+      "id": "scratch_capture_pagination_screenshots_run_loginas",
+      "label": "loginAs()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "capture_pagination_screenshots.js",
+      "file_type": "code",
+      "norm_label": "loginas()",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L67"
+    },
+    {
+      "id": "scratch_capture_pagination_screenshots_run_send",
+      "label": "send()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "capture_pagination_screenshots.js",
+      "file_type": "code",
+      "norm_label": "send()",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L40"
+    },
+    {
+      "id": "scratch_capture_pagination_screenshots_run_waitforapp",
+      "label": "waitForApp()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "capture_pagination_screenshots.js",
+      "file_type": "code",
+      "norm_label": "waitforapp()",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L52"
+    },
+    {
+      "id": "scratch_capture_pagination_screenshots_sleep",
+      "label": "sleep()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "capture_pagination_screenshots.js",
+      "file_type": "code",
+      "norm_label": "sleep()",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L9"
     },
     {
       "id": "src_lib_publicprofile_rawstatssession",
@@ -2586,28 +2826,52 @@
       "source_location": "L24"
     },
     {
-      "id": "src_components_logo2d_logo2d",
-      "label": "Logo2D()",
+      "id": "src_components_accountdialog_accountdialog",
+      "label": "AccountDialog()",
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "Login.jsx",
+      "community_name": "AccountDialog.jsx",
       "file_type": "code",
-      "norm_label": "logo2d()",
-      "source_file": "src/components/Logo2D.jsx",
-      "source_location": "L6"
+      "norm_label": "accountdialog()",
+      "source_file": "src/components/AccountDialog.jsx",
+      "source_location": "L23"
     },
     {
-      "id": "src_components_splashscreen_splashscreen",
-      "label": "SplashScreen()",
+      "id": "src_components_securitydialog_securitydialog",
+      "label": "SecurityDialog()",
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "Login.jsx",
+      "community_name": "AccountDialog.jsx",
       "file_type": "code",
-      "norm_label": "splashscreen()",
-      "source_file": "src/components/SplashScreen.jsx",
-      "source_location": "L10"
+      "norm_label": "securitydialog()",
+      "source_file": "src/components/SecurityDialog.jsx",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_lib_avatarupload_cropandresizetocanvas",
+      "label": "cropAndResizeToCanvas()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "AccountDialog.jsx",
+      "file_type": "code",
+      "norm_label": "cropandresizetocanvas()",
+      "source_file": "src/lib/avatarUpload.js",
+      "source_location": "L79"
+    },
+    {
+      "id": "src_lib_avatarupload_validateavatarfile",
+      "label": "validateAvatarFile()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "AccountDialog.jsx",
+      "file_type": "code",
+      "norm_label": "validateavatarfile()",
+      "source_file": "src/lib/avatarUpload.js",
+      "source_location": "L15"
     },
     {
       "id": "src_lib_focustrap_focusfirst",
@@ -2615,7 +2879,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "Login.jsx",
+      "community_name": "AccountDialog.jsx",
       "file_type": "code",
       "norm_label": "focusfirst()",
       "source_file": "src/lib/focusTrap.js",
@@ -2627,7 +2891,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "Login.jsx",
+      "community_name": "AccountDialog.jsx",
       "file_type": "code",
       "norm_label": "traptabkey()",
       "source_file": "src/lib/focusTrap.js",
@@ -2639,71 +2903,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "Login.jsx",
+      "community_name": "AccountDialog.jsx",
       "file_type": "code",
       "norm_label": "visiblenodes()",
       "source_file": "src/lib/focusTrap.js",
       "source_location": "L14"
-    },
-    {
-      "id": "src_screens_login_fmt",
-      "label": "fmt()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "Login.jsx",
-      "file_type": "code",
-      "norm_label": "fmt()",
-      "source_file": "src/screens/Login.jsx",
-      "source_location": "L208"
-    },
-    {
-      "id": "src_screens_login_fmthours",
-      "label": "fmtHours()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "Login.jsx",
-      "file_type": "code",
-      "norm_label": "fmthours()",
-      "source_file": "src/screens/Login.jsx",
-      "source_location": "L209"
-    },
-    {
-      "id": "src_screens_login_hscube",
-      "label": "HsCube()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "Login.jsx",
-      "file_type": "code",
-      "norm_label": "hscube()",
-      "source_file": "src/screens/Login.jsx",
-      "source_location": "L28"
-    },
-    {
-      "id": "src_screens_login_landingpage",
-      "label": "LandingPage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "Login.jsx",
-      "file_type": "code",
-      "norm_label": "landingpage()",
-      "source_file": "src/screens/Login.jsx",
-      "source_location": "L215"
-    },
-    {
-      "id": "src_screens_login_plural",
-      "label": "plural()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "Login.jsx",
-      "file_type": "code",
-      "norm_label": "plural()",
-      "source_file": "src/screens/Login.jsx",
-      "source_location": "L213"
     },
     {
       "id": "server_lib_application_files_uploadapplicationdocument",
@@ -2752,18 +2956,6 @@
       "norm_label": "httperror()",
       "source_file": "server/middleware/errors.js",
       "source_location": "L14"
-    },
-    {
-      "id": "server_routes_accreditation_readableapplication",
-      "label": "readableApplication()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 49,
-      "community_name": "httpError",
-      "file_type": "code",
-      "norm_label": "readableapplication()",
-      "source_file": "server/routes/accreditation.js",
-      "source_location": "L42"
     },
     {
       "id": "server_routes_messages_assertcanchat",
@@ -2850,30 +3042,6 @@
       "source_location": "L25"
     },
     {
-      "id": "server_routes_rewards_vouchercode",
-      "label": "voucherCode()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 49,
-      "community_name": "httpError",
-      "file_type": "code",
-      "norm_label": "vouchercode()",
-      "source_file": "server/routes/rewards.js",
-      "source_location": "L119"
-    },
-    {
-      "id": "server_routes_sessions_requiredevicekey",
-      "label": "requireDeviceKey()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 49,
-      "community_name": "httpError",
-      "file_type": "code",
-      "norm_label": "requiredevicekey()",
-      "source_file": "server/routes/sessions.js",
-      "source_location": "L221"
-    },
-    {
       "id": "server_scripts_test_centrifuge_client_runtests",
       "label": "runTests()",
       "_callable": true,
@@ -2884,54 +3052,6 @@
       "norm_label": "runtests()",
       "source_file": "server/scripts/test-centrifuge-client.js",
       "source_location": "L9"
-    },
-    {
-      "id": "src_main_errorboundary_componentdidcatch",
-      "label": ".componentDidCatch()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "CentrifugoService",
-      "file_type": "code",
-      "norm_label": ".componentdidcatch()",
-      "source_file": "src/main.jsx",
-      "source_location": "L20"
-    },
-    {
-      "id": "src_main_errorboundary_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "CentrifugoService",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/main.jsx",
-      "source_location": "L11"
-    },
-    {
-      "id": "src_main_errorboundary_getderivedstatefromerror",
-      "label": ".getDerivedStateFromError()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "CentrifugoService",
-      "file_type": "code",
-      "norm_label": ".getderivedstatefromerror()",
-      "source_file": "src/main.jsx",
-      "source_location": "L16"
-    },
-    {
-      "id": "src_main_errorboundary_render",
-      "label": ".render()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "CentrifugoService",
-      "file_type": "code",
-      "norm_label": ".render()",
-      "source_file": "src/main.jsx",
-      "source_location": "L24"
     },
     {
       "id": "src_services_realtime_centrifugoservice_centrifugoservice_aggregatepresence",
@@ -3546,215 +3666,35 @@
       "source_location": "L329"
     },
     {
-      "id": "src_api_apierror_constructor",
-      "label": ".constructor()",
+      "id": "server_lib_aiassistant_generatetutoringhint",
+      "label": "generateTutoringHint()",
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": "api.js",
+      "community_name": "ai.js",
       "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/api.js",
-      "source_location": "L6"
+      "norm_label": "generatetutoringhint()",
+      "source_file": "server/lib/aiAssistant.js",
+      "source_location": "L16"
     },
     {
-      "id": "src_api_request",
-      "label": "request()",
+      "id": "server_lib_aiassistant_generatewrapupsynthesis",
+      "label": "generateWrapUpSynthesis()",
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": "api.js",
+      "community_name": "ai.js",
       "file_type": "code",
-      "norm_label": "request()",
-      "source_file": "src/api.js",
-      "source_location": "L13"
-    },
-    {
-      "id": "src_api_requestblob",
-      "label": "requestBlob()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 50,
-      "community_name": "api.js",
-      "file_type": "code",
-      "norm_label": "requestblob()",
-      "source_file": "src/api.js",
-      "source_location": "L38"
-    },
-    {
-      "id": "src_screens_rewardcatalog_fmt",
-      "label": "fmt()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 50,
-      "community_name": "api.js",
-      "file_type": "code",
-      "norm_label": "fmt()",
-      "source_file": "src/screens/RewardCatalog.jsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "src_screens_rewardcatalog_rewardcatalog",
-      "label": "RewardCatalog()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 50,
-      "community_name": "api.js",
-      "file_type": "code",
-      "norm_label": "rewardcatalog()",
-      "source_file": "src/screens/RewardCatalog.jsx",
-      "source_location": "L10"
-    },
-    {
-      "id": "src_components_accountdialog_accountdialog",
-      "label": "AccountDialog()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "accountdialog()",
-      "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L23"
-    },
-    {
-      "id": "src_components_securitydialog_securitydialog",
-      "label": "SecurityDialog()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "securitydialog()",
-      "source_file": "src/components/SecurityDialog.jsx",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_components_ui_avatar_avatar",
-      "label": "Avatar()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "avatar()",
-      "source_file": "src/components/ui/Avatar.jsx",
-      "source_location": "L28"
-    },
-    {
-      "id": "src_components_ui_avatar_getinitials",
-      "label": "getInitials()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "getinitials()",
-      "source_file": "src/components/ui/Avatar.jsx",
-      "source_location": "L4"
-    },
-    {
-      "id": "src_lib_avatarupload_cropandresizetocanvas",
-      "label": "cropAndResizeToCanvas()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "cropandresizetocanvas()",
-      "source_file": "src/lib/avatarUpload.js",
-      "source_location": "L79"
-    },
-    {
-      "id": "src_lib_avatarupload_validateavatarfile",
-      "label": "validateAvatarFile()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "validateavatarfile()",
-      "source_file": "src/lib/avatarUpload.js",
-      "source_location": "L15"
-    },
-    {
-      "id": "src_screens_mytutors_fmtdate",
-      "label": "fmtDate()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "fmtdate()",
-      "source_file": "src/screens/MyTutors.jsx",
-      "source_location": "L20"
-    },
-    {
-      "id": "src_screens_mytutors_mytutors",
-      "label": "MyTutors()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "mytutors()",
-      "source_file": "src/screens/MyTutors.jsx",
-      "source_location": "L31"
-    },
-    {
-      "id": "src_screens_tutorprofile_tutorprofile",
-      "label": "TutorProfile()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "tutorprofile()",
-      "source_file": "src/screens/TutorProfile.jsx",
-      "source_location": "L29"
-    },
-    {
-      "id": "scratch_capture_after_screenshots_run",
-      "label": "run()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "capture_after_screenshots.js",
-      "file_type": "code",
-      "norm_label": "run()",
-      "source_file": "scratch/capture_after_screenshots.js",
-      "source_location": "L11"
-    },
-    {
-      "id": "scratch_capture_after_screenshots_run_send",
-      "label": "send()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "capture_after_screenshots.js",
-      "file_type": "code",
-      "norm_label": "send()",
-      "source_file": "scratch/capture_after_screenshots.js",
-      "source_location": "L42"
-    },
-    {
-      "id": "scratch_capture_after_screenshots_sleep",
-      "label": "sleep()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "capture_after_screenshots.js",
-      "file_type": "code",
-      "norm_label": "sleep()",
-      "source_file": "scratch/capture_after_screenshots.js",
-      "source_location": "L9"
+      "norm_label": "generatewrapupsynthesis()",
+      "source_file": "server/lib/aiAssistant.js",
+      "source_location": "L66"
     },
     {
       "id": "src_components_classroom_googleclassroomsessions_fmtshortdate",
       "label": "fmtShortDate()",
       "_callable": true,
       "_origin": "ast",
-      "community": 54,
+      "community": 51,
       "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
       "norm_label": "fmtshortdate()",
@@ -3766,7 +3706,7 @@
       "label": "GoogleClassroomSessions()",
       "_callable": true,
       "_origin": "ast",
-      "community": 54,
+      "community": 51,
       "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
       "norm_label": "googleclassroomsessions()",
@@ -3778,7 +3718,7 @@
       "label": "SkeletonCard()",
       "_callable": true,
       "_origin": "ast",
-      "community": 54,
+      "community": 51,
       "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
       "norm_label": "skeletoncard()",
@@ -3790,7 +3730,7 @@
       "label": "StatusBadge()",
       "_callable": true,
       "_origin": "ast",
-      "community": 54,
+      "community": 51,
       "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
       "norm_label": "statusbadge()",
@@ -3802,7 +3742,7 @@
       "label": "fmtDate()",
       "_callable": true,
       "_origin": "ast",
-      "community": 54,
+      "community": 51,
       "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
       "norm_label": "fmtdate()",
@@ -3814,7 +3754,7 @@
       "label": "getSubjectBannerPalette()",
       "_callable": true,
       "_origin": "ast",
-      "community": 54,
+      "community": 51,
       "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
       "norm_label": "getsubjectbannerpalette()",
@@ -3826,12 +3766,192 @@
       "label": "SessionDetailModal()",
       "_callable": true,
       "_origin": "ast",
-      "community": 54,
+      "community": 51,
       "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
       "norm_label": "sessiondetailmodal()",
       "source_file": "src/components/classroom/SessionDetailModal.jsx",
       "source_location": "L51"
+    },
+    {
+      "id": "src_components_ui_avatar_avatar",
+      "label": "Avatar()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "GoogleClassroomSessions.jsx",
+      "file_type": "code",
+      "norm_label": "avatar()",
+      "source_file": "src/components/ui/Avatar.jsx",
+      "source_location": "L28"
+    },
+    {
+      "id": "src_components_ui_avatar_getinitials",
+      "label": "getInitials()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "GoogleClassroomSessions.jsx",
+      "file_type": "code",
+      "norm_label": "getinitials()",
+      "source_file": "src/components/ui/Avatar.jsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_screens_messages_fmtinboxtime",
+      "label": "fmtInboxTime()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "GoogleClassroomSessions.jsx",
+      "file_type": "code",
+      "norm_label": "fmtinboxtime()",
+      "source_file": "src/screens/Messages.jsx",
+      "source_location": "L22"
+    },
+    {
+      "id": "src_screens_messages_fmttime",
+      "label": "fmtTime()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "GoogleClassroomSessions.jsx",
+      "file_type": "code",
+      "norm_label": "fmttime()",
+      "source_file": "src/screens/Messages.jsx",
+      "source_location": "L14"
+    },
+    {
+      "id": "src_screens_messages_initialsof",
+      "label": "initialsOf()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "GoogleClassroomSessions.jsx",
+      "file_type": "code",
+      "norm_label": "initialsof()",
+      "source_file": "src/screens/Messages.jsx",
+      "source_location": "L11"
+    },
+    {
+      "id": "src_screens_messages_messages",
+      "label": "Messages()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "GoogleClassroomSessions.jsx",
+      "file_type": "code",
+      "norm_label": "messages()",
+      "source_file": "src/screens/Messages.jsx",
+      "source_location": "L35"
+    },
+    {
+      "id": "src_screens_mytutors_fmtdate",
+      "label": "fmtDate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "GoogleClassroomSessions.jsx",
+      "file_type": "code",
+      "norm_label": "fmtdate()",
+      "source_file": "src/screens/MyTutors.jsx",
+      "source_location": "L20"
+    },
+    {
+      "id": "src_screens_mytutors_mytutors",
+      "label": "MyTutors()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "GoogleClassroomSessions.jsx",
+      "file_type": "code",
+      "norm_label": "mytutors()",
+      "source_file": "src/screens/MyTutors.jsx",
+      "source_location": "L31"
+    },
+    {
+      "id": "src_screens_tutorprofile_tutorprofile",
+      "label": "TutorProfile()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "GoogleClassroomSessions.jsx",
+      "file_type": "code",
+      "norm_label": "tutorprofile()",
+      "source_file": "src/screens/TutorProfile.jsx",
+      "source_location": "L29"
+    },
+    {
+      "id": "scratch_capture_after_screenshots_run",
+      "label": "run()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "ref_node_child_process",
+      "file_type": "code",
+      "norm_label": "run()",
+      "source_file": "scratch/capture_after_screenshots.js",
+      "source_location": "L11"
+    },
+    {
+      "id": "scratch_capture_after_screenshots_run_send",
+      "label": "send()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "ref_node_child_process",
+      "file_type": "code",
+      "norm_label": "send()",
+      "source_file": "scratch/capture_after_screenshots.js",
+      "source_location": "L42"
+    },
+    {
+      "id": "scratch_capture_after_screenshots_sleep",
+      "label": "sleep()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "ref_node_child_process",
+      "file_type": "code",
+      "norm_label": "sleep()",
+      "source_file": "scratch/capture_after_screenshots.js",
+      "source_location": "L9"
+    },
+    {
+      "id": "scratch_test_mobile_scroll_run",
+      "label": "run()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "test_mobile_scroll.js",
+      "file_type": "code",
+      "norm_label": "run()",
+      "source_file": "scratch/test_mobile_scroll.js",
+      "source_location": "L11"
+    },
+    {
+      "id": "scratch_test_mobile_scroll_run_send",
+      "label": "send()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "test_mobile_scroll.js",
+      "file_type": "code",
+      "norm_label": "send()",
+      "source_file": "scratch/test_mobile_scroll.js",
+      "source_location": "L40"
+    },
+    {
+      "id": "scratch_test_mobile_scroll_sleep",
+      "label": "sleep()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "test_mobile_scroll.js",
+      "file_type": "code",
+      "norm_label": "sleep()",
+      "source_file": "scratch/test_mobile_scroll.js",
+      "source_location": "L9"
     },
     {
       "id": "scratch_capture_classroom_screenshots_run",
@@ -3887,7 +4007,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 56,
-      "community_name": "ref_node_child_process",
+      "community_name": "reproduce_screenshots.js",
       "file_type": "code",
       "norm_label": "run()",
       "source_file": "scratch/reproduce_screenshots.js",
@@ -3899,7 +4019,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 56,
-      "community_name": "ref_node_child_process",
+      "community_name": "reproduce_screenshots.js",
       "file_type": "code",
       "norm_label": "send()",
       "source_file": "scratch/reproduce_screenshots.js",
@@ -3911,7 +4031,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 56,
-      "community_name": "ref_node_child_process",
+      "community_name": "reproduce_screenshots.js",
       "file_type": "code",
       "norm_label": "sleep()",
       "source_file": "scratch/reproduce_screenshots.js",
@@ -4086,52 +4206,52 @@
       "source_location": "L9"
     },
     {
-      "id": "src_screens_messages_fmtinboxtime",
-      "label": "fmtInboxTime()",
+      "id": "src_main_errorboundary_componentdidcatch",
+      "label": ".componentDidCatch()",
       "_callable": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "Messages.jsx",
+      "community_name": "ErrorBoundary",
       "file_type": "code",
-      "norm_label": "fmtinboxtime()",
-      "source_file": "src/screens/Messages.jsx",
-      "source_location": "L22"
+      "norm_label": ".componentdidcatch()",
+      "source_file": "src/main.jsx",
+      "source_location": "L20"
     },
     {
-      "id": "src_screens_messages_fmttime",
-      "label": "fmtTime()",
+      "id": "src_main_errorboundary_constructor",
+      "label": ".constructor()",
       "_callable": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "Messages.jsx",
+      "community_name": "ErrorBoundary",
       "file_type": "code",
-      "norm_label": "fmttime()",
-      "source_file": "src/screens/Messages.jsx",
-      "source_location": "L14"
-    },
-    {
-      "id": "src_screens_messages_initialsof",
-      "label": "initialsOf()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 62,
-      "community_name": "Messages.jsx",
-      "file_type": "code",
-      "norm_label": "initialsof()",
-      "source_file": "src/screens/Messages.jsx",
+      "norm_label": ".constructor()",
+      "source_file": "src/main.jsx",
       "source_location": "L11"
     },
     {
-      "id": "src_screens_messages_messages",
-      "label": "Messages()",
+      "id": "src_main_errorboundary_getderivedstatefromerror",
+      "label": ".getDerivedStateFromError()",
       "_callable": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "Messages.jsx",
+      "community_name": "ErrorBoundary",
       "file_type": "code",
-      "norm_label": "messages()",
-      "source_file": "src/screens/Messages.jsx",
-      "source_location": "L35"
+      "norm_label": ".getderivedstatefromerror()",
+      "source_file": "src/main.jsx",
+      "source_location": "L16"
+    },
+    {
+      "id": "src_main_errorboundary_render",
+      "label": ".render()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 62,
+      "community_name": "ErrorBoundary",
+      "file_type": "code",
+      "norm_label": ".render()",
+      "source_file": "src/main.jsx",
+      "source_location": "L24"
     },
     {
       "id": "scratch_capture_my_tutors_screenshots_run",
@@ -4898,6 +5018,17 @@
       "source_location": "L34"
     },
     {
+      "id": "ref_animejs",
+      "label": "animejs",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "package.json",
+      "file_type": "concept",
+      "norm_label": "animejs",
+      "source_file": "package.json",
+      "source_location": "L53"
+    },
+    {
       "id": "ref_autoprefixer",
       "label": "autoprefixer",
       "_origin": "ast",
@@ -4986,17 +5117,6 @@
       "source_location": "L1"
     },
     {
-      "id": "src_components_ui_badgedisplay",
-      "label": "BadgeDisplay.jsx",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "badgedisplay.jsx",
-      "source_file": "src/components/ui/BadgeDisplay.jsx",
-      "source_location": "L1"
-    },
-    {
       "id": "src_components_ui_card",
       "label": "src/components/ui/card.jsx",
       "_origin": "ast",
@@ -5074,36 +5194,14 @@
       "source_location": "L14"
     },
     {
-      "id": "src_components_ui_input",
-      "label": "src/components/ui/input.jsx",
+      "id": "src_components_ui_pagination",
+      "label": "Pagination.jsx",
       "_origin": "ast",
       "community": 1,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "src/components/ui/input.jsx",
-      "source_file": "src/components/ui/input.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_components_ui_input_input",
-      "label": "Input",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "input",
-      "source_file": "src/components/ui/input.jsx",
-      "source_location": "L4"
-    },
-    {
-      "id": "src_components_ui_profileavatar",
-      "label": "ProfileAvatar.jsx",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "profileavatar.jsx",
-      "source_file": "src/components/ui/ProfileAvatar.jsx",
+      "norm_label": "pagination.jsx",
+      "source_file": "src/components/ui/Pagination.jsx",
       "source_location": "L1"
     },
     {
@@ -5129,70 +5227,37 @@
       "source_location": "L4"
     },
     {
-      "id": "src_lib_utils",
-      "label": "src/lib/utils.js",
+      "id": "src_screens_dashboard",
+      "label": "src/screens/Dashboard.jsx",
       "_origin": "ast",
       "community": 1,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "src/lib/utils.js",
-      "source_file": "src/lib/utils.js",
+      "norm_label": "src/screens/dashboard.jsx",
+      "source_file": "src/screens/Dashboard.jsx",
       "source_location": "L1"
     },
     {
-      "id": "src_screens_facultyreferral",
-      "label": "src/screens/FacultyReferral.jsx",
+      "id": "src_screens_dashboard_status_dot",
+      "label": "STATUS_DOT",
       "_origin": "ast",
       "community": 1,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "src/screens/facultyreferral.jsx",
-      "source_file": "src/screens/FacultyReferral.jsx",
-      "source_location": "L1"
+      "norm_label": "status_dot",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L56"
     },
     {
-      "id": "src_screens_facultyreferral_step_labels",
-      "label": "STEP_LABELS",
+      "id": "src_screens_dashboard_urgency_dot",
+      "label": "URGENCY_DOT",
       "_origin": "ast",
       "community": 1,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "step_labels",
-      "source_file": "src/screens/FacultyReferral.jsx",
-      "source_location": "L17"
-    },
-    {
-      "id": "src_screens_facultyreferral_urgencies",
-      "label": "URGENCIES",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "urgencies",
-      "source_file": "src/screens/FacultyReferral.jsx",
-      "source_location": "L9"
-    },
-    {
-      "id": "src_screens_profilescreen",
-      "label": "ProfileScreen.jsx",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "profilescreen.jsx",
-      "source_file": "src/screens/ProfileScreen.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_screens_tutorexam",
-      "label": "src/screens/TutorExam.jsx",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "src/screens/tutorexam.jsx",
-      "source_file": "src/screens/TutorExam.jsx",
-      "source_location": "L1"
+      "norm_label": "urgency_dot",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L67"
     },
     {
       "id": "next_app_archived_package_dependencies",
@@ -6494,14 +6559,14 @@
       "source_location": "L7"
     },
     {
-      "id": "server_lib_room_membership",
-      "label": "room-membership.js",
+      "id": "server_lib_publicprofile",
+      "label": "server/lib/publicProfile.js",
       "_origin": "ast",
       "community": 16,
       "community_name": "routes/index.js",
       "file_type": "code",
-      "norm_label": "room-membership.js",
-      "source_file": "server/lib/room-membership.js",
+      "norm_label": "server/lib/publicprofile.js",
+      "source_file": "server/lib/publicProfile.js",
       "source_location": "L1"
     },
     {
@@ -6547,6 +6612,28 @@
       "norm_label": "router",
       "source_file": "server/routes/index.js",
       "source_location": "L20"
+    },
+    {
+      "id": "server_routes_matching",
+      "label": "matching.js",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "routes/index.js",
+      "file_type": "code",
+      "norm_label": "matching.js",
+      "source_file": "server/routes/matching.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_routes_matching_router",
+      "label": "router",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "routes/index.js",
+      "file_type": "code",
+      "norm_label": "router",
+      "source_file": "server/routes/matching.js",
+      "source_location": "L8"
     },
     {
       "id": "server_routes_notifications",
@@ -6604,70 +6691,26 @@
       "source_location": "L4"
     },
     {
-      "id": "server_routes_realtime",
-      "label": "realtime.js",
+      "id": "server_routes_users",
+      "label": "users.js",
       "_origin": "ast",
       "community": 16,
       "community_name": "routes/index.js",
       "file_type": "code",
-      "norm_label": "realtime.js",
-      "source_file": "server/routes/realtime.js",
+      "norm_label": "users.js",
+      "source_file": "server/routes/users.js",
       "source_location": "L1"
     },
     {
-      "id": "server_routes_realtime_default_ttl_seconds",
-      "label": "DEFAULT_TTL_SECONDS",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "code",
-      "norm_label": "default_ttl_seconds",
-      "source_file": "server/routes/realtime.js",
-      "source_location": "L11"
-    },
-    {
-      "id": "server_routes_realtime_router",
+      "id": "server_routes_users_router",
       "label": "router",
       "_origin": "ast",
       "community": 16,
       "community_name": "routes/index.js",
       "file_type": "code",
       "norm_label": "router",
-      "source_file": "server/routes/realtime.js",
-      "source_location": "L9"
-    },
-    {
-      "id": "server_routes_realtime_tokenratelimiter",
-      "label": "tokenRateLimiter",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "code",
-      "norm_label": "tokenratelimiter",
-      "source_file": "server/routes/realtime.js",
-      "source_location": "L13"
-    },
-    {
-      "id": "server_routes_video",
-      "label": "video.js",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "code",
-      "norm_label": "video.js",
-      "source_file": "server/routes/video.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_routes_video_router",
-      "label": "router",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "code",
-      "norm_label": "router",
-      "source_file": "server/routes/video.js",
-      "source_location": "L7"
+      "source_file": "server/routes/users.js",
+      "source_location": "L5"
     },
     {
       "id": "server_scripts_repro",
@@ -6712,17 +6755,6 @@
       "norm_label": "express",
       "source_file": "package.json",
       "source_location": "L62"
-    },
-    {
-      "id": "ref_express_rate_limit",
-      "label": "express-rate-limit",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "concept",
-      "norm_label": "express-rate-limit",
-      "source_file": "package.json",
-      "source_location": "L63"
     },
     {
       "id": "lccb_academix_cfd",
@@ -6870,6 +6902,17 @@
       "file_type": "code",
       "norm_label": "examples/jsm/loaders/hdrloader.js",
       "source_file": "/examples/jsm/loaders/HDRLoader.js"
+    },
+    {
+      "id": "src_api",
+      "label": "api.js",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "SuperadminApprovals.jsx",
+      "file_type": "code",
+      "norm_label": "api.js",
+      "source_file": "src/api.js",
+      "source_location": "L1"
     },
     {
       "id": "src_components_applicationdocumentpicker",
@@ -7063,51 +7106,18 @@
       "label": "dates.js",
       "_origin": "ast",
       "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
+      "community_name": "LearnerWizard.jsx",
       "file_type": "code",
       "norm_label": "dates.js",
       "source_file": "src/lib/dates.js",
       "source_location": "L1"
     },
     {
-      "id": "src_screens_dashboard",
-      "label": "src/screens/Dashboard.jsx",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
-      "file_type": "code",
-      "norm_label": "src/screens/dashboard.jsx",
-      "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_screens_dashboard_status_dot",
-      "label": "STATUS_DOT",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
-      "file_type": "code",
-      "norm_label": "status_dot",
-      "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L55"
-    },
-    {
-      "id": "src_screens_dashboard_urgency_dot",
-      "label": "URGENCY_DOT",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
-      "file_type": "code",
-      "norm_label": "urgency_dot",
-      "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L66"
-    },
-    {
       "id": "src_screens_learnerwizard",
       "label": "LearnerWizard.jsx",
       "_origin": "ast",
       "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
+      "community_name": "LearnerWizard.jsx",
       "file_type": "code",
       "norm_label": "learnerwizard.jsx",
       "source_file": "src/screens/LearnerWizard.jsx",
@@ -7118,7 +7128,7 @@
       "label": "AVAILABILITY",
       "_origin": "ast",
       "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
+      "community_name": "LearnerWizard.jsx",
       "file_type": "code",
       "norm_label": "availability",
       "source_file": "src/screens/LearnerWizard.jsx",
@@ -7129,7 +7139,7 @@
       "label": "GOALS",
       "_origin": "ast",
       "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
+      "community_name": "LearnerWizard.jsx",
       "file_type": "code",
       "norm_label": "goals",
       "source_file": "src/screens/LearnerWizard.jsx",
@@ -7140,7 +7150,7 @@
       "label": "LANGUAGES",
       "_origin": "ast",
       "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
+      "community_name": "LearnerWizard.jsx",
       "file_type": "code",
       "norm_label": "languages",
       "source_file": "src/screens/LearnerWizard.jsx",
@@ -7151,7 +7161,7 @@
       "label": "LEVELS",
       "_origin": "ast",
       "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
+      "community_name": "LearnerWizard.jsx",
       "file_type": "code",
       "norm_label": "levels",
       "source_file": "src/screens/LearnerWizard.jsx",
@@ -7162,7 +7172,7 @@
       "label": "steps",
       "_origin": "ast",
       "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
+      "community_name": "LearnerWizard.jsx",
       "file_type": "code",
       "norm_label": "steps",
       "source_file": "src/screens/LearnerWizard.jsx",
@@ -7173,7 +7183,7 @@
       "label": "TIMELINES",
       "_origin": "ast",
       "community": 19,
-      "community_name": "src/screens/Dashboard.jsx",
+      "community_name": "LearnerWizard.jsx",
       "file_type": "code",
       "norm_label": "timelines",
       "source_file": "src/screens/LearnerWizard.jsx",
@@ -7620,6 +7630,94 @@
       "source_location": "L4"
     },
     {
+      "id": "src_components_logo2d",
+      "label": "Logo2D.jsx",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "logo2d.jsx",
+      "source_file": "src/components/Logo2D.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_components_splashscreen",
+      "label": "SplashScreen.jsx",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "splashscreen.jsx",
+      "source_file": "src/components/SplashScreen.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_screens_login",
+      "label": "Login.jsx",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "login.jsx",
+      "source_file": "src/screens/Login.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_screens_login_faqs",
+      "label": "FAQS",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "faqs",
+      "source_file": "src/screens/Login.jsx",
+      "source_location": "L136"
+    },
+    {
+      "id": "src_screens_login_illustration_credits",
+      "label": "ILLUSTRATION_CREDITS",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "illustration_credits",
+      "source_file": "src/screens/Login.jsx",
+      "source_location": "L163"
+    },
+    {
+      "id": "src_screens_login_menu_groups",
+      "label": "MENU_GROUPS",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "menu_groups",
+      "source_file": "src/screens/Login.jsx",
+      "source_location": "L58"
+    },
+    {
+      "id": "src_screens_login_role_titles",
+      "label": "ROLE_TITLES",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "role_titles",
+      "source_file": "src/screens/Login.jsx",
+      "source_location": "L20"
+    },
+    {
+      "id": "src_screens_login_steps",
+      "label": "STEPS",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "steps",
+      "source_file": "src/screens/Login.jsx",
+      "source_location": "L85"
+    },
+    {
       "id": "vite_config",
       "label": "vite.config.js",
       "_origin": "ast",
@@ -7741,37 +7839,26 @@
       "source_location": "L13"
     },
     {
-      "id": "server_routes_sessions",
-      "label": "sessions.js",
+      "id": "server_routes_rewards",
+      "label": "rewards.js",
       "_origin": "ast",
       "community": 22,
       "community_name": "query",
       "file_type": "code",
-      "norm_label": "sessions.js",
-      "source_file": "server/routes/sessions.js",
+      "norm_label": "rewards.js",
+      "source_file": "server/routes/rewards.js",
       "source_location": "L1"
     },
     {
-      "id": "server_routes_sessions_router",
+      "id": "server_routes_rewards_router",
       "label": "router",
       "_origin": "ast",
       "community": 22,
       "community_name": "query",
       "file_type": "code",
       "norm_label": "router",
-      "source_file": "server/routes/sessions.js",
-      "source_location": "L10"
-    },
-    {
-      "id": "server_routes_sessions_tokenlimiter",
-      "label": "tokenLimiter",
-      "_origin": "ast",
-      "community": 22,
-      "community_name": "query",
-      "file_type": "code",
-      "norm_label": "tokenlimiter",
-      "source_file": "server/routes/sessions.js",
-      "source_location": "L12"
+      "source_file": "server/routes/rewards.js",
+      "source_location": "L20"
     },
     {
       "id": "server_scripts_setup_cemer_ady",
@@ -9154,7 +9241,7 @@
       "label": "DualPurposeChat.jsx",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "dualpurposechat.jsx",
       "source_file": "src/components/classroom/DualPurposeChat.jsx",
@@ -9165,7 +9252,7 @@
       "label": "ROLE_BADGES",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "role_badges",
       "source_file": "src/components/classroom/DualPurposeChat.jsx",
@@ -9176,7 +9263,7 @@
       "label": "JitsiMeetingRoom.jsx",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "jitsimeetingroom.jsx",
       "source_file": "src/components/classroom/JitsiMeetingRoom.jsx",
@@ -9187,7 +9274,7 @@
       "label": "JitsiMeetingRoom",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "jitsimeetingroom",
       "source_file": "src/components/classroom/JitsiMeetingRoom.jsx",
@@ -9198,7 +9285,7 @@
       "label": "LiveClassroom.jsx",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "liveclassroom.jsx",
       "source_file": "src/components/classroom/LiveClassroom.jsx",
@@ -9209,7 +9296,7 @@
       "label": "NativeVideoRoom.jsx",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "nativevideoroom.jsx",
       "source_file": "src/components/classroom/NativeVideoRoom.jsx",
@@ -9220,7 +9307,7 @@
       "label": "RTC_CONFIG",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "rtc_config",
       "source_file": "src/components/classroom/NativeVideoRoom.jsx",
@@ -9231,10 +9318,21 @@
       "label": "SessionQuizModal.jsx",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "sessionquizmodal.jsx",
       "source_file": "src/components/classroom/SessionQuizModal.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_components_ui_badgedisplay",
+      "label": "BadgeDisplay.jsx",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "badgedisplay.jsx",
+      "source_file": "src/components/ui/BadgeDisplay.jsx",
       "source_location": "L1"
     },
     {
@@ -9242,7 +9340,7 @@
       "label": "src/components/ui/button.jsx",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "src/components/ui/button.jsx",
       "source_file": "src/components/ui/button.jsx",
@@ -9253,18 +9351,117 @@
       "label": "Button",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "button",
       "source_file": "src/components/ui/button.jsx",
       "source_location": "L5"
     },
     {
+      "id": "src_components_ui_input",
+      "label": "src/components/ui/input.jsx",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "src/components/ui/input.jsx",
+      "source_file": "src/components/ui/input.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_components_ui_input_input",
+      "label": "Input",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "input",
+      "source_file": "src/components/ui/input.jsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_components_ui_profileavatar",
+      "label": "ProfileAvatar.jsx",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "profileavatar.jsx",
+      "source_file": "src/components/ui/ProfileAvatar.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_lib_utils",
+      "label": "src/lib/utils.js",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "src/lib/utils.js",
+      "source_file": "src/lib/utils.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_screens_facultyreferral",
+      "label": "src/screens/FacultyReferral.jsx",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "src/screens/facultyreferral.jsx",
+      "source_file": "src/screens/FacultyReferral.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_screens_facultyreferral_step_labels",
+      "label": "STEP_LABELS",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "step_labels",
+      "source_file": "src/screens/FacultyReferral.jsx",
+      "source_location": "L17"
+    },
+    {
+      "id": "src_screens_facultyreferral_urgencies",
+      "label": "URGENCIES",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "urgencies",
+      "source_file": "src/screens/FacultyReferral.jsx",
+      "source_location": "L9"
+    },
+    {
+      "id": "src_screens_profilescreen",
+      "label": "ProfileScreen.jsx",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "profilescreen.jsx",
+      "source_file": "src/screens/ProfileScreen.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_screens_rewardcatalog",
+      "label": "src/screens/RewardCatalog.jsx",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "src/screens/rewardcatalog.jsx",
+      "source_file": "src/screens/RewardCatalog.jsx",
+      "source_location": "L1"
+    },
+    {
       "id": "src_screens_sessioncheckin",
       "label": "src/screens/SessionCheckIn.jsx",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "src/screens/sessioncheckin.jsx",
       "source_file": "src/screens/SessionCheckIn.jsx",
@@ -9275,7 +9472,7 @@
       "label": "LiveClassroom",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "liveclassroom",
       "source_file": "src/screens/SessionCheckIn.jsx",
@@ -9286,11 +9483,22 @@
       "label": "SessionQuizModal",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "file_type": "code",
       "norm_label": "sessionquizmodal",
       "source_file": "src/screens/SessionCheckIn.jsx",
       "source_location": "L10"
+    },
+    {
+      "id": "src_screens_tutorexam",
+      "label": "src/screens/TutorExam.jsx",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "ref_react",
+      "file_type": "code",
+      "norm_label": "src/screens/tutorexam.jsx",
+      "source_file": "src/screens/TutorExam.jsx",
+      "source_location": "L1"
     },
     {
       "id": "three_js",
@@ -9434,6 +9642,72 @@
       "norm_label": "upload",
       "source_file": "server/lib/application-files.js",
       "source_location": "L57"
+    },
+    {
+      "id": "server_lib_points",
+      "label": "points.js",
+      "_origin": "ast",
+      "community": 404,
+      "community_name": "application-files.js",
+      "file_type": "code",
+      "norm_label": "points.js",
+      "source_file": "server/lib/points.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_lib_points_session_points_earned_sql",
+      "label": "SESSION_POINTS_EARNED_SQL",
+      "_origin": "ast",
+      "community": 404,
+      "community_name": "application-files.js",
+      "file_type": "code",
+      "norm_label": "session_points_earned_sql",
+      "source_file": "server/lib/points.js",
+      "source_location": "L20"
+    },
+    {
+      "id": "server_lib_points_test",
+      "label": "points.test.js",
+      "_origin": "ast",
+      "community": 404,
+      "community_name": "application-files.js",
+      "file_type": "code",
+      "norm_label": "points.test.js",
+      "source_file": "server/lib/points.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_lib_points_weekly_learner_session_cap",
+      "label": "WEEKLY_LEARNER_SESSION_CAP",
+      "_origin": "ast",
+      "community": 404,
+      "community_name": "application-files.js",
+      "file_type": "code",
+      "norm_label": "weekly_learner_session_cap",
+      "source_file": "server/lib/points.js",
+      "source_location": "L10"
+    },
+    {
+      "id": "server_lib_points_weekly_tutor_session_cap",
+      "label": "WEEKLY_TUTOR_SESSION_CAP",
+      "_origin": "ast",
+      "community": 404,
+      "community_name": "application-files.js",
+      "file_type": "code",
+      "norm_label": "weekly_tutor_session_cap",
+      "source_file": "server/lib/points.js",
+      "source_location": "L9"
+    },
+    {
+      "id": "server_lib_publicprofile_test",
+      "label": "publicProfile.test.js",
+      "_origin": "ast",
+      "community": 404,
+      "community_name": "application-files.js",
+      "file_type": "code",
+      "norm_label": "publicprofile.test.js",
+      "source_file": "server/lib/publicProfile.test.js",
+      "source_location": "L1"
     },
     {
       "id": "server_scripts_test_jitsi_component",
@@ -9590,17 +9864,6 @@
       "source_location": "L1"
     },
     {
-      "id": "server_lib_aiassistant",
-      "label": "aiAssistant.js",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "app.js",
-      "file_type": "code",
-      "norm_label": "aiassistant.js",
-      "source_file": "server/lib/aiAssistant.js",
-      "source_location": "L1"
-    },
-    {
       "id": "server_lib_ws_realtime",
       "label": "ws-realtime.js",
       "_origin": "ast",
@@ -9623,26 +9886,37 @@
       "source_location": "L1"
     },
     {
-      "id": "server_routes_ai",
-      "label": "ai.js",
+      "id": "server_routes_sessions",
+      "label": "sessions.js",
       "_origin": "ast",
       "community": 41,
       "community_name": "app.js",
       "file_type": "code",
-      "norm_label": "ai.js",
-      "source_file": "server/routes/ai.js",
+      "norm_label": "sessions.js",
+      "source_file": "server/routes/sessions.js",
       "source_location": "L1"
     },
     {
-      "id": "server_routes_ai_router",
+      "id": "server_routes_sessions_router",
       "label": "router",
       "_origin": "ast",
       "community": 41,
       "community_name": "app.js",
       "file_type": "code",
       "norm_label": "router",
-      "source_file": "server/routes/ai.js",
-      "source_location": "L7"
+      "source_file": "server/routes/sessions.js",
+      "source_location": "L10"
+    },
+    {
+      "id": "server_routes_sessions_tokenlimiter",
+      "label": "tokenLimiter",
+      "_origin": "ast",
+      "community": 41,
+      "community_name": "app.js",
+      "file_type": "code",
+      "norm_label": "tokenlimiter",
+      "source_file": "server/routes/sessions.js",
+      "source_location": "L12"
     },
     {
       "id": "ref_cors",
@@ -9665,17 +9939,6 @@
       "norm_label": "dotenv",
       "source_file": "package.json",
       "source_location": "L61"
-    },
-    {
-      "id": "ref_google_genai",
-      "label": "@google/genai",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "app.js",
-      "file_type": "concept",
-      "norm_label": "@google/genai",
-      "source_file": "package.json",
-      "source_location": "L42"
     },
     {
       "id": "ref_helmet",
@@ -9821,70 +10084,92 @@
       "source_location": "L9"
     },
     {
-      "id": "server_lib_publicprofile",
-      "label": "server/lib/publicProfile.js",
+      "id": "server_lib_room_membership",
+      "label": "room-membership.js",
       "_origin": "ast",
       "community": 44,
-      "community_name": "matching.js",
+      "community_name": "realtime.js",
       "file_type": "code",
-      "norm_label": "server/lib/publicprofile.js",
-      "source_file": "server/lib/publicProfile.js",
+      "norm_label": "room-membership.js",
+      "source_file": "server/lib/room-membership.js",
       "source_location": "L1"
     },
     {
-      "id": "server_lib_publicprofile_test",
-      "label": "publicProfile.test.js",
+      "id": "server_routes_realtime",
+      "label": "realtime.js",
       "_origin": "ast",
       "community": 44,
-      "community_name": "matching.js",
+      "community_name": "realtime.js",
       "file_type": "code",
-      "norm_label": "publicprofile.test.js",
-      "source_file": "server/lib/publicProfile.test.js",
+      "norm_label": "realtime.js",
+      "source_file": "server/routes/realtime.js",
       "source_location": "L1"
     },
     {
-      "id": "server_routes_matching",
-      "label": "matching.js",
+      "id": "server_routes_realtime_default_ttl_seconds",
+      "label": "DEFAULT_TTL_SECONDS",
       "_origin": "ast",
       "community": 44,
-      "community_name": "matching.js",
+      "community_name": "realtime.js",
       "file_type": "code",
-      "norm_label": "matching.js",
-      "source_file": "server/routes/matching.js",
-      "source_location": "L1"
+      "norm_label": "default_ttl_seconds",
+      "source_file": "server/routes/realtime.js",
+      "source_location": "L11"
     },
     {
-      "id": "server_routes_matching_router",
+      "id": "server_routes_realtime_router",
       "label": "router",
       "_origin": "ast",
       "community": 44,
-      "community_name": "matching.js",
+      "community_name": "realtime.js",
       "file_type": "code",
       "norm_label": "router",
-      "source_file": "server/routes/matching.js",
-      "source_location": "L8"
+      "source_file": "server/routes/realtime.js",
+      "source_location": "L9"
     },
     {
-      "id": "server_routes_users",
-      "label": "users.js",
+      "id": "server_routes_realtime_tokenratelimiter",
+      "label": "tokenRateLimiter",
       "_origin": "ast",
       "community": 44,
-      "community_name": "matching.js",
+      "community_name": "realtime.js",
       "file_type": "code",
-      "norm_label": "users.js",
-      "source_file": "server/routes/users.js",
+      "norm_label": "tokenratelimiter",
+      "source_file": "server/routes/realtime.js",
+      "source_location": "L13"
+    },
+    {
+      "id": "server_routes_video",
+      "label": "video.js",
+      "_origin": "ast",
+      "community": 44,
+      "community_name": "realtime.js",
+      "file_type": "code",
+      "norm_label": "video.js",
+      "source_file": "server/routes/video.js",
       "source_location": "L1"
     },
     {
-      "id": "server_routes_users_router",
+      "id": "server_routes_video_router",
       "label": "router",
       "_origin": "ast",
       "community": 44,
-      "community_name": "matching.js",
+      "community_name": "realtime.js",
       "file_type": "code",
       "norm_label": "router",
-      "source_file": "server/routes/users.js",
-      "source_location": "L5"
+      "source_file": "server/routes/video.js",
+      "source_location": "L7"
+    },
+    {
+      "id": "ref_express_rate_limit",
+      "label": "express-rate-limit",
+      "_origin": "ast",
+      "community": 44,
+      "community_name": "realtime.js",
+      "file_type": "concept",
+      "norm_label": "express-rate-limit",
+      "source_file": "package.json",
+      "source_location": "L63"
     },
     {
       "id": "scripts_fix_seed",
@@ -9964,81 +10249,26 @@
       "source_location": "L18"
     },
     {
-      "id": "server_lib_points",
-      "label": "points.js",
+      "id": "scratch_capture_pagination_screenshots",
+      "label": "capture_pagination_screenshots.js",
       "_origin": "ast",
       "community": 46,
-      "community_name": "wrapup.js",
+      "community_name": "capture_pagination_screenshots.js",
       "file_type": "code",
-      "norm_label": "points.js",
-      "source_file": "server/lib/points.js",
+      "norm_label": "capture_pagination_screenshots.js",
+      "source_file": "scratch/capture_pagination_screenshots.js",
       "source_location": "L1"
     },
     {
-      "id": "server_lib_points_session_points_earned_sql",
-      "label": "SESSION_POINTS_EARNED_SQL",
+      "id": "scratch_capture_pagination_screenshots_temp_profile",
+      "label": "TEMP_PROFILE",
       "_origin": "ast",
       "community": 46,
-      "community_name": "wrapup.js",
+      "community_name": "capture_pagination_screenshots.js",
       "file_type": "code",
-      "norm_label": "session_points_earned_sql",
-      "source_file": "server/lib/points.js",
-      "source_location": "L20"
-    },
-    {
-      "id": "server_lib_points_test",
-      "label": "points.test.js",
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "wrapup.js",
-      "file_type": "code",
-      "norm_label": "points.test.js",
-      "source_file": "server/lib/points.test.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_lib_points_weekly_learner_session_cap",
-      "label": "WEEKLY_LEARNER_SESSION_CAP",
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "wrapup.js",
-      "file_type": "code",
-      "norm_label": "weekly_learner_session_cap",
-      "source_file": "server/lib/points.js",
-      "source_location": "L10"
-    },
-    {
-      "id": "server_lib_points_weekly_tutor_session_cap",
-      "label": "WEEKLY_TUTOR_SESSION_CAP",
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "wrapup.js",
-      "file_type": "code",
-      "norm_label": "weekly_tutor_session_cap",
-      "source_file": "server/lib/points.js",
-      "source_location": "L9"
-    },
-    {
-      "id": "server_routes_wrapup",
-      "label": "wrapup.js",
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "wrapup.js",
-      "file_type": "code",
-      "norm_label": "wrapup.js",
-      "source_file": "server/routes/wrapup.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_routes_wrapup_router",
-      "label": "router",
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "wrapup.js",
-      "file_type": "code",
-      "norm_label": "router",
-      "source_file": "server/routes/wrapup.js",
-      "source_location": "L13"
+      "norm_label": "temp_profile",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L7"
     },
     {
       "id": "src_lib_publicprofile",
@@ -10052,33 +10282,66 @@
       "source_location": "L1"
     },
     {
-      "id": "src_components_logo2d",
-      "label": "Logo2D.jsx",
+      "id": "src_components_accountdialog",
+      "label": "AccountDialog.jsx",
       "_origin": "ast",
       "community": 48,
-      "community_name": "Login.jsx",
+      "community_name": "AccountDialog.jsx",
       "file_type": "code",
-      "norm_label": "logo2d.jsx",
-      "source_file": "src/components/Logo2D.jsx",
+      "norm_label": "accountdialog.jsx",
+      "source_file": "src/components/AccountDialog.jsx",
       "source_location": "L1"
     },
     {
-      "id": "src_components_splashscreen",
-      "label": "SplashScreen.jsx",
+      "id": "src_components_securitydialog",
+      "label": "SecurityDialog.jsx",
       "_origin": "ast",
       "community": 48,
-      "community_name": "Login.jsx",
+      "community_name": "AccountDialog.jsx",
       "file_type": "code",
-      "norm_label": "splashscreen.jsx",
-      "source_file": "src/components/SplashScreen.jsx",
+      "norm_label": "securitydialog.jsx",
+      "source_file": "src/components/SecurityDialog.jsx",
       "source_location": "L1"
+    },
+    {
+      "id": "src_lib_avatarupload",
+      "label": "avatarUpload.js",
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "AccountDialog.jsx",
+      "file_type": "code",
+      "norm_label": "avatarupload.js",
+      "source_file": "src/lib/avatarUpload.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_lib_avatarupload_max_avatar_bytes",
+      "label": "MAX_AVATAR_BYTES",
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "AccountDialog.jsx",
+      "file_type": "code",
+      "norm_label": "max_avatar_bytes",
+      "source_file": "src/lib/avatarUpload.js",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_lib_avatarupload_target_avatar_size",
+      "label": "TARGET_AVATAR_SIZE",
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "AccountDialog.jsx",
+      "file_type": "code",
+      "norm_label": "target_avatar_size",
+      "source_file": "src/lib/avatarUpload.js",
+      "source_location": "L8"
     },
     {
       "id": "src_lib_focustrap",
       "label": "focusTrap.js",
       "_origin": "ast",
       "community": 48,
-      "community_name": "Login.jsx",
+      "community_name": "AccountDialog.jsx",
       "file_type": "code",
       "norm_label": "focustrap.js",
       "source_file": "src/lib/focusTrap.js",
@@ -10089,88 +10352,11 @@
       "label": "FOCUSABLE",
       "_origin": "ast",
       "community": 48,
-      "community_name": "Login.jsx",
+      "community_name": "AccountDialog.jsx",
       "file_type": "code",
       "norm_label": "focusable",
       "source_file": "src/lib/focusTrap.js",
       "source_location": "L5"
-    },
-    {
-      "id": "src_screens_login",
-      "label": "Login.jsx",
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "Login.jsx",
-      "file_type": "code",
-      "norm_label": "login.jsx",
-      "source_file": "src/screens/Login.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_screens_login_faqs",
-      "label": "FAQS",
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "Login.jsx",
-      "file_type": "code",
-      "norm_label": "faqs",
-      "source_file": "src/screens/Login.jsx",
-      "source_location": "L136"
-    },
-    {
-      "id": "src_screens_login_illustration_credits",
-      "label": "ILLUSTRATION_CREDITS",
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "Login.jsx",
-      "file_type": "code",
-      "norm_label": "illustration_credits",
-      "source_file": "src/screens/Login.jsx",
-      "source_location": "L163"
-    },
-    {
-      "id": "src_screens_login_menu_groups",
-      "label": "MENU_GROUPS",
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "Login.jsx",
-      "file_type": "code",
-      "norm_label": "menu_groups",
-      "source_file": "src/screens/Login.jsx",
-      "source_location": "L58"
-    },
-    {
-      "id": "src_screens_login_role_titles",
-      "label": "ROLE_TITLES",
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "Login.jsx",
-      "file_type": "code",
-      "norm_label": "role_titles",
-      "source_file": "src/screens/Login.jsx",
-      "source_location": "L20"
-    },
-    {
-      "id": "src_screens_login_steps",
-      "label": "STEPS",
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "Login.jsx",
-      "file_type": "code",
-      "norm_label": "steps",
-      "source_file": "src/screens/Login.jsx",
-      "source_location": "L85"
-    },
-    {
-      "id": "ref_animejs",
-      "label": "animejs",
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "Login.jsx",
-      "file_type": "concept",
-      "norm_label": "animejs",
-      "source_file": "package.json",
-      "source_location": "L53"
     },
     {
       "id": "demo",
@@ -10523,26 +10709,26 @@
       "source_location": "L214"
     },
     {
-      "id": "server_routes_rewards",
-      "label": "rewards.js",
+      "id": "server_routes_wrapup",
+      "label": "wrapup.js",
       "_origin": "ast",
       "community": 49,
       "community_name": "httpError",
       "file_type": "code",
-      "norm_label": "rewards.js",
-      "source_file": "server/routes/rewards.js",
+      "norm_label": "wrapup.js",
+      "source_file": "server/routes/wrapup.js",
       "source_location": "L1"
     },
     {
-      "id": "server_routes_rewards_router",
+      "id": "server_routes_wrapup_router",
       "label": "router",
       "_origin": "ast",
       "community": 49,
       "community_name": "httpError",
       "file_type": "code",
       "norm_label": "router",
-      "source_file": "server/routes/rewards.js",
-      "source_location": "L20"
+      "source_file": "server/routes/wrapup.js",
+      "source_location": "L13"
     },
     {
       "id": "server_scripts_test_centrifuge_client",
@@ -10553,17 +10739,6 @@
       "file_type": "code",
       "norm_label": "test-centrifuge-client.js",
       "source_file": "server/scripts/test-centrifuge-client.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_main",
-      "label": "main.jsx",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "CentrifugoService",
-      "file_type": "code",
-      "norm_label": "main.jsx",
-      "source_file": "src/main.jsx",
       "source_location": "L1"
     },
     {
@@ -10699,47 +10874,80 @@
       "source_location": "L75"
     },
     {
-      "id": "src_api",
-      "label": "api.js",
+      "id": "server_lib_aiassistant",
+      "label": "aiAssistant.js",
       "_origin": "ast",
       "community": 50,
-      "community_name": "api.js",
+      "community_name": "ai.js",
       "file_type": "code",
-      "norm_label": "api.js",
-      "source_file": "src/api.js",
+      "norm_label": "aiassistant.js",
+      "source_file": "server/lib/aiAssistant.js",
       "source_location": "L1"
     },
     {
-      "id": "src_screens_rewardcatalog",
-      "label": "src/screens/RewardCatalog.jsx",
+      "id": "server_routes_ai",
+      "label": "ai.js",
       "_origin": "ast",
       "community": 50,
-      "community_name": "api.js",
+      "community_name": "ai.js",
       "file_type": "code",
-      "norm_label": "src/screens/rewardcatalog.jsx",
-      "source_file": "src/screens/RewardCatalog.jsx",
+      "norm_label": "ai.js",
+      "source_file": "server/routes/ai.js",
       "source_location": "L1"
     },
     {
-      "id": "src_components_accountdialog",
-      "label": "AccountDialog.jsx",
+      "id": "server_routes_ai_router",
+      "label": "router",
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "ai.js",
+      "file_type": "code",
+      "norm_label": "router",
+      "source_file": "server/routes/ai.js",
+      "source_location": "L7"
+    },
+    {
+      "id": "ref_google_genai",
+      "label": "@google/genai",
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "ai.js",
+      "file_type": "concept",
+      "norm_label": "@google/genai",
+      "source_file": "package.json",
+      "source_location": "L42"
+    },
+    {
+      "id": "src_components_classroom_googleclassroomsessions",
+      "label": "GoogleClassroomSessions.jsx",
       "_origin": "ast",
       "community": 51,
-      "community_name": "AccountDialog.jsx",
+      "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
-      "norm_label": "accountdialog.jsx",
-      "source_file": "src/components/AccountDialog.jsx",
+      "norm_label": "googleclassroomsessions.jsx",
+      "source_file": "src/components/classroom/GoogleClassroomSessions.jsx",
       "source_location": "L1"
     },
     {
-      "id": "src_components_securitydialog",
-      "label": "SecurityDialog.jsx",
+      "id": "src_components_classroom_googleclassroomsessions_status_filters",
+      "label": "STATUS_FILTERS",
       "_origin": "ast",
       "community": 51,
-      "community_name": "AccountDialog.jsx",
+      "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
-      "norm_label": "securitydialog.jsx",
-      "source_file": "src/components/SecurityDialog.jsx",
+      "norm_label": "status_filters",
+      "source_file": "src/components/classroom/GoogleClassroomSessions.jsx",
+      "source_location": "L24"
+    },
+    {
+      "id": "src_components_classroom_sessiondetailmodal",
+      "label": "SessionDetailModal.jsx",
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "GoogleClassroomSessions.jsx",
+      "file_type": "code",
+      "norm_label": "sessiondetailmodal.jsx",
+      "source_file": "src/components/classroom/SessionDetailModal.jsx",
       "source_location": "L1"
     },
     {
@@ -10747,7 +10955,7 @@
       "label": "Avatar.jsx",
       "_origin": "ast",
       "community": 51,
-      "community_name": "AccountDialog.jsx",
+      "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
       "norm_label": "avatar.jsx",
       "source_file": "src/components/ui/Avatar.jsx",
@@ -10758,51 +10966,40 @@
       "label": "SIZE_MAP",
       "_origin": "ast",
       "community": 51,
-      "community_name": "AccountDialog.jsx",
+      "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
       "norm_label": "size_map",
       "source_file": "src/components/ui/Avatar.jsx",
       "source_location": "L15"
     },
     {
-      "id": "src_lib_avatarupload",
-      "label": "avatarUpload.js",
+      "id": "src_main",
+      "label": "main.jsx",
       "_origin": "ast",
       "community": 51,
-      "community_name": "AccountDialog.jsx",
+      "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
-      "norm_label": "avatarupload.js",
-      "source_file": "src/lib/avatarUpload.js",
+      "norm_label": "main.jsx",
+      "source_file": "src/main.jsx",
       "source_location": "L1"
     },
     {
-      "id": "src_lib_avatarupload_max_avatar_bytes",
-      "label": "MAX_AVATAR_BYTES",
+      "id": "src_screens_messages",
+      "label": "Messages.jsx",
       "_origin": "ast",
       "community": 51,
-      "community_name": "AccountDialog.jsx",
+      "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
-      "norm_label": "max_avatar_bytes",
-      "source_file": "src/lib/avatarUpload.js",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_lib_avatarupload_target_avatar_size",
-      "label": "TARGET_AVATAR_SIZE",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "target_avatar_size",
-      "source_file": "src/lib/avatarUpload.js",
-      "source_location": "L8"
+      "norm_label": "messages.jsx",
+      "source_file": "src/screens/Messages.jsx",
+      "source_location": "L1"
     },
     {
       "id": "src_screens_mytutors",
       "label": "MyTutors.jsx",
       "_origin": "ast",
       "community": 51,
-      "community_name": "AccountDialog.jsx",
+      "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
       "norm_label": "mytutors.jsx",
       "source_file": "src/screens/MyTutors.jsx",
@@ -10813,7 +11010,7 @@
       "label": "TutorProfile.jsx",
       "_origin": "ast",
       "community": 51,
-      "community_name": "AccountDialog.jsx",
+      "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
       "norm_label": "tutorprofile.jsx",
       "source_file": "src/screens/TutorProfile.jsx",
@@ -10824,7 +11021,7 @@
       "label": "ROLE_META",
       "_origin": "ast",
       "community": 51,
-      "community_name": "AccountDialog.jsx",
+      "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "code",
       "norm_label": "role_meta",
       "source_file": "src/screens/TutorProfile.jsx",
@@ -10835,7 +11032,7 @@
       "label": "react-router-dom",
       "_origin": "ast",
       "community": 51,
-      "community_name": "AccountDialog.jsx",
+      "community_name": "GoogleClassroomSessions.jsx",
       "file_type": "concept",
       "norm_label": "react-router-dom",
       "source_file": "package.json",
@@ -10956,7 +11153,7 @@
       "label": "capture_after_screenshots.js",
       "_origin": "ast",
       "community": 53,
-      "community_name": "capture_after_screenshots.js",
+      "community_name": "ref_node_child_process",
       "file_type": "code",
       "norm_label": "capture_after_screenshots.js",
       "source_file": "scratch/capture_after_screenshots.js",
@@ -10967,44 +11164,55 @@
       "label": "TEMP_PROFILE",
       "_origin": "ast",
       "community": 53,
-      "community_name": "capture_after_screenshots.js",
+      "community_name": "ref_node_child_process",
       "file_type": "code",
       "norm_label": "temp_profile",
       "source_file": "scratch/capture_after_screenshots.js",
       "source_location": "L7"
     },
     {
-      "id": "src_components_classroom_googleclassroomsessions",
-      "label": "GoogleClassroomSessions.jsx",
+      "id": "server_scripts_start",
+      "label": "start.js",
       "_origin": "ast",
-      "community": 54,
-      "community_name": "GoogleClassroomSessions.jsx",
+      "community": 53,
+      "community_name": "ref_node_child_process",
       "file_type": "code",
-      "norm_label": "googleclassroomsessions.jsx",
-      "source_file": "src/components/classroom/GoogleClassroomSessions.jsx",
+      "norm_label": "start.js",
+      "source_file": "server/scripts/start.js",
       "source_location": "L1"
     },
     {
-      "id": "src_components_classroom_googleclassroomsessions_status_filters",
-      "label": "STATUS_FILTERS",
+      "id": "server_scripts_start_processes",
+      "label": "processes",
       "_origin": "ast",
-      "community": 54,
-      "community_name": "GoogleClassroomSessions.jsx",
+      "community": 53,
+      "community_name": "ref_node_child_process",
       "file_type": "code",
-      "norm_label": "status_filters",
-      "source_file": "src/components/classroom/GoogleClassroomSessions.jsx",
-      "source_location": "L24"
+      "norm_label": "processes",
+      "source_file": "server/scripts/start.js",
+      "source_location": "L4"
     },
     {
-      "id": "src_components_classroom_sessiondetailmodal",
-      "label": "SessionDetailModal.jsx",
+      "id": "scratch_test_mobile_scroll",
+      "label": "test_mobile_scroll.js",
       "_origin": "ast",
       "community": 54,
-      "community_name": "GoogleClassroomSessions.jsx",
+      "community_name": "test_mobile_scroll.js",
       "file_type": "code",
-      "norm_label": "sessiondetailmodal.jsx",
-      "source_file": "src/components/classroom/SessionDetailModal.jsx",
+      "norm_label": "test_mobile_scroll.js",
+      "source_file": "scratch/test_mobile_scroll.js",
       "source_location": "L1"
+    },
+    {
+      "id": "scratch_test_mobile_scroll_temp_profile",
+      "label": "TEMP_PROFILE",
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "test_mobile_scroll.js",
+      "file_type": "code",
+      "norm_label": "temp_profile",
+      "source_file": "scratch/test_mobile_scroll.js",
+      "source_location": "L7"
     },
     {
       "id": "scratch_capture_classroom_screenshots",
@@ -11033,7 +11241,7 @@
       "label": "reproduce_screenshots.js",
       "_origin": "ast",
       "community": 56,
-      "community_name": "ref_node_child_process",
+      "community_name": "reproduce_screenshots.js",
       "file_type": "code",
       "norm_label": "reproduce_screenshots.js",
       "source_file": "scratch/reproduce_screenshots.js",
@@ -11044,33 +11252,11 @@
       "label": "TEMP_PROFILE",
       "_origin": "ast",
       "community": 56,
-      "community_name": "ref_node_child_process",
+      "community_name": "reproduce_screenshots.js",
       "file_type": "code",
       "norm_label": "temp_profile",
       "source_file": "scratch/reproduce_screenshots.js",
       "source_location": "L7"
-    },
-    {
-      "id": "server_scripts_start",
-      "label": "start.js",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "ref_node_child_process",
-      "file_type": "code",
-      "norm_label": "start.js",
-      "source_file": "server/scripts/start.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_scripts_start_processes",
-      "label": "processes",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "ref_node_child_process",
-      "file_type": "code",
-      "norm_label": "processes",
-      "source_file": "server/scripts/start.js",
-      "source_location": "L4"
     },
     {
       "id": "scratch_reproduce_tutor",
@@ -11566,17 +11752,6 @@
       "norm_label": "temp_profile",
       "source_file": "scratch/capture_universal_profiles.js",
       "source_location": "L7"
-    },
-    {
-      "id": "src_screens_messages",
-      "label": "Messages.jsx",
-      "_origin": "ast",
-      "community": 62,
-      "community_name": "Messages.jsx",
-      "file_type": "code",
-      "norm_label": "messages.jsx",
-      "source_file": "src/screens/Messages.jsx",
-      "source_location": "L1"
     },
     {
       "id": "docs_operations",
@@ -12447,17 +12622,6 @@
       "source_location": "L2"
     },
     {
-      "id": "ref_react",
-      "label": "ref_react",
-      "community": 1,
-      "community_name": "cn",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "ref_react",
-      "source_file": "",
-      "type": "external"
-    },
-    {
       "id": "ref_node_net",
       "label": "ref_node_net",
       "community": 13,
@@ -12487,6 +12651,17 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_node_url",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_screens_landing",
+      "label": "src_screens_landing",
+      "community": 20,
+      "community_name": "App.jsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_screens_landing",
       "source_file": "",
       "type": "external"
     },
@@ -12692,10 +12867,21 @@
       "id": "ref_lucide_react",
       "label": "ref_lucide_react",
       "community": 4,
-      "community_name": "Button",
+      "community_name": "ref_react",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_lucide_react",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "ref_react",
+      "label": "ref_react",
+      "community": 4,
+      "community_name": "ref_react",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ref_react",
       "source_file": "",
       "type": "external"
     },
@@ -12707,6 +12893,17 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_node_assert",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "ref_node_test",
+      "label": "ref_node_test",
+      "community": 404,
+      "community_name": "application-files.js",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ref_node_test",
       "source_file": "",
       "type": "external"
     },
@@ -12755,17 +12952,6 @@
       "type": "external"
     },
     {
-      "id": "ref_node_test",
-      "label": "ref_node_test",
-      "community": 44,
-      "community_name": "matching.js",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "ref_node_test",
-      "source_file": "",
-      "type": "external"
-    },
-    {
       "id": "ref_node_fs",
       "label": "ref_node_fs",
       "community": 45,
@@ -12788,21 +12974,10 @@
       "type": "external"
     },
     {
-      "id": "src_screens_landing",
-      "label": "src_screens_landing",
-      "community": 48,
-      "community_name": "Login.jsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_screens_landing",
-      "source_file": "",
-      "type": "external"
-    },
-    {
       "id": "ref_react_dom",
       "label": "ref_react_dom",
-      "community": 5,
-      "community_name": "CentrifugoService",
+      "community": 51,
+      "community_name": "GoogleClassroomSessions.jsx",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_react_dom",
@@ -12812,8 +12987,8 @@
     {
       "id": "src_index",
       "label": "src_index",
-      "community": 5,
-      "community_name": "CentrifugoService",
+      "community": 51,
+      "community_name": "GoogleClassroomSessions.jsx",
       "external": true,
       "file_type": "concept",
       "norm_label": "src_index",
@@ -12823,7 +12998,7 @@
     {
       "id": "ref_node_child_process",
       "label": "ref_node_child_process",
-      "community": 56,
+      "community": 53,
       "community_name": "ref_node_child_process",
       "external": true,
       "file_type": "concept",
@@ -13806,6 +13981,102 @@
       "weight": 1.0
     },
     {
+      "source": "scratch_capture_pagination_screenshots_run",
+      "target": "scratch_capture_pagination_screenshots_sleep",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots_run_capture",
+      "target": "scratch_capture_pagination_screenshots_run_send",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L87",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots_run_capture",
+      "target": "scratch_capture_pagination_screenshots_sleep",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L93",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots_run_loginas",
+      "target": "scratch_capture_pagination_screenshots_run_send",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L68",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots_run_loginas",
+      "target": "scratch_capture_pagination_screenshots_run_waitforapp",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L82",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots_run_loginas",
+      "target": "scratch_capture_pagination_screenshots_sleep",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots_run_send",
+      "target": "scratch_capture_pagination_screenshots_run_send",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots_run_waitforapp",
+      "target": "scratch_capture_pagination_screenshots_run_send",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L53",
+      "weight": 1.0
+    },
+    {
       "source": "scratch_capture_universal_profiles_run",
       "target": "scratch_capture_universal_profiles_sleep",
       "relation": "calls",
@@ -14054,6 +14325,30 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scratch/reproduce_tutor.js",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_test_mobile_scroll_run",
+      "target": "scratch_test_mobile_scroll_sleep",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/test_mobile_scroll.js",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_test_mobile_scroll_run_send",
+      "target": "scratch_test_mobile_scroll_run_send",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/test_mobile_scroll.js",
       "source_location": "L44",
       "weight": 1.0
     },
@@ -15954,6 +16249,18 @@
       "weight": 1.0
     },
     {
+      "source": "src_components_ui_pagination_pagination",
+      "target": "src_lib_utils_cn",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/components/ui/Pagination.jsx",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
       "source": "src_components_ui_profileavatar_profileavatar",
       "target": "src_lib_utils_cn",
       "relation": "calls",
@@ -16058,7 +16365,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L114",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -16070,7 +16377,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L240",
+      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -16082,7 +16389,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L256",
+      "source_location": "L260",
       "weight": 1.0
     },
     {
@@ -16094,7 +16401,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L275",
+      "source_location": "L279",
       "weight": 1.0
     },
     {
@@ -16106,7 +16413,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L290",
+      "source_location": "L294",
       "weight": 1.0
     },
     {
@@ -16118,7 +16425,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L324",
+      "source_location": "L328",
       "weight": 1.0
     },
     {
@@ -16130,7 +16437,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L475",
+      "source_location": "L479",
       "weight": 1.0
     },
     {
@@ -16142,7 +16449,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L515",
+      "source_location": "L519",
       "weight": 1.0
     },
     {
@@ -16154,7 +16461,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L732",
+      "source_location": "L736",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_dashboard_dashboard",
+      "target": "src_components_ui_pagination_pagination",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L824",
       "weight": 1.0
     },
     {
@@ -16166,7 +16485,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L833",
+      "source_location": "L863",
       "weight": 1.0
     },
     {
@@ -16178,7 +16497,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L866",
+      "source_location": "L910",
       "weight": 1.0
     },
     {
@@ -16190,7 +16509,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L88",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -16202,7 +16521,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L74",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -16754,7 +17073,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L112",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -16766,7 +17085,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L113",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -16778,7 +17097,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L166",
+      "source_location": "L176",
       "weight": 1.0
     },
     {
@@ -16790,7 +17109,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L192",
+      "source_location": "L202",
       "weight": 1.0
     },
     {
@@ -16802,7 +17121,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L203",
+      "source_location": "L213",
       "weight": 1.0
     },
     {
@@ -16814,7 +17133,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L210",
+      "source_location": "L220",
       "weight": 1.0
     },
     {
@@ -16826,7 +17145,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L211",
+      "source_location": "L221",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_superadminapprovals_superadminapprovals",
+      "target": "src_components_ui_pagination_pagination",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/screens/SuperadminApprovals.jsx",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -16838,7 +17169,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L327",
+      "source_location": "L346",
       "weight": 1.0
     },
     {
@@ -16850,7 +17181,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L78",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -17826,6 +18157,54 @@
       "weight": 1.0
     },
     {
+      "source": "scratch_capture_pagination_screenshots_run",
+      "target": "scratch_capture_pagination_screenshots_run_send",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots_run",
+      "target": "scratch_capture_pagination_screenshots_run_waitforapp",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots_run",
+      "target": "scratch_capture_pagination_screenshots_run_loginas",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L67",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots_run",
+      "target": "scratch_capture_pagination_screenshots_run_capture",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L86",
+      "weight": 1.0
+    },
+    {
       "source": "scratch_capture_universal_profiles_run",
       "target": "scratch_capture_universal_profiles_run_send",
       "relation": "contains",
@@ -17882,6 +18261,18 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scratch/reproduce_tutor.js",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_test_mobile_scroll_run",
+      "target": "scratch_test_mobile_scroll_run_send",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/test_mobile_scroll.js",
       "source_location": "L40",
       "weight": 1.0
     },
@@ -22748,6 +23139,18 @@
       "weight": 1.0
     },
     {
+      "source": "src_components_ui_pagination",
+      "target": "src_lib_utils_cn",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/components/ui/Pagination.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "src_components_ui_profileavatar",
       "target": "src_lib_utils_cn",
       "relation": "imports",
@@ -22841,6 +23244,18 @@
       "context": "import",
       "source_file": "src/screens/Dashboard.jsx",
       "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_dashboard",
+      "target": "src_components_ui_pagination_pagination",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -23165,6 +23580,18 @@
       "context": "import",
       "source_file": "src/screens/SessionCheckIn.jsx",
       "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_superadminapprovals",
+      "target": "src_components_ui_pagination_pagination",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/screens/SuperadminApprovals.jsx",
+      "source_location": "L10",
       "weight": 1.0
     },
     {
@@ -24668,6 +25095,42 @@
       "weight": 1.0
     },
     {
+      "source": "scratch_capture_pagination_screenshots",
+      "target": "ref_node_child_process",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots",
+      "target": "ref_node_fs",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots",
+      "target": "ref_node_path",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "scratch_capture_universal_profiles",
       "target": "ref_node_child_process",
       "relation": "imports_from",
@@ -24820,6 +25283,42 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scratch/reproduce_tutor.js",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_test_mobile_scroll",
+      "target": "ref_node_child_process",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scratch/test_mobile_scroll.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_test_mobile_scroll",
+      "target": "ref_node_fs",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scratch/test_mobile_scroll.js",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_test_mobile_scroll",
+      "target": "ref_node_path",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scratch/test_mobile_scroll.js",
       "source_location": "L3",
       "weight": 1.0
     },
@@ -28544,6 +29043,42 @@
       "weight": 1.0
     },
     {
+      "source": "src_components_ui_pagination",
+      "target": "ref_react",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/components/ui/Pagination.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_ui_pagination",
+      "target": "ref_lucide_react",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/components/ui/Pagination.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_ui_pagination",
+      "target": "src_lib_utils",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/components/ui/Pagination.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "src_components_ui_profileavatar",
       "target": "ref_react",
       "relation": "imports_from",
@@ -28713,6 +29248,18 @@
     },
     {
       "source": "src_screens_dashboard",
+      "target": "src_api",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/screens/Dashboard.jsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_dashboard",
       "target": "ref_react_router_dom",
       "relation": "imports_from",
       "_origin": "ast",
@@ -28797,7 +29344,7 @@
     },
     {
       "source": "src_screens_dashboard",
-      "target": "src_api",
+      "target": "src_components_ui_pagination",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -29541,7 +30088,7 @@
     },
     {
       "source": "src_screens_superadminapprovals",
-      "target": "src_api",
+      "target": "src_components_ui_pagination",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -29549,6 +30096,18 @@
       "context": "import",
       "source_file": "src/screens/SuperadminApprovals.jsx",
       "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_superadminapprovals",
+      "target": "src_api",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/screens/SuperadminApprovals.jsx",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -33547,6 +34106,39 @@
       "weight": 1.0
     },
     {
+      "source": "scratch_capture_pagination_screenshots",
+      "target": "scratch_capture_pagination_screenshots_run",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots",
+      "target": "scratch_capture_pagination_screenshots_temp_profile",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_pagination_screenshots",
+      "target": "scratch_capture_pagination_screenshots_sleep",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scratch/capture_pagination_screenshots.js",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
       "source": "scratch_capture_universal_profiles",
       "target": "scratch_capture_universal_profiles_run",
       "relation": "contains",
@@ -33906,6 +34498,39 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scratch/reproduce_tutor.js",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_test_mobile_scroll",
+      "target": "scratch_test_mobile_scroll_run",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scratch/test_mobile_scroll.js",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_test_mobile_scroll",
+      "target": "scratch_test_mobile_scroll_temp_profile",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scratch/test_mobile_scroll.js",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_test_mobile_scroll",
+      "target": "scratch_test_mobile_scroll_sleep",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scratch/test_mobile_scroll.js",
       "source_location": "L9",
       "weight": 1.0
     },
@@ -36572,6 +37197,17 @@
       "weight": 1.0
     },
     {
+      "source": "src_components_ui_pagination",
+      "target": "src_components_ui_pagination_pagination",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/ui/Pagination.jsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
       "source": "src_components_ui_profileavatar",
       "target": "src_components_ui_profileavatar_profileavatar",
       "relation": "contains",
@@ -36909,7 +37545,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L100",
+      "source_location": "L101",
       "weight": 1.0
     },
     {
@@ -36920,7 +37556,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L112",
+      "source_location": "L113",
       "weight": 1.0
     },
     {
@@ -36931,7 +37567,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -36942,7 +37578,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -36953,7 +37589,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L42",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -36964,7 +37600,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -36975,7 +37611,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L52",
+      "source_location": "L53",
       "weight": 1.0
     },
     {
@@ -36986,7 +37622,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L55",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -36997,7 +37633,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L66",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -37008,7 +37644,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L72",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -37019,7 +37655,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L81",
+      "source_location": "L82",
       "weight": 1.0
     },
     {
@@ -37448,7 +38084,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -37459,7 +38095,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -37470,7 +38106,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -37481,7 +38117,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -39249,5 +39885,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "0f7f5476f68109cc2868870ea1510daa02380a5a"
+  "built_at_commit": "80e94d96aeb2d6ef030435d27a9575d5d2b80323"
 }

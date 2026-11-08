@@ -66,9 +66,9 @@
     "semantic_hash": ""
   },
   "src/screens/Dashboard.jsx": {
-    "mtime": 1794163573.155339,
-    "seen": 1794163782.8856785,
-    "ast_hash": "33b4db53d9a215d62c3fb5e9442bea93",
+    "mtime": 1794164833.6866257,
+    "seen": 1794165307.018351,
+    "ast_hash": "dffe35fe529d2526b7ffc1d6bae5f248",
     "semantic_hash": ""
   },
   "src/screens/FacultyReferral.jsx": {
@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "src/screens/SuperadminApprovals.jsx": {
-    "mtime": 1794160230.4343877,
-    "seen": 1794160940.5352092,
-    "ast_hash": "8c9bf2ad0a71759af7ffe76969ce1a28",
+    "mtime": 1794164865.2573328,
+    "seen": 1794165307.0213509,
+    "ast_hash": "c99f89a5a693ffc9e1c073115bf088c7",
     "semantic_hash": ""
   },
   "src/screens/TutorExam.jsx": {
@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "server/routes/matching.js": {
-    "mtime": 1794162618.145581,
-    "seen": 1794163782.8554506,
-    "ast_hash": "9305089827d69b62719071ab4da99df4",
+    "mtime": 1794164611.1290386,
+    "seen": 1794165306.996682,
+    "ast_hash": "802762dbad57265afb790730c37ef0c7",
     "semantic_hash": ""
   },
   "server/routes/notifications.js": {
@@ -282,8 +282,8 @@
     "semantic_hash": ""
   },
   "server/routes/sessions.js": {
-    "mtime": 1794163443.5448785,
-    "seen": 1794163782.8581135,
+    "mtime": 1794163952.8269563,
+    "seen": 1794165306.9976883,
     "ast_hash": "c0285a80875bbe845401e795535ceb50",
     "semantic_hash": ""
   },
@@ -1284,27 +1284,45 @@
     "semantic_hash": ""
   },
   "scratch/capture_classroom_screenshots.js": {
-    "mtime": 1794163697.5951812,
-    "seen": 1794163782.830705,
+    "mtime": 1794163952.7099583,
+    "seen": 1794165306.9847279,
     "ast_hash": "eda0b7ac1078706ec87702fc34e1c28d",
     "semantic_hash": ""
   },
   "scratch/test_sessions_query.js": {
-    "mtime": 1794163414.489872,
-    "seen": 1794163782.838698,
-    "ast_hash": "c2f9aeb33904b1b8004601a6cb4a51e8",
+    "mtime": 1794163925.3190167,
+    "seen": 1794165306.9877295,
+    "ast_hash": "f3ed1abf230522960fd7aa15b90e8da5",
     "semantic_hash": ""
   },
   "src/components/classroom/GoogleClassroomSessions.jsx": {
-    "mtime": 1794163499.4433928,
-    "seen": 1794163782.8766665,
-    "ast_hash": "77913199933016fbc0a99f1260612669",
+    "mtime": 1794163925.4381826,
+    "seen": 1794165307.0130038,
+    "ast_hash": "69134424aac0c988daae0e7ba3a6f58d",
     "semantic_hash": ""
   },
   "src/components/classroom/SessionDetailModal.jsx": {
-    "mtime": 1794163467.0018327,
-    "seen": 1794163782.8786657,
-    "ast_hash": "4a3a9c10ce2885330c14f0e41802f6c8",
+    "mtime": 1794163925.4944499,
+    "seen": 1794165307.0140114,
+    "ast_hash": "fc5b2b139c77426319df707176822c9b",
+    "semantic_hash": ""
+  },
+  "scratch/capture_pagination_screenshots.js": {
+    "mtime": 1794165047.8817115,
+    "seen": 1794165306.9847279,
+    "ast_hash": "3b8b10e821db84d9a91461574dae3421",
+    "semantic_hash": ""
+  },
+  "scratch/test_mobile_scroll.js": {
+    "mtime": 1794165115.2385564,
+    "seen": 1794165306.9877295,
+    "ast_hash": "ee8d86a608b6e3b0124ab2fc2515c8d7",
+    "semantic_hash": ""
+  },
+  "src/components/ui/Pagination.jsx": {
+    "mtime": 1794164591.4082248,
+    "seen": 1794165307.0150104,
+    "ast_hash": "5f03ae1606fd10cd46c86b1a410cd1e7",
     "semantic_hash": ""
   }
 }
