@@ -46,7 +46,10 @@ export function Avatar({
     setImgError(false);
   }
 
-  const hasImage = Boolean(resolvedUrl) && !imgError;
+  const isHttpOrData = typeof resolvedUrl === 'string' &&
+    (resolvedUrl.startsWith('/') || resolvedUrl.startsWith('http://') || resolvedUrl.startsWith('https://') || resolvedUrl.startsWith('data:image/'));
+  const hasImage = Boolean(isHttpOrData) && !imgError;
+  const isEmoji = !hasImage && typeof resolvedUrl === 'string' && resolvedUrl.trim().length > 0;
 
   return (
     <div
@@ -67,10 +70,13 @@ export function Avatar({
         />
       ) : (
         <span
-          className="grid h-full w-full place-items-center bg-gold text-ink"
+          className={cn(
+            'grid h-full w-full place-items-center bg-gold text-ink',
+            isEmoji && 'text-[1.15em] leading-none'
+          )}
           aria-hidden="true"
         >
-          {initials}
+          {isEmoji ? resolvedUrl : initials}
         </span>
       )}
     </div>

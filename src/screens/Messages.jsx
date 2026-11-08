@@ -170,9 +170,12 @@ export default function Messages({ user, showToast, onRead }) {
                 selectedId === conversation.other_id && 'bg-surface-highlight',
               )}
             >
-              <span className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-gold text-[12px] font-bold text-ink">
-                {initialsOf(conversation.name)}
-              </span>
+              <Avatar
+                name={conversation.name}
+                avatarUrl={conversation.avatar}
+                size="md"
+                className="shrink-0"
+              />
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-2">
                   <p className="truncate text-[14px] font-bold leading-tight text-ink">{conversation.name}</p>

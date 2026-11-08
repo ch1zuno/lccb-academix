@@ -18,8 +18,8 @@
     "semantic_hash": ""
   },
   "src/App.jsx": {
-    "mtime": 1794159938.7373707,
-    "seen": 1794160129.4331262,
+    "mtime": 1794160230.0534246,
+    "seen": 1794160940.525204,
     "ast_hash": "05d90bade63ef36f1db940fc7725fb22",
     "semantic_hash": ""
   },
@@ -66,8 +66,8 @@
     "semantic_hash": ""
   },
   "src/screens/Dashboard.jsx": {
-    "mtime": 1794159907.7104912,
-    "seen": 1794160129.441126,
+    "mtime": 1794160230.211115,
+    "seen": 1794160940.5332084,
     "ast_hash": "1c9febd4ac6c6d8235772e0fe2658db0",
     "semantic_hash": ""
   },
@@ -96,14 +96,14 @@
     "semantic_hash": ""
   },
   "src/screens/SessionCheckIn.jsx": {
-    "mtime": 1794159813.2561107,
-    "seen": 1794160129.442126,
+    "mtime": 1794160230.3917327,
+    "seen": 1794160940.5352092,
     "ast_hash": "b2e8a2e7eba0a46517f432d0e0d97ca3",
     "semantic_hash": ""
   },
   "src/screens/SuperadminApprovals.jsx": {
-    "mtime": 1794159866.970657,
-    "seen": 1794160129.442126,
+    "mtime": 1794160230.4343877,
+    "seen": 1794160940.5352092,
     "ast_hash": "8c9bf2ad0a71759af7ffe76969ce1a28",
     "semantic_hash": ""
   },
@@ -252,8 +252,8 @@
     "semantic_hash": ""
   },
   "server/routes/matching.js": {
-    "mtime": 1794159499.6025414,
-    "seen": 1794160129.4191272,
+    "mtime": 1794160229.780926,
+    "seen": 1794160940.5083892,
     "ast_hash": "d934e75fa0db1b297308774d26a5a9ad",
     "semantic_hash": ""
   },
@@ -282,8 +282,8 @@
     "semantic_hash": ""
   },
   "server/routes/sessions.js": {
-    "mtime": 1794159479.9469607,
-    "seen": 1794160129.4211264,
+    "mtime": 1794160229.8502321,
+    "seen": 1794160940.5093884,
     "ast_hash": "1021566f05898f9f7d39449f70693af2",
     "semantic_hash": ""
   },
@@ -852,9 +852,9 @@
     "semantic_hash": ""
   },
   "server/routes/messages.js": {
-    "mtime": 1794064723.9909856,
-    "seen": 1794064996.3619366,
-    "ast_hash": "e9e6f120a0863bc020d974c77161e447",
+    "mtime": 1794160715.5937743,
+    "seen": 1794160940.5083892,
+    "ast_hash": "11de875be0467d2ad90e8be8c9f977eb",
     "semantic_hash": ""
   },
   "server/routes/realtime.js": {
@@ -972,9 +972,9 @@
     "semantic_hash": ""
   },
   "src/screens/Messages.jsx": {
-    "mtime": 1794159758.6291513,
-    "seen": 1794160129.441126,
-    "ast_hash": "b1edad745c17499983d9af9a013d35d5",
+    "mtime": 1794160759.6894333,
+    "seen": 1794160940.534209,
+    "ast_hash": "eb566dafd49e260bac0e368cf36e9381",
     "semantic_hash": ""
   },
   "src/screens/ProfileScreen.jsx": {
@@ -1206,8 +1206,8 @@
     "semantic_hash": ""
   },
   "server/routes/users.js": {
-    "mtime": 1794159456.9835513,
-    "seen": 1794160129.4211264,
+    "mtime": 1794160229.929393,
+    "seen": 1794160940.5093884,
     "ast_hash": "162a4dfb73ed4eaf9e83741a5297dee9",
     "semantic_hash": ""
   },
@@ -1218,9 +1218,9 @@
     "semantic_hash": ""
   },
   "src/components/ui/Avatar.jsx": {
-    "mtime": 1794158324.8321202,
-    "seen": 1794160129.436126,
-    "ast_hash": "5bfeb295b18fe198f1deab6d213ac3fa",
+    "mtime": 1794160749.1865306,
+    "seen": 1794160940.5292022,
+    "ast_hash": "8549f32ecdbe68c1f9ef8cc21a0a1b26",
     "semantic_hash": ""
   },
   "src/lib/avatarUpload.js": {
@@ -1236,15 +1236,27 @@
     "semantic_hash": ""
   },
   "src/screens/TutorProfile.jsx": {
-    "mtime": 1794159558.6061566,
-    "seen": 1794160129.442126,
+    "mtime": 1794160230.550812,
+    "seen": 1794160940.5352092,
     "ast_hash": "e676e06f9c2c18cc195a91e00d1bebc5",
     "semantic_hash": ""
   },
   "scratch/capture_universal_profiles.js": {
-    "mtime": 1794160034.4697137,
-    "seen": 1794160129.4093494,
-    "ast_hash": "3fded4cbc4f6aaefc0d93c5ab753f26f",
+    "mtime": 1794160212.8552413,
+    "seen": 1794160940.4977047,
+    "ast_hash": "26d37b45f2cbf7c622b4459af817413e",
+    "semantic_hash": ""
+  },
+  "scratch/capture_messages_screenshots.js": {
+    "mtime": 1794160894.6022859,
+    "seen": 1794160940.4977047,
+    "ast_hash": "778145ef234545e40ed28ff7c3ef655c",
+    "semantic_hash": ""
+  },
+  "scratch/check_messages_avatar.js": {
+    "mtime": 1794160588.7068303,
+    "seen": 1794160940.4977047,
+    "ast_hash": "f7305cdc23051d3ca2970c111cd1e5fc",
     "semantic_hash": ""
   }
 }
