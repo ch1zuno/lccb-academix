@@ -195,7 +195,8 @@ router.get('/session-requests', requireAuth, async (req, res, next) => {
     const col = req.user.role === 'learner' ? 'sr.learner_id' : req.user.role === 'tutor' ? 'sr.tutor_id' : null;
     if (!col) throw httpError(403, 'Learners and tutors only');
     const { rows } = await query(
-      `SELECT sr.*, u.name AS tutor_name, t.name AS learner_name, s.name AS subject, s.code AS subject_code
+      `SELECT sr.*, u.custom_id AS tutor_custom_id, t.custom_id AS learner_custom_id,
+              u.name AS tutor_name, t.name AS learner_name, s.name AS subject, s.code AS subject_code
        FROM session_requests sr
        JOIN users u ON u.id = sr.tutor_id
        JOIN users t ON t.id = sr.learner_id

@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MessageSquare, Send } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import Avatar from '../components/ui/Avatar';
 import { cn } from '../lib/utils';
 import api from '../api';
 
@@ -32,6 +33,7 @@ const fmtInboxTime = (value) => {
 };
 
 export default function Messages({ user, showToast, onRead }) {
+  const navigate = useNavigate();
   const [params] = useSearchParams();
   const [conversations, setConversations] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
@@ -147,7 +149,7 @@ export default function Messages({ user, showToast, onRead }) {
       <div className="panel grid min-h-[540px] overflow-hidden lg:grid-cols-[320px_1fr]">
         {/* Inbox */}
         <aside className={cn('min-w-0 border-b-2 border-ink lg:border-b-0 lg:border-r-2', selectedId && 'hidden lg:block')}>
-          <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-[#f8f1e2] px-4 py-3">
+          <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-surface-quiet px-4 py-3">
             <h2 className="font-display text-[16px] font-bold leading-tight tracking-[-0.02em]">Conversations</h2>
             <span className="num border-2 border-ink bg-paper px-1.5 text-[13px]">{conversations?.length ?? 0}</span>
           </div>
@@ -164,8 +166,8 @@ export default function Messages({ user, showToast, onRead }) {
               type="button"
               onClick={() => { setSelectedId(conversation.other_id); setPeer(null); setMessages(null); }}
               className={cn(
-                'flex w-full items-start gap-3 border-b border-line px-4 py-3 text-left transition-colors hover:bg-[#fff7d6]',
-                selectedId === conversation.other_id && 'bg-[#fff7d6]',
+                'flex w-full items-start gap-3 border-b border-line px-4 py-3 text-left transition-colors hover:bg-surface-highlight',
+                selectedId === conversation.other_id && 'bg-surface-highlight',
               )}
             >
               <span className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-gold text-[12px] font-bold text-ink">
@@ -197,7 +199,7 @@ export default function Messages({ user, showToast, onRead }) {
         <section className={cn('flex min-h-[420px] min-w-0 flex-col', !selectedId && 'hidden lg:flex')}>
           {!selectedId && (
             <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-              <span className="grid h-14 w-14 place-items-center border-2 border-ink bg-gold text-ink shadow-[3px_3px_0_#0f2942]">
+              <span className="grid h-14 w-14 place-items-center border-2 border-ink bg-gold text-ink shadow-[3px_3px_0_var(--color-ink)]">
                 <MessageSquare className="h-6 w-6" strokeWidth={2} />
               </span>
               <p className="mt-4 font-display text-[18px] font-bold tracking-[-0.02em]">Pick a conversation</p>
@@ -209,27 +211,38 @@ export default function Messages({ user, showToast, onRead }) {
 
           {selectedId && (
             <>
-              <div className="flex items-center gap-3 border-b-2 border-ink bg-[#f8f1e2] px-4 py-3">
+              <div className="flex items-center gap-3 border-b-2 border-ink bg-surface-quiet px-4 py-3">
                 <button
                   type="button"
                   onClick={() => setSelectedId(null)}
-                  className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-paper text-ink shadow-[2px_2px_0_#0f2942] lg:hidden"
+                  className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-paper text-ink shadow-[2px_2px_0_var(--color-ink)] lg:hidden"
                   aria-label="Back to conversations"
                 >
                   <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
                 </button>
-                <span className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-gold text-[12px] font-bold text-ink">
-                  {initialsOf(peerView?.name)}
-                </span>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/profile/${peerView?.custom_id || peerView?.other_id || peerView?.id || selectedId}`)}
+                  className="shrink-0 transition-transform hover:scale-105"
+                  title={`View ${peerView?.name || 'user'}'s public profile`}
+                >
+                  <Avatar name={peerView?.name || ''} avatarUrl={peerView?.avatar} size="sm" />
+                </button>
                 <div className="min-w-0">
-                  <p className="truncate text-[14px] font-bold leading-tight text-ink">{peerView?.name ?? 'Conversation'}</p>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/profile/${peerView?.custom_id || peerView?.other_id || peerView?.id || selectedId}`)}
+                    className="truncate text-left text-[14px] font-bold leading-tight text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                  >
+                    {peerView?.name ?? 'Conversation'}
+                  </button>
                   <p className="truncate text-[12px] text-muted-foreground">
                     {peerRole}{peerView?.program ? ` · ${peerView.program}` : ''}
                   </p>
                 </div>
               </div>
 
-              <div className="flex-1 space-y-3 overflow-y-auto bg-[#fbf7ee] px-4 py-4" style={{ maxHeight: '430px' }}>
+              <div className="flex-1 space-y-3 overflow-y-auto bg-card px-4 py-4" style={{ maxHeight: '430px' }}>
                 {messages === null && <div className="empty">Reading messages…</div>}
                 {messages !== null && messages.length === 0 && (
                   <div className="empty">No messages yet — say hello.</div>
@@ -239,7 +252,7 @@ export default function Messages({ user, showToast, onRead }) {
                   return (
                     <div key={message.id} className={cn('flex', mine ? 'justify-end' : 'justify-start')}>
                       <div className={cn(
-                        'max-w-[78%] border-2 border-ink px-3 py-2 shadow-[2px_2px_0_#0f2942]',
+                        'max-w-[78%] border-2 border-ink px-3 py-2 shadow-[2px_2px_0_var(--color-ink)]',
                         mine ? 'bg-gold text-ink' : 'bg-paper text-ink',
                       )}>
                         <p className="whitespace-pre-wrap break-words text-[14px] leading-snug">{message.body}</p>
@@ -268,7 +281,7 @@ export default function Messages({ user, showToast, onRead }) {
                     rows={2}
                     maxLength={MAX_BODY}
                     placeholder="Write a message… (Enter to send, Shift+Enter for a new line)"
-                    className="w-full resize-none border-2 border-ink bg-paper px-3 py-2 text-[14px] text-ink shadow-[2px_2px_0_rgba(15,41,66,0.16)] outline-none focus-visible:shadow-[3px_3px_0_#d4ac0d]"
+                    className="w-full resize-none border-2 border-ink bg-paper px-3 py-2 text-[14px] text-ink shadow-[2px_2px_0_rgba(0,0,0,0.16)] outline-none focus-visible:shadow-[3px_3px_0_var(--color-gold)]"
                   />
                   <p className="mt-1 text-right text-[11px] text-muted-foreground">{draft.length}/{MAX_BODY}</p>
                 </div>

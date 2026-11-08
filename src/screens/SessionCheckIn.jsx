@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Copy, Check, Loader2, Star, Sparkles, BookOpen } from 'lucide-react';
@@ -34,6 +35,7 @@ const SessionStatus = ({ status, active }) => {
 };
 
 export default function SessionCheckIn({ role, user, showToast }) {
+  const navigate = useNavigate();
   const [active, setActive] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [sessions, setSessions] = useState(null);
@@ -184,7 +186,7 @@ export default function SessionCheckIn({ role, user, showToast }) {
                   aria-label={`${star} out of 5`}
                   className={cn(
                     'grid h-10 w-10 place-items-center border-2 border-ink transition-colors',
-                    wrapRating >= star ? 'bg-gold' : 'bg-paper hover:bg-[#fff7d6]'
+                    wrapRating >= star ? 'bg-gold' : 'bg-paper hover:bg-surface-highlight'
                   )}
                   onClick={() => setWrapRating(star)}
                 >
@@ -213,7 +215,7 @@ export default function SessionCheckIn({ role, user, showToast }) {
           )}
 
           {Array.isArray(wrapResult?.badges) && wrapResult.badges.length > 0 && (
-            <div className="mt-5 flex items-start gap-2.5 border-2 border-ink bg-[#f8f1e2] px-4 py-3 text-[13px] text-ink shadow-[3px_3px_0_#0f2942]">
+            <div className="mt-5 flex items-start gap-2.5 border-2 border-ink bg-surface-quiet px-4 py-3 text-[13px] text-ink shadow-[3px_3px_0_var(--color-ink)]">
               <span className="mt-1 h-2 w-2 shrink-0 border border-ink bg-gold" />
               Badge unlocked — {wrapResult.badges.join(', ')}.
             </div>
@@ -233,7 +235,7 @@ export default function SessionCheckIn({ role, user, showToast }) {
             </div>
 
             {aiSynthesis?.summary ? (
-              <div className="border-2 border-ink bg-[#f8f1e2] p-4 text-[13px] leading-relaxed shadow-[2px_2px_0_#0f2942]">
+              <div className="border-2 border-ink bg-surface-quiet p-4 text-[13px] leading-relaxed shadow-[2px_2px_0_var(--color-ink)]">
                 <div className="prose prose-sm max-w-none text-ink whitespace-pre-line mb-3">
                   {aiSynthesis.summary}
                 </div>
@@ -243,7 +245,7 @@ export default function SessionCheckIn({ role, user, showToast }) {
                     variant="outline"
                     size="sm"
                     onClick={() => setShowQuizModal(true)}
-                    className="border-2 border-ink bg-gold text-ink font-bold shadow-[2px_2px_0_#0f2942] hover:bg-[#e3bb19]"
+                    className="border-2 border-ink bg-gold text-ink font-bold shadow-[2px_2px_0_var(--color-ink)] hover:bg-[#e3bb19]"
                   >
                     <BookOpen className="mr-1.5 h-3.5 w-3.5" />
                     Review Custom Quiz ({aiSynthesis.quiz.length} Questions)
@@ -263,7 +265,7 @@ export default function SessionCheckIn({ role, user, showToast }) {
                     .catch(() => {})
                     .finally(() => setLoadingAiWrap(false));
                 }}
-                className="w-full border-2 border-ink bg-[#fff7d6] text-ink font-bold"
+                className="w-full border-2 border-ink bg-surface-highlight text-ink font-bold"
               >
                 <Sparkles className="mr-1.5 h-3.5 w-3.5 text-gold-ink" />
                 Generate AI Lesson Summary & Review Quiz
@@ -382,7 +384,21 @@ export default function SessionCheckIn({ role, user, showToast }) {
                 </label>
               ) : (
                 <div className="text-right">
-                  <p className="text-[13px] text-muted-foreground">{target.learner_name && role === 'tutor' ? target.learner_name : target.tutor_name}</p>
+                  <p className="text-[13px] text-muted-foreground">
+                    Partner:{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const partnerId = role === 'tutor'
+                          ? (target.learner_custom_id || target.learner_id)
+                          : (target.tutor_custom_id || target.tutor_id);
+                        if (partnerId) navigate(`/profile/${partnerId}`);
+                      }}
+                      className="font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                    >
+                      {target.learner_name && role === 'tutor' ? target.learner_name : target.tutor_name}
+                    </button>
+                  </p>
                   <p className="mt-1 text-[13px] text-muted-foreground">Both parties must confirm</p>
                 </div>
               )}
@@ -391,7 +407,7 @@ export default function SessionCheckIn({ role, user, showToast }) {
 
           <div className="grid gap-4 md:grid-cols-2">
             {/* Tutor device */}
-            <div className={cn('panel p-5', role !== 'tutor' && 'bg-[#f4eedf]')}>
+            <div className={cn('panel p-5', role !== 'tutor' && 'bg-surface-quiet/60')}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="font-display text-[18px] font-extrabold tracking-[-0.03em]">Tutor device</h2>
@@ -420,7 +436,7 @@ export default function SessionCheckIn({ role, user, showToast }) {
                   <div className="text-center">
                     <p className="text-[13px] font-semibold text-muted-foreground">Learner code</p>
                     <div className="mt-2 flex items-center justify-center gap-2">
-                      <p className="num border-2 border-ink bg-gold px-5 py-3 text-[28px] tracking-[0.16em] text-ink shadow-[3px_3px_0_#0f2942]">{stagedToken}</p>
+                      <p className="num border-2 border-ink bg-gold px-5 py-3 text-[28px] tracking-[0.16em] text-ink shadow-[3px_3px_0_var(--color-ink)]">{stagedToken}</p>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -457,7 +473,7 @@ export default function SessionCheckIn({ role, user, showToast }) {
             </div>
 
             {/* Learner device */}
-            <div className={cn('panel p-5', role !== 'learner' && 'bg-[#f4eedf]')}>
+            <div className={cn('panel p-5', role !== 'learner' && 'bg-surface-quiet/60')}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="font-display text-[18px] font-extrabold tracking-[-0.03em]">Learner device</h2>

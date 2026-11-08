@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { ApplicationFileList } from '../components/ApplicationDocumentPicker';
 import { Loader2, Check, X, ExternalLink, FileText } from 'lucide-react';
@@ -20,6 +21,7 @@ const initials = (name = '') => name.split(' ').filter(Boolean).map(part => part
 const subjectCode = (subject) => (typeof subject === 'string' ? subject : subject?.code) || '—';
 
 export default function SuperadminApprovals({ showToast }) {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState(null);
   const [selectedApp, setSelectedApp] = useState(null);
   const [selectedDocs, setSelectedDocs] = useState(null);
@@ -121,7 +123,7 @@ export default function SuperadminApprovals({ showToast }) {
           <h1 className="section-title">Tutor approvals</h1>
           <p className="section-subtitle">Read the exam score, academic record, and attached files before you sign off.</p>
         </div>
-        <span className="border-2 border-ink bg-gold px-2 py-1 text-[13px] font-bold text-ink shadow-[2px_2px_0_#0f2942]">{applications?.length ?? '—'} pending</span>
+        <span className="border-2 border-ink bg-gold px-2 py-1 text-[13px] font-bold text-ink shadow-[2px_2px_0_var(--color-ink)]">{applications?.length ?? '—'} pending</span>
       </div>
 
       {applications === null && <div className="panel empty">Reading the applications…</div>}
@@ -152,11 +154,28 @@ export default function SuperadminApprovals({ showToast }) {
                   className="panel flex flex-col p-5 transition-transform hover:-translate-y-1"
                 >
                   <div className="flex items-start gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center border-2 border-ink bg-gold text-[13px] font-bold text-ink shadow-[2px_2px_0_#0f2942]">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/profile/${app.custom_id || app.user_id || app.id}`);
+                      }}
+                      className="grid h-10 w-10 shrink-0 place-items-center border-2 border-ink bg-gold text-[13px] font-bold text-ink shadow-[2px_2px_0_var(--color-ink)] transition-transform hover:scale-105"
+                      title={`View ${app.name}'s public profile`}
+                    >
                       {initials(app.name)}
-                    </span>
+                    </button>
                     <div className="min-w-0 flex-1">
-                      <h2 className="truncate font-display text-[16px] font-bold leading-tight text-ink">{app.name}</h2>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/profile/${app.custom_id || app.user_id || app.id}`);
+                        }}
+                        className="truncate text-left font-display text-[16px] font-bold leading-tight text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                      >
+                        {app.name}
+                      </button>
                       <p className="mt-0.5 truncate text-[13px] text-muted-foreground">{app.program || app.department}</p>
                     </div>
                     <span className="status-pill shrink-0">
@@ -166,11 +185,11 @@ export default function SuperadminApprovals({ showToast }) {
                   </div>
 
                   <div className="mt-4 grid grid-cols-2 gap-2 border-t-2 border-ink pt-4">
-                    <div className="border-2 border-ink bg-[#f8f1e2] p-2">
+                    <div className="border-2 border-ink bg-surface-quiet p-2">
                       <p className="text-[13px] font-semibold text-muted-foreground">Exam score</p>
                       <p className="num mt-1 text-[22px] leading-none text-ink">{app.exam_score == null ? '—' : `${app.exam_score}%`}</p>
                     </div>
-                    <div className={cn('border-2 border-ink p-2 text-right', noFiles ? 'bg-[#f6d7d2]' : 'bg-[#f8f1e2]')}>
+                    <div className={cn('border-2 border-ink p-2 text-right', noFiles ? 'bg-surface-alert' : 'bg-surface-quiet')}>
                       <p className="text-[13px] font-semibold text-muted-foreground">Files</p>
                       <div className="mt-1 flex items-baseline justify-end gap-1.5">
                         <p className={cn('num text-[22px] leading-none', noFiles ? 'text-crimson' : 'text-ink')}>{fileCount}</p>
@@ -181,7 +200,7 @@ export default function SuperadminApprovals({ showToast }) {
 
                   <div className="mt-4 flex flex-wrap gap-1.5">
                     {(app.subjects ?? []).map(subject => (
-                      <span key={subjectCode(subject)} className="inline-flex h-6 items-center border-2 border-ink bg-[#fff7d6] px-2 text-[13px] font-semibold text-ink">
+                      <span key={subjectCode(subject)} className="inline-flex h-6 items-center border-2 border-ink bg-surface-highlight px-2 text-[13px] font-semibold text-ink">
                         {subjectCode(subject)}
                       </span>
                     ))}
@@ -249,11 +268,11 @@ export default function SuperadminApprovals({ showToast }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.18 }}
-              className="fixed left-1/2 top-1/2 z-50 flex max-h-[90svh] w-[min(760px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden border-2 border-ink bg-paper shadow-[10px_10px_0_#d4ac0d]"
+              className="fixed left-1/2 top-1/2 z-50 flex max-h-[90svh] w-[min(760px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden border-2 border-ink bg-paper shadow-[10px_10px_0_var(--color-gold)]"
             >
-              <div className="flex items-start justify-between gap-4 border-b-2 border-ink bg-[#f8f1e2] px-4 py-4 sm:px-6 sm:py-5">
+              <div className="flex items-start justify-between gap-4 border-b-2 border-ink bg-surface-quiet px-4 py-4 sm:px-6 sm:py-5">
                 <div className="flex min-w-0 items-start gap-3">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center border-2 border-ink bg-gold text-[14px] font-bold shadow-[2px_2px_0_#0f2942]">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center border-2 border-ink bg-gold text-[14px] font-bold shadow-[2px_2px_0_var(--color-ink)]">
                     {initials(selectedApp.name)}
                   </span>
                   <div className="min-w-0">
@@ -268,7 +287,7 @@ export default function SuperadminApprovals({ showToast }) {
                   type="button"
                   onClick={() => setSelectedApp(null)}
                   disabled={Boolean(busy)}
-                  className="grid h-9 w-9 place-items-center border-2 border-ink bg-paper text-ink shadow-[2px_2px_0_#0f2942] transition-colors hover:bg-gold disabled:opacity-40"
+                  className="grid h-9 w-9 place-items-center border-2 border-ink bg-paper text-ink shadow-[2px_2px_0_var(--color-ink)] transition-colors hover:bg-gold disabled:opacity-40"
                   aria-label="Close"
                 >
                   <X className="h-4 w-4" strokeWidth={1.6} />
@@ -283,7 +302,7 @@ export default function SuperadminApprovals({ showToast }) {
                     { label: 'Files', value: selectedDocs?.length ?? selectedApp.document_count ?? 0 },
                     { label: 'Notes', value: (selectedApp.achievements ?? []).length },
                   ].map(item => (
-                    <div key={item.label} className="border-2 border-ink bg-[#f8f1e2] p-3">
+                    <div key={item.label} className="border-2 border-ink bg-surface-quiet p-3">
                       <p className="text-[13px] font-semibold text-muted-foreground">{item.label}</p>
                       <p className="num mt-1 text-[18px] leading-none text-ink">{item.value}</p>
                     </div>
@@ -300,7 +319,7 @@ export default function SuperadminApprovals({ showToast }) {
                   {selectedDocs === null ? (
                     <p className="mt-2 text-[13px] text-muted-foreground">Reading attached files…</p>
                   ) : selectedDocs.length === 0 ? (
-                    <p className="mt-2 border-2 border-ink bg-[#f6d7d2] px-4 py-3 text-[13px] font-semibold text-crimson">
+                    <p className="mt-2 border-2 border-ink bg-surface-alert px-4 py-3 text-[13px] font-semibold text-crimson">
                       No files attached. Approval is blocked until the applicant uploads at least one supporting file.
                     </p>
                   ) : (
@@ -325,7 +344,7 @@ export default function SuperadminApprovals({ showToast }) {
                     <h3 className="font-display text-[17px] font-bold text-ink">Academic record</h3>
                     <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                       {Object.entries(selectedGrades).map(([term, grade]) => (
-                        <div key={term} className="border-2 border-ink bg-[#f8f1e2] p-3">
+                        <div key={term} className="border-2 border-ink bg-surface-quiet p-3">
                           <p className="text-[13px] text-muted-foreground">{term.replace('preFinal', 'Pre-Final')}</p>
                           <p className="num mt-1 text-[20px] leading-none text-ink">{grade}</p>
                         </div>
@@ -375,7 +394,7 @@ export default function SuperadminApprovals({ showToast }) {
                   <h3 className="font-display text-[17px] font-bold text-ink">Subjects applied for</h3>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {(selectedApp.subjects ?? []).map(subject => (
-                      <span key={subjectCode(subject)} className="inline-flex h-6 items-center border-2 border-ink bg-[#fff7d6] px-2 text-[13px] font-semibold text-ink">
+                      <span key={subjectCode(subject)} className="inline-flex h-6 items-center border-2 border-ink bg-surface-highlight px-2 text-[13px] font-semibold text-ink">
                         {subjectCode(subject)}
                       </span>
                     ))}
@@ -383,7 +402,7 @@ export default function SuperadminApprovals({ showToast }) {
                 </section>
               </div>
 
-              <div className="flex flex-col gap-3 border-t-2 border-ink bg-[#f8f1e2] px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-6">
+              <div className="flex flex-col gap-3 border-t-2 border-ink bg-surface-quiet px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-6">
                 <p className="text-[13px] text-muted-foreground sm:max-w-[42ch]">
                   {selectedDocs === null
                     ? 'Checking the attached files…'

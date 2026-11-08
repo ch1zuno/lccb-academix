@@ -16,6 +16,7 @@ router.get('/sessions/mine', requireAuth, async (req, res, next) => {
   try {
     const { rows } = await query(
       `SELECT s.id, s.session_code, s.topic, s.date, s.time, s.duration, s.duration_hours, s.status, s.location,
+              s.tutor_id, s.learner_id, u1.custom_id AS tutor_custom_id, u2.custom_id AS learner_custom_id,
               u1.name AS tutor_name, u2.name AS learner_name, sub.name AS subject, sub.code AS subject_code,
               s.rating, s.notes,
               (SELECT count(*) FROM session_check_ins c WHERE c.session_id = s.id) AS check_in_count

@@ -85,6 +85,19 @@
       "source_location": "L32"
     },
     {
+      "id": "src_main_errorboundary",
+      "label": "ErrorBoundary",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "CentrifugoService",
+      "file_type": "code",
+      "norm_label": "errorboundary",
+      "source_file": "src/main.jsx",
+      "source_location": "L10"
+    },
+    {
       "id": "src_services_realtime_centrifugoservice_centrifugoservice",
       "label": "CentrifugoService",
       "_callable": true,
@@ -122,19 +135,6 @@
       "norm_label": "mockjitsimeetexternalapi",
       "source_file": "server/scripts/test-jitsi-component.js",
       "source_location": "L4"
-    },
-    {
-      "id": "src_main_errorboundary",
-      "label": "ErrorBoundary",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 59,
-      "community_name": "ErrorBoundary",
-      "file_type": "code",
-      "norm_label": "errorboundary",
-      "source_file": "src/main.jsx",
-      "source_location": "L10"
     },
     {
       "id": "src_services_realtime_wsrealtimeservice_wsrealtimeservice",
@@ -222,6 +222,42 @@
       "source_location": "L4"
     },
     {
+      "id": "src_screens_facultyreferral_facultyreferral",
+      "label": "FacultyReferral()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "facultyreferral()",
+      "source_file": "src/screens/FacultyReferral.jsx",
+      "source_location": "L38"
+    },
+    {
+      "id": "src_screens_facultyreferral_initials",
+      "label": "initials()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "initials()",
+      "source_file": "src/screens/FacultyReferral.jsx",
+      "source_location": "L15"
+    },
+    {
+      "id": "src_screens_facultyreferral_studentrow",
+      "label": "StudentRow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "studentrow()",
+      "source_file": "src/screens/FacultyReferral.jsx",
+      "source_location": "L19"
+    },
+    {
       "id": "src_screens_profilescreen_profilescreen",
       "label": "ProfileScreen()",
       "_callable": true,
@@ -263,7 +299,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "check()",
       "source_file": "server/scripts/e2e-accreditation.js",
@@ -275,7 +311,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "download()",
       "source_file": "server/scripts/e2e-accreditation.js",
@@ -287,7 +323,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "login()",
       "source_file": "server/scripts/e2e-accreditation.js",
@@ -299,7 +335,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "request()",
       "source_file": "server/scripts/e2e-accreditation.js",
@@ -311,7 +347,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "upload()",
       "source_file": "server/scripts/e2e-accreditation.js",
@@ -323,7 +359,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "assert()",
       "source_file": "server/scripts/e2e-audit.js",
@@ -335,7 +371,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "login()",
       "source_file": "server/scripts/e2e-audit.js",
@@ -347,7 +383,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "request()",
       "source_file": "server/scripts/e2e-audit.js",
@@ -359,7 +395,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "assert()",
       "source_file": "server/scripts/e2e-concurrency.js",
@@ -371,7 +407,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "login()",
       "source_file": "server/scripts/e2e-concurrency.js",
@@ -383,7 +419,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "request()",
       "source_file": "server/scripts/e2e-concurrency.js",
@@ -395,7 +431,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "probe()",
       "source_file": "server/scripts/e2e-ledger-integrity.js",
@@ -407,7 +443,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "login()",
       "source_file": "server/scripts/e2e-referrals.js",
@@ -419,7 +455,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "request()",
       "source_file": "server/scripts/e2e-referrals.js",
@@ -431,7 +467,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "login()",
       "source_file": "server/scripts/e2e-wrapup.js",
@@ -443,23 +479,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "request()",
       "source_file": "server/scripts/e2e-wrapup.js",
       "source_location": "L6"
-    },
-    {
-      "id": "server_scripts_pooler_probe_probe",
-      "label": "probe()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "probe()",
-      "source_file": "server/scripts/pooler-probe.js",
-      "source_location": "L24"
     },
     {
       "id": "server_scripts_demo_check_check",
@@ -558,6 +582,54 @@
       "source_location": "L13"
     },
     {
+      "id": "server_scripts_db_reset_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "pg-embed.js",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "server/scripts/db-reset.js",
+      "source_location": "L31"
+    },
+    {
+      "id": "server_scripts_db_reset_onfatal",
+      "label": "onFatal()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "pg-embed.js",
+      "file_type": "code",
+      "norm_label": "onfatal()",
+      "source_file": "server/scripts/db-reset.js",
+      "source_location": "L14"
+    },
+    {
+      "id": "server_scripts_db_reset_quoteident",
+      "label": "quoteIdent()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "pg-embed.js",
+      "file_type": "code",
+      "norm_label": "quoteident()",
+      "source_file": "server/scripts/db-reset.js",
+      "source_location": "L99"
+    },
+    {
+      "id": "server_scripts_db_reset_read",
+      "label": "read()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "pg-embed.js",
+      "file_type": "code",
+      "norm_label": "read()",
+      "source_file": "server/scripts/db-reset.js",
+      "source_location": "L26"
+    },
+    {
       "id": "server_routes_sessions_requiredevicekey",
       "label": "requireDeviceKey()",
       "_callable": true,
@@ -567,7 +639,7 @@
       "file_type": "code",
       "norm_label": "requiredevicekey()",
       "source_file": "server/routes/sessions.js",
-      "source_location": "L161"
+      "source_location": "L162"
     },
     {
       "id": "server_scripts_e2e_matching_login",
@@ -963,7 +1035,7 @@
       "file_type": "code",
       "norm_label": "fmtdate()",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L11"
+      "source_location": "L12"
     },
     {
       "id": "src_screens_superadminapprovals_initials",
@@ -975,7 +1047,7 @@
       "file_type": "code",
       "norm_label": "initials()",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L19"
+      "source_location": "L20"
     },
     {
       "id": "src_screens_superadminapprovals_subjectcode",
@@ -987,7 +1059,7 @@
       "file_type": "code",
       "norm_label": "subjectcode()",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L20"
+      "source_location": "L21"
     },
     {
       "id": "src_screens_superadminapprovals_superadminapprovals",
@@ -999,7 +1071,7 @@
       "file_type": "code",
       "norm_label": "superadminapprovals()",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L22"
+      "source_location": "L23"
     },
     {
       "id": "src_screens_tutorapplicant_nextfileid",
@@ -1158,6 +1230,30 @@
       "source_location": "L14"
     },
     {
+      "id": "src_screens_learnerwizard_learnerwizard",
+      "label": "LearnerWizard()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "src/screens/Dashboard.jsx",
+      "file_type": "code",
+      "norm_label": "learnerwizard()",
+      "source_file": "src/screens/LearnerWizard.jsx",
+      "source_location": "L83"
+    },
+    {
+      "id": "src_screens_learnerwizard_optionrow",
+      "label": "OptionRow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "src/screens/Dashboard.jsx",
+      "file_type": "code",
+      "norm_label": "optionrow()",
+      "source_file": "src/screens/LearnerWizard.jsx",
+      "source_location": "L54"
+    },
+    {
       "id": "src_app_app",
       "label": "App()",
       "_callable": true,
@@ -1218,6 +1314,66 @@
       "source_location": "L12"
     },
     {
+      "id": "src_authtoken_savesession",
+      "label": "saveSession()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "savesession()",
+      "source_file": "src/authToken.js",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_components_accountdialog_accountdialog",
+      "label": "AccountDialog()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "accountdialog()",
+      "source_file": "src/components/AccountDialog.jsx",
+      "source_location": "L23"
+    },
+    {
+      "id": "src_components_securitydialog_securitydialog",
+      "label": "SecurityDialog()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "securitydialog()",
+      "source_file": "src/components/SecurityDialog.jsx",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_lib_avatarupload_cropandresizetocanvas",
+      "label": "cropAndResizeToCanvas()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "cropandresizetocanvas()",
+      "source_file": "src/lib/avatarUpload.js",
+      "source_location": "L79"
+    },
+    {
+      "id": "src_lib_avatarupload_validateavatarfile",
+      "label": "validateAvatarFile()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "validateavatarfile()",
+      "source_file": "src/lib/avatarUpload.js",
+      "source_location": "L15"
+    },
+    {
       "id": "vite_config_manualchunks",
       "label": "manualChunks()",
       "_callable": true,
@@ -1266,52 +1422,28 @@
       "source_location": "L38"
     },
     {
-      "id": "src_screens_messages_fmtinboxtime",
-      "label": "fmtInboxTime()",
+      "id": "src_screens_rewardcatalog_fmt",
+      "label": "fmt()",
       "_callable": true,
       "_origin": "ast",
       "community": 22,
       "community_name": "api.js",
       "file_type": "code",
-      "norm_label": "fmtinboxtime()",
-      "source_file": "src/screens/Messages.jsx",
-      "source_location": "L21"
+      "norm_label": "fmt()",
+      "source_file": "src/screens/RewardCatalog.jsx",
+      "source_location": "L8"
     },
     {
-      "id": "src_screens_messages_fmttime",
-      "label": "fmtTime()",
+      "id": "src_screens_rewardcatalog_rewardcatalog",
+      "label": "RewardCatalog()",
       "_callable": true,
       "_origin": "ast",
       "community": 22,
       "community_name": "api.js",
       "file_type": "code",
-      "norm_label": "fmttime()",
-      "source_file": "src/screens/Messages.jsx",
-      "source_location": "L13"
-    },
-    {
-      "id": "src_screens_messages_initialsof",
-      "label": "initialsOf()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 22,
-      "community_name": "api.js",
-      "file_type": "code",
-      "norm_label": "initialsof()",
-      "source_file": "src/screens/Messages.jsx",
+      "norm_label": "rewardcatalog()",
+      "source_file": "src/screens/RewardCatalog.jsx",
       "source_location": "L10"
-    },
-    {
-      "id": "src_screens_messages_messages",
-      "label": "Messages()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 22,
-      "community_name": "api.js",
-      "file_type": "code",
-      "norm_label": "messages()",
-      "source_file": "src/screens/Messages.jsx",
-      "source_location": "L34"
     },
     {
       "id": "server_scripts_e2e_cancel_check",
@@ -1854,30 +1986,6 @@
       "source_location": "L6"
     },
     {
-      "id": "src_screens_rewardcatalog_fmt",
-      "label": "fmt()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Button",
-      "file_type": "code",
-      "norm_label": "fmt()",
-      "source_file": "src/screens/RewardCatalog.jsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "src_screens_rewardcatalog_rewardcatalog",
-      "label": "RewardCatalog()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Button",
-      "file_type": "code",
-      "norm_label": "rewardcatalog()",
-      "source_file": "src/screens/RewardCatalog.jsx",
-      "source_location": "L10"
-    },
-    {
       "id": "src_screens_sessioncheckin_fmtdate",
       "label": "fmtDate()",
       "_callable": true,
@@ -1887,7 +1995,7 @@
       "file_type": "code",
       "norm_label": "fmtdate()",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L18"
+      "source_location": "L19"
     },
     {
       "id": "src_screens_sessioncheckin_formattime",
@@ -1899,7 +2007,7 @@
       "file_type": "code",
       "norm_label": "formattime()",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L11"
+      "source_location": "L12"
     },
     {
       "id": "src_screens_sessioncheckin_sessioncheckin",
@@ -1911,7 +2019,7 @@
       "file_type": "code",
       "norm_label": "sessioncheckin()",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L36"
+      "source_location": "L37"
     },
     {
       "id": "src_screens_sessioncheckin_sessionstatus",
@@ -1923,7 +2031,7 @@
       "file_type": "code",
       "norm_label": "sessionstatus()",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L26"
+      "source_location": "L27"
     },
     {
       "id": "server_lib_application_files_contentmatchesextension",
@@ -2382,54 +2490,6 @@
       "source_location": "L19"
     },
     {
-      "id": "server_scripts_db_reset_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 44,
-      "community_name": "db-reset.js",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "server/scripts/db-reset.js",
-      "source_location": "L31"
-    },
-    {
-      "id": "server_scripts_db_reset_onfatal",
-      "label": "onFatal()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 44,
-      "community_name": "db-reset.js",
-      "file_type": "code",
-      "norm_label": "onfatal()",
-      "source_file": "server/scripts/db-reset.js",
-      "source_location": "L14"
-    },
-    {
-      "id": "server_scripts_db_reset_quoteident",
-      "label": "quoteIdent()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 44,
-      "community_name": "db-reset.js",
-      "file_type": "code",
-      "norm_label": "quoteident()",
-      "source_file": "server/scripts/db-reset.js",
-      "source_location": "L99"
-    },
-    {
-      "id": "server_scripts_db_reset_read",
-      "label": "read()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 44,
-      "community_name": "db-reset.js",
-      "file_type": "code",
-      "norm_label": "read()",
-      "source_file": "server/scripts/db-reset.js",
-      "source_location": "L26"
-    },
-    {
       "id": "server_lib_aiassistant_generatetutoringhint",
       "label": "generateTutoringHint()",
       "_callable": true,
@@ -2752,6 +2812,54 @@
       "norm_label": "runtests()",
       "source_file": "server/scripts/test-centrifuge-client.js",
       "source_location": "L9"
+    },
+    {
+      "id": "src_main_errorboundary_componentdidcatch",
+      "label": ".componentDidCatch()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "CentrifugoService",
+      "file_type": "code",
+      "norm_label": ".componentdidcatch()",
+      "source_file": "src/main.jsx",
+      "source_location": "L20"
+    },
+    {
+      "id": "src_main_errorboundary_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "CentrifugoService",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/main.jsx",
+      "source_location": "L11"
+    },
+    {
+      "id": "src_main_errorboundary_getderivedstatefromerror",
+      "label": ".getDerivedStateFromError()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "CentrifugoService",
+      "file_type": "code",
+      "norm_label": ".getderivedstatefromerror()",
+      "source_file": "src/main.jsx",
+      "source_location": "L16"
+    },
+    {
+      "id": "src_main_errorboundary_render",
+      "label": ".render()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "CentrifugoService",
+      "file_type": "code",
+      "norm_label": ".render()",
+      "source_file": "src/main.jsx",
+      "source_location": "L24"
     },
     {
       "id": "src_services_realtime_centrifugoservice_centrifugoservice_aggregatepresence",
@@ -3371,7 +3479,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 51,
-      "community_name": "LearnerWizard.jsx",
+      "community_name": "Messages.jsx",
       "file_type": "code",
       "norm_label": "avatar()",
       "source_file": "src/components/ui/Avatar.jsx",
@@ -3383,35 +3491,59 @@
       "_callable": true,
       "_origin": "ast",
       "community": 51,
-      "community_name": "LearnerWizard.jsx",
+      "community_name": "Messages.jsx",
       "file_type": "code",
       "norm_label": "getinitials()",
       "source_file": "src/components/ui/Avatar.jsx",
       "source_location": "L4"
     },
     {
-      "id": "src_screens_learnerwizard_learnerwizard",
-      "label": "LearnerWizard()",
+      "id": "src_screens_messages_fmtinboxtime",
+      "label": "fmtInboxTime()",
       "_callable": true,
       "_origin": "ast",
       "community": 51,
-      "community_name": "LearnerWizard.jsx",
+      "community_name": "Messages.jsx",
       "file_type": "code",
-      "norm_label": "learnerwizard()",
-      "source_file": "src/screens/LearnerWizard.jsx",
-      "source_location": "L83"
+      "norm_label": "fmtinboxtime()",
+      "source_file": "src/screens/Messages.jsx",
+      "source_location": "L22"
     },
     {
-      "id": "src_screens_learnerwizard_optionrow",
-      "label": "OptionRow()",
+      "id": "src_screens_messages_fmttime",
+      "label": "fmtTime()",
       "_callable": true,
       "_origin": "ast",
       "community": 51,
-      "community_name": "LearnerWizard.jsx",
+      "community_name": "Messages.jsx",
       "file_type": "code",
-      "norm_label": "optionrow()",
-      "source_file": "src/screens/LearnerWizard.jsx",
-      "source_location": "L54"
+      "norm_label": "fmttime()",
+      "source_file": "src/screens/Messages.jsx",
+      "source_location": "L14"
+    },
+    {
+      "id": "src_screens_messages_initialsof",
+      "label": "initialsOf()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "Messages.jsx",
+      "file_type": "code",
+      "norm_label": "initialsof()",
+      "source_file": "src/screens/Messages.jsx",
+      "source_location": "L11"
+    },
+    {
+      "id": "src_screens_messages_messages",
+      "label": "Messages()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "Messages.jsx",
+      "file_type": "code",
+      "norm_label": "messages()",
+      "source_file": "src/screens/Messages.jsx",
+      "source_location": "L35"
     },
     {
       "id": "src_screens_tutorprofile_tutorprofile",
@@ -3419,11 +3551,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 51,
-      "community_name": "LearnerWizard.jsx",
+      "community_name": "Messages.jsx",
       "file_type": "code",
       "norm_label": "tutorprofile()",
       "source_file": "src/screens/TutorProfile.jsx",
-      "source_location": "L19"
+      "source_location": "L29"
     },
     {
       "id": "scratch_capture_after_screenshots_run",
@@ -3431,7 +3563,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 53,
-      "community_name": "ref_node_child_process",
+      "community_name": "capture_after_screenshots.js",
       "file_type": "code",
       "norm_label": "run()",
       "source_file": "scratch/capture_after_screenshots.js",
@@ -3443,7 +3575,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 53,
-      "community_name": "ref_node_child_process",
+      "community_name": "capture_after_screenshots.js",
       "file_type": "code",
       "norm_label": "send()",
       "source_file": "scratch/capture_after_screenshots.js",
@@ -3455,7 +3587,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 53,
-      "community_name": "ref_node_child_process",
+      "community_name": "capture_after_screenshots.js",
       "file_type": "code",
       "norm_label": "sleep()",
       "source_file": "scratch/capture_after_screenshots.js",
@@ -3666,148 +3798,64 @@
       "source_location": "L9"
     },
     {
-      "id": "src_authtoken_savesession",
-      "label": "saveSession()",
+      "id": "server_scripts_pooler_probe_probe",
+      "label": "probe()",
       "_callable": true,
       "_origin": "ast",
       "community": 58,
-      "community_name": "AccountDialog.jsx",
+      "community_name": "pooler-probe.js",
       "file_type": "code",
-      "norm_label": "savesession()",
-      "source_file": "src/authToken.js",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_components_accountdialog_accountdialog",
-      "label": "AccountDialog()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 58,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "accountdialog()",
-      "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L22"
-    },
-    {
-      "id": "src_components_securitydialog_securitydialog",
-      "label": "SecurityDialog()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 58,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "securitydialog()",
-      "source_file": "src/components/SecurityDialog.jsx",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_lib_avatarupload_cropandresizetocanvas",
-      "label": "cropAndResizeToCanvas()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 58,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "cropandresizetocanvas()",
-      "source_file": "src/lib/avatarUpload.js",
-      "source_location": "L79"
-    },
-    {
-      "id": "src_lib_avatarupload_validateavatarfile",
-      "label": "validateAvatarFile()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 58,
-      "community_name": "AccountDialog.jsx",
-      "file_type": "code",
-      "norm_label": "validateavatarfile()",
-      "source_file": "src/lib/avatarUpload.js",
-      "source_location": "L15"
-    },
-    {
-      "id": "src_main_errorboundary_componentdidcatch",
-      "label": ".componentDidCatch()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 59,
-      "community_name": "ErrorBoundary",
-      "file_type": "code",
-      "norm_label": ".componentdidcatch()",
-      "source_file": "src/main.jsx",
-      "source_location": "L20"
-    },
-    {
-      "id": "src_main_errorboundary_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 59,
-      "community_name": "ErrorBoundary",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/main.jsx",
-      "source_location": "L11"
-    },
-    {
-      "id": "src_main_errorboundary_getderivedstatefromerror",
-      "label": ".getDerivedStateFromError()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 59,
-      "community_name": "ErrorBoundary",
-      "file_type": "code",
-      "norm_label": ".getderivedstatefromerror()",
-      "source_file": "src/main.jsx",
-      "source_location": "L16"
-    },
-    {
-      "id": "src_main_errorboundary_render",
-      "label": ".render()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 59,
-      "community_name": "ErrorBoundary",
-      "file_type": "code",
-      "norm_label": ".render()",
-      "source_file": "src/main.jsx",
+      "norm_label": "probe()",
+      "source_file": "server/scripts/pooler-probe.js",
       "source_location": "L24"
     },
     {
-      "id": "src_screens_facultyreferral_facultyreferral",
-      "label": "FacultyReferral()",
+      "id": "scratch_capture_universal_profiles_run",
+      "label": "run()",
       "_callable": true,
       "_origin": "ast",
       "community": 61,
-      "community_name": "src/screens/FacultyReferral.jsx",
+      "community_name": "capture_universal_profiles.js",
       "file_type": "code",
-      "norm_label": "facultyreferral()",
-      "source_file": "src/screens/FacultyReferral.jsx",
-      "source_location": "L38"
+      "norm_label": "run()",
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L11"
     },
     {
-      "id": "src_screens_facultyreferral_initials",
-      "label": "initials()",
+      "id": "scratch_capture_universal_profiles_run_send",
+      "label": "send()",
       "_callable": true,
       "_origin": "ast",
       "community": 61,
-      "community_name": "src/screens/FacultyReferral.jsx",
+      "community_name": "capture_universal_profiles.js",
       "file_type": "code",
-      "norm_label": "initials()",
-      "source_file": "src/screens/FacultyReferral.jsx",
-      "source_location": "L15"
+      "norm_label": "send()",
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L40"
     },
     {
-      "id": "src_screens_facultyreferral_studentrow",
-      "label": "StudentRow()",
+      "id": "scratch_capture_universal_profiles_run_waitforapp",
+      "label": "waitForApp()",
       "_callable": true,
       "_origin": "ast",
       "community": 61,
-      "community_name": "src/screens/FacultyReferral.jsx",
+      "community_name": "capture_universal_profiles.js",
       "file_type": "code",
-      "norm_label": "studentrow()",
-      "source_file": "src/screens/FacultyReferral.jsx",
-      "source_location": "L19"
+      "norm_label": "waitforapp()",
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L68"
+    },
+    {
+      "id": "scratch_capture_universal_profiles_sleep",
+      "label": "sleep()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 61,
+      "community_name": "capture_universal_profiles.js",
+      "file_type": "code",
+      "norm_label": "sleep()",
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L9"
     },
     {
       "id": "server_lib_centrifugo_signconnectiontoken",
@@ -4627,6 +4675,61 @@
       "source_location": "L35"
     },
     {
+      "id": "ref_zod",
+      "label": "zod",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "package.json",
+      "file_type": "concept",
+      "norm_label": "zod",
+      "source_file": "package.json",
+      "source_location": "L75"
+    },
+    {
+      "id": "src_components_classroom_dualpurposechat",
+      "label": "DualPurposeChat.jsx",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "dualpurposechat.jsx",
+      "source_file": "src/components/classroom/DualPurposeChat.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_components_classroom_dualpurposechat_role_badges",
+      "label": "ROLE_BADGES",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "role_badges",
+      "source_file": "src/components/classroom/DualPurposeChat.jsx",
+      "source_location": "L9"
+    },
+    {
+      "id": "src_components_classroom_nativevideoroom",
+      "label": "NativeVideoRoom.jsx",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "nativevideoroom.jsx",
+      "source_file": "src/components/classroom/NativeVideoRoom.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_components_classroom_nativevideoroom_rtc_config",
+      "label": "RTC_CONFIG",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "rtc_config",
+      "source_file": "src/components/classroom/NativeVideoRoom.jsx",
+      "source_location": "L17"
+    },
+    {
       "id": "src_components_ui_badge",
       "label": "src/components/ui/badge.jsx",
       "_origin": "ast",
@@ -4646,6 +4749,17 @@
       "file_type": "code",
       "norm_label": "badgedisplay.jsx",
       "source_file": "src/components/ui/BadgeDisplay.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_components_ui_button",
+      "label": "src/components/ui/button.jsx",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "src/components/ui/button.jsx",
+      "source_file": "src/components/ui/button.jsx",
       "source_location": "L1"
     },
     {
@@ -4790,6 +4904,39 @@
       "norm_label": "src/lib/utils.js",
       "source_file": "src/lib/utils.js",
       "source_location": "L1"
+    },
+    {
+      "id": "src_screens_facultyreferral",
+      "label": "src/screens/FacultyReferral.jsx",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "src/screens/facultyreferral.jsx",
+      "source_file": "src/screens/FacultyReferral.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_screens_facultyreferral_step_labels",
+      "label": "STEP_LABELS",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "step_labels",
+      "source_file": "src/screens/FacultyReferral.jsx",
+      "source_location": "L17"
+    },
+    {
+      "id": "src_screens_facultyreferral_urgencies",
+      "label": "URGENCIES",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "urgencies",
+      "source_file": "src/screens/FacultyReferral.jsx",
+      "source_location": "L9"
     },
     {
       "id": "src_screens_profilescreen",
@@ -5214,7 +5361,7 @@
       "label": "e2e-accreditation.js",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "e2e-accreditation.js",
       "source_file": "server/scripts/e2e-accreditation.js",
@@ -5225,7 +5372,7 @@
       "label": "CORRECT",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "correct",
       "source_file": "server/scripts/e2e-accreditation.js",
@@ -5236,7 +5383,7 @@
       "label": "DEMO_PNG",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "demo_png",
       "source_file": "server/scripts/e2e-accreditation.js",
@@ -5247,7 +5394,7 @@
       "label": "psql",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "psql",
       "source_file": "server/scripts/e2e-accreditation.js",
@@ -5258,7 +5405,7 @@
       "label": "e2e-audit.js",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "e2e-audit.js",
       "source_file": "server/scripts/e2e-audit.js",
@@ -5269,7 +5416,7 @@
       "label": "client",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "client",
       "source_file": "server/scripts/e2e-audit.js",
@@ -5280,7 +5427,7 @@
       "label": "e2e-concurrency.js",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "e2e-concurrency.js",
       "source_file": "server/scripts/e2e-concurrency.js",
@@ -5291,7 +5438,7 @@
       "label": "client",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "client",
       "source_file": "server/scripts/e2e-concurrency.js",
@@ -5302,7 +5449,7 @@
       "label": "e2e-db.js",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "e2e-db.js",
       "source_file": "server/scripts/e2e-db.js",
@@ -5313,7 +5460,7 @@
       "label": "E2E_DATABASE_URL",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "e2e_database_url",
       "source_file": "server/scripts/e2e-db.js",
@@ -5324,7 +5471,7 @@
       "label": "host",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "host",
       "source_file": "server/scripts/e2e-db.js",
@@ -5335,7 +5482,7 @@
       "label": "LOCAL_HOSTS",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "local_hosts",
       "source_file": "server/scripts/e2e-db.js",
@@ -5346,7 +5493,7 @@
       "label": "e2e-ledger-integrity.js",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "e2e-ledger-integrity.js",
       "source_file": "server/scripts/e2e-ledger-integrity.js",
@@ -5357,7 +5504,7 @@
       "label": "client",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "client",
       "source_file": "server/scripts/e2e-ledger-integrity.js",
@@ -5368,7 +5515,7 @@
       "label": "e2e-referrals.js",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "e2e-referrals.js",
       "source_file": "server/scripts/e2e-referrals.js",
@@ -5379,7 +5526,7 @@
       "label": "e2e-wrapup.js",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "e2e-wrapup.js",
       "source_file": "server/scripts/e2e-wrapup.js",
@@ -5390,198 +5537,11 @@
       "label": "psql",
       "_origin": "ast",
       "community": 111,
-      "community_name": "pg",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "psql",
       "source_file": "server/scripts/e2e-wrapup.js",
       "source_location": "L16"
-    },
-    {
-      "id": "server_scripts_pooler_probe",
-      "label": "pooler-probe.js",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "pooler-probe.js",
-      "source_file": "server/scripts/pooler-probe.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_scripts_pooler_probe_clusters",
-      "label": "CLUSTERS",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "clusters",
-      "source_file": "server/scripts/pooler-probe.js",
-      "source_location": "L20"
-    },
-    {
-      "id": "server_scripts_pooler_probe_hits",
-      "label": "hits",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "hits",
-      "source_file": "server/scripts/pooler-probe.js",
-      "source_location": "L22"
-    },
-    {
-      "id": "server_scripts_pooler_probe_password",
-      "label": "PASSWORD",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "password",
-      "source_file": "server/scripts/pooler-probe.js",
-      "source_location": "L11"
-    },
-    {
-      "id": "server_scripts_pooler_probe_ref",
-      "label": "REF",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "ref",
-      "source_file": "server/scripts/pooler-probe.js",
-      "source_location": "L9"
-    },
-    {
-      "id": "server_scripts_pooler_probe_regions",
-      "label": "REGIONS",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "regions",
-      "source_file": "server/scripts/pooler-probe.js",
-      "source_location": "L13"
-    },
-    {
-      "id": "server_scripts_pooler_probe_src",
-      "label": "src",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "src",
-      "source_file": "server/scripts/pooler-probe.js",
-      "source_location": "L8"
-    },
-    {
-      "id": "server_scripts_pooler_verify",
-      "label": "pooler-verify.js",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "pooler-verify.js",
-      "source_file": "server/scripts/pooler-verify.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_scripts_pooler_verify_c",
-      "label": "c",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "c",
-      "source_file": "server/scripts/pooler-verify.js",
-      "source_location": "L5"
-    },
-    {
-      "id": "server_scripts_pooler_verify_t0",
-      "label": "t0",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "t0",
-      "source_file": "server/scripts/pooler-verify.js",
-      "source_location": "L10"
-    },
-    {
-      "id": "server_scripts_purge_retention",
-      "label": "purge-retention.js",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "purge-retention.js",
-      "source_file": "server/scripts/purge-retention.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_scripts_purge_retention_apply",
-      "label": "apply",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "apply",
-      "source_file": "server/scripts/purge-retention.js",
-      "source_location": "L17"
-    },
-    {
-      "id": "server_scripts_purge_retention_client",
-      "label": "client",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "client",
-      "source_file": "server/scripts/purge-retention.js",
-      "source_location": "L32"
-    },
-    {
-      "id": "server_scripts_purge_retention_days",
-      "label": "days",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "days",
-      "source_file": "server/scripts/purge-retention.js",
-      "source_location": "L18"
-    },
-    {
-      "id": "server_scripts_purge_retention_local",
-      "label": "local",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "local",
-      "source_file": "server/scripts/purge-retention.js",
-      "source_location": "L26"
-    },
-    {
-      "id": "server_scripts_purge_retention_notificationdays",
-      "label": "notificationDays",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "code",
-      "norm_label": "notificationdays",
-      "source_file": "server/scripts/purge-retention.js",
-      "source_location": "L19"
-    },
-    {
-      "id": "ref_pg",
-      "label": "pg",
-      "_origin": "ast",
-      "community": 111,
-      "community_name": "pg",
-      "file_type": "concept",
-      "norm_label": "pg",
-      "source_file": "package.json",
-      "source_location": "L70"
     },
     {
       "id": "tailwindcss",
@@ -5703,6 +5663,39 @@
       "norm_label": "root",
       "source_file": "server/pg-embed.js",
       "source_location": "L10"
+    },
+    {
+      "id": "server_scripts_db_reset",
+      "label": "db-reset.js",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "pg-embed.js",
+      "file_type": "code",
+      "norm_label": "db-reset.js",
+      "source_file": "server/scripts/db-reset.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_scripts_db_reset_dbdir",
+      "label": "dbDir",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "pg-embed.js",
+      "file_type": "code",
+      "norm_label": "dbdir",
+      "source_file": "server/scripts/db-reset.js",
+      "source_location": "L24"
+    },
+    {
+      "id": "server_scripts_db_reset_here",
+      "label": "here",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "pg-embed.js",
+      "file_type": "code",
+      "norm_label": "here",
+      "source_file": "server/scripts/db-reset.js",
+      "source_location": "L23"
     },
     {
       "id": "server_scripts_dbcheck",
@@ -6700,6 +6693,83 @@
       "source_location": "L65"
     },
     {
+      "id": "src_screens_learnerwizard",
+      "label": "LearnerWizard.jsx",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "src/screens/Dashboard.jsx",
+      "file_type": "code",
+      "norm_label": "learnerwizard.jsx",
+      "source_file": "src/screens/LearnerWizard.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_screens_learnerwizard_availability",
+      "label": "AVAILABILITY",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "src/screens/Dashboard.jsx",
+      "file_type": "code",
+      "norm_label": "availability",
+      "source_file": "src/screens/LearnerWizard.jsx",
+      "source_location": "L45"
+    },
+    {
+      "id": "src_screens_learnerwizard_goals",
+      "label": "GOALS",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "src/screens/Dashboard.jsx",
+      "file_type": "code",
+      "norm_label": "goals",
+      "source_file": "src/screens/LearnerWizard.jsx",
+      "source_location": "L21"
+    },
+    {
+      "id": "src_screens_learnerwizard_languages",
+      "label": "LANGUAGES",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "src/screens/Dashboard.jsx",
+      "file_type": "code",
+      "norm_label": "languages",
+      "source_file": "src/screens/LearnerWizard.jsx",
+      "source_location": "L39"
+    },
+    {
+      "id": "src_screens_learnerwizard_levels",
+      "label": "LEVELS",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "src/screens/Dashboard.jsx",
+      "file_type": "code",
+      "norm_label": "levels",
+      "source_file": "src/screens/LearnerWizard.jsx",
+      "source_location": "L33"
+    },
+    {
+      "id": "src_screens_learnerwizard_steps",
+      "label": "steps",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "src/screens/Dashboard.jsx",
+      "file_type": "code",
+      "norm_label": "steps",
+      "source_file": "src/screens/LearnerWizard.jsx",
+      "source_location": "L11"
+    },
+    {
+      "id": "src_screens_learnerwizard_timelines",
+      "label": "TIMELINES",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "src/screens/Dashboard.jsx",
+      "file_type": "code",
+      "norm_label": "timelines",
+      "source_file": "src/screens/LearnerWizard.jsx",
+      "source_location": "L27"
+    },
+    {
       "id": "next_app_archived_package",
       "label": "next-app-archived/package.json",
       "_origin": "ast",
@@ -7129,26 +7199,59 @@
       "source_location": "L4"
     },
     {
-      "id": "src_main",
-      "label": "main.jsx",
+      "id": "src_components_accountdialog",
+      "label": "AccountDialog.jsx",
       "_origin": "ast",
       "community": 20,
       "community_name": "App.jsx",
       "file_type": "code",
-      "norm_label": "main.jsx",
-      "source_file": "src/main.jsx",
+      "norm_label": "accountdialog.jsx",
+      "source_file": "src/components/AccountDialog.jsx",
       "source_location": "L1"
     },
     {
-      "id": "ref_react_router_dom",
-      "label": "react-router-dom",
+      "id": "src_components_securitydialog",
+      "label": "SecurityDialog.jsx",
       "_origin": "ast",
       "community": 20,
       "community_name": "App.jsx",
-      "file_type": "concept",
-      "norm_label": "react-router-dom",
-      "source_file": "package.json",
-      "source_location": "L73"
+      "file_type": "code",
+      "norm_label": "securitydialog.jsx",
+      "source_file": "src/components/SecurityDialog.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_lib_avatarupload",
+      "label": "avatarUpload.js",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "avatarupload.js",
+      "source_file": "src/lib/avatarUpload.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_lib_avatarupload_max_avatar_bytes",
+      "label": "MAX_AVATAR_BYTES",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "max_avatar_bytes",
+      "source_file": "src/lib/avatarUpload.js",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_lib_avatarupload_target_avatar_size",
+      "label": "TARGET_AVATAR_SIZE",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "target_avatar_size",
+      "source_file": "src/lib/avatarUpload.js",
+      "source_location": "L8"
     },
     {
       "id": "vite_config",
@@ -7217,14 +7320,14 @@
       "source_location": "L1"
     },
     {
-      "id": "src_screens_messages",
-      "label": "Messages.jsx",
+      "id": "src_screens_rewardcatalog",
+      "label": "src/screens/RewardCatalog.jsx",
       "_origin": "ast",
       "community": 22,
       "community_name": "api.js",
       "file_type": "code",
-      "norm_label": "messages.jsx",
-      "source_file": "src/screens/Messages.jsx",
+      "norm_label": "src/screens/rewardcatalog.jsx",
+      "source_file": "src/screens/RewardCatalog.jsx",
       "source_location": "L1"
     },
     {
@@ -8593,28 +8696,6 @@
       "source_location": "L1"
     },
     {
-      "id": "src_components_classroom_dualpurposechat",
-      "label": "DualPurposeChat.jsx",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Button",
-      "file_type": "code",
-      "norm_label": "dualpurposechat.jsx",
-      "source_file": "src/components/classroom/DualPurposeChat.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_components_classroom_dualpurposechat_role_badges",
-      "label": "ROLE_BADGES",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Button",
-      "file_type": "code",
-      "norm_label": "role_badges",
-      "source_file": "src/components/classroom/DualPurposeChat.jsx",
-      "source_location": "L9"
-    },
-    {
       "id": "src_components_classroom_jitsimeetingroom",
       "label": "JitsiMeetingRoom.jsx",
       "_origin": "ast",
@@ -8648,28 +8729,6 @@
       "source_location": "L1"
     },
     {
-      "id": "src_components_classroom_nativevideoroom",
-      "label": "NativeVideoRoom.jsx",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Button",
-      "file_type": "code",
-      "norm_label": "nativevideoroom.jsx",
-      "source_file": "src/components/classroom/NativeVideoRoom.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_components_classroom_nativevideoroom_rtc_config",
-      "label": "RTC_CONFIG",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Button",
-      "file_type": "code",
-      "norm_label": "rtc_config",
-      "source_file": "src/components/classroom/NativeVideoRoom.jsx",
-      "source_location": "L17"
-    },
-    {
       "id": "src_components_classroom_sessionquizmodal",
       "label": "SessionQuizModal.jsx",
       "_origin": "ast",
@@ -8678,17 +8737,6 @@
       "file_type": "code",
       "norm_label": "sessionquizmodal.jsx",
       "source_file": "src/components/classroom/SessionQuizModal.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_components_ui_button",
-      "label": "src/components/ui/button.jsx",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Button",
-      "file_type": "code",
-      "norm_label": "src/components/ui/button.jsx",
-      "source_file": "src/components/ui/button.jsx",
       "source_location": "L1"
     },
     {
@@ -8701,17 +8749,6 @@
       "norm_label": "button",
       "source_file": "src/components/ui/button.jsx",
       "source_location": "L5"
-    },
-    {
-      "id": "src_screens_rewardcatalog",
-      "label": "src/screens/RewardCatalog.jsx",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Button",
-      "file_type": "code",
-      "norm_label": "src/screens/rewardcatalog.jsx",
-      "source_file": "src/screens/RewardCatalog.jsx",
-      "source_location": "L1"
     },
     {
       "id": "src_screens_sessioncheckin",
@@ -8733,7 +8770,7 @@
       "file_type": "code",
       "norm_label": "liveclassroom",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L8"
+      "source_location": "L9"
     },
     {
       "id": "src_screens_sessioncheckin_sessionquizmodal",
@@ -8744,7 +8781,7 @@
       "file_type": "code",
       "norm_label": "sessionquizmodal",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L9"
+      "source_location": "L10"
     },
     {
       "id": "three_js",
@@ -9220,44 +9257,121 @@
       "source_location": "L9"
     },
     {
-      "id": "server_scripts_db_reset",
-      "label": "db-reset.js",
+      "id": "server_scripts_pooler_verify",
+      "label": "pooler-verify.js",
       "_origin": "ast",
       "community": 44,
-      "community_name": "db-reset.js",
+      "community_name": "pg",
       "file_type": "code",
-      "norm_label": "db-reset.js",
-      "source_file": "server/scripts/db-reset.js",
+      "norm_label": "pooler-verify.js",
+      "source_file": "server/scripts/pooler-verify.js",
       "source_location": "L1"
     },
     {
-      "id": "server_scripts_db_reset_dbdir",
-      "label": "dbDir",
+      "id": "server_scripts_pooler_verify_c",
+      "label": "c",
       "_origin": "ast",
       "community": 44,
-      "community_name": "db-reset.js",
+      "community_name": "pg",
       "file_type": "code",
-      "norm_label": "dbdir",
-      "source_file": "server/scripts/db-reset.js",
-      "source_location": "L24"
+      "norm_label": "c",
+      "source_file": "server/scripts/pooler-verify.js",
+      "source_location": "L5"
     },
     {
-      "id": "server_scripts_db_reset_here",
-      "label": "here",
+      "id": "server_scripts_pooler_verify_t0",
+      "label": "t0",
       "_origin": "ast",
       "community": 44,
-      "community_name": "db-reset.js",
+      "community_name": "pg",
       "file_type": "code",
-      "norm_label": "here",
-      "source_file": "server/scripts/db-reset.js",
-      "source_location": "L23"
+      "norm_label": "t0",
+      "source_file": "server/scripts/pooler-verify.js",
+      "source_location": "L10"
+    },
+    {
+      "id": "server_scripts_purge_retention",
+      "label": "purge-retention.js",
+      "_origin": "ast",
+      "community": 44,
+      "community_name": "pg",
+      "file_type": "code",
+      "norm_label": "purge-retention.js",
+      "source_file": "server/scripts/purge-retention.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_scripts_purge_retention_apply",
+      "label": "apply",
+      "_origin": "ast",
+      "community": 44,
+      "community_name": "pg",
+      "file_type": "code",
+      "norm_label": "apply",
+      "source_file": "server/scripts/purge-retention.js",
+      "source_location": "L17"
+    },
+    {
+      "id": "server_scripts_purge_retention_client",
+      "label": "client",
+      "_origin": "ast",
+      "community": 44,
+      "community_name": "pg",
+      "file_type": "code",
+      "norm_label": "client",
+      "source_file": "server/scripts/purge-retention.js",
+      "source_location": "L32"
+    },
+    {
+      "id": "server_scripts_purge_retention_days",
+      "label": "days",
+      "_origin": "ast",
+      "community": 44,
+      "community_name": "pg",
+      "file_type": "code",
+      "norm_label": "days",
+      "source_file": "server/scripts/purge-retention.js",
+      "source_location": "L18"
+    },
+    {
+      "id": "server_scripts_purge_retention_local",
+      "label": "local",
+      "_origin": "ast",
+      "community": 44,
+      "community_name": "pg",
+      "file_type": "code",
+      "norm_label": "local",
+      "source_file": "server/scripts/purge-retention.js",
+      "source_location": "L26"
+    },
+    {
+      "id": "server_scripts_purge_retention_notificationdays",
+      "label": "notificationDays",
+      "_origin": "ast",
+      "community": 44,
+      "community_name": "pg",
+      "file_type": "code",
+      "norm_label": "notificationdays",
+      "source_file": "server/scripts/purge-retention.js",
+      "source_location": "L19"
+    },
+    {
+      "id": "ref_pg",
+      "label": "pg",
+      "_origin": "ast",
+      "community": 44,
+      "community_name": "pg",
+      "file_type": "concept",
+      "norm_label": "pg",
+      "source_file": "package.json",
+      "source_location": "L70"
     },
     {
       "id": "scripts_fix_seed",
       "label": "fix-seed.mjs",
       "_origin": "ast",
       "community": 45,
-      "community_name": "ref_node_fs",
+      "community_name": "ref_node_path",
       "file_type": "code",
       "norm_label": "fix-seed.mjs",
       "source_file": "scripts/fix-seed.mjs",
@@ -9268,7 +9382,7 @@
       "label": "s",
       "_origin": "ast",
       "community": 45,
-      "community_name": "ref_node_fs",
+      "community_name": "ref_node_path",
       "file_type": "code",
       "norm_label": "s",
       "source_file": "scripts/fix-seed.mjs",
@@ -9279,7 +9393,7 @@
       "label": "check-bundle.js",
       "_origin": "ast",
       "community": 45,
-      "community_name": "ref_node_fs",
+      "community_name": "ref_node_path",
       "file_type": "code",
       "norm_label": "check-bundle.js",
       "source_file": "server/scripts/check-bundle.js",
@@ -9290,7 +9404,7 @@
       "label": "dir",
       "_origin": "ast",
       "community": 45,
-      "community_name": "ref_node_fs",
+      "community_name": "ref_node_path",
       "file_type": "code",
       "norm_label": "dir",
       "source_file": "server/scripts/check-bundle.js",
@@ -9301,7 +9415,7 @@
       "label": "main",
       "_origin": "ast",
       "community": 45,
-      "community_name": "ref_node_fs",
+      "community_name": "ref_node_path",
       "file_type": "code",
       "norm_label": "main",
       "source_file": "server/scripts/check-bundle.js",
@@ -9312,7 +9426,7 @@
       "label": "sizes",
       "_origin": "ast",
       "community": 45,
-      "community_name": "ref_node_fs",
+      "community_name": "ref_node_path",
       "file_type": "code",
       "norm_label": "sizes",
       "source_file": "server/scripts/check-bundle.js",
@@ -9323,11 +9437,33 @@
       "label": "totalGzip",
       "_origin": "ast",
       "community": 45,
-      "community_name": "ref_node_fs",
+      "community_name": "ref_node_path",
       "file_type": "code",
       "norm_label": "totalgzip",
       "source_file": "server/scripts/check-bundle.js",
       "source_location": "L18"
+    },
+    {
+      "id": "server_scripts_export_user",
+      "label": "export-user.js",
+      "_origin": "ast",
+      "community": 45,
+      "community_name": "ref_node_path",
+      "file_type": "code",
+      "norm_label": "export-user.js",
+      "source_file": "server/scripts/export-user.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_scripts_export_user_client",
+      "label": "client",
+      "_origin": "ast",
+      "community": 45,
+      "community_name": "ref_node_path",
+      "file_type": "code",
+      "norm_label": "client",
+      "source_file": "server/scripts/export-user.js",
+      "source_location": "L23"
     },
     {
       "id": "server_lib_aiassistant",
@@ -9834,6 +9970,17 @@
       "source_location": "L1"
     },
     {
+      "id": "src_main",
+      "label": "main.jsx",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "CentrifugoService",
+      "file_type": "code",
+      "norm_label": "main.jsx",
+      "source_file": "src/main.jsx",
+      "source_location": "L1"
+    },
+    {
       "id": "src_services_realtime_centrifugoservice",
       "label": "CentrifugoService.js",
       "_origin": "ast",
@@ -9955,17 +10102,6 @@
       "source_location": "L56"
     },
     {
-      "id": "ref_zod",
-      "label": "zod",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "CentrifugoService",
-      "file_type": "concept",
-      "norm_label": "zod",
-      "source_file": "package.json",
-      "source_location": "L75"
-    },
-    {
       "id": "server_scripts_db_migrate",
       "label": "db-migrate.js",
       "_origin": "ast",
@@ -10032,66 +10168,11 @@
       "source_location": "L28"
     },
     {
-      "id": "server_scripts_e2e_all",
-      "label": "e2e-all.js",
-      "_origin": "ast",
-      "community": 50,
-      "community_name": "db-migrate.js",
-      "file_type": "code",
-      "norm_label": "e2e-all.js",
-      "source_file": "server/scripts/e2e-all.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_scripts_e2e_all_here",
-      "label": "here",
-      "_origin": "ast",
-      "community": 50,
-      "community_name": "db-migrate.js",
-      "file_type": "code",
-      "norm_label": "here",
-      "source_file": "server/scripts/e2e-all.js",
-      "source_location": "L6"
-    },
-    {
-      "id": "server_scripts_e2e_all_scripts",
-      "label": "scripts",
-      "_origin": "ast",
-      "community": 50,
-      "community_name": "db-migrate.js",
-      "file_type": "code",
-      "norm_label": "scripts",
-      "source_file": "server/scripts/e2e-all.js",
-      "source_location": "L7"
-    },
-    {
-      "id": "server_scripts_export_user",
-      "label": "export-user.js",
-      "_origin": "ast",
-      "community": 50,
-      "community_name": "db-migrate.js",
-      "file_type": "code",
-      "norm_label": "export-user.js",
-      "source_file": "server/scripts/export-user.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_scripts_export_user_client",
-      "label": "client",
-      "_origin": "ast",
-      "community": 50,
-      "community_name": "db-migrate.js",
-      "file_type": "code",
-      "norm_label": "client",
-      "source_file": "server/scripts/export-user.js",
-      "source_location": "L23"
-    },
-    {
       "id": "src_components_ui_avatar",
       "label": "Avatar.jsx",
       "_origin": "ast",
       "community": 51,
-      "community_name": "LearnerWizard.jsx",
+      "community_name": "Messages.jsx",
       "file_type": "code",
       "norm_label": "avatar.jsx",
       "source_file": "src/components/ui/Avatar.jsx",
@@ -10102,99 +10183,55 @@
       "label": "SIZE_MAP",
       "_origin": "ast",
       "community": 51,
-      "community_name": "LearnerWizard.jsx",
+      "community_name": "Messages.jsx",
       "file_type": "code",
       "norm_label": "size_map",
       "source_file": "src/components/ui/Avatar.jsx",
       "source_location": "L15"
     },
     {
-      "id": "src_screens_learnerwizard",
-      "label": "LearnerWizard.jsx",
+      "id": "src_screens_messages",
+      "label": "Messages.jsx",
       "_origin": "ast",
       "community": 51,
-      "community_name": "LearnerWizard.jsx",
+      "community_name": "Messages.jsx",
       "file_type": "code",
-      "norm_label": "learnerwizard.jsx",
-      "source_file": "src/screens/LearnerWizard.jsx",
+      "norm_label": "messages.jsx",
+      "source_file": "src/screens/Messages.jsx",
       "source_location": "L1"
-    },
-    {
-      "id": "src_screens_learnerwizard_availability",
-      "label": "AVAILABILITY",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "LearnerWizard.jsx",
-      "file_type": "code",
-      "norm_label": "availability",
-      "source_file": "src/screens/LearnerWizard.jsx",
-      "source_location": "L45"
-    },
-    {
-      "id": "src_screens_learnerwizard_goals",
-      "label": "GOALS",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "LearnerWizard.jsx",
-      "file_type": "code",
-      "norm_label": "goals",
-      "source_file": "src/screens/LearnerWizard.jsx",
-      "source_location": "L21"
-    },
-    {
-      "id": "src_screens_learnerwizard_languages",
-      "label": "LANGUAGES",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "LearnerWizard.jsx",
-      "file_type": "code",
-      "norm_label": "languages",
-      "source_file": "src/screens/LearnerWizard.jsx",
-      "source_location": "L39"
-    },
-    {
-      "id": "src_screens_learnerwizard_levels",
-      "label": "LEVELS",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "LearnerWizard.jsx",
-      "file_type": "code",
-      "norm_label": "levels",
-      "source_file": "src/screens/LearnerWizard.jsx",
-      "source_location": "L33"
-    },
-    {
-      "id": "src_screens_learnerwizard_steps",
-      "label": "steps",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "LearnerWizard.jsx",
-      "file_type": "code",
-      "norm_label": "steps",
-      "source_file": "src/screens/LearnerWizard.jsx",
-      "source_location": "L11"
-    },
-    {
-      "id": "src_screens_learnerwizard_timelines",
-      "label": "TIMELINES",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "LearnerWizard.jsx",
-      "file_type": "code",
-      "norm_label": "timelines",
-      "source_file": "src/screens/LearnerWizard.jsx",
-      "source_location": "L27"
     },
     {
       "id": "src_screens_tutorprofile",
       "label": "TutorProfile.jsx",
       "_origin": "ast",
       "community": 51,
-      "community_name": "LearnerWizard.jsx",
+      "community_name": "Messages.jsx",
       "file_type": "code",
       "norm_label": "tutorprofile.jsx",
       "source_file": "src/screens/TutorProfile.jsx",
       "source_location": "L1"
+    },
+    {
+      "id": "src_screens_tutorprofile_role_meta",
+      "label": "ROLE_META",
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "Messages.jsx",
+      "file_type": "code",
+      "norm_label": "role_meta",
+      "source_file": "src/screens/TutorProfile.jsx",
+      "source_location": "L22"
+    },
+    {
+      "id": "ref_react_router_dom",
+      "label": "react-router-dom",
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "Messages.jsx",
+      "file_type": "concept",
+      "norm_label": "react-router-dom",
+      "source_file": "package.json",
+      "source_location": "L73"
     },
     {
       "id": "server_scripts_db_backup",
@@ -10311,7 +10348,7 @@
       "label": "capture_after_screenshots.js",
       "_origin": "ast",
       "community": 53,
-      "community_name": "ref_node_child_process",
+      "community_name": "capture_after_screenshots.js",
       "file_type": "code",
       "norm_label": "capture_after_screenshots.js",
       "source_file": "scratch/capture_after_screenshots.js",
@@ -10322,33 +10359,11 @@
       "label": "TEMP_PROFILE",
       "_origin": "ast",
       "community": 53,
-      "community_name": "ref_node_child_process",
+      "community_name": "capture_after_screenshots.js",
       "file_type": "code",
       "norm_label": "temp_profile",
       "source_file": "scratch/capture_after_screenshots.js",
       "source_location": "L7"
-    },
-    {
-      "id": "server_scripts_start",
-      "label": "start.js",
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "ref_node_child_process",
-      "file_type": "code",
-      "norm_label": "start.js",
-      "source_file": "server/scripts/start.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_scripts_start_processes",
-      "label": "processes",
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "ref_node_child_process",
-      "file_type": "code",
-      "norm_label": "processes",
-      "source_file": "server/scripts/start.js",
-      "source_location": "L4"
     },
     {
       "id": "server_scripts_test_jitsi_component",
@@ -10450,59 +10465,136 @@
       "source_location": "L7"
     },
     {
-      "id": "src_components_accountdialog",
-      "label": "AccountDialog.jsx",
+      "id": "server_scripts_pooler_probe",
+      "label": "pooler-probe.js",
       "_origin": "ast",
       "community": 58,
-      "community_name": "AccountDialog.jsx",
+      "community_name": "pooler-probe.js",
       "file_type": "code",
-      "norm_label": "accountdialog.jsx",
-      "source_file": "src/components/AccountDialog.jsx",
+      "norm_label": "pooler-probe.js",
+      "source_file": "server/scripts/pooler-probe.js",
       "source_location": "L1"
     },
     {
-      "id": "src_components_securitydialog",
-      "label": "SecurityDialog.jsx",
+      "id": "server_scripts_pooler_probe_clusters",
+      "label": "CLUSTERS",
       "_origin": "ast",
       "community": 58,
-      "community_name": "AccountDialog.jsx",
+      "community_name": "pooler-probe.js",
       "file_type": "code",
-      "norm_label": "securitydialog.jsx",
-      "source_file": "src/components/SecurityDialog.jsx",
+      "norm_label": "clusters",
+      "source_file": "server/scripts/pooler-probe.js",
+      "source_location": "L20"
+    },
+    {
+      "id": "server_scripts_pooler_probe_hits",
+      "label": "hits",
+      "_origin": "ast",
+      "community": 58,
+      "community_name": "pooler-probe.js",
+      "file_type": "code",
+      "norm_label": "hits",
+      "source_file": "server/scripts/pooler-probe.js",
+      "source_location": "L22"
+    },
+    {
+      "id": "server_scripts_pooler_probe_password",
+      "label": "PASSWORD",
+      "_origin": "ast",
+      "community": 58,
+      "community_name": "pooler-probe.js",
+      "file_type": "code",
+      "norm_label": "password",
+      "source_file": "server/scripts/pooler-probe.js",
+      "source_location": "L11"
+    },
+    {
+      "id": "server_scripts_pooler_probe_ref",
+      "label": "REF",
+      "_origin": "ast",
+      "community": 58,
+      "community_name": "pooler-probe.js",
+      "file_type": "code",
+      "norm_label": "ref",
+      "source_file": "server/scripts/pooler-probe.js",
+      "source_location": "L9"
+    },
+    {
+      "id": "server_scripts_pooler_probe_regions",
+      "label": "REGIONS",
+      "_origin": "ast",
+      "community": 58,
+      "community_name": "pooler-probe.js",
+      "file_type": "code",
+      "norm_label": "regions",
+      "source_file": "server/scripts/pooler-probe.js",
+      "source_location": "L13"
+    },
+    {
+      "id": "server_scripts_pooler_probe_src",
+      "label": "src",
+      "_origin": "ast",
+      "community": 58,
+      "community_name": "pooler-probe.js",
+      "file_type": "code",
+      "norm_label": "src",
+      "source_file": "server/scripts/pooler-probe.js",
+      "source_location": "L8"
+    },
+    {
+      "id": "server_scripts_e2e_all",
+      "label": "e2e-all.js",
+      "_origin": "ast",
+      "community": 59,
+      "community_name": "ref_node_child_process",
+      "file_type": "code",
+      "norm_label": "e2e-all.js",
+      "source_file": "server/scripts/e2e-all.js",
       "source_location": "L1"
     },
     {
-      "id": "src_lib_avatarupload",
-      "label": "avatarUpload.js",
+      "id": "server_scripts_e2e_all_here",
+      "label": "here",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "AccountDialog.jsx",
+      "community": 59,
+      "community_name": "ref_node_child_process",
       "file_type": "code",
-      "norm_label": "avatarupload.js",
-      "source_file": "src/lib/avatarUpload.js",
-      "source_location": "L1"
+      "norm_label": "here",
+      "source_file": "server/scripts/e2e-all.js",
+      "source_location": "L6"
     },
     {
-      "id": "src_lib_avatarupload_max_avatar_bytes",
-      "label": "MAX_AVATAR_BYTES",
+      "id": "server_scripts_e2e_all_scripts",
+      "label": "scripts",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "AccountDialog.jsx",
+      "community": 59,
+      "community_name": "ref_node_child_process",
       "file_type": "code",
-      "norm_label": "max_avatar_bytes",
-      "source_file": "src/lib/avatarUpload.js",
+      "norm_label": "scripts",
+      "source_file": "server/scripts/e2e-all.js",
       "source_location": "L7"
     },
     {
-      "id": "src_lib_avatarupload_target_avatar_size",
-      "label": "TARGET_AVATAR_SIZE",
+      "id": "server_scripts_start",
+      "label": "start.js",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "AccountDialog.jsx",
+      "community": 59,
+      "community_name": "ref_node_child_process",
       "file_type": "code",
-      "norm_label": "target_avatar_size",
-      "source_file": "src/lib/avatarUpload.js",
-      "source_location": "L8"
+      "norm_label": "start.js",
+      "source_file": "server/scripts/start.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_scripts_start_processes",
+      "label": "processes",
+      "_origin": "ast",
+      "community": 59,
+      "community_name": "ref_node_child_process",
+      "file_type": "code",
+      "norm_label": "processes",
+      "source_file": "server/scripts/start.js",
+      "source_location": "L4"
     },
     {
       "id": "package_dependencies",
@@ -10901,37 +10993,26 @@
       "source_location": "L1"
     },
     {
-      "id": "src_screens_facultyreferral",
-      "label": "src/screens/FacultyReferral.jsx",
+      "id": "scratch_capture_universal_profiles",
+      "label": "capture_universal_profiles.js",
       "_origin": "ast",
       "community": 61,
-      "community_name": "src/screens/FacultyReferral.jsx",
+      "community_name": "capture_universal_profiles.js",
       "file_type": "code",
-      "norm_label": "src/screens/facultyreferral.jsx",
-      "source_file": "src/screens/FacultyReferral.jsx",
+      "norm_label": "capture_universal_profiles.js",
+      "source_file": "scratch/capture_universal_profiles.js",
       "source_location": "L1"
     },
     {
-      "id": "src_screens_facultyreferral_step_labels",
-      "label": "STEP_LABELS",
+      "id": "scratch_capture_universal_profiles_temp_profile",
+      "label": "TEMP_PROFILE",
       "_origin": "ast",
       "community": 61,
-      "community_name": "src/screens/FacultyReferral.jsx",
+      "community_name": "capture_universal_profiles.js",
       "file_type": "code",
-      "norm_label": "step_labels",
-      "source_file": "src/screens/FacultyReferral.jsx",
-      "source_location": "L17"
-    },
-    {
-      "id": "src_screens_facultyreferral_urgencies",
-      "label": "URGENCIES",
-      "_origin": "ast",
-      "community": 61,
-      "community_name": "src/screens/FacultyReferral.jsx",
-      "file_type": "code",
-      "norm_label": "urgencies",
-      "source_file": "src/screens/FacultyReferral.jsx",
-      "source_location": "L9"
+      "norm_label": "temp_profile",
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L7"
     },
     {
       "id": "docs_operations",
@@ -11934,28 +12015,6 @@
       "type": "external"
     },
     {
-      "id": "ref_react_dom",
-      "label": "ref_react_dom",
-      "community": 20,
-      "community_name": "App.jsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "ref_react_dom",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_index",
-      "label": "src_index",
-      "community": 20,
-      "community_name": "App.jsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_index",
-      "source_file": "",
-      "type": "external"
-    },
-    {
       "id": "next_app_archived_src_app_globals",
       "label": "next_app_archived_src_app_globals",
       "community": 3,
@@ -12201,7 +12260,7 @@
       "id": "ref_node_fs",
       "label": "ref_node_fs",
       "community": 45,
-      "community_name": "ref_node_fs",
+      "community_name": "ref_node_path",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_node_fs",
@@ -12209,10 +12268,21 @@
       "type": "external"
     },
     {
+      "id": "ref_node_path",
+      "label": "ref_node_path",
+      "community": 45,
+      "community_name": "ref_node_path",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ref_node_path",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "ref_node_zlib",
       "label": "ref_node_zlib",
       "community": 45,
-      "community_name": "ref_node_fs",
+      "community_name": "ref_node_path",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_node_zlib",
@@ -12231,35 +12301,46 @@
       "type": "external"
     },
     {
-      "id": "ref_node_path",
-      "label": "ref_node_path",
-      "community": 50,
-      "community_name": "db-migrate.js",
+      "id": "ref_react_dom",
+      "label": "ref_react_dom",
+      "community": 5,
+      "community_name": "CentrifugoService",
       "external": true,
       "file_type": "concept",
-      "norm_label": "ref_node_path",
+      "norm_label": "ref_react_dom",
       "source_file": "",
       "type": "external"
     },
     {
-      "id": "ref_node_url",
-      "label": "ref_node_url",
-      "community": 50,
-      "community_name": "db-migrate.js",
+      "id": "src_index",
+      "label": "src_index",
+      "community": 5,
+      "community_name": "CentrifugoService",
       "external": true,
       "file_type": "concept",
-      "norm_label": "ref_node_url",
+      "norm_label": "src_index",
       "source_file": "",
       "type": "external"
     },
     {
       "id": "ref_node_child_process",
       "label": "ref_node_child_process",
-      "community": 53,
+      "community": 59,
       "community_name": "ref_node_child_process",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_node_child_process",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "ref_node_url",
+      "label": "ref_node_url",
+      "community": 59,
+      "community_name": "ref_node_child_process",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ref_node_url",
       "source_file": "",
       "type": "external"
     },
@@ -13152,6 +13233,42 @@
       "weight": 1.0
     },
     {
+      "source": "scratch_capture_universal_profiles_run",
+      "target": "scratch_capture_universal_profiles_sleep",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_universal_profiles_run_send",
+      "target": "scratch_capture_universal_profiles_run_send",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_universal_profiles_run_waitforapp",
+      "target": "scratch_capture_universal_profiles_run_send",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L69",
+      "weight": 1.0
+    },
+    {
       "source": "scratch_check_page_run",
       "target": "scratch_check_page_sleep",
       "relation": "calls",
@@ -13712,7 +13829,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/routes/sessions.js",
-      "source_location": "L163",
+      "source_location": "L164",
       "weight": 1.0
     },
     {
@@ -14276,7 +14393,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L466",
+      "source_location": "L473",
       "weight": 1.0
     },
     {
@@ -14288,7 +14405,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L467",
+      "source_location": "L474",
       "weight": 1.0
     },
     {
@@ -14300,7 +14417,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L468",
+      "source_location": "L475",
       "weight": 1.0
     },
     {
@@ -14312,7 +14429,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L469",
+      "source_location": "L476",
       "weight": 1.0
     },
     {
@@ -14324,7 +14441,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L470",
+      "source_location": "L477",
       "weight": 1.0
     },
     {
@@ -14336,7 +14453,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L471",
+      "source_location": "L478",
       "weight": 1.0
     },
     {
@@ -14348,7 +14465,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L472",
+      "source_location": "L479",
       "weight": 1.0
     },
     {
@@ -14360,7 +14477,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L473",
+      "source_location": "L480",
       "weight": 1.0
     },
     {
@@ -14372,7 +14489,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L474",
+      "source_location": "L481",
       "weight": 1.0
     },
     {
@@ -14384,7 +14501,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L478",
+      "source_location": "L485",
       "weight": 1.0
     },
     {
@@ -14396,7 +14513,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L499",
+      "source_location": "L532",
       "weight": 1.0
     },
     {
@@ -14408,7 +14525,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L671",
+      "source_location": "L704",
       "weight": 1.0
     },
     {
@@ -14444,7 +14561,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L108",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -14456,7 +14573,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L116",
+      "source_location": "L118",
       "weight": 1.0
     },
     {
@@ -14468,7 +14585,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L187",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
@@ -14480,7 +14597,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L312",
+      "source_location": "L314",
       "weight": 1.0
     },
     {
@@ -14492,7 +14609,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L356",
+      "source_location": "L358",
       "weight": 1.0
     },
     {
@@ -14504,7 +14621,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L420",
+      "source_location": "L422",
       "weight": 1.0
     },
     {
@@ -14516,7 +14633,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L530",
+      "source_location": "L532",
       "weight": 1.0
     },
     {
@@ -14528,7 +14645,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L66",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -14540,7 +14657,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L97",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -15140,7 +15257,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L1018",
+      "source_location": "L1089",
       "weight": 1.0
     },
     {
@@ -15224,7 +15341,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L462",
+      "source_location": "L474",
       "weight": 1.0
     },
     {
@@ -15236,7 +15353,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L502",
+      "source_location": "L514",
       "weight": 1.0
     },
     {
@@ -15248,7 +15365,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L706",
+      "source_location": "L731",
       "weight": 1.0
     },
     {
@@ -15260,7 +15377,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Dashboard.jsx",
-      "source_location": "L787",
+      "source_location": "L832",
       "weight": 1.0
     },
     {
@@ -15368,7 +15485,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/LearnerWizard.jsx",
-      "source_location": "L250",
+      "source_location": "L251",
       "weight": 1.0
     },
     {
@@ -15380,7 +15497,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/LearnerWizard.jsx",
-      "source_location": "L276",
+      "source_location": "L277",
       "weight": 1.0
     },
     {
@@ -15392,7 +15509,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/LearnerWizard.jsx",
-      "source_location": "L331",
+      "source_location": "L332",
       "weight": 1.0
     },
     {
@@ -15404,7 +15521,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/LearnerWizard.jsx",
-      "source_location": "L364",
+      "source_location": "L371",
       "weight": 1.0
     },
     {
@@ -15416,7 +15533,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/LearnerWizard.jsx",
-      "source_location": "L386",
+      "source_location": "L400",
       "weight": 1.0
     },
     {
@@ -15536,7 +15653,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Messages.jsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -15548,7 +15665,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Messages.jsx",
-      "source_location": "L149",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -15560,7 +15677,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Messages.jsx",
-      "source_location": "L172",
+      "source_location": "L174",
       "weight": 1.0
     },
     {
@@ -15572,7 +15689,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Messages.jsx",
-      "source_location": "L177",
+      "source_location": "L179",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_messages_messages",
+      "target": "src_components_ui_avatar_avatar",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/screens/Messages.jsx",
+      "source_location": "L229",
       "weight": 1.0
     },
     {
@@ -15584,7 +15713,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Messages.jsx",
-      "source_location": "L246",
+      "source_location": "L259",
       "weight": 1.0
     },
     {
@@ -15596,7 +15725,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/Messages.jsx",
-      "source_location": "L275",
+      "source_location": "L288",
       "weight": 1.0
     },
     {
@@ -15692,7 +15821,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L120",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -15704,7 +15833,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L185",
+      "source_location": "L187",
       "weight": 1.0
     },
     {
@@ -15716,7 +15845,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L241",
+      "source_location": "L243",
       "weight": 1.0
     },
     {
@@ -15728,7 +15857,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L302",
+      "source_location": "L304",
       "weight": 1.0
     },
     {
@@ -15740,7 +15869,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L317",
+      "source_location": "L319",
       "weight": 1.0
     },
     {
@@ -15752,7 +15881,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L336",
+      "source_location": "L338",
       "weight": 1.0
     },
     {
@@ -15764,7 +15893,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L355",
+      "source_location": "L357",
       "weight": 1.0
     },
     {
@@ -15776,7 +15905,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L488",
+      "source_location": "L504",
       "weight": 1.0
     },
     {
@@ -15788,7 +15917,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -15800,7 +15929,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L110",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -15812,7 +15941,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L111",
+      "source_location": "L113",
       "weight": 1.0
     },
     {
@@ -15824,7 +15953,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L156",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -15836,7 +15965,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L173",
+      "source_location": "L192",
       "weight": 1.0
     },
     {
@@ -15848,7 +15977,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L184",
+      "source_location": "L203",
       "weight": 1.0
     },
     {
@@ -15860,7 +15989,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L191",
+      "source_location": "L210",
       "weight": 1.0
     },
     {
@@ -15872,7 +16001,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L192",
+      "source_location": "L211",
       "weight": 1.0
     },
     {
@@ -15884,7 +16013,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L308",
+      "source_location": "L327",
       "weight": 1.0
     },
     {
@@ -15896,7 +16025,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L76",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
@@ -16052,7 +16181,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/TutorProfile.jsx",
-      "source_location": "L110",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -16064,7 +16193,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/screens/TutorProfile.jsx",
-      "source_location": "L180",
+      "source_location": "L210",
       "weight": 1.0
     },
     {
@@ -16797,6 +16926,30 @@
       "context": "call",
       "source_file": "scratch/capture_after_screenshots.js",
       "source_location": "L42",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_universal_profiles_run",
+      "target": "scratch_capture_universal_profiles_run_send",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_universal_profiles_run",
+      "target": "scratch_capture_universal_profiles_run_waitforapp",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -17588,7 +17741,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -17601,7 +17754,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0
     },
     {
@@ -21045,7 +21198,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -21057,7 +21210,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -21069,7 +21222,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -21081,7 +21234,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -21093,7 +21246,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -21105,7 +21258,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -21117,7 +21270,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -21129,7 +21282,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -21141,7 +21294,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -21770,7 +21923,7 @@
     },
     {
       "source": "src_screens_messages",
-      "target": "src_lib_utils_cn",
+      "target": "src_components_ui_avatar_avatar",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -21778,6 +21931,18 @@
       "context": "import",
       "source_file": "src/screens/Messages.jsx",
       "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_messages",
+      "target": "src_lib_utils_cn",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/screens/Messages.jsx",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -21873,7 +22038,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -21885,7 +22050,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -21897,7 +22062,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -21909,7 +22074,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -21921,7 +22086,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -21933,7 +22098,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -21945,7 +22110,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -21957,7 +22122,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -21969,7 +22134,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -21981,7 +22146,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -23289,6 +23454,42 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scratch/capture_after_screenshots.js",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_universal_profiles",
+      "target": "ref_node_child_process",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_universal_profiles",
+      "target": "ref_node_fs",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_universal_profiles",
+      "target": "ref_node_path",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scratch/capture_universal_profiles.js",
       "source_location": "L3",
       "weight": 1.0
     },
@@ -26181,7 +26382,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -26193,7 +26394,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -26205,7 +26406,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -26217,7 +26418,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -26229,7 +26430,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -26241,24 +26442,12 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L18",
-      "weight": 1.0
-    },
-    {
-      "source": "src_components_accountdialog",
-      "target": "src_lib_avatarupload",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "src/components/AccountDialog.jsx",
       "source_location": "L19",
       "weight": 1.0
     },
     {
       "source": "src_components_accountdialog",
-      "target": "ref_lucide_react",
+      "target": "ref_react_router_dom",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -26270,7 +26459,7 @@
     },
     {
       "source": "src_components_accountdialog",
-      "target": "src_lib_utils",
+      "target": "src_lib_avatarupload",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -26278,6 +26467,30 @@
       "context": "import",
       "source_file": "src/components/AccountDialog.jsx",
       "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_accountdialog",
+      "target": "src_lib_utils",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/components/AccountDialog.jsx",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_accountdialog",
+      "target": "ref_lucide_react",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/components/AccountDialog.jsx",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -27506,7 +27719,7 @@
     },
     {
       "source": "src_screens_messages",
-      "target": "src_lib_utils",
+      "target": "src_components_ui_avatar",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -27518,7 +27731,7 @@
     },
     {
       "source": "src_screens_messages",
-      "target": "src_api",
+      "target": "src_lib_utils",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -27526,6 +27739,18 @@
       "context": "import",
       "source_file": "src/screens/Messages.jsx",
       "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_messages",
+      "target": "src_api",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/screens/Messages.jsx",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -27710,7 +27935,7 @@
     },
     {
       "source": "src_screens_sessioncheckin",
-      "target": "src_components_ui_button",
+      "target": "ref_react_router_dom",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -27722,7 +27947,7 @@
     },
     {
       "source": "src_screens_sessioncheckin",
-      "target": "src_components_ui_input",
+      "target": "src_components_ui_button",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -27734,7 +27959,7 @@
     },
     {
       "source": "src_screens_sessioncheckin",
-      "target": "ref_lucide_react",
+      "target": "src_components_ui_input",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -27746,7 +27971,7 @@
     },
     {
       "source": "src_screens_sessioncheckin",
-      "target": "src_lib_utils",
+      "target": "ref_lucide_react",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -27758,7 +27983,7 @@
     },
     {
       "source": "src_screens_sessioncheckin",
-      "target": "src_api",
+      "target": "src_lib_utils",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -27766,6 +27991,18 @@
       "context": "import",
       "source_file": "src/screens/SessionCheckIn.jsx",
       "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_sessioncheckin",
+      "target": "src_api",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/screens/SessionCheckIn.jsx",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -27782,7 +28019,19 @@
     },
     {
       "source": "src_screens_superadminapprovals",
-      "target": "src_components_ui_button",
+      "target": "src_api",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/screens/SuperadminApprovals.jsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_superadminapprovals",
+      "target": "ref_react_router_dom",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -27794,7 +28043,7 @@
     },
     {
       "source": "src_screens_superadminapprovals",
-      "target": "src_components_applicationdocumentpicker",
+      "target": "src_components_ui_button",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -27806,7 +28055,7 @@
     },
     {
       "source": "src_screens_superadminapprovals",
-      "target": "ref_lucide_react",
+      "target": "src_components_applicationdocumentpicker",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -27818,7 +28067,7 @@
     },
     {
       "source": "src_screens_superadminapprovals",
-      "target": "ref_framer_motion",
+      "target": "ref_lucide_react",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -27830,7 +28079,7 @@
     },
     {
       "source": "src_screens_superadminapprovals",
-      "target": "src_lib_applicationfiles",
+      "target": "ref_framer_motion",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -27842,7 +28091,7 @@
     },
     {
       "source": "src_screens_superadminapprovals",
-      "target": "src_lib_utils",
+      "target": "src_lib_applicationfiles",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -27850,6 +28099,18 @@
       "context": "import",
       "source_file": "src/screens/SuperadminApprovals.jsx",
       "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_superadminapprovals",
+      "target": "src_lib_utils",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/screens/SuperadminApprovals.jsx",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -27861,18 +28122,6 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L8",
-      "weight": 1.0
-    },
-    {
-      "source": "src_screens_superadminapprovals",
-      "target": "src_api",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "src/screens/SuperadminApprovals.jsx",
       "source_location": "L9",
       "weight": 1.0
     },
@@ -28094,18 +28343,6 @@
     },
     {
       "source": "src_screens_tutorprofile",
-      "target": "src_api",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "src/screens/TutorProfile.jsx",
-      "source_location": "L17",
-      "weight": 1.0
-    },
-    {
-      "source": "src_screens_tutorprofile",
       "target": "ref_react_router_dom",
       "relation": "imports_from",
       "_origin": "ast",
@@ -28114,6 +28351,18 @@
       "context": "import",
       "source_file": "src/screens/TutorProfile.jsx",
       "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_tutorprofile",
+      "target": "src_api",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/screens/TutorProfile.jsx",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -31677,6 +31926,39 @@
       "weight": 1.0
     },
     {
+      "source": "scratch_capture_universal_profiles",
+      "target": "scratch_capture_universal_profiles_run",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_universal_profiles",
+      "target": "scratch_capture_universal_profiles_temp_profile",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "scratch_capture_universal_profiles",
+      "target": "scratch_capture_universal_profiles_sleep",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scratch/capture_universal_profiles.js",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
       "source": "scratch_check_page",
       "target": "scratch_check_page_sleep",
       "relation": "contains",
@@ -34225,7 +34507,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/AccountDialog.jsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -35237,7 +35519,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Messages.jsx",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -35248,7 +35530,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Messages.jsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -35259,7 +35541,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Messages.jsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -35270,7 +35552,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/Messages.jsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -35308,13 +35590,24 @@
     },
     {
       "source": "src_screens_sessioncheckin",
+      "target": "src_screens_sessioncheckin_sessionquizmodal",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/screens/SessionCheckIn.jsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_sessioncheckin",
       "target": "src_screens_sessioncheckin_formattime",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -35325,7 +35618,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -35336,7 +35629,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -35347,23 +35640,12 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
       "source": "src_screens_sessioncheckin",
       "target": "src_screens_sessioncheckin_liveclassroom",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/SessionCheckIn.jsx",
-      "source_location": "L8",
-      "weight": 1.0
-    },
-    {
-      "source": "src_screens_sessioncheckin",
-      "target": "src_screens_sessioncheckin_sessionquizmodal",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -35380,7 +35662,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -35391,7 +35673,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -35402,7 +35684,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -35413,7 +35695,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SuperadminApprovals.jsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -35462,13 +35744,24 @@
     },
     {
       "source": "src_screens_tutorprofile",
+      "target": "src_screens_tutorprofile_role_meta",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/screens/TutorProfile.jsx",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "src_screens_tutorprofile",
       "target": "src_screens_tutorprofile_tutorprofile",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/TutorProfile.jsx",
-      "source_location": "L19",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -36952,7 +37245,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "server/routes/sessions.js",
-      "source_location": "L169",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -37161,5 +37454,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "20d9ba3cec2bb865f0edbdcdf0bde92af688ad4a"
+  "built_at_commit": "e676c6bed9bfded72ff0ab8920dcddb451786f4e"
 }

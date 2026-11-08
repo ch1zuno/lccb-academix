@@ -445,6 +445,13 @@ export default function App() {
                 </button>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={() => navigate(`/profile/${user?.custom_id || user?.id}`)}
+              className="mt-2.5 block w-full text-center text-[12px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-4 hover:decoration-ink"
+            >
+              View my public profile →
+            </button>
           </div>
         </aside>
 
@@ -472,6 +479,32 @@ export default function App() {
                   <Route path="/rewards" element={gate('/rewards', <RewardCatalog showToast={showToast} />)} />
                   <Route path="/messages" element={gate('/messages', <Messages user={user} showToast={showToast} onRead={refreshUnreadMessages} />)} />
                   <Route path="/approvals" element={gate('/approvals', <SuperadminApprovals showToast={showToast} />)} />
+                  <Route
+                    path="/profile/:id"
+                    element={(
+                      <TutorProfile
+                        currentUser={user}
+                        showToast={showToast}
+                        onEditProfile={() => {
+                          setAccountTab('profile');
+                          setAccountOpen(true);
+                        }}
+                      />
+                    )}
+                  />
+                  <Route
+                    path="/users/:id"
+                    element={(
+                      <TutorProfile
+                        currentUser={user}
+                        showToast={showToast}
+                        onEditProfile={() => {
+                          setAccountTab('profile');
+                          setAccountOpen(true);
+                        }}
+                      />
+                    )}
+                  />
                   <Route
                     path="/tutors/:id"
                     element={(

@@ -320,7 +320,7 @@ export default function Dashboard({ role, user, showToast }) {
                           initial={{ height: 0 }}
                           animate={{ height: `${Math.max(2, (point.sessions / chartMax) * 118)}px` }}
                           transition={{ duration: 0.45, delay: index * 0.05, ease: 'easeOut' }}
-                          className={cn('w-full max-w-[38px] border-2 border-ink', index === weeklyTrend.length - 1 ? 'bg-gold' : 'bg-[#e4dbc9]')}
+                          className={cn('w-full max-w-[38px] border-2 border-ink', index === weeklyTrend.length - 1 ? 'bg-gold' : 'bg-surface-quiet')}
                         />
                       </div>
                     ))}
@@ -381,7 +381,13 @@ export default function Dashboard({ role, user, showToast }) {
                 <div key={tutor.id} className="flex items-center gap-3 border-b border-line py-2.5 last:border-0">
                   <span className="num w-4 text-[13px] text-muted-foreground">{index + 1}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-medium leading-tight">{tutor.name}</p>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/profile/${tutor.custom_id || tutor.id}`)}
+                      className="truncate text-left text-[14px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
+                    >
+                      {tutor.name}
+                    </button>
                     <p className="text-[13px] leading-tight text-muted-foreground">{tutor.program}</p>
                   </div>
                   <p className="num text-[14px] text-ink">
@@ -428,7 +434,13 @@ export default function Dashboard({ role, user, showToast }) {
                   <span className={cn('mt-1.5 h-2 w-2 shrink-0 border border-ink', URGENCY_DOT[referral.urgency] || 'bg-ink/30')} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] leading-tight text-ink">
-                      <span className="font-medium">{referral.learner}</span>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/profile/${referral.learner_custom_id || referral.learner_id || referral.learner}`)}
+                        className="font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                      >
+                        {referral.learner}
+                      </button>
                       <span className="text-muted-foreground"> · {referral.topic}</span>
                     </p>
                     <p className="mt-1 text-[13px] leading-tight text-muted-foreground">
@@ -529,7 +541,7 @@ export default function Dashboard({ role, user, showToast }) {
         {!referralsLoading && !referralsError && (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             {columns.map(column => (
-              <div key={column.key} className="border-2 border-ink bg-[#e9e1d1] p-2.5">
+              <div key={column.key} className="border-2 border-ink bg-surface-quiet p-2.5">
                 <div className="flex items-center justify-between gap-2 border-b-2 border-ink px-1 pb-2.5">
                   <div className="flex items-center gap-2 text-[13px] font-bold text-ink">
                     <span className={cn('h-2 w-2 border border-ink', column.dot)} />
@@ -544,9 +556,15 @@ export default function Dashboard({ role, user, showToast }) {
                     const required = Number(referral.hours_required) || 1;
                     const pct = Math.min(100, (completed / required) * 100);
                     return (
-                      <article key={referral.id} className="border-2 border-ink bg-paper p-3.5 shadow-[3px_3px_0_#0f2942] transition-transform hover:-translate-y-0.5">
+                      <article key={referral.id} className="border-2 border-ink bg-paper p-3.5 shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="text-[14px] font-bold leading-snug text-ink">{referral.learner}</p>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/profile/${referral.learner_custom_id || referral.learner_id || referral.learner}`)}
+                            className="font-display text-left text-[14px] font-bold leading-snug text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                          >
+                            {referral.learner}
+                          </button>
                           <span className={cn('mt-1.5 h-2 w-2 shrink-0 border border-ink', URGENCY_DOT[referral.urgency] || 'bg-ink/30')} title={`${referral.urgency} urgency`} />
                         </div>
                         <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">
@@ -563,7 +581,14 @@ export default function Dashboard({ role, user, showToast }) {
 
                         {referral.assigned_tutor && (
                           <p className="mt-2 truncate text-[13px] text-muted-foreground">
-                            Tutor · <span className="text-ink">{referral.assigned_tutor}</span>
+                            Tutor ·{' '}
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/profile/${referral.tutor_custom_id || referral.tutor_id || referral.assigned_tutor}`)}
+                              className="font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                            >
+                              {referral.assigned_tutor}
+                            </button>
                           </p>
                         )}
                         {referral.notes && <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-muted-foreground">{referral.notes}</p>}
@@ -704,7 +729,16 @@ export default function Dashboard({ role, user, showToast }) {
               {next ? (
                 <>
                   <p className="mt-1 text-[14px] font-medium text-ink">{fmtLongDate(next.date)} · {next.time}</p>
-                  <p className="mt-0.5 text-[13px] text-muted-foreground">{next.learner_name} · {next.subject}</p>
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/profile/${next.learner_custom_id || next.learner_id}`)}
+                      className="font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                    >
+                      {next.learner_name}
+                    </button>{' '}
+                    · {next.subject}
+                  </p>
                   <p className="mt-0.5 text-[13px] text-muted-foreground">{next.location}</p>
                 </>
               ) : (
@@ -715,7 +749,7 @@ export default function Dashboard({ role, user, showToast }) {
         </div>
 
         {sessionRequests && sessionRequests.length > 0 && (
-          <div className="panel border-2 border-gold bg-[#fffdf6] p-5">
+          <div className="panel border-2 border-gold bg-card p-5">
             <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
               <div>
                 <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
@@ -733,7 +767,13 @@ export default function Dashboard({ role, user, showToast }) {
               {sessionRequests.map((req) => (
                 <div key={req.id} className="flex flex-col gap-3 border-b border-line/60 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-[14px] font-bold text-ink">{req.learner_name}</p>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/profile/${req.learner_custom_id || req.learner_id}`)}
+                      className="font-display text-left text-[14px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                    >
+                      {req.learner_name}
+                    </button>
                     <p className="mt-0.5 text-[13px] text-muted-foreground">
                       {req.subject} ({req.subject_code}) · {req.topic}
                     </p>
@@ -774,7 +814,7 @@ export default function Dashboard({ role, user, showToast }) {
 
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="panel min-w-0">
-            <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-[#f8f1e2] px-5 py-4">
+            <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-surface-quiet px-5 py-4">
               <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">Upcoming sessions</h2>
               <span className="num border-2 border-ink bg-paper px-1.5 text-[13px]">{upcoming.length}</span>
             </div>
@@ -783,11 +823,22 @@ export default function Dashboard({ role, user, showToast }) {
             {[...upcoming].sort((a, b) => String(a.date).localeCompare(String(b.date))).map(session => (
               <div key={session.id} className="flex items-start justify-between gap-4 border-b border-line px-5 py-3.5 last:border-0">
                 <div className="flex min-w-0 items-start gap-3">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-[#fff7d6] text-[13px] font-bold text-ink">
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/profile/${session.learner_custom_id || session.learner_id}`)}
+                    className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-surface-highlight text-[13px] font-bold text-ink transition-transform hover:scale-105"
+                    title={`View ${session.learner_name}'s profile`}
+                  >
                     {initialsOf(session.learner_name)}
-                  </span>
+                  </button>
                   <div className="min-w-0">
-                    <p className="truncate text-[14px] font-medium leading-tight text-ink">{session.learner_name}</p>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/profile/${session.learner_custom_id || session.learner_id}`)}
+                      className="truncate text-left text-[14px] font-medium leading-tight text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                    >
+                      {session.learner_name}
+                    </button>
                     <p className="mt-0.5 truncate text-[13px] leading-tight text-muted-foreground">{session.subject} · {session.topic}</p>
                   </div>
                 </div>
@@ -810,7 +861,7 @@ export default function Dashboard({ role, user, showToast }) {
           </div>
 
           <div className="panel min-w-0">
-            <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-[#f8f1e2] px-5 py-4">
+            <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-surface-quiet px-5 py-4">
               <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">Completed</h2>
               <span className="num border-2 border-ink bg-paper px-1.5 text-[13px]">{completed.length}</span>
             </div>
@@ -831,7 +882,13 @@ export default function Dashboard({ role, user, showToast }) {
                     {completed.map(session => (
                       <tr key={session.id}>
                         <td>
-                          <p className="font-medium leading-tight">{session.learner_name}</p>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/profile/${session.learner_custom_id || session.learner_id}`)}
+                            className="text-left font-medium leading-tight text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                          >
+                            {session.learner_name}
+                          </button>
                           <p className="mt-0.5 text-[13px] leading-tight text-muted-foreground">{session.subject}</p>
                         </td>
                         <td className="num whitespace-nowrap text-[13px] text-muted-foreground">{fmtDate(session.date)}</td>
@@ -892,7 +949,7 @@ export default function Dashboard({ role, user, showToast }) {
       )}
 
       {sessionRequests && sessionRequests.length > 0 && (
-        <div className="panel border-2 border-gold bg-[#fffdf6] p-5">
+        <div className="panel border-2 border-gold bg-card p-5">
           <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
             <div>
               <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
@@ -910,7 +967,13 @@ export default function Dashboard({ role, user, showToast }) {
             {sessionRequests.map((req) => (
               <div key={req.id} className="flex flex-col gap-3 border-b border-line/60 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-[14px] font-bold text-ink">{req.tutor_name}</p>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/profile/${req.tutor_custom_id || req.tutor_id}`)}
+                    className="font-display text-left text-[14px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                  >
+                    {req.tutor_name}
+                  </button>
                   <p className="mt-0.5 text-[13px] text-muted-foreground">
                     {req.subject} ({req.subject_code}) · {req.topic}
                   </p>
@@ -984,7 +1047,7 @@ export default function Dashboard({ role, user, showToast }) {
       </div>
 
       <div className="panel">
-        <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-[#f8f1e2] px-5 py-4">
+        <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-surface-quiet px-5 py-4">
           <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">Session record</h2>
           <span className="num border-2 border-ink bg-paper px-1.5 text-[13px]">{mine.length}</span>
         </div>
@@ -1009,7 +1072,15 @@ export default function Dashboard({ role, user, showToast }) {
               <tbody>
                 {mySessions.map(session => (
                   <tr key={session.id}>
-                    <td className="font-medium">{session.tutor_name}</td>
+                    <td className="font-medium">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/profile/${session.tutor_custom_id || session.tutor_id}`)}
+                        className="text-left font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                      >
+                        {session.tutor_name}
+                      </button>
+                    </td>
                     <td>
                       <p className="leading-tight">{session.subject}</p>
                       <p className="mt-0.5 text-[13px] leading-tight text-muted-foreground">{session.topic}</p>

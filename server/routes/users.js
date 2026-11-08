@@ -56,15 +56,14 @@ router.get('/users/:id/avatar', async (req, res, next) => {
 router.get('/users/:id/public', async (req, res, next) => {
   try {
     const { id } = req.params;
-    if (!UUID_RE.test(String(id))) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    const isUuid = UUID_RE.test(String(id));
 
     const { rows } = await query(
-      `SELECT u.id, u.name, u.role, u.bio, u.avatar,
+      `SELECT u.id, u.custom_id, u.name, u.role, u.bio, u.avatar, u.program, u.department,
+              u.is_available, u.is_verified,
               EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id) AS has_avatar
        FROM users u
-       WHERE u.id = $1`,
+       WHERE ${isUuid ? 'u.id = $1' : 'u.custom_id = $1'}`,
       [id]
     );
 
@@ -73,24 +72,48 @@ router.get('/users/:id/public', async (req, res, next) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    let stats = null;
+    if (user.role === 'tutor') {
+      const statsRes = await query(
+        `SELECT count(*)::int AS completed_sessions
+         FROM sessions
+         WHERE tutor_id = $1 AND status = 'completed'`,
+        [user.id]
+      );
+      stats = { completed_sessions: statsRes.rows[0]?.completed_sessions || 0 };
+    } else if (user.role === 'learner') {
+      const statsRes = await query(
+        `SELECT count(*)::int AS completed_sessions
+         FROM sessions
+         WHERE learner_id = $1 AND status = 'completed'`,
+        [user.id]
+      );
+      stats = { completed_sessions: statsRes.rows[0]?.completed_sessions || 0 };
+    }
+
     let subjects = [];
     if (user.role === 'tutor') {
       const subRows = await query(
-        `SELECT s.code, s.name, s.department
+        `SELECT s.id, s.code, s.name, s.department
          FROM user_subjects us
          JOIN subjects s ON s.id = us.subject_id
          WHERE us.user_id = $1
          ORDER BY s.code`,
-        [id]
+        [user.id]
       );
       subjects = subRows.rows;
     }
 
-    const publicProfile = toPublicProfile(user, subjects);
-    res.json({ profile: publicProfile });
+    const publicProfile = toPublicProfile(user, subjects, stats);
+    res.json({
+      profile: publicProfile,
+      userId: user.id,
+      customId: user.custom_id,
+    });
   } catch (err) {
     next(err);
   }
 });
 
 export default router;
+
