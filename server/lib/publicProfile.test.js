@@ -66,3 +66,28 @@ test('toPublicProfile caps bio at 280 characters', () => {
   const publicProfile = toPublicProfile(user);
   assert.equal(publicProfile.bio.length, 280);
 });
+
+test('toPublicProfile includes safe program, status and completed sessions', () => {
+  const tutor = {
+    id: 'f1e2d3c4-b5a6-7890-1234-56789abcdef0',
+    name: 'Mark Antipo',
+    role: 'tutor',
+    program: 'BSIT',
+    is_available: true,
+    is_verified: true,
+    email: 'mark@lccbacolod.edu.ph',
+  };
+
+  const subjects = [{ id: 's1', code: 'CS-101', name: 'Intro', department: 'CS' }];
+  const stats = { completed_sessions: 8 };
+
+  const profile = toPublicProfile(tutor, subjects, stats);
+  assert.equal(profile.name, 'Mark Antipo');
+  assert.equal(profile.program, 'BSIT');
+  assert.equal(profile.is_available, true);
+  assert.equal(profile.is_verified, true);
+  assert.deepEqual(profile.stats, { completed_sessions: 8 });
+  assert.equal(profile.id, undefined);
+  assert.equal(profile.email, undefined);
+});
+

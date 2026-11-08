@@ -25,26 +25,28 @@ const SIZE_MAP = {
  * Universal reusable Avatar component with initials fallback.
  * Strictly renders plain text initials when image is missing or errors.
  */
-export default function Avatar({
+export function Avatar({
   name = '',
   avatarUrl = null,
+  src = null,
   size = 'md',
   className = '',
   showBorder = true,
   alt = '',
 }) {
+  const resolvedUrl = src || avatarUrl;
   const [imgError, setImgError] = useState(false);
   const sizeClass = SIZE_MAP[size] || SIZE_MAP.md;
   const initials = getInitials(name);
 
-  // If avatarUrl changed, reset error state
-  const [prevUrl, setPrevUrl] = useState(avatarUrl);
-  if (avatarUrl !== prevUrl) {
-    setPrevUrl(avatarUrl);
+  // If URL changed, reset error state
+  const [prevUrl, setPrevUrl] = useState(resolvedUrl);
+  if (resolvedUrl !== prevUrl) {
+    setPrevUrl(resolvedUrl);
     setImgError(false);
   }
 
-  const hasImage = Boolean(avatarUrl) && !imgError;
+  const hasImage = Boolean(resolvedUrl) && !imgError;
 
   return (
     <div
@@ -57,7 +59,7 @@ export default function Avatar({
     >
       {hasImage ? (
         <img
-          src={avatarUrl}
+          src={resolvedUrl}
           alt={alt || `${name || 'User'}'s avatar`}
           className="h-full w-full object-cover"
           loading="lazy"
@@ -74,3 +76,6 @@ export default function Avatar({
     </div>
   );
 }
+
+export default Avatar;
+

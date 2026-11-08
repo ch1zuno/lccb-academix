@@ -12,15 +12,15 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1794155455.1630194,
-    "seen": 1794156108.4848459,
+    "mtime": 1794156176.399154,
+    "seen": 1794158246.3400156,
     "ast_hash": "c1da6df909e4645e5a147bd2f8b729a2",
     "semantic_hash": ""
   },
   "src/App.jsx": {
-    "mtime": 1794155380.3602438,
-    "seen": 1794156108.513675,
-    "ast_hash": "12d2e489ddcd9766aea8c604345f2170",
+    "mtime": 1794156823.5128427,
+    "seen": 1794158246.4167354,
+    "ast_hash": "2b5a55d7c6987b83c2577253cbf6add6",
     "semantic_hash": ""
   },
   "src/components/ui/badge.jsx": {
@@ -78,9 +78,9 @@
     "semantic_hash": ""
   },
   "src/screens/LearnerWizard.jsx": {
-    "mtime": 1794073681.031305,
-    "seen": 1794074893.204499,
-    "ast_hash": "8e5ba326f3f46eac49b9801e25e3dae7",
+    "mtime": 1794156768.5198278,
+    "seen": 1794158246.444517,
+    "ast_hash": "21d4d4e550117319608b3331b30f7679",
     "semantic_hash": ""
   },
   "src/screens/Login.jsx": {
@@ -240,21 +240,21 @@
     "semantic_hash": ""
   },
   "server/routes/auth.js": {
-    "mtime": 1794155130.8011637,
-    "seen": 1794156108.4946716,
+    "mtime": 1794156176.510787,
+    "seen": 1794158246.3709948,
     "ast_hash": "4894a6de56c75530dfc0c88b7bfd316c",
     "semantic_hash": ""
   },
   "server/routes/index.js": {
-    "mtime": 1794155067.633817,
-    "seen": 1794156108.4946716,
+    "mtime": 1794156176.567137,
+    "seen": 1794158246.3730018,
     "ast_hash": "7e2ac05e16126e2ee08b5637b125072e",
     "semantic_hash": ""
   },
   "server/routes/matching.js": {
-    "mtime": 1794064723.9909856,
-    "seen": 1794064996.3619366,
-    "ast_hash": "8bf06df24a00ecdeb35f760ad34932f0",
+    "mtime": 1794156711.9570248,
+    "seen": 1794158246.3730018,
+    "ast_hash": "9ccc7920fdf63015fe78deb2b6c037cc",
     "semantic_hash": ""
   },
   "server/routes/notifications.js": {
@@ -480,8 +480,8 @@
     "semantic_hash": ""
   },
   "src/components/SecurityDialog.jsx": {
-    "mtime": 1794155195.6780055,
-    "seen": 1794156108.515708,
+    "mtime": 1794156176.8656485,
+    "seen": 1794158246.422194,
     "ast_hash": "6dc5eb29d25cff4f4b17e2c0f97c373f",
     "semantic_hash": ""
   },
@@ -1194,45 +1194,51 @@
     "semantic_hash": ""
   },
   "server/lib/publicProfile.js": {
-    "mtime": 1794154991.608333,
-    "seen": 1794156108.4911745,
-    "ast_hash": "184386884a386f5029588b87ef5270ed",
+    "mtime": 1794156624.9501681,
+    "seen": 1794158246.3586524,
+    "ast_hash": "ab2c83011dae5bc0722d569d8c3ea590",
     "semantic_hash": ""
   },
   "server/lib/publicProfile.test.js": {
-    "mtime": 1794155429.4809563,
-    "seen": 1794156108.4911745,
-    "ast_hash": "86946a5bfbc47f2bbae670b654e18d01",
+    "mtime": 1794156644.6500635,
+    "seen": 1794158246.3586524,
+    "ast_hash": "608c51edc92be9829cf17e20d4629739",
     "semantic_hash": ""
   },
   "server/routes/users.js": {
-    "mtime": 1794155051.9058275,
-    "seen": 1794156108.4980946,
-    "ast_hash": "4b70e344ab8a26a7431e549489e8d030",
+    "mtime": 1794156171.294449,
+    "seen": 1794158246.3804471,
+    "ast_hash": "0ec59ae9a1ddbc78d90be1514daec4dd",
     "semantic_hash": ""
   },
   "src/components/AccountDialog.jsx": {
-    "mtime": 1794155187.2825115,
-    "seen": 1794156108.5146463,
-    "ast_hash": "29678685f8ec83569b1bc4f69ecb5f73",
+    "mtime": 1794156171.4796307,
+    "seen": 1794158246.418744,
+    "ast_hash": "4c9d11989a353b72b1d8f102e59e88c8",
     "semantic_hash": ""
   },
   "src/components/ui/Avatar.jsx": {
-    "mtime": 1794155037.0500023,
-    "seen": 1794156108.5170753,
-    "ast_hash": "a9d7b06cbe6db4a464b5ec302eb9f12a",
+    "mtime": 1794156859.260056,
+    "seen": 1794158246.426208,
+    "ast_hash": "5bfeb295b18fe198f1deab6d213ac3fa",
     "semantic_hash": ""
   },
   "src/lib/avatarUpload.js": {
-    "mtime": 1794155021.677589,
-    "seen": 1794156108.5211844,
-    "ast_hash": "9030aaaa3753452190ddf5dfab5dd2ce",
+    "mtime": 1794156171.7118783,
+    "seen": 1794158246.4357517,
+    "ast_hash": "cbf715e28f4e60ece605823269d53be3",
     "semantic_hash": ""
   },
   "src/lib/publicProfile.js": {
-    "mtime": 1794155002.210919,
-    "seen": 1794156108.5221243,
-    "ast_hash": "74745ff8675d85f98d3f0a7c8420558c",
+    "mtime": 1794156668.0434806,
+    "seen": 1794158246.4397683,
+    "ast_hash": "ca155a7709e43275bf106d6f4c7b900f",
+    "semantic_hash": ""
+  },
+  "src/screens/TutorProfile.jsx": {
+    "mtime": 1794156799.8073351,
+    "seen": 1794158246.4513943,
+    "ast_hash": "22f8f8347d7dbf44dba0c69ab667197a",
     "semantic_hash": ""
   }
 }

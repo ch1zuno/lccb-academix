@@ -28,6 +28,7 @@ const FacultyReferral = React.lazy(() => import('./screens/FacultyReferral'));
 const SessionCheckIn = React.lazy(() => import('./screens/SessionCheckIn'));
 const RewardCatalog = React.lazy(() => import('./screens/RewardCatalog'));
 const Messages = React.lazy(() => import('./screens/Messages'));
+const TutorProfile = React.lazy(() => import('./screens/TutorProfile'));
 
 /* Production builds hide the demo switcher unless VITE_DEMO_MODE=1. Local dev
  * keeps it on; VITE_DEMO_MODE=0 can disable it during a local production test. */
@@ -471,6 +472,19 @@ export default function App() {
                   <Route path="/rewards" element={gate('/rewards', <RewardCatalog showToast={showToast} />)} />
                   <Route path="/messages" element={gate('/messages', <Messages user={user} showToast={showToast} onRead={refreshUnreadMessages} />)} />
                   <Route path="/approvals" element={gate('/approvals', <SuperadminApprovals showToast={showToast} />)} />
+                  <Route
+                    path="/tutors/:id"
+                    element={(
+                      <TutorProfile
+                        currentUser={user}
+                        showToast={showToast}
+                        onEditProfile={() => {
+                          setAccountTab('profile');
+                          setAccountOpen(true);
+                        }}
+                      />
+                    )}
+                  />
                   <Route
                     path="*"
                     element={(

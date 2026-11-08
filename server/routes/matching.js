@@ -3,6 +3,7 @@ import { query, withTransaction } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { audit, requestIp } from '../lib/audit.js';
+import { toPublicProfile } from '../lib/publicProfile.js';
 
 const router = express.Router();
 
@@ -59,6 +60,56 @@ router.get('/tutors', requireAuth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+/** GET /tutors/:id — public-safe profile for an accredited tutor */
+router.get('/tutors/:id', requireAuth, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id));
+
+    const userResult = await query(
+      `SELECT u.id, u.custom_id, u.name, u.role, u.bio, u.avatar, u.program, u.department,
+              u.is_available, u.is_verified,
+              EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id) AS has_avatar
+       FROM users u
+       WHERE ${isUuid ? 'u.id = $1' : 'u.custom_id = $1'} AND u.role = 'tutor'`,
+      [id]
+    );
+
+    const user = userResult.rows[0];
+    if (!user) {
+      throw httpError(404, 'Tutor not found');
+    }
+
+    // Real computed completed sessions count only
+    const statsResult = await query(
+      `SELECT count(*)::int AS completed_sessions
+       FROM sessions
+       WHERE tutor_id = $1 AND status = 'completed'`,
+      [user.id]
+    );
+    const stats = { completed_sessions: statsResult.rows[0]?.completed_sessions || 0 };
+
+    // Taught subjects
+    const subjectsResult = await query(
+      `SELECT s.id, s.code, s.name, s.department
+       FROM user_subjects us
+       JOIN subjects s ON s.id = us.subject_id
+       WHERE us.user_id = $1
+       ORDER BY s.code`,
+      [user.id]
+    );
+
+    const publicProfile = toPublicProfile(user, subjectsResult.rows, stats);
+    res.json({
+      profile: publicProfile,
+      tutorId: user.id,
+      customId: user.custom_id,
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
 /** GET /subjects — subject list for the wizard dropdowns */
 router.get('/subjects', requireAuth, async (_req, res, next) => {
   try {
@@ -104,29 +155,31 @@ router.post('/session-requests', requireAuth, requireRole('learner'), async (req
       throw httpError(400, 'preferredTime must look like 3:30 PM');
     }
     // tutor must actually teach that subject and still be verified/available
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(tutorId));
     const { rows: ok } = await query(
-      `SELECT 1 FROM user_subjects us JOIN users u ON u.id = us.user_id
-        WHERE us.user_id = $1 AND us.subject_id = $2 AND u.is_verified AND u.is_available`, [tutorId, subjectId]);
+      `SELECT u.id FROM user_subjects us JOIN users u ON u.id = us.user_id
+        WHERE ${isUuid ? 'us.user_id = $1' : 'u.custom_id = $1'} AND us.subject_id = $2 AND u.is_verified AND u.is_available`, [tutorId, subjectId]);
     if (!ok[0]) throw httpError(409, 'That tutor is not accredited or available for this subject');
+    const resolvedTutorId = ok[0].id;
 
     const { rows } = await query(
       `INSERT INTO session_requests (learner_id, tutor_id, subject_id, topic, preferred_date, preferred_time, note, location)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, status`,
-      [req.user.id, tutorId, subjectId, String(topic).slice(0, 120), date, String(preferredTime).slice(0, 20),
+      [req.user.id, resolvedTutorId, subjectId, String(topic).slice(0, 120), date, String(preferredTime).slice(0, 20),
         note ? String(note).slice(0, 300) : null, String(location).slice(0, 80)],
     );
     await query(
       `INSERT INTO notifications (user_id, title, message, type)
        SELECT $1, 'New session request', 'Request from ' || $2 || ' — subject ' || s.name, 'info'
        FROM subjects s WHERE s.id = $3`,
-      [tutorId, req.user.name, subjectId]).catch(() => {});
+      [resolvedTutorId, req.user.name, subjectId]).catch(() => {});
     await audit({
       actorId: req.user.id,
       actorRole: req.user.role,
       action: 'session.request',
       entity: 'session_request',
       entityId: rows[0].id,
-      detail: { tutorId, subjectId, date, time: preferredTime },
+      detail: { tutorId: resolvedTutorId, subjectId, date, time: preferredTime },
       ip: requestIp(req),
     });
     res.status(201).json({ request: rows[0] });

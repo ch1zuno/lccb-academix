@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { ArrowRight, ArrowLeft, Loader2, Star, Check } from 'lucide-react';
+import { Avatar } from '../components/ui/Avatar';
 import { cn } from '../lib/utils';
 import { addDaysYmd } from '../lib/dates';
 import api from '../api';
@@ -58,8 +60,8 @@ function OptionRow({ label, desc, selected, onClick }) {
       className={cn(
         'flex min-h-[96px] w-full items-start justify-between gap-4 border-2 border-ink p-4 text-left transition-[background-color,box-shadow,transform]',
         selected
-          ? 'bg-gold shadow-[4px_4px_0_#0f2942]'
-          : 'bg-paper hover:-translate-y-0.5 hover:bg-[#fff7d6] hover:shadow-[3px_3px_0_#0f2942]',
+          ? 'bg-gold shadow-[4px_4px_0_var(--color-ink)]'
+          : 'bg-paper hover:-translate-y-0.5 hover:bg-surface-highlight hover:shadow-[3px_3px_0_var(--color-ink)]',
       )}
     >
       <span>
@@ -79,6 +81,11 @@ function OptionRow({ label, desc, selected, onClick }) {
 }
 
 export default function LearnerWizard({ showToast }) {
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const prefilledTutor = location.state?.prefilledTutor;
+  const prefilledTutorId = searchParams.get('tutorId') || prefilledTutor?.id;
+
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState({});
   const [matching, setMatching] = useState(false);
@@ -86,6 +93,35 @@ export default function LearnerWizard({ showToast }) {
   const [matches, setMatches] = useState(null);
   const [matchError, setMatchError] = useState(null);
   const [requesting, setRequesting] = useState(null);
+
+  useEffect(() => {
+    if (prefilledTutor) {
+      setMatches([prefilledTutor]);
+      setCurrentStep(steps.length - 1);
+      if (prefilledTutor.subjects?.[0]?.code) {
+        setData(d => ({ ...d, course: prefilledTutor.subjects[0].code, goal: d.goal || 'One-on-one session' }));
+      }
+    } else if (prefilledTutorId) {
+      api.get(`/tutors/${prefilledTutorId}`)
+        .then(({ profile, tutorId, customId }) => {
+          const tutorObj = {
+            id: tutorId || prefilledTutorId,
+            custom_id: customId,
+            name: profile.name,
+            program: profile.program,
+            subjects: profile.subjects,
+            avatar: profile.avatar,
+            stats: profile.stats,
+          };
+          setMatches([tutorObj]);
+          setCurrentStep(steps.length - 1);
+          if (profile.subjects?.[0]?.code) {
+            setData(d => ({ ...d, course: profile.subjects[0].code, goal: d.goal || 'One-on-one session' }));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [prefilledTutor, prefilledTutorId]);
 
   useEffect(() => {
     api.get('/subjects')
@@ -238,10 +274,10 @@ export default function LearnerWizard({ showToast }) {
                           onClick={() => selectOption('course', option.code)}
                           aria-pressed={data.course === option.code}
                           className={cn(
-                            'h-10 border-2 border-ink px-4 text-[14px] font-bold shadow-[2px_2px_0_#0f2942] transition-[background-color,transform,box-shadow]',
+                            'h-10 border-2 border-ink px-4 text-[14px] font-bold shadow-[2px_2px_0_var(--color-ink)] transition-[background-color,transform,box-shadow]',
                             data.course === option.code
                               ? 'bg-gold text-ink'
-                              : 'bg-paper text-ink hover:-translate-y-0.5 hover:bg-[#fff7d6]',
+                              : 'bg-paper text-ink hover:-translate-y-0.5 hover:bg-surface-highlight',
                           )}
                         >
                           {option.code}
@@ -306,11 +342,26 @@ export default function LearnerWizard({ showToast }) {
 
                 {getMatches().length > 0 && (
                   <div className="panel overflow-hidden">
+                    {Boolean(prefilledTutor || prefilledTutorId) && (
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink/20 bg-surface-highlight p-3 text-[13px] font-medium text-ink">
+                        <span>Prefilled tutor for your session. Click Request session below or select a course.</span>
+                        {Array.isArray(getMatches()[0]?.subjects) && getMatches()[0].subjects.length > 1 && (
+                          <select
+                            aria-label="Course for session"
+                            value={data.course || getMatches()[0].subjects[0].code}
+                            onChange={(e) => setData(d => ({ ...d, course: e.target.value }))}
+                            className="border border-ink bg-paper px-2 py-1 text-[13px] font-medium text-ink"
+                          >
+                            {getMatches()[0].subjects.map(s => (
+                              <option key={s.code} value={s.code}>{s.code} · {s.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    )}
                     {getMatches().map(tutor => (
                       <div key={tutor.id} className="flex flex-col gap-4 border-b border-ink/15 p-5 last:border-0 sm:flex-row sm:items-center">
-                        <span className="grid h-11 w-11 shrink-0 place-items-center border-2 border-ink bg-[#fff7d6] font-display text-[14px] font-bold text-ink">
-                          {tutor.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                        </span>
+                        <Avatar name={tutor.name} src={tutor.avatar} size="md" className="shrink-0" />
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                             <h3 className="font-display text-[16px] font-bold text-ink">{tutor.name}</h3>
@@ -333,10 +384,12 @@ export default function LearnerWizard({ showToast }) {
                           onClick={async () => {
                             setRequesting(tutor.id);
                             const fallbackDate = addDaysYmd(3);
+                            const targetSubjectId = (subjectOptions.find(s => s.code === data.course) || {}).id
+                              || (tutor.subjects?.[0] || {}).id;
                             try {
                               await api.post('/session-requests', {
                                 tutorId: tutor.id,
-                                subjectId: (subjectOptions.find(s => s.code === data.course) || {}).id,
+                                subjectId: targetSubjectId,
                                 topic: data.goal || 'General review',
                                 preferredDate: fallbackDate,
                                 preferredTime: '3:30 PM',
