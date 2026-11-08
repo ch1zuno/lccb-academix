@@ -1,6 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import { query } from '../db.js';
+import { query, withTransaction } from '../db.js';
 import { requireAuth, signToken } from '../middleware/auth.js';
 import { config } from '../config.js';
 import { audit, requestIp } from '../lib/audit.js';
@@ -8,9 +8,37 @@ import { clearSessionCookie, setSessionCookie } from '../lib/sessionCookie.js';
 
 const router = express.Router();
 const DEV = !config.isProd;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const PUBLIC_COLUMNS = `id, custom_id, name, email, role, avatar, program, department, title,
                         is_verified, is_available, certified_by_id, token_version`;
+
+async function fetchFullUser(userId) {
+  const { rows } = await query(
+    `SELECT u.id, u.custom_id, u.name, u.email, u.role, u.avatar, u.bio, u.program, u.department, u.title,
+            u.is_verified, u.is_available, u.certified_by_id,
+            EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id) AS has_avatar
+     FROM users u WHERE u.id = $1`,
+    [userId]
+  );
+  const user = rows[0];
+  if (!user) return null;
+
+  user.avatar_url = user.has_avatar ? `/api/users/${user.id}/avatar` : null;
+
+  if (user.role === 'tutor') {
+    const subRows = await query(
+      `SELECT s.id, s.code, s.name, s.department
+       FROM user_subjects us
+       JOIN subjects s ON s.id = us.subject_id
+       WHERE us.user_id = $1
+       ORDER BY s.code`,
+      [userId]
+    );
+    user.subjects = subRows.rows;
+  }
+  return user;
+}
 
 /**
  * POST /api/auth/login { loginId, password }
@@ -54,12 +82,129 @@ router.post('/login', async (req, res, next) => {
 /** GET /api/auth/me → current user profile (fresh, no hash) */
 router.get('/me', requireAuth, async (req, res, next) => {
   try {
-    const { rows } = await query(
-      `SELECT id, custom_id, name, email, role, avatar, program, department, title,
-              is_verified, is_available, certified_by_id
-       FROM users WHERE id = $1`, [req.user.id],
-    );
-    res.json({ user: rows[0] });
+    const user = await fetchFullUser(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ user });
+  } catch (e) { next(e); }
+});
+
+/**
+ * PATCH /api/auth/profile
+ * Allows users to edit their own profile: name, bio (max 280 plain text), avatar.
+ * Tutors also edit the subjects they teach.
+ */
+router.patch('/profile', requireAuth, async (req, res, next) => {
+  try {
+    const { name, bio, avatarBase64, subjectIds } = req.body || {};
+    const userId = req.user.id;
+
+    // 1. Validate name
+    let validatedName = undefined;
+    if (name !== undefined) {
+      const cleanName = String(name).trim();
+      if (!cleanName) {
+        return res.status(400).json({ error: 'Display name cannot be empty' });
+      }
+      if (cleanName.length > 100) {
+        return res.status(400).json({ error: 'Display name must be 100 characters or fewer' });
+      }
+      validatedName = cleanName;
+    }
+
+    // 2. Validate bio (plain text only, max 280 chars)
+    let validatedBio = undefined;
+    if (bio !== undefined) {
+      const cleanBio = String(bio).trim();
+      if (cleanBio.length > 280) {
+        return res.status(400).json({ error: 'Bio must be 280 characters or fewer' });
+      }
+      validatedBio = cleanBio;
+    }
+
+    // 3. Process avatar if provided
+    if (avatarBase64 === null) {
+      // Remove avatar
+      await query(`DELETE FROM user_avatars WHERE user_id = $1`, [userId]);
+    } else if (typeof avatarBase64 === 'string' && avatarBase64.trim().length > 0) {
+      const cleanedBase64 = avatarBase64.replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, '');
+      const buffer = Buffer.from(cleanedBase64, 'base64');
+
+      if (buffer.length > 500 * 1024) {
+        return res.status(400).json({ error: 'Avatar image must not exceed 500 KB' });
+      }
+
+      // Check magic bytes
+      let mimeType = null;
+      if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+        mimeType = 'image/jpeg';
+      } else if (
+        buffer.length >= 8 &&
+        buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47 &&
+        buffer[4] === 0x0d && buffer[5] === 0x0a && buffer[6] === 0x1a && buffer[7] === 0x0a
+      ) {
+        mimeType = 'image/png';
+      } else if (
+        buffer.length >= 12 &&
+        buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+        buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50
+      ) {
+        mimeType = 'image/webp';
+      }
+
+      if (!mimeType) {
+        return res.status(400).json({ error: 'Invalid image format. Only JPEG, PNG, and WebP are allowed.' });
+      }
+
+      await query(
+        `INSERT INTO user_avatars (user_id, data, mime_type, size_bytes, updated_at)
+         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+         ON CONFLICT (user_id) DO UPDATE
+           SET data = EXCLUDED.data,
+               mime_type = EXCLUDED.mime_type,
+               size_bytes = EXCLUDED.size_bytes,
+               updated_at = CURRENT_TIMESTAMP`,
+        [userId, buffer, mimeType, buffer.length]
+      );
+    }
+
+    // 4. Update tutor subjects if tutor role
+    if (req.user.role === 'tutor' && Array.isArray(subjectIds)) {
+      const validUuids = subjectIds.filter((id) => UUID_RE.test(String(id)));
+      await withTransaction(async (client) => {
+        await client.query(`DELETE FROM user_subjects WHERE user_id = $1`, [userId]);
+        if (validUuids.length > 0) {
+          await client.query(
+            `INSERT INTO user_subjects (user_id, subject_id)
+             SELECT $1, id FROM subjects WHERE id = ANY($2::uuid[])`,
+            [userId, validUuids]
+          );
+        }
+      });
+    }
+
+    // 5. Update users table
+    if (validatedName !== undefined || validatedBio !== undefined) {
+      await query(
+        `UPDATE users
+         SET name = COALESCE($1, name),
+             bio = COALESCE($2, bio),
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $3`,
+        [validatedName ?? null, validatedBio ?? null, userId]
+      );
+    }
+
+    await audit({
+      actorId: userId,
+      actorRole: req.user.role,
+      action: 'user.update_profile',
+      entity: 'user',
+      entityId: userId,
+      ip: requestIp(req),
+    });
+
+    const updatedUser = await fetchFullUser(userId);
+    res.json({ ok: true, user: updatedUser });
   } catch (e) { next(e); }
 });
 

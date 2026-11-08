@@ -15,12 +15,14 @@ import aiRoutes from './ai.js';
 import realtimeRoutes from './realtime.js';
 import videoRoutes from './video.js';
 import messageRoutes from './messages.js';
+import usersRoutes from './users.js';
 
 const router = Router();
 
 // Anonymous landing-page numbers. Mount before the authenticated routes.
 router.use(publicRoutes);
 router.use('/auth', authRoutes);
+router.use(usersRoutes);
 // referrals.js registers full /referrals/... paths itself — mount WITHOUT a prefix
 router.use(referralRoutes);
 // sessions.js registers /sessions/... and /device/... — no prefix needed

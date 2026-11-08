@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-
 import {
   BookOpen, Bell, ChevronDown, Check, LayoutDashboard, Search, Clock,
   ShieldCheck, Users, Award, LogOut, Menu, X, Inbox, KeyRound, MessageSquare,
+  User,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from './lib/utils';
@@ -12,9 +13,9 @@ import api from './api';
 import { loadSession, saveSession, clearSession } from './authToken';
 
 import Login from './screens/Login';
-import SecurityDialog from './components/SecurityDialog';
+import AccountDialog from './components/AccountDialog';
+import Avatar from './components/ui/Avatar';
 import SplashScreen from './components/SplashScreen';
-import DarkModeToggle from './components/DarkModeToggle';
 
 /* Route-level code splitting keeps the landing bundle small; each role only
  * downloads the workspace it can enter. */
@@ -80,7 +81,8 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
-  const [securityOpen, setSecurityOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [accountTab, setAccountTab] = useState('profile');
   const [role, setRole] = useState(user?.role ?? 'learner');
   const [showSplash, setShowSplash] = useState(true);
 
@@ -118,9 +120,14 @@ export default function App() {
   useEffect(() => {
     if (!mobileOpen) return undefined;
     const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
     document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
     mobileCloseRef.current?.focus();
-    return () => { document.body.style.overflow = previousOverflow; };
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    };
   }, [mobileOpen]);
 
   const currentProfile = user
@@ -260,7 +267,7 @@ export default function App() {
 
   const Wordmark = ({ compact = false }) => (
     <div className="flex items-center gap-2.5">
-      <span className="grid h-10 w-10 shrink-0 place-items-center border-2 border-ink bg-gold text-ink shadow-[2px_2px_0_#0f2942]">
+      <span className="grid h-10 w-10 shrink-0 place-items-center border-2 border-ink bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]">
         <BookOpen className="h-[18px] w-[18px]" strokeWidth={2.2} />
       </span>
       <div className="min-w-0">
@@ -294,6 +301,12 @@ export default function App() {
       <div className="mx-2.5 my-5 h-0.5 bg-ink/15" />
       <p className="group-label mb-2 px-2.5 uppercase tracking-[0.04em]">Account</p>
       <button
+        onClick={() => { setAccountTab('profile'); setAccountOpen(true); onNavigate?.(); }}
+        className="nav-item w-full"
+      >
+        <span className="flex items-center gap-2.5"><User /> Profile</span>
+      </button>
+      <button
         onClick={() => { setShowNotifications(v => !v); refreshNotifications(); onNavigate?.(); }}
         className="nav-item w-full justify-between"
       >
@@ -318,7 +331,7 @@ export default function App() {
       </AnimatePresence>
       <div className={cn("min-h-screen bg-stone text-ink", showSplash && 'hidden')}>
         {/* Mobile bar */}
-      <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b-2 border-ink bg-[#f7f0e2] px-4 lg:hidden">
+      <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b-2 border-ink bg-surface-sidebar px-4 lg:hidden">
         <Wordmark compact />
         <div className="flex items-center gap-1.5">
           <button
@@ -330,7 +343,7 @@ export default function App() {
             {unreadNotifications > 0 && <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 border-2 border-ink bg-crimson" />}
           </button>
           <button
-            className="grid h-10 w-10 place-items-center border-2 border-ink bg-paper text-ink shadow-[2px_2px_0_#0f2942] transition-transform active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+            className="grid h-10 w-10 place-items-center border-2 border-ink bg-paper text-ink shadow-[2px_2px_0_var(--color-ink)] transition-transform active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
             aria-label="Open menu"
             aria-haspopup="dialog"
             aria-controls="mobile-workspace-menu"
@@ -344,14 +357,14 @@ export default function App() {
 
       <div className="flex">
         {/* Desktop sidebar */}
-        <aside className="sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r-2 border-ink bg-[#f7f0e2] px-3 py-5 lg:flex">
+        <aside className="sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r-2 border-ink bg-surface-sidebar px-3 py-5 lg:flex">
           <div className="px-2 pb-6"><Wordmark /></div>
 
           {DEMO_MODE ? (
             <div className="relative px-2 pb-6">
               <button
                 onClick={() => setShowRoleMenu(v => !v)}
-                className="flex w-full items-center justify-between border-2 border-ink bg-paper px-3 py-2.5 text-left shadow-[3px_3px_0_#0f2942] transition-[transform,box-shadow] hover:-translate-y-px hover:shadow-[4px_4px_0_#0f2942]"
+                className="flex w-full items-center justify-between border-2 border-ink bg-paper px-3 py-2.5 text-left shadow-[3px_3px_0_var(--color-ink)] transition-[transform,box-shadow] hover:-translate-y-px hover:shadow-[4px_4px_0_var(--color-ink)]"
                 aria-expanded={showRoleMenu}
               >
                 <div>
@@ -367,7 +380,7 @@ export default function App() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.12 }}
-                    className="absolute left-2 right-2 top-full z-40 mt-1.5 border-2 border-ink bg-paper shadow-[5px_5px_0_#0f2942]"
+                    className="absolute left-2 right-2 top-full z-40 mt-1.5 border-2 border-ink bg-paper shadow-[5px_5px_0_var(--color-ink)]"
                   >
                     {DEMO_ROLES.map(({ role: rId, loginId }) => (
                       <button
@@ -375,7 +388,7 @@ export default function App() {
                         onClick={() => switchDemoRole(rId, loginId)}
                         className={cn(
                           'flex w-full items-center justify-between border-b border-ink/15 px-3 py-2.5 text-left text-[13px] last:border-b-0 hover:bg-gold',
-                          role === rId && 'bg-[#fff7d6] font-bold'
+                          role === rId && 'bg-surface-highlight font-bold'
                         )}
                       >
                         <span>{ROLE_LABELS[rId]}</span>
@@ -395,27 +408,38 @@ export default function App() {
 
           <div className="flex-1"><NavList /></div>
 
-          {/* Dark mode toggle */}
-          <div className="mt-4 px-2">
-            <DarkModeToggle />
-          </div>
-
           <div className="mt-4 border-t-2 border-ink px-2 pt-4">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <span className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-gold text-[13px] font-bold shadow-[2px_2px_0_#0f2942]">
-                  {currentProfile.initials}
-                </span>
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => { setAccountTab('profile'); setAccountOpen(true); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAccountTab('profile'); setAccountOpen(true); } }}
+                className="flex min-w-0 cursor-pointer items-center gap-2.5 transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                title="Edit profile"
+                aria-label="Edit profile"
+              >
+                <Avatar name={user?.name || ''} avatarUrl={user?.avatar_url} size="md" />
                 <div className="min-w-0">
                   <p className="truncate text-[13px] font-bold leading-tight">{currentProfile.name}</p>
                   <p className="truncate text-[12px] leading-tight text-muted-foreground">{currentProfile.subtitle}</p>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-0.5">
-                <button onClick={() => setSecurityOpen(true)} className="grid h-9 w-9 place-items-center border-2 border-transparent text-muted-foreground transition-colors hover:border-ink hover:bg-gold hover:text-ink" title="Account security" aria-label="Account security">
+                <button
+                  onClick={() => { setAccountTab('security'); setAccountOpen(true); }}
+                  className="grid h-9 w-9 place-items-center border-2 border-transparent text-muted-foreground transition-colors hover:border-ink hover:bg-gold hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                  title="Account settings"
+                  aria-label="Account settings"
+                >
                   <KeyRound className="h-[17px] w-[17px]" strokeWidth={2} />
                 </button>
-                <button onClick={signOut} className="grid h-9 w-9 place-items-center border-2 border-transparent text-muted-foreground transition-colors hover:border-ink hover:bg-gold hover:text-ink" title="Sign out" aria-label="Sign out">
+                <button
+                  onClick={signOut}
+                  className="grid h-9 w-9 place-items-center border-2 border-transparent text-muted-foreground transition-colors hover:border-ink hover:bg-gold hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                  title="Sign out"
+                  aria-label="Sign out"
+                >
                   <LogOut className="h-[17px] w-[17px]" strokeWidth={2} />
                 </button>
               </div>
@@ -481,20 +505,28 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-stone lg:hidden"
+            className="fixed inset-0 z-50 flex h-[100vh] h-[100dvh] flex-col bg-stone lg:hidden"
           >
-            <div className="flex h-16 items-center justify-between border-b-2 border-ink bg-[#f7f0e2] px-4">
+            {/* Pinned header */}
+            <div className="flex h-16 shrink-0 items-center justify-between border-b-2 border-ink bg-surface-sidebar px-4">
               <Wordmark compact />
-              <button ref={mobileCloseRef} className="grid h-10 w-10 place-items-center border-2 border-ink bg-paper shadow-[2px_2px_0_#0f2942]" onClick={() => setMobileOpen(false)} aria-label="Close menu">
+              <button
+                ref={mobileCloseRef}
+                className="grid h-11 w-11 min-h-[44px] min-w-[44px] place-items-center border-2 border-ink bg-paper shadow-[2px_2px_0_var(--color-ink)]"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close menu"
+              >
                 <X className="h-5 w-5" strokeWidth={2.2} />
               </button>
             </div>
-            <div className="flex h-[calc(100vh-4rem)] flex-col overflow-y-auto px-4 py-5">
+
+            {/* Scrollable nav list */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-5">
               {DEMO_MODE ? (
                 <>
                   <button
                     onClick={() => setShowRoleMenu(v => !v)}
-                    className="mb-5 flex w-full items-center justify-between border-2 border-ink bg-paper px-3 py-2.5 text-left shadow-[3px_3px_0_#0f2942]"
+                    className="mb-5 flex min-h-[44px] w-full items-center justify-between border-2 border-ink bg-paper px-3 py-2.5 text-left shadow-[3px_3px_0_var(--color-ink)]"
                   >
                     <div>
                       <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-muted-foreground">Demo workspace</p>
@@ -503,14 +535,14 @@ export default function App() {
                     <ChevronDown className="h-4 w-4" strokeWidth={2.2} />
                   </button>
                   {showRoleMenu && (
-                    <div className="mb-5 -mt-3 border-2 border-ink bg-paper shadow-[4px_4px_0_#0f2942]">
+                    <div className="mb-5 -mt-3 border-2 border-ink bg-paper shadow-[4px_4px_0_var(--color-ink)]">
                       {DEMO_ROLES.map(({ role: rId, loginId }) => (
                         <button
                           key={rId}
                           onClick={() => switchDemoRole(rId, loginId)}
                           className={cn(
-                            'flex w-full items-center justify-between border-b border-ink/15 px-3 py-2.5 text-left text-[13px] last:border-b-0 hover:bg-gold',
-                            role === rId && 'bg-[#fff7d6] font-bold'
+                            'flex min-h-[44px] w-full items-center justify-between border-b border-ink/15 px-3 py-2.5 text-left text-[13px] last:border-b-0 hover:bg-gold',
+                            role === rId && 'bg-surface-highlight font-bold'
                           )}
                         >
                           <span>{ROLE_LABELS[rId]}</span>
@@ -527,21 +559,41 @@ export default function App() {
                 </div>
               )}
               <NavList onNavigate={() => setMobileOpen(false)} />
-              <div className="mt-auto border-t-2 border-ink pt-4">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center border-2 border-ink bg-gold text-[13px] font-bold shadow-[2px_2px_0_#0f2942]">
-                      {currentProfile.initials}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-[13px] font-bold">{currentProfile.name}</p>
-                      <p className="truncate text-[12px] text-muted-foreground">{currentProfile.subtitle}</p>
-                    </div>
+            </div>
+
+            {/* Pinned bottom footer with safe-area padding and 44px tap targets */}
+            <div className="shrink-0 border-t-2 border-ink bg-surface-sidebar px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-2px_0_var(--color-ink)]">
+              <div className="flex items-center justify-between gap-2">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => { setMobileOpen(false); setAccountTab('profile'); setAccountOpen(true); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMobileOpen(false); setAccountTab('profile'); setAccountOpen(true); } }}
+                  className="flex min-w-0 cursor-pointer items-center gap-2.5 transition-opacity hover:opacity-85"
+                  title="Edit profile"
+                  aria-label="Edit profile"
+                >
+                  <Avatar name={user?.name || ''} avatarUrl={user?.avatar_url} size="md" />
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-bold leading-tight">{currentProfile.name}</p>
+                    <p className="truncate text-[12px] leading-tight text-muted-foreground">{currentProfile.subtitle}</p>
                   </div>
-                  <div className="flex flex-wrap justify-end gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => { setMobileOpen(false); setSecurityOpen(true); }}><KeyRound className="h-4 w-4" strokeWidth={2} /> Security</Button>
-                    <Button variant="ghost" size="sm" onClick={signOut}><LogOut className="h-4 w-4" strokeWidth={2} /> Sign out</Button>
-                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <button
+                    onClick={() => { setMobileOpen(false); setAccountTab('security'); setAccountOpen(true); }}
+                    className="flex h-11 min-h-[44px] items-center gap-1.5 border-2 border-ink bg-paper px-3 text-[13px] font-bold text-ink shadow-[2px_2px_0_var(--color-ink)] hover:bg-gold active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+                    aria-label="Account security"
+                  >
+                    <KeyRound className="h-4 w-4" strokeWidth={2} /> Security
+                  </button>
+                  <button
+                    onClick={signOut}
+                    className="flex h-11 min-h-[44px] items-center gap-1.5 border-2 border-ink bg-gold px-3 text-[13px] font-bold text-ink shadow-[2px_2px_0_var(--color-ink)] hover:bg-[#e3bb19] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+                    aria-label="Sign out"
+                  >
+                    <LogOut className="h-4 w-4" strokeWidth={2} /> Sign out
+                  </button>
                 </div>
               </div>
             </div>
@@ -564,9 +616,9 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.14 }}
-              className="fixed right-4 top-20 z-50 w-[min(390px,calc(100vw-2rem))] border-2 border-ink bg-paper shadow-[6px_6px_0_#0f2942] lg:right-8 lg:top-8"
+              className="fixed right-4 top-20 z-50 w-[min(390px,calc(100vw-2rem))] border-2 border-ink bg-paper shadow-[6px_6px_0_var(--color-ink)] lg:right-8 lg:top-8"
             >
-              <div className="flex items-center justify-between border-b-2 border-ink bg-gold px-4 py-3">
+              <div className="flex items-center justify-between border-b-2 border-ink bg-gold px-4 py-3 text-ink">
                 <div>
                   <p className="font-display text-[16px] font-extrabold uppercase leading-none tracking-[-0.02em]">Notifications</p>
                   <p className="mt-1.5 text-[13px] font-semibold">{unreadNotifications} unread</p>
@@ -583,7 +635,7 @@ export default function App() {
                   </div>
                 )}
                 {notifications.slice(0, 8).map(n => (
-                  <div key={n.id} className={cn('border-b border-ink/15 px-4 py-3 last:border-0', !n.is_read && 'bg-[#fff7d6]')}>
+                  <div key={n.id} className={cn('border-b border-ink/15 px-4 py-3 last:border-0', !n.is_read && 'bg-surface-highlight')}>
                     <div className="flex items-start gap-2.5">
                       <span className={cn('mt-1.5 h-2 w-2 shrink-0 border border-ink', n.type === 'warning' ? 'bg-crimson' : n.type === 'success' ? 'bg-emerald' : 'bg-ink/30')} />
                       <div className="min-w-0">
@@ -601,11 +653,17 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {securityOpen && (
-        <SecurityDialog
-          onClose={() => setSecurityOpen(false)}
+      {accountOpen && (
+        <AccountDialog
+          user={user}
+          initialTab={accountTab}
+          onClose={() => setAccountOpen(false)}
           onSignOut={signOut}
           showToast={showToast}
+          onUserUpdated={(fresh) => {
+            setUser(fresh);
+            setRole(fresh.role);
+          }}
         />
       )}
 
@@ -619,8 +677,8 @@ export default function App() {
             transition={{ duration: 0.18 }}
             role="status"
             className={cn(
-              'fixed bottom-5 right-5 z-[60] flex max-w-[min(430px,calc(100vw-2rem))] items-center gap-2.5 border-2 border-ink px-3.5 py-3 text-ink shadow-[5px_5px_0_#0f2942]',
-              toast.type === 'error' ? 'bg-[#f4d6d0]' : 'bg-gold'
+              'fixed bottom-5 right-5 z-[60] flex max-w-[min(430px,calc(100vw-2rem))] items-center gap-2.5 border-2 border-ink px-3.5 py-3 text-ink shadow-[5px_5px_0_var(--color-ink)]',
+              toast.type === 'error' ? 'bg-surface-alert text-destructive' : 'bg-gold text-ink'
             )}
           >
             <span className={cn('h-2.5 w-2.5 shrink-0 border-2 border-ink', toast.type === 'error' ? 'bg-crimson' : toast.type === 'info' ? 'bg-paper' : 'bg-emerald')} />
