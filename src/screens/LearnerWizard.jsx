@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { ArrowRight, ArrowLeft, Loader2, Star, Check } from 'lucide-react';
@@ -81,6 +81,7 @@ function OptionRow({ label, desc, selected, onClick }) {
 }
 
 export default function LearnerWizard({ showToast }) {
+  const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const prefilledTutor = location.state?.prefilledTutor;
@@ -361,10 +362,23 @@ export default function LearnerWizard({ showToast }) {
                     )}
                     {getMatches().map(tutor => (
                       <div key={tutor.id} className="flex flex-col gap-4 border-b border-ink/15 p-5 last:border-0 sm:flex-row sm:items-center">
-                        <Avatar name={tutor.name} src={tutor.avatar} size="md" className="shrink-0" />
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/tutors/${tutor.custom_id || tutor.id}`)}
+                          className="shrink-0 transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
+                          title={`View ${tutor.name}'s profile`}
+                        >
+                          <Avatar name={tutor.name} src={tutor.avatar} size="md" />
+                        </button>
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                            <h3 className="font-display text-[16px] font-bold text-ink">{tutor.name}</h3>
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/tutors/${tutor.custom_id || tutor.id}`)}
+                              className="font-display text-left text-[16px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
+                            >
+                              {tutor.name}
+                            </button>
                             <span className="text-[13px] text-muted-foreground">Verified · {tutor.program}</span>
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted-foreground">

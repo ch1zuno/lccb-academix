@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   KeyRound,
   Loader2,
@@ -27,6 +28,7 @@ export default function AccountDialog({
   initialTab = 'profile',
   onUserUpdated,
 }) {
+  const navigate = useNavigate();
   const panelRef = useRef(null);
   const restoreRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -551,6 +553,19 @@ export default function AccountDialog({
               >
                 Cancel
               </Button>
+              {user?.role === 'tutor' && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    onClose();
+                    navigate(`/tutors/${user.custom_id || user.id}`);
+                  }}
+                  className="ml-auto min-h-[44px] text-[13px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-4 hover:decoration-ink"
+                >
+                  View Public Profile →
+                </Button>
+              )}
             </div>
           </form>
         )}
@@ -678,3 +693,4 @@ export default function AccountDialog({
     </div>
   );
 }
+
