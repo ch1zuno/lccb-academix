@@ -26,7 +26,7 @@ export default function SessionQuizModal({ quiz = [], summary, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 p-4">
-      <div className="relative flex max-h-[90vh] w-full max-w-[680px] flex-col border-2 border-ink bg-paper shadow-[8px_8px_0_#0f2942]">
+      <div className="relative flex max-h-[90vh] w-full max-w-[680px] flex-col border-2 border-ink bg-paper shadow-[8px_8px_0_var(--color-ink)]">
         {/* Header */}
         <div className="flex items-center justify-between border-b-2 border-ink bg-gold p-4 text-ink">
           <div className="flex items-center gap-2">
@@ -38,7 +38,7 @@ export default function SessionQuizModal({ quiz = [], summary, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="grid h-8 w-8 place-items-center border-2 border-ink bg-paper hover:bg-[#fff7d6]"
+            className="grid h-8 w-8 place-items-center border-2 border-ink bg-paper hover:bg-surface-highlight"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -48,7 +48,7 @@ export default function SessionQuizModal({ quiz = [], summary, onClose }) {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
           {summary && (
-            <div className="border-2 border-ink bg-[#f8f1e2] p-4 text-[13px] leading-relaxed shadow-[2px_2px_0_#0f2942]">
+            <div className="border-2 border-ink bg-surface-quiet p-4 text-[13px] leading-relaxed shadow-[2px_2px_0_var(--color-ink)]">
               <p className="font-bold uppercase tracking-wider text-muted-foreground text-[11px] mb-1">
                 Antigravity AI Lesson Synthesis
               </p>
@@ -59,7 +59,7 @@ export default function SessionQuizModal({ quiz = [], summary, onClose }) {
           )}
 
           {submitted && (
-            <div className="flex items-center justify-between border-2 border-ink bg-[#fff7d6] p-4">
+            <div className="flex items-center justify-between border-2 border-ink bg-surface-highlight p-4">
               <div>
                 <p className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">Your Score</p>
                 <p className="num text-[28px] font-extrabold text-ink">
@@ -78,7 +78,7 @@ export default function SessionQuizModal({ quiz = [], summary, onClose }) {
               const isCorrect = selectedAnswers[qIdx] === q.answer;
 
               return (
-                <div key={qIdx} className="border-2 border-ink bg-paper p-4 shadow-[3px_3px_0_#0f2942]">
+                <div key={qIdx} className="border-2 border-ink bg-paper p-4 shadow-[3px_3px_0_var(--color-ink)]">
                   <p className="text-[14px] font-bold text-ink mb-3">
                     <span className="mr-1.5 font-mono text-[13px] bg-gold px-1.5 py-0.5 border border-ink">
                       Q{qIdx + 1}
@@ -89,13 +89,13 @@ export default function SessionQuizModal({ quiz = [], summary, onClose }) {
                   <div className="space-y-2">
                     {q.options.map((opt, optIdx) => {
                       const isSelected = selectedAnswers[qIdx] === optIdx;
-                      let optionStyle = 'bg-paper hover:bg-[#fff7d6] border-ink';
+                      let optionStyle = 'bg-paper hover:bg-surface-highlight border-ink';
 
                       if (submitted) {
                         if (optIdx === q.answer) {
-                          optionStyle = 'bg-[#d1fae5] border-emerald font-bold';
+                          optionStyle = 'bg-emerald/20 border-emerald font-bold';
                         } else if (isSelected && !isCorrect) {
-                          optionStyle = 'bg-[#fee2e2] border-crimson line-through';
+                          optionStyle = 'bg-crimson/20 border-crimson line-through';
                         }
                       } else if (isSelected) {
                         optionStyle = 'bg-gold border-ink font-bold';
@@ -133,7 +133,7 @@ export default function SessionQuizModal({ quiz = [], summary, onClose }) {
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between border-t-2 border-ink bg-[#f8f1e2] p-4">
+        <div className="flex items-center justify-between border-t-2 border-ink bg-surface-quiet p-4">
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>

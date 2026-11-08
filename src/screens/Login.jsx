@@ -8,7 +8,7 @@ import { focusFirst, trapTabKey } from '../lib/focusTrap';
 import Logo2D from '../components/Logo2D';
 import './Landing.css';
 
-const DEV = import.meta.env.DEV;
+const DEV = import.meta.env.DEV || import.meta.env.VITE_DEMO_MODE === '1';
 
 const DEMO_ACCOUNTS = DEV ? [
   { role: 'superadmin', loginId: 'l.betita.admin@lccbacolod.edu.ph', label: 'Sir Lenuel Betita' },

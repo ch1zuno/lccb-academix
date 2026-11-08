@@ -137,3 +137,4 @@ export async function cropAndResizeToCanvas(file, targetSize = TARGET_AVATAR_SIZ
     img.src = objectUrl;
   });
 }
+

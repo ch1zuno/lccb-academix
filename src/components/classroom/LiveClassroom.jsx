@@ -8,7 +8,7 @@ import JitsiMeetingRoom from './JitsiMeetingRoom';
 import NativeVideoRoom from './NativeVideoRoom';
 
 export default function LiveClassroom({ session, user, role, seconds, onEnd, showToast }) {
-  const [videoEngine, setVideoEngine] = useState('jitsi'); // 'jitsi' (default) | 'webrtc'
+  const [videoEngine, setVideoEngine] = useState('webrtc'); // 'webrtc' (instant direct peer-to-peer) | 'jitsi'
   const { isReconnecting, accessDenied, isOnline, isRoleOnline } = useRealtime(session?.id);
 
   const peerId = role === 'tutor' ? session?.learner_id : session?.tutor_id;
@@ -27,9 +27,9 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
   return (
     <div className="mx-auto w-full max-w-[1200px]">
       {/* Session Banner */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-2 border-ink bg-[#f8f1e2] p-3 shadow-[4px_4px_0_#0f2942]">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-2 border-ink bg-surface-quiet p-3 shadow-[4px_4px_0_var(--color-ink)]">
         <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center border-2 border-ink bg-gold font-display text-[14px] font-extrabold text-ink shadow-[2px_2px_0_#0f2942]">
+          <span className="grid h-10 w-10 shrink-0 place-items-center border-2 border-ink bg-gold font-display text-[14px] font-extrabold text-ink shadow-[2px_2px_0_var(--color-ink)]">
             LIVE
           </span>
           <div>
@@ -66,7 +66,7 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 border-2 border-ink bg-paper px-3 py-1 text-ink shadow-[2px_2px_0_#0f2942]">
+          <div className="flex items-center gap-2 border-2 border-ink bg-paper px-3 py-1 text-ink shadow-[2px_2px_0_var(--color-ink)]">
             <Clock className="h-4 w-4 text-emerald" />
             <span className="num text-[18px] font-extrabold">{formatTimer(seconds)}</span>
           </div>
@@ -79,9 +79,9 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
       {/* Main Classroom Layout: Left Video Stage / Right Dual Chat */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 min-h-[580px]">
         {/* Left Video Stage (7 cols) */}
-        <div className="flex flex-col border-2 border-ink bg-paper shadow-[4px_4px_0_#0f2942] lg:col-span-7 xl:col-span-8">
+        <div className="flex flex-col border-2 border-ink bg-paper shadow-[4px_4px_0_var(--color-ink)] lg:col-span-7 xl:col-span-8">
           {/* Video Header & Mode Switcher */}
-          <div className="flex flex-wrap items-center justify-between border-b-2 border-ink bg-[#f5ecda] px-3 py-1.5 text-xs">
+          <div className="flex flex-wrap items-center justify-between border-b-2 border-ink bg-surface-quiet px-3 py-1.5 text-xs">
             <span className="font-display font-bold uppercase tracking-wider text-ink flex items-center gap-1.5">
               <Video className="h-3.5 w-3.5 text-ink" /> Live Classroom Video
             </span>
@@ -92,7 +92,7 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
                 className={cn(
                   'rounded px-2 py-0.5 text-[11px] font-bold border transition-colors',
                   videoEngine === 'webrtc'
-                    ? 'border-ink bg-emerald text-ink shadow-[1px_1px_0_#0f2942]'
+                    ? 'border-ink bg-emerald text-ink shadow-[1px_1px_0_var(--color-ink)]'
                     : 'border-transparent text-muted-foreground hover:text-ink'
                 )}
                 title="Direct WebRTC Peer-to-Peer over local Wi-Fi (instant connect, no third-party login)"
@@ -105,7 +105,7 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
                 className={cn(
                   'rounded px-2 py-0.5 text-[11px] font-bold border transition-colors',
                   videoEngine === 'jitsi'
-                    ? 'border-ink bg-gold text-ink shadow-[1px_1px_0_#0f2942]'
+                    ? 'border-ink bg-gold text-ink shadow-[1px_1px_0_var(--color-ink)]'
                     : 'border-transparent text-muted-foreground hover:text-ink'
                 )}
                 title="Jitsi Meet iframe external room"
@@ -130,6 +130,10 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
                 user={{ displayName: user?.name || 'Participant' }}
                 active={true}
                 onHangup={onEnd}
+                onError={() => {
+                  showToast?.('Jitsi blocked or unavailable. Switched to Direct WebRTC.', 'warning');
+                  setVideoEngine('webrtc');
+                }}
                 onSwitchEngine={setVideoEngine}
               />
             )}

@@ -15,7 +15,7 @@ export function BadgeDisplay({
 
   const variantStyles = {
     default: "bg-paper border-ink text-ink",
-    compact: "bg-[#f8f1e2] border-gold text-ink",
+    compact: "bg-surface-quiet border-gold text-ink",
     outline: "bg-transparent border-ink text-ink",
   }
 

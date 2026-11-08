@@ -12,7 +12,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server/index.js",
-    "test": "node --test server/lib/application-files.test.js server/lib/points.test.js",
+    "test": "node --test server/lib/application-files.test.js server/lib/points.test.js server/lib/publicProfile.test.js",
     "test:realtime": "node server/scripts/test-centrifugo.js && node server/scripts/test-centrifuge-client.js",
     "test:video": "node server/scripts/test-video-room.js && node server/scripts/test-jitsi-component.js",
     "check:bundle": "node server/scripts/check-bundle.js",

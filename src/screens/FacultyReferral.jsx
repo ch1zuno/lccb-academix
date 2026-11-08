@@ -23,7 +23,7 @@ function StudentRow({ student, onSelect }) {
       onClick={() => onSelect(student)}
       className="flex w-full items-center gap-3 border-b border-ink/15 px-1 py-3 text-left transition-colors last:border-0 hover:bg-gold/25"
     >
-      <span className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-[#fff7d6] text-[13px] font-bold text-ink">
+      <span className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-surface-highlight text-[13px] font-bold text-ink">
         {initials(student.name)}
       </span>
       <span className="min-w-0 flex-1">
@@ -173,7 +173,7 @@ export default function FacultyReferral({ showToast, user }) {
         {step === 2 && (
           <div>
             <div className="flex items-center gap-3 border-b-2 border-ink pb-5">
-              <span className="grid h-10 w-10 place-items-center border-2 border-ink bg-gold text-[13px] font-bold shadow-[2px_2px_0_#0f2942]">
+              <span className="grid h-10 w-10 place-items-center border-2 border-ink bg-gold text-[13px] font-bold shadow-[2px_2px_0_var(--color-ink)]">
                 {initials(selectedStudent?.name || student)}
               </span>
               <div className="min-w-0">
@@ -217,7 +217,7 @@ export default function FacultyReferral({ showToast, user }) {
                       key={option.value}
                       className={cn(
                         'flex cursor-pointer items-start gap-2.5 border-2 border-ink p-3 transition-[background-color,box-shadow]',
-                        selectedUrgency === option.value ? 'bg-gold shadow-[3px_3px_0_#0f2942]' : 'bg-paper hover:bg-[#fff7d6]',
+                        selectedUrgency === option.value ? 'bg-gold shadow-[3px_3px_0_var(--color-ink)]' : 'bg-paper hover:bg-surface-highlight',
                       )}
                     >
                       <input
@@ -283,7 +283,7 @@ export default function FacultyReferral({ showToast, user }) {
             <h2 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Check the entry</h2>
             <p className="mt-1 text-[13px] text-muted-foreground">This will appear on the referral board and notify the student.</p>
 
-            <div className="mt-5 border-2 border-ink bg-[#f8f1e2] p-4 shadow-[3px_3px_0_#0f2942]">
+            <div className="mt-5 border-2 border-ink bg-surface-quiet p-4 shadow-[3px_3px_0_var(--color-ink)]">
               <div className="space-y-3">
                 {[
                   ['Student', selectedStudent?.name || student],

@@ -65,7 +65,7 @@ export default function RewardCatalog({ showToast }) {
           </div>
           <div className="p-6">
             <p className="text-[13px] font-semibold text-muted-foreground">Voucher code</p>
-            <p className="num mt-1 inline-block border-2 border-ink bg-[#fff7d6] px-2 py-1 text-[28px] leading-tight tracking-[0.08em] text-ink shadow-[3px_3px_0_#0f2942]">{voucher.voucher_code}</p>
+            <p className="num mt-1 inline-block border-2 border-ink bg-surface-highlight px-2 py-1 text-[28px] leading-tight tracking-[0.08em] text-ink shadow-[3px_3px_0_var(--color-ink)]">{voucher.voucher_code}</p>
 
             <div className="mt-6 border-t-2 border-ink pt-4">
               <div className="flex items-start justify-between gap-4">
@@ -110,7 +110,7 @@ export default function RewardCatalog({ showToast }) {
           <h1 className="section-title">Rewards catalog</h1>
           <p className="section-subtitle">Exchange earned points for campus perks, merchandise, and event passes.</p>
         </div>
-        <div className="border-2 border-ink bg-gold px-4 py-2.5 text-right shadow-[3px_3px_0_#0f2942]">
+        <div className="border-2 border-ink bg-gold px-4 py-2.5 text-right shadow-[3px_3px_0_var(--color-ink)]">
           <p className="text-[13px] font-semibold text-ink/70">Available balance</p>
           <p className="num mt-0.5 text-[24px] leading-tight text-ink">
             {fmt(balance)} <span className="text-[13px] font-normal text-muted-foreground">pts</span>
@@ -133,8 +133,8 @@ export default function RewardCatalog({ showToast }) {
             aria-pressed={filter === category}
             onClick={() => setFilter(category)}
             className={cn(
-              'h-9 border-2 border-ink px-3 text-[13px] font-bold shadow-[2px_2px_0_#0f2942] transition-[background-color,transform]',
-              filter === category ? 'bg-gold text-ink' : 'bg-paper text-ink hover:-translate-y-0.5 hover:bg-[#fff7d6]',
+              'h-9 border-2 border-ink px-3 text-[13px] font-bold shadow-[2px_2px_0_var(--color-ink)] transition-[background-color,transform]',
+              filter === category ? 'bg-gold text-ink' : 'bg-paper text-ink hover:-translate-y-0.5 hover:bg-surface-highlight',
             )}
           >
             {category}
@@ -162,7 +162,7 @@ export default function RewardCatalog({ showToast }) {
                 className="panel flex flex-col p-5 transition-transform hover:-translate-y-1"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <span className="border-2 border-ink bg-[#f8f1e2] px-1.5 py-0.5 text-[13px] font-semibold text-ink">{item.category}</span>
+                  <span className="border-2 border-ink bg-surface-quiet px-1.5 py-0.5 text-[13px] font-semibold text-ink">{item.category}</span>
                   <span className="num border-2 border-ink bg-gold px-1.5 py-0.5 text-[13px] text-ink">{fmt(item.cost)} pts</span>
                 </div>
                 <h2 className="mt-3 font-display text-[19px] font-extrabold leading-tight tracking-[-0.03em]">{item.name}</h2>

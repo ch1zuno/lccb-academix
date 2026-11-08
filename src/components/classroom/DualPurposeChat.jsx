@@ -7,7 +7,7 @@ import api from '../../api';
 import { useRealtime } from '../../services/realtime';
 
 const ROLE_BADGES = {
-  student: { label: 'Learner', bg: 'bg-[#fff7d6]', border: 'border-ink', text: 'text-ink' },
+  student: { label: 'Learner', bg: 'bg-surface-highlight', border: 'border-ink', text: 'text-ink' },
   tutor: { label: 'Tutor', bg: 'bg-gold', border: 'border-ink', text: 'text-ink' },
   ai: { label: 'Antigravity AI', bg: 'bg-ink', border: 'border-ink', text: 'text-paper' },
 };
@@ -145,9 +145,9 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
   });
 
   return (
-    <div className="flex h-full flex-col border-2 border-ink bg-paper shadow-[4px_4px_0_#0f2942]">
+    <div className="flex h-full flex-col border-2 border-ink bg-paper shadow-[4px_4px_0_var(--color-ink)]">
       {/* Header with Mode Tabs */}
-      <div className="border-b-2 border-ink bg-[#f8f1e2] p-2.5">
+      <div className="border-b-2 border-ink bg-surface-quiet p-2.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex rounded-none border-2 border-ink bg-paper p-0.5" role="tablist">
             <button
@@ -157,7 +157,7 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
               onClick={() => setActiveTab('classroom')}
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1 text-[12px] font-bold transition-colors',
-                activeTab === 'classroom' ? 'bg-gold text-ink' : 'text-muted-foreground hover:bg-[#fff7d6]'
+                activeTab === 'classroom' ? 'bg-gold text-ink' : 'text-muted-foreground hover:bg-surface-highlight'
               )}
             >
               <User className="h-3.5 w-3.5" />
@@ -170,7 +170,7 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
               onClick={() => setActiveTab('ai')}
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1 text-[12px] font-bold transition-colors',
-                activeTab === 'ai' ? 'bg-ink text-paper' : 'text-muted-foreground hover:bg-[#fff7d6]'
+                activeTab === 'ai' ? 'bg-ink text-paper' : 'text-muted-foreground hover:bg-surface-highlight'
               )}
             >
               <Bot className="h-3.5 w-3.5" />
@@ -253,9 +253,9 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
                 </div>
                 <div
                   className={cn(
-                    'max-w-[88%] border-2 border-ink p-2.5 text-[13px] leading-snug shadow-[2px_2px_0_#0f2942]',
+                    'max-w-[88%] border-2 border-ink p-2.5 text-[13px] leading-snug shadow-[2px_2px_0_var(--color-ink)]',
                     isAi
-                      ? 'bg-[#fdfaf2] border-ink font-sans text-ink'
+                      ? 'bg-paper border-ink font-sans text-ink'
                       : isMe
                       ? 'bg-gold text-ink'
                       : 'bg-paper text-ink'
@@ -270,7 +270,7 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
       </div>
 
       {/* Input Composer */}
-      <form onSubmit={handleSend} className="border-t-2 border-ink bg-[#f8f1e2] p-2.5 flex items-center gap-2">
+      <form onSubmit={handleSend} className="border-t-2 border-ink bg-surface-quiet p-2.5 flex items-center gap-2">
         <Input
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}

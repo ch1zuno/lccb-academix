@@ -44,7 +44,7 @@ function DocumentThumb({ item }) {
     return <img src={url} alt="" className="h-14 w-14 shrink-0 border-2 border-ink object-cover" />;
   }
   return (
-    <span className="flex h-14 w-14 shrink-0 flex-col items-center justify-center gap-0.5 border-2 border-ink bg-[#fff7d6]">
+    <span className="flex h-14 w-14 shrink-0 flex-col items-center justify-center gap-0.5 border-2 border-ink bg-surface-highlight">
       {image ? <FileImage className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
       <span className="text-[10px] font-bold uppercase leading-none">
         {fileExtension(item.name) || 'file'}
@@ -73,7 +73,7 @@ export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty
             <button
               type="button"
               onClick={() => onOpen(item)}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1 border-2 border-ink bg-gold px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-[#e3bb19]"
+              className="inline-flex min-h-9 shrink-0 items-center gap-1 border-2 border-ink bg-gold px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-gold/90"
             >
               <ExternalLink className="h-3 w-3" /> Open
             </button>
@@ -83,7 +83,7 @@ export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty
               type="button"
               onClick={() => onDownload(item)}
               aria-label={`Download ${item.name}`}
-              className="hidden h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-[#f0e7d5] sm:grid"
+              className="hidden h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-surface-highlight sm:grid"
             >
               <Download className="h-4 w-4" />
             </button>
@@ -92,7 +92,7 @@ export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty
             <button
               type="button"
               onClick={() => onDownload(item)}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1 border-2 border-ink bg-gold px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-[#e3bb19]"
+              className="inline-flex min-h-9 shrink-0 items-center gap-1 border-2 border-ink bg-gold px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-gold/90"
             >
               <Download className="h-3 w-3" /> Download
             </button>
@@ -102,7 +102,7 @@ export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty
               type="button"
               onClick={() => onRemove(item.id)}
               aria-label={`Remove ${item.name}`}
-              className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-[#f6d7d2]"
+              className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-surface-alert"
             >
               <X className="h-4 w-4" />
             </button>
@@ -170,8 +170,8 @@ export default function ApplicationDocumentPicker({
           if (!disabled) accept(event.dataTransfer.files);
         }}
         className={cn(
-          'flex cursor-pointer items-center gap-3 border-2 border-dashed border-ink bg-[#f8f1e2] px-4 py-4 outline-none transition-colors',
-          'hover:bg-[#f3e8d2] focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2',
+          'flex cursor-pointer items-center gap-3 border-2 border-dashed border-ink bg-surface-quiet px-4 py-4 outline-none transition-colors',
+          'hover:bg-surface-highlight focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2',
           dragging && 'bg-gold/50',
           disabled && 'cursor-not-allowed opacity-60',
         )}

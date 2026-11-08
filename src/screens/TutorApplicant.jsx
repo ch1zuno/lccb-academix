@@ -199,7 +199,7 @@ export default function TutorApplicant({ showToast, user }) {
             <p className="text-[13px] text-muted-foreground">Subjects applied for</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {(app?.subjects ?? []).map(s => (
-                <span key={s.code || s} className="inline-flex h-6 items-center border-2 border-ink bg-[#fff7d6] px-2 text-[13px] font-semibold text-ink">
+                <span key={s.code || s} className="inline-flex h-6 items-center border-2 border-ink bg-surface-highlight px-2 text-[13px] font-semibold text-ink">
                   {s.code || s}
                 </span>
               ))}
@@ -216,7 +216,7 @@ export default function TutorApplicant({ showToast, user }) {
       </div>
 
       <div className="panel">
-        <div className="border-b-2 border-ink bg-[#f8f1e2] px-5 py-4">
+        <div className="border-b-2 border-ink bg-surface-quiet px-5 py-4">
           <h2 className="font-display text-[18px] font-extrabold tracking-[-0.03em]">
             {phase === 'exam' ? 'Qualification exam' : 'Application status'}
           </h2>
@@ -234,7 +234,7 @@ export default function TutorApplicant({ showToast, user }) {
         </div>
 
         {pending && fileCount === 0 && (
-          <div className="mx-5 mt-4 border-2 border-ink bg-[#fff0c2] px-4 py-3">
+          <div className="mx-5 mt-4 border-2 border-ink bg-surface-banner px-4 py-3">
             <p className="text-[13px] font-bold text-ink">Submission incomplete</p>
             <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">
               Attach at least one supporting file below — the superadmin cannot approve the application without one.
@@ -268,7 +268,7 @@ export default function TutorApplicant({ showToast, user }) {
                 <p className="num text-[13px] font-semibold text-muted-foreground">Question {currentQ + 1} of {questions.length}</p>
                 <p className="mt-0.5 text-[13px] text-muted-foreground">{Object.keys(answers).length} answered</p>
               </div>
-              <span className={cn('num border-2 border-ink px-2 py-0.5 text-[16px]', timeLeft < 300 ? 'bg-[#f4d6d0] text-crimson' : 'bg-paper text-ink')}>
+              <span className={cn('num border-2 border-ink px-2 py-0.5 text-[16px]', timeLeft < 300 ? 'bg-surface-alert text-crimson' : 'bg-paper text-ink')}>
                 {formatTime(timeLeft)}
               </span>
             </div>
@@ -301,7 +301,7 @@ export default function TutorApplicant({ showToast, user }) {
                           key={i}
                           className={cn(
                             'flex cursor-pointer items-start gap-3 border-2 border-ink p-3.5 transition-[background-color,box-shadow]',
-                            selected ? 'bg-gold shadow-[3px_3px_0_#0f2942]' : 'bg-paper hover:bg-[#fff7d6]',
+                            selected ? 'bg-gold shadow-[3px_3px_0_var(--color-ink)]' : 'bg-paper hover:bg-surface-highlight',
                           )}
                         >
                           <input
@@ -404,7 +404,7 @@ export default function TutorApplicant({ showToast, user }) {
       </div>
 
       <div className="panel mt-4">
-        <div className="border-b-2 border-ink bg-[#f8f1e2] px-5 py-4">
+        <div className="border-b-2 border-ink bg-surface-quiet px-5 py-4">
           <h2 className="font-display text-[18px] font-extrabold tracking-[-0.03em]">Supporting documents</h2>
           <p className="meta mt-0.5">Files and academic-record notes the reviewer sees.</p>
         </div>
@@ -414,7 +414,7 @@ export default function TutorApplicant({ showToast, user }) {
             <h3 className="text-[13px] font-bold uppercase tracking-[0.08em]">Attached files</h3>
             <span className={cn(
               'border-2 border-ink px-2 py-0.5 text-[11px] font-bold',
-              fileCount === 0 ? 'bg-[#f6d7d2] text-crimson' : 'bg-gold text-ink',
+              fileCount === 0 ? 'bg-surface-alert text-crimson' : 'bg-gold text-ink',
             )}>
               {fileCount} / {MAX_APPLICATION_FILES}
             </span>

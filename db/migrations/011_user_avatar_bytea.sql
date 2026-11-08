@@ -14,3 +14,4 @@ CREATE INDEX IF NOT EXISTS idx_user_avatars_updated_at ON user_avatars(updated_a
 COMMENT ON TABLE user_avatars IS 'Resized 256x256 avatar binaries stored safely for ephemeral Render dynos';
 
 COMMIT;
+

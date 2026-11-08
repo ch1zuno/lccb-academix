@@ -5,10 +5,10 @@ function Badge({ className, variant = "default", ...props }) {
   const variants = {
     default: "bg-ink text-paper",
     secondary: "bg-gold text-ink",
-    destructive: "bg-[#f4d6d0] text-crimson",
+    destructive: "bg-surface-alert text-crimson",
     outline: "bg-paper text-ink",
-    emerald: "bg-[#dcebdd] text-emerald",
-    amber: "bg-[#f5e6c6] text-amber",
+    emerald: "bg-surface-highlight text-emerald",
+    amber: "bg-surface-quiet text-amber",
   }
 
   return (

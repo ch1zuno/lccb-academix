@@ -161,7 +161,7 @@ export default function TutorExam({ showToast, user }) {
                 key={subject.id}
                 className={cn(
                   'flex cursor-pointer items-start gap-2.5 border-2 border-ink p-3 transition-[background-color,box-shadow]',
-                  selected ? 'bg-gold shadow-[3px_3px_0_#0f2942]' : 'bg-paper hover:bg-[#fff7d6]',
+                  selected ? 'bg-gold shadow-[3px_3px_0_var(--color-ink)]' : 'bg-paper hover:bg-surface-highlight',
                 )}
               >
                 <input
@@ -222,7 +222,7 @@ export default function TutorExam({ showToast, user }) {
 
           <div className="mt-4 space-y-3">
             {docs.map((doc, index) => (
-              <div key={index} className="border-2 border-ink bg-[#f8f1e2] p-3">
+              <div key={index} className="border-2 border-ink bg-surface-quiet p-3">
                 <div className="flex items-center gap-2">
                   <span className="num grid h-6 w-6 shrink-0 place-items-center border-2 border-ink bg-gold text-[13px] font-bold text-ink">{index + 1}</span>
                   <Input
