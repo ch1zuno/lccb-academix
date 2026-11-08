@@ -118,6 +118,60 @@ router.get('/subjects', requireAuth, async (_req, res, next) => {
   } catch (e) { next(e); }
 });
 
+/** GET /learners/my-tutors — distinct tutors from completed sessions for learners */
+router.get('/learners/my-tutors', requireAuth, requireRole('learner'), async (req, res, next) => {
+  try {
+    const { rows } = await query(
+      `WITH learner_sessions AS (
+         SELECT s.id, s.tutor_id, s.subject_id, s.date, s.created_at,
+                sub.name AS subject_name, sub.code AS subject_code,
+                ROW_NUMBER() OVER (PARTITION BY s.tutor_id ORDER BY s.date DESC, s.created_at DESC) AS rn
+           FROM sessions s
+           JOIN subjects sub ON sub.id = s.subject_id
+          WHERE s.learner_id = $1 AND s.status = 'completed'
+       ),
+       tutor_stats AS (
+         SELECT tutor_id,
+                count(id)::int AS total_sessions,
+                max(date) AS last_session_date
+           FROM learner_sessions
+          GROUP BY tutor_id
+       )
+       SELECT ts.tutor_id,
+              u.custom_id AS tutor_custom_id,
+              u.name AS tutor_name,
+              u.role AS tutor_role,
+              u.program AS tutor_program,
+              u.is_verified AS is_accredited,
+              u.is_available,
+              CASE WHEN EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id)
+                   THEN '/api/users/' || u.id || '/avatar'
+                   ELSE u.avatar
+              END AS avatar,
+              ts.total_sessions,
+              ts.last_session_date,
+              ls.subject_name AS last_subject_name,
+              ls.subject_code AS last_subject_code,
+              COALESCE(
+                (
+                  SELECT json_agg(json_build_object('id', sub.id, 'code', sub.code, 'name', sub.name))
+                    FROM user_subjects us
+                    JOIN subjects sub ON sub.id = us.subject_id
+                   WHERE us.user_id = u.id
+                ), '[]'::json
+              ) AS subjects
+         FROM tutor_stats ts
+         JOIN learner_sessions ls ON ls.tutor_id = ts.tutor_id AND ls.rn = 1
+         JOIN users u ON u.id = ts.tutor_id
+        ORDER BY ts.last_session_date DESC, ts.total_sessions DESC`,
+      [req.user.id]
+    );
+    res.json({ tutors: rows });
+  } catch (e) {
+    next(e);
+  }
+});
+
 /** PATCH /tutors/me/availability — tutor pauses or resumes new requests. */
 router.patch('/tutors/me/availability', requireAuth, requireRole('tutor'), async (req, res, next) => {
   try {

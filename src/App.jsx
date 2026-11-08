@@ -29,6 +29,7 @@ const SessionCheckIn = React.lazy(() => import('./screens/SessionCheckIn'));
 const RewardCatalog = React.lazy(() => import('./screens/RewardCatalog'));
 const Messages = React.lazy(() => import('./screens/Messages'));
 const TutorProfile = React.lazy(() => import('./screens/TutorProfile'));
+const MyTutors = React.lazy(() => import('./screens/MyTutors'));
 
 /* Production builds hide the demo switcher unless VITE_DEMO_MODE=1. Local dev
  * keeps it on; VITE_DEMO_MODE=0 can disable it during a local production test. */
@@ -53,6 +54,7 @@ const DEMO_ROLES = [
  * while standing on a page) must never render another role's screen. */
 const ROLE_ROUTES = {
   '/wizard': ['learner'],
+  '/my-tutors': ['learner'],
   '/dashboard': ['learner', 'tutor', 'faculty', 'superadmin'],
   '/exam': ['learner', 'tutor'],
   '/tutor-pending': ['learner'],
@@ -250,6 +252,7 @@ export default function App() {
       case 'learner':
         return [
           { id: 'wizard', label: 'Find a tutor', icon: Search },
+          { id: 'my-tutors', label: 'My tutors', icon: Users },
           { id: 'dashboard', label: 'My progress', icon: LayoutDashboard },
           { id: 'messages', label: 'Messages', icon: MessageSquare },
           { id: 'checkin', label: 'Session check-in', icon: Clock },
@@ -471,6 +474,7 @@ export default function App() {
                   <Routes location={location} key={location.pathname}>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/wizard" element={gate('/wizard', <LearnerWizard showToast={showToast} />)} />
+                  <Route path="/my-tutors" element={gate('/my-tutors', <MyTutors showToast={showToast} />)} />
                   <Route path="/dashboard" element={gate('/dashboard', <Dashboard role={role} user={user} showToast={showToast} />)} />
                   <Route path="/exam" element={gate('/exam', <TutorExam showToast={showToast} user={user} />)} />
                   <Route path="/tutor-pending" element={gate('/tutor-pending', <TutorApplicant showToast={showToast} user={user} />)} />
