@@ -14,19 +14,78 @@ const tokenLimiter = rateLimit({ windowMs: 60_000, max: 30, message: { error: 'S
 /* ---------- GET /sessions/mine ---------- */
 router.get('/sessions/mine', requireAuth, async (req, res, next) => {
   try {
-    const { rows } = await query(
-      `SELECT s.id, s.session_code, s.topic, s.date, s.time, s.duration, s.duration_hours, s.status, s.location,
-              s.tutor_id, s.learner_id, u1.custom_id AS tutor_custom_id, u2.custom_id AS learner_custom_id,
-              u1.name AS tutor_name, u2.name AS learner_name, sub.name AS subject, sub.code AS subject_code,
-              s.rating, s.notes,
-              (SELECT count(*) FROM session_check_ins c WHERE c.session_id = s.id) AS check_in_count
-       FROM sessions s
-       JOIN users u1 ON u1.id = s.tutor_id
-       JOIN users u2 ON u2.id = s.learner_id
-       JOIN subjects sub ON sub.id = s.subject_id
-       WHERE s.tutor_id = $1 OR s.learner_id = $1
-       ORDER BY s.date DESC, s.created_at DESC LIMIT 60`, [req.user.id]);
-    res.json({ sessions: rows });
+    const status = req.query.status ? String(req.query.status).trim() : null;
+    const subject = req.query.subject ? String(req.query.subject).trim() : null;
+    const sort = String(req.query.sort || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 60));
+    const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
+
+    const conditions = ['(s.tutor_id = $1 OR s.learner_id = $1)'];
+    const params = [req.user.id];
+
+    if (status && status !== 'all') {
+      params.push(status);
+      conditions.push(`s.status = $${params.length}`);
+    }
+
+    if (subject && subject !== 'all') {
+      params.push(subject);
+      conditions.push(`(sub.code = $${params.length} OR sub.id::text = $${params.length})`);
+    }
+
+    const whereClause = conditions.join(' AND ');
+    const orderClause = sort === 'ASC' ? 's.date ASC, s.created_at ASC' : 's.date DESC, s.created_at DESC';
+
+    params.push(limit);
+    const limitIdx = params.length;
+    params.push(offset);
+    const offsetIdx = params.length;
+
+    const [sessionsResult, subjectsResult] = await Promise.all([
+      query(
+        `SELECT s.id, s.session_code, s.topic, s.date, s.time, s.duration, s.duration_hours, s.status, s.location,
+                s.tutor_id, s.learner_id, u1.custom_id AS tutor_custom_id, u2.custom_id AS learner_custom_id,
+                u1.name AS tutor_name, u2.name AS learner_name, sub.name AS subject, sub.code AS subject_code,
+                CASE WHEN EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u1.id)
+                     THEN '/api/users/' || u1.id || '/avatar'
+                     ELSE u1.avatar
+                END AS tutor_avatar,
+                CASE WHEN EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u2.id)
+                     THEN '/api/users/' || u2.id || '/avatar'
+                     ELSE u2.avatar
+                END AS learner_avatar,
+                s.rating, s.notes,
+                (SELECT count(*) FROM session_check_ins c WHERE c.session_id = s.id) AS check_in_count,
+                count(*) OVER()::int AS total_count
+           FROM sessions s
+           JOIN users u1 ON u1.id = s.tutor_id
+           JOIN users u2 ON u2.id = s.learner_id
+           JOIN subjects sub ON sub.id = s.subject_id
+          WHERE ${whereClause}
+          ORDER BY ${orderClause}
+          LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+        params
+      ),
+      query(
+        `SELECT DISTINCT sub.code, sub.name
+           FROM sessions s
+           JOIN subjects sub ON sub.id = s.subject_id
+          WHERE s.tutor_id = $1 OR s.learner_id = $1
+          ORDER BY sub.code`,
+        [req.user.id]
+      ),
+    ]);
+
+    const rows = sessionsResult.rows;
+    const total = rows[0]?.total_count ?? (offset === 0 ? rows.length : 0);
+    const hasMore = (offset + rows.length) < total;
+
+    res.json({
+      sessions: rows,
+      total,
+      hasMore,
+      subjects: subjectsResult.rows,
+    });
   } catch (e) { next(e); }
 });
 

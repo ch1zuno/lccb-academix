@@ -5,6 +5,7 @@ import { ArrowUpRight, Download, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
 import { localYmd } from '../lib/dates';
+import GoogleClassroomSessions from '../components/classroom/GoogleClassroomSessions';
 import api from '../api';
 
 /**
@@ -860,46 +861,9 @@ export default function Dashboard({ role, user, showToast }) {
             ))}
           </div>
 
-          <div className="panel min-w-0">
-            <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-surface-quiet px-5 py-4">
-              <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">Completed</h2>
-              <span className="num border-2 border-ink bg-paper px-1.5 text-[13px]">{completed.length}</span>
-            </div>
-            {sessionsMine === null && <div className="empty">Reading your record…</div>}
-            {sessionsMine !== null && completed.length === 0 && <div className="empty">Completed sessions appear here after wrap-up.</div>}
-            {completed.length > 0 && (
-              <div className="overflow-x-auto px-5 pb-2">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Learner</th>
-                      <th>Date</th>
-                      <th className="text-right">Rating</th>
-                      <th className="text-right">Credit</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {completed.map(session => (
-                      <tr key={session.id}>
-                        <td>
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/profile/${session.learner_custom_id || session.learner_id}`)}
-                            className="text-left font-medium leading-tight text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
-                          >
-                            {session.learner_name}
-                          </button>
-                          <p className="mt-0.5 text-[13px] leading-tight text-muted-foreground">{session.subject}</p>
-                        </td>
-                        <td className="num whitespace-nowrap text-[13px] text-muted-foreground">{fmtDate(session.date)}</td>
-                        <td className="num text-right">{session.rating ? `${session.rating}/5` : '—'}</td>
-                        <td className="num whitespace-nowrap text-right">+50</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+          <div className="space-y-3 min-w-0">
+            <h2 className="font-display text-[18px] font-bold leading-tight tracking-[-0.02em]">Session records</h2>
+            <GoogleClassroomSessions role="tutor" />
           </div>
         </div>
       </div>
@@ -1046,65 +1010,9 @@ export default function Dashboard({ role, user, showToast }) {
         </div>
       </div>
 
-      <div className="panel">
-        <div className="flex items-center justify-between gap-3 border-b-2 border-ink bg-surface-quiet px-5 py-4">
-          <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">Session record</h2>
-          <span className="num border-2 border-ink bg-paper px-1.5 text-[13px]">{mine.length}</span>
-        </div>
-        {sessionsMine === null && <div className="empty">Reading your sessions…</div>}
-        {sessionsMine !== null && mySessions.length === 0 && (
-          <div className="empty">
-            No sessions yet. <button type="button" onClick={() => navigate('/wizard')} className="link-ink">Find a tutor</button> to start the record.
-          </div>
-        )}
-        {mySessions.length > 0 && (
-          <div className="overflow-x-auto px-5 pb-2">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Tutor</th>
-                  <th>Subject</th>
-                  <th>When</th>
-                  <th className="text-right">Status</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mySessions.map(session => (
-                  <tr key={session.id}>
-                    <td className="font-medium">
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/profile/${session.tutor_custom_id || session.tutor_id}`)}
-                        className="text-left font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
-                      >
-                        {session.tutor_name}
-                      </button>
-                    </td>
-                    <td>
-                      <p className="leading-tight">{session.subject}</p>
-                      <p className="mt-0.5 text-[13px] leading-tight text-muted-foreground">{session.topic}</p>
-                    </td>
-                    <td className="num whitespace-nowrap text-[13px] text-muted-foreground">{fmtLongDate(session.date)} · {session.time}</td>
-                    <td className="text-right"><StatusPill status={session.status} /></td>
-                    <td className="text-right">
-                      {session.status === 'upcoming' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={cancellingId === session.id}
-                          onClick={() => handleCancelSession(session.id)}
-                        >
-                          {cancellingId === session.id ? 'Cancelling…' : 'Cancel'}
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <div className="space-y-3">
+        <h2 className="font-display text-[18px] font-bold leading-tight tracking-[-0.02em]">Session records</h2>
+        <GoogleClassroomSessions role="learner" />
       </div>
 
       {showToast && (

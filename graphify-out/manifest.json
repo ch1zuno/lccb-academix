@@ -18,8 +18,8 @@
     "semantic_hash": ""
   },
   "src/App.jsx": {
-    "mtime": 1794162024.1124904,
-    "seen": 1794162500.9812126,
+    "mtime": 1794162618.2285583,
+    "seen": 1794163782.8746674,
     "ast_hash": "7d29f44a93ecb6b4408d375c0fc5db2d",
     "semantic_hash": ""
   },
@@ -66,9 +66,9 @@
     "semantic_hash": ""
   },
   "src/screens/Dashboard.jsx": {
-    "mtime": 1794160230.211115,
-    "seen": 1794160940.5332084,
-    "ast_hash": "1c9febd4ac6c6d8235772e0fe2658db0",
+    "mtime": 1794163573.155339,
+    "seen": 1794163782.8856785,
+    "ast_hash": "33b4db53d9a215d62c3fb5e9442bea93",
     "semantic_hash": ""
   },
   "src/screens/FacultyReferral.jsx": {
@@ -252,8 +252,8 @@
     "semantic_hash": ""
   },
   "server/routes/matching.js": {
-    "mtime": 1794161954.013158,
-    "seen": 1794162500.9659865,
+    "mtime": 1794162618.145581,
+    "seen": 1794163782.8554506,
     "ast_hash": "9305089827d69b62719071ab4da99df4",
     "semantic_hash": ""
   },
@@ -282,9 +282,9 @@
     "semantic_hash": ""
   },
   "server/routes/sessions.js": {
-    "mtime": 1794160229.8502321,
-    "seen": 1794160940.5093884,
-    "ast_hash": "1021566f05898f9f7d39449f70693af2",
+    "mtime": 1794163443.5448785,
+    "seen": 1794163782.8581135,
+    "ast_hash": "c0285a80875bbe845401e795535ceb50",
     "semantic_hash": ""
   },
   "server/routes/wrapup.js": {
@@ -1260,15 +1260,15 @@
     "semantic_hash": ""
   },
   "scratch/capture_my_tutors_screenshots.js": {
-    "mtime": 1794162365.7845397,
-    "seen": 1794162500.956355,
+    "mtime": 1794162617.965994,
+    "seen": 1794163782.8316984,
     "ast_hash": "1958f94711511e0e299deb405816659d",
     "semantic_hash": ""
   },
   "scratch/check_empty_learner.js": {
-    "mtime": 1794162328.999749,
-    "seen": 1794162500.957365,
-    "ast_hash": "0fbaedee052ecd3e4dbb5654c2ff9369",
+    "mtime": 1794162613.9201837,
+    "seen": 1794163782.8316984,
+    "ast_hash": "e1af5717016a85a1f3e6616fc556f209",
     "semantic_hash": ""
   },
   "scratch/test_my_tutors_query.js": {
@@ -1278,9 +1278,33 @@
     "semantic_hash": ""
   },
   "src/screens/MyTutors.jsx": {
-    "mtime": 1794161980.6167302,
-    "seen": 1794162500.9934206,
-    "ast_hash": "457930ac6d06f34be9a41ed949da50bb",
+    "mtime": 1794162614.122705,
+    "seen": 1794163782.8899045,
+    "ast_hash": "60164ad64a4a780e1b82a102d2649108",
+    "semantic_hash": ""
+  },
+  "scratch/capture_classroom_screenshots.js": {
+    "mtime": 1794163697.5951812,
+    "seen": 1794163782.830705,
+    "ast_hash": "eda0b7ac1078706ec87702fc34e1c28d",
+    "semantic_hash": ""
+  },
+  "scratch/test_sessions_query.js": {
+    "mtime": 1794163414.489872,
+    "seen": 1794163782.838698,
+    "ast_hash": "c2f9aeb33904b1b8004601a6cb4a51e8",
+    "semantic_hash": ""
+  },
+  "src/components/classroom/GoogleClassroomSessions.jsx": {
+    "mtime": 1794163499.4433928,
+    "seen": 1794163782.8766665,
+    "ast_hash": "77913199933016fbc0a99f1260612669",
+    "semantic_hash": ""
+  },
+  "src/components/classroom/SessionDetailModal.jsx": {
+    "mtime": 1794163467.0018327,
+    "seen": 1794163782.8786657,
+    "ast_hash": "4a3a9c10ce2885330c14f0e41802f6c8",
     "semantic_hash": ""
   }
 }
