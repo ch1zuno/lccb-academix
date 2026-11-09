@@ -285,3 +285,78 @@
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Matchmaking calm pulse, orbit, ripple, and card ease-in (transform & opacity only) */
+@keyframes mmPulse {
+  0%, 100% {
+    transform: scale(0.94);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes mmOrbit {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes mmRipple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+}
+
+@keyframes mmEaseIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.mm-pulse {
+  animation: mmPulse 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform, opacity;
+}
+
+.mm-orbit {
+  animation: mmOrbit 3.6s linear infinite;
+  will-change: transform;
+}
+
+.mm-ripple {
+  animation: mmRipple 2.2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+  will-change: transform, opacity;
+}
+
+.mm-ease-in {
+  animation: mmEaseIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-pulse,
+  .mm-orbit,
+  .mm-ripple,
+  .mm-ease-in {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}

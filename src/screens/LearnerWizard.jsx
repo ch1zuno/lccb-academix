@@ -6,6 +6,7 @@ import { ArrowRight, ArrowLeft, Loader2, Star, Check } from 'lucide-react';
 import { Avatar } from '../components/ui/Avatar';
 import { cn } from '../lib/utils';
 import { addDaysYmd } from '../lib/dates';
+import MatchmakingAnimation from '../components/MatchmakingAnimation';
 import api from '../api';
 
 const steps = [
@@ -89,7 +90,6 @@ export default function LearnerWizard({ showToast }) {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState({});
-  const [matching, setMatching] = useState(false);
   const [liveSubjects, setLiveSubjects] = useState(null);
   const [matches, setMatches] = useState(null);
   const [matchError, setMatchError] = useState(null);
@@ -135,28 +135,8 @@ export default function LearnerWizard({ showToast }) {
     [liveSubjects],
   );
 
-  const nextStep = async () => {
-    if (currentStep === steps.length - 2 && !matches) {
-      setMatching(true);
-      setMatchError(null);
-      try {
-        const apiCall = data.course && data.course !== 'Any'
-          ? api.get('/tutors', { subject: data.course, available: '1' })
-          : api.get('/tutors', { available: '1' });
-        const [{ tutors }] = [await apiCall];
-        await new Promise(resolve => setTimeout(resolve, 700));
-        setMatches(tutors);
-        setCurrentStep(s => s + 1);
-        showToast(`Found ${tutors.length} accredited ${data.course || ''} matches.`, 'success');
-      } catch (e) {
-        setMatchError(e.message);
-        showToast('Matching failed — please retry.', 'error');
-      } finally {
-        setMatching(false);
-      }
-    } else {
-      setCurrentStep(s => Math.min(steps.length - 1, s + 1));
-    }
+  const nextStep = () => {
+    setCurrentStep(s => Math.min(steps.length - 1, s + 1));
   };
 
   const prevStep = () => setCurrentStep(s => Math.max(0, s - 1));
@@ -215,28 +195,13 @@ export default function LearnerWizard({ showToast }) {
       )}
 
       <AnimatePresence mode="wait">
-        {matching ? (
-          <motion.div
-            key="matching"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="panel p-8 text-center"
-          >
-            <Loader2 className="mx-auto h-5 w-5 animate-spin text-ink" strokeWidth={1.6} />
-            <h2 className="mt-4 font-display text-[22px] font-extrabold tracking-[-0.03em]">Reading the tutor file…</h2>
-            <p className="mt-1 text-[14px] text-muted-foreground">
-              Checking verified peers for {data.course || 'any subject'} and your availability.
-            </p>
-          </motion.div>
-        ) : (
-          <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -8 }}
-            transition={{ duration: 0.18 }}
-          >
+        <motion.div
+          key={currentStep}
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -8 }}
+          transition={{ duration: 0.18 }}
+        >
             {isQuestionStep && (
               <>
                 <div className="mb-6">
@@ -326,40 +291,23 @@ export default function LearnerWizard({ showToast }) {
                   </p>
                 </div>
 
-                {matchError && (
-                  <div className="panel mb-4 px-5 py-4">
-                    <p className="text-[14px] text-crimson">Matching failed: {matchError}</p>
-                    <Button variant="outline" size="sm" className="mt-3" onClick={() => setMatches(null)}>Try again</Button>
-                  </div>
-                )}
-
-                {matches === null && !matchError && (
-                  <div className="panel empty">No matches loaded yet. Go back and continue the questions.</div>
-                )}
-
-                {matches !== null && matches.length === 0 && !matchError && (
-                  <div className="panel empty">No tutor matches this combination. Try another course or window.</div>
-                )}
-
-                {getMatches().length > 0 && (
+                {Boolean(prefilledTutor || prefilledTutorId) ? (
                   <div className="panel overflow-hidden">
-                    {Boolean(prefilledTutor || prefilledTutorId) && (
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink/20 bg-surface-highlight p-3 text-[13px] font-medium text-ink">
-                        <span>Prefilled tutor for your session. Click Request session below or select a course.</span>
-                        {Array.isArray(getMatches()[0]?.subjects) && getMatches()[0].subjects.length > 1 && (
-                          <select
-                            aria-label="Course for session"
-                            value={data.course || getMatches()[0].subjects[0].code}
-                            onChange={(e) => setData(d => ({ ...d, course: e.target.value }))}
-                            className="border border-ink bg-paper px-2 py-1 text-[13px] font-medium text-ink"
-                          >
-                            {getMatches()[0].subjects.map(s => (
-                              <option key={s.code} value={s.code}>{s.code} · {s.name}</option>
-                            ))}
-                          </select>
-                        )}
-                      </div>
-                    )}
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink/20 bg-surface-highlight p-3 text-[13px] font-medium text-ink">
+                      <span>Prefilled tutor for your session. Click Request session below or select a course.</span>
+                      {Array.isArray(getMatches()[0]?.subjects) && getMatches()[0].subjects.length > 1 && (
+                        <select
+                          aria-label="Course for session"
+                          value={data.course || getMatches()[0].subjects[0].code}
+                          onChange={(e) => setData(d => ({ ...d, course: e.target.value }))}
+                          className="border border-ink bg-paper px-2 py-1 text-[13px] font-medium text-ink"
+                        >
+                          {getMatches()[0].subjects.map(s => (
+                            <option key={s.code} value={s.code}>{s.code} · {s.name}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
                     {getMatches().map(tutor => (
                       <div key={tutor.id} className="flex flex-col gap-4 border-b border-ink/15 p-5 last:border-0 sm:flex-row sm:items-center">
                         <button
@@ -422,19 +370,48 @@ export default function LearnerWizard({ showToast }) {
                       </div>
                     ))}
                   </div>
+                ) : (
+                  <MatchmakingAnimation
+                    course={data.course}
+                    availability={data.availability}
+                    goal={data.goal}
+                    onCancel={() => setCurrentStep(steps.length - 2)}
+                    onRequestSession={async (tutor) => {
+                      setRequesting(tutor.id);
+                      const fallbackDate = addDaysYmd(3);
+                      const targetSubjectId = (subjectOptions.find(s => s.code === data.course) || {}).id
+                        || (tutor.subjects?.[0] || {}).id;
+                      try {
+                        await api.post('/session-requests', {
+                          tutorId: tutor.id,
+                          subjectId: targetSubjectId,
+                          topic: data.goal || 'General review',
+                          preferredDate: fallbackDate,
+                          preferredTime: '3:30 PM',
+                          note: data.level ? `Level: ${data.level} • Language: ${data.language || 'English'} • Preview: ${data.availability || ''}` : null,
+                        });
+                        showToast(`Session requested with ${tutor.name}.`, 'success');
+                      } catch (err) {
+                        showToast(err.message || 'Request failed', 'error');
+                      } finally {
+                        setRequesting(null);
+                      }
+                    }}
+                    requestingId={requesting}
+                    navigate={navigate}
+                  />
                 )}
               </div>
             )}
           </motion.div>
-        )}
       </AnimatePresence>
 
-      {isQuestionStep && !matching && (
+      {isQuestionStep && (
         <div className="mt-8 flex items-center justify-between gap-3">
           <Button variant="ghost" onClick={prevStep} disabled={currentStep === 0}>
             <ArrowLeft className="h-4 w-4" strokeWidth={1.8} /> Back
           </Button>
-          <Button onClick={nextStep} disabled={!data[steps[currentStep].id] || matching}>
+          <Button onClick={nextStep} disabled={!data[steps[currentStep].id]}>
             {currentStep === steps.length - 2 ? 'Find matches' : 'Continue'}
             <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
           </Button>
