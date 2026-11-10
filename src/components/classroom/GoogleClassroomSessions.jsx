@@ -40,6 +40,16 @@ function fmtShortDate(value) {
   });
 }
 
+function formatDurationShort(totalSeconds = 0) {
+  const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${sec > 0 ? `${sec}s` : ''}`.trim();
+  return `${sec}s`;
+}
+
 function StatusBadge({ status }) {
   const STATUS_STYLES = {
     completed: 'bg-emerald text-white border-emerald',
@@ -340,21 +350,24 @@ export default function GoogleClassroomSessions({ role = 'learner' }) {
                     </div>
                   </div>
 
-                  {/* Card Footer: Rating or Session Code */}
+                  {/* Card Footer: Code, Logged Duration & Rating */}
                   <div className="flex items-center justify-between border-t border-ink/10 bg-surface-quiet px-4 py-2 text-[12px]">
                     <span className="font-mono text-muted-foreground">
                       {session.session_code || 'SES'}
                     </span>
-                    {session.rating ? (
-                      <span className="inline-flex items-center gap-1 font-bold text-ink">
-                        <Star className="h-3.5 w-3.5 fill-gold text-gold-ink" />
-                        <span>{session.rating}/5</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground font-medium">
+                        {session.actual_duration_seconds > 0
+                          ? formatDurationShort(session.actual_duration_seconds)
+                          : (session.duration || `${session.duration_hours || 1} hr`)}
                       </span>
-                    ) : (
-                      <span className="text-muted-foreground">
-                        {session.duration || `${session.duration_hours || 1} hr`}
-                      </span>
-                    )}
+                      {session.rating && (
+                        <span className="inline-flex items-center gap-1 font-bold text-ink">
+                          <Star className="h-3.5 w-3.5 fill-gold text-gold-ink" />
+                          <span>{session.rating}/5</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

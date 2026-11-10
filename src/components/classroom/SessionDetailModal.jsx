@@ -48,6 +48,18 @@ function fmtDate(value) {
   });
 }
 
+function formatDurationVerbose(totalSeconds = 0) {
+  const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const parts = [];
+  if (h > 0) parts.push(`${h} hr${h > 1 ? 's' : ''}`);
+  if (m > 0) parts.push(`${m} min${m > 1 ? 's' : ''}`);
+  if (sec > 0 || parts.length === 0) parts.push(`${sec} sec${sec !== 1 ? 's' : ''}`);
+  return parts.join(' ');
+}
+
 export default function SessionDetailModal({
   session,
   role = 'learner',
@@ -203,7 +215,12 @@ export default function SessionDetailModal({
               <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
               <div>
                 <p className="font-semibold text-muted-foreground">Time & Duration</p>
-                <p className="font-bold text-ink">{session.time} ({session.duration || `${session.duration_hours || 1} hr`})</p>
+                <p className="font-bold text-ink">{session.time}</p>
+                <p className="text-[12px] text-muted-foreground">
+                  {session.actual_duration_seconds > 0
+                    ? `Logged Call: ${formatDurationVerbose(session.actual_duration_seconds)}`
+                    : (session.duration || `${session.duration_hours || 1} hr scheduled`)}
+                </p>
               </div>
             </div>
 
@@ -214,6 +231,23 @@ export default function SessionDetailModal({
                 <p className="font-bold text-ink">{session.location || 'Campus Library Study Room A'}</p>
               </div>
             </div>
+
+            {session.rating && (
+              <div className="col-span-2 flex items-center justify-between border-t border-ink/10 pt-2.5">
+                <span className="font-semibold text-muted-foreground">Session Quality Rating</span>
+                <span className="inline-flex items-center gap-1 font-bold text-ink">
+                  <span className="inline-flex items-center gap-0.5 mr-1">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <Star
+                        key={star}
+                        className={cn('h-3.5 w-3.5', Number(session.rating) >= star ? 'fill-gold text-gold-ink' : 'text-ink/20')}
+                      />
+                    ))}
+                  </span>
+                  <span>{session.rating}/5</span>
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Notes or Wrap-up Details */}

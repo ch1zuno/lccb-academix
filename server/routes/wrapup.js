@@ -34,10 +34,12 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
       throw httpError(400, 'rating (integer 1-5) is required');
     }
 
+    const durationSecondsParam = Number(req.body?.durationSeconds);
+
     const wrap = await withTransaction(async (client) => {
       // lock row for safe transitions
       const { rows: live } = await client.query(
-        `SELECT id, tutor_id, learner_id, subject_id, referral_id, status, COALESCE(duration_hours, 1) AS duration_hours
+        `SELECT id, tutor_id, learner_id, subject_id, referral_id, status, started_at, COALESCE(duration_hours, 1) AS duration_hours
          FROM sessions WHERE id = $1 FOR UPDATE`,
         [sessionId]);
       const session = live[0];
@@ -58,10 +60,22 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
         throw httpError(409, 'Both the tutor and the learner must check in before wrap-up');
       }
 
-      await client.query(
-        `UPDATE sessions SET status = 'completed', notes = $1, rating = $2 WHERE id = $3`,
-        [notes, rating, sessionId],
+      const actualDuration = Number.isInteger(durationSecondsParam) && durationSecondsParam > 0
+        ? durationSecondsParam
+        : (session.started_at ? Math.max(1, Math.round((Date.now() - new Date(session.started_at).getTime()) / 1000)) : 0);
+
+      const { rows: updatedRows } = await client.query(
+        `UPDATE sessions
+            SET status = 'completed',
+                notes = $1,
+                rating = $2,
+                ended_at = CURRENT_TIMESTAMP,
+                actual_duration_seconds = $3
+          WHERE id = $4
+          RETURNING id, status, notes, rating, started_at, ended_at, actual_duration_seconds`,
+        [notes, rating, actualDuration, sessionId],
       );
+      const updatedSession = updatedRows[0];
 
       let referralResolved = null;
       if (session.referral_id) {
@@ -137,6 +151,7 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
         entityId: sessionId,
         detail: {
           rating,
+          durationSeconds: actualDuration,
           tutorPoints: pointsToAward,
           learnerPoints,
           referralResolved,
@@ -146,7 +161,8 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
       }, client);
 
       return {
-        session: { id: sessionId, status: 'completed', notes },
+        session: updatedSession || { id: sessionId, status: 'completed', notes, rating, actual_duration_seconds: actualDuration },
+        actualDurationSeconds: actualDuration,
         tutorBalance: (await client.query(
           `SELECT COALESCE(SUM(amount),0)::int AS balance FROM points_ledger WHERE user_id = $1`,
         [session.tutor_id])).rows[0].balance,

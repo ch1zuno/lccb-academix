@@ -70,7 +70,7 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
             <Clock className="h-4 w-4 text-emerald" />
             <span className="num text-[18px] font-extrabold">{formatTimer(seconds)}</span>
           </div>
-          <Button variant="destructive" size="sm" onClick={onEnd} className="h-9">
+          <Button variant="destructive" size="sm" onClick={() => onEnd(seconds)} className="h-9">
             <PhoneOff className="mr-1.5 h-4 w-4" /> End Session
           </Button>
         </div>
@@ -122,14 +122,14 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
                 user={user}
                 peerName={peerName}
                 isPeerOnline={isPeerOnline}
-                onHangup={onEnd}
+                onHangup={() => onEnd(seconds)}
               />
             ) : (
               <JitsiMeetingRoom
                 roomId={session.id}
                 user={{ displayName: user?.name || 'Participant' }}
                 active={true}
-                onHangup={onEnd}
+                onHangup={() => onEnd(seconds)}
                 onError={() => {
                   showToast?.('Jitsi blocked or unavailable. Switched to Direct WebRTC.', 'warning');
                   setVideoEngine('webrtc');

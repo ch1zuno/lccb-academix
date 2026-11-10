@@ -44,6 +44,7 @@ router.get('/sessions/mine', requireAuth, async (req, res, next) => {
     const [sessionsResult, subjectsResult] = await Promise.all([
       query(
         `SELECT s.id, s.session_code, s.topic, s.date, s.time, s.duration, s.duration_hours, s.status, s.location,
+                s.started_at, s.ended_at, s.actual_duration_seconds,
                 s.tutor_id, s.learner_id, u1.custom_id AS tutor_custom_id, u2.custom_id AS learner_custom_id,
                 u1.name AS tutor_name, u2.name AS learner_name, sub.name AS subject, sub.code AS subject_code,
                 CASE WHEN EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u1.id)
@@ -158,7 +159,7 @@ router.post('/sessions/:id/check-in', requireAuth, tokenLimiter, async (req, res
          JOIN users u ON u.id = c.user_id
          WHERE c.session_id = $1`, [row.id]);
       if (c[0].confirmations >= 2) {
-        await client.query(`UPDATE sessions SET status = 'in-progress' WHERE id = $1 AND status = 'upcoming'`, [row.id]);
+        await client.query(`UPDATE sessions SET status = 'in-progress', started_at = COALESCE(started_at, CURRENT_TIMESTAMP) WHERE id = $1 AND status = 'upcoming'`, [row.id]);
       }
       return { insertTwice: ins.rows.length === 0, confirmations: c[0].confirmations };
     });
@@ -294,7 +295,7 @@ router.post('/device/verify', requireDeviceKey, async (req, res, next) => {
       const { rows: c } = await client.query(
         `SELECT count(*)::int AS confirmations FROM session_check_ins WHERE session_id = $1`, [r.session_id]);
       if (c[0].confirmations >= 2) {
-        await client.query(`UPDATE sessions SET status = 'in-progress' WHERE id = $1 AND status = 'upcoming'`, [r.session_id]);
+        await client.query(`UPDATE sessions SET status = 'in-progress', started_at = COALESCE(started_at, CURRENT_TIMESTAMP) WHERE id = $1 AND status = 'upcoming'`, [r.session_id]);
       }
       return c[0];
     });
