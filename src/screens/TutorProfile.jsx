@@ -18,6 +18,7 @@ import {
   Building,
 } from 'lucide-react';
 import api from '../api';
+import { usePageTitle } from '../lib/ux';
 
 const ROLE_META = {
   superadmin: { label: 'Superadmin (Dean)', badgeClass: 'bg-ink text-paper border border-ink' },
@@ -76,6 +77,8 @@ export default function TutorProfile({ currentUser, onEditProfile, showToast }) 
   const isAccredited = profile?.is_verified !== false;
   const roleInfo = ROLE_META[role] || ROLE_META.learner;
 
+  usePageTitle(profile?.name ? `${profile.name} · Profile` : 'Public Profile');
+
   const handleBookSession = () => {
     if (!isLearner) {
       showToast?.('Only students with learner accounts can book peer tutoring sessions.', 'error');
@@ -133,10 +136,10 @@ export default function TutorProfile({ currentUser, onEditProfile, showToast }) 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Button
               variant="outline"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate(currentUser ? '/dashboard' : '/')}
               className="min-h-[44px]"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" strokeWidth={2} /> Back to Dashboard
+              <ArrowLeft className="mr-2 h-4 w-4" strokeWidth={2} /> {currentUser ? 'Back to Dashboard' : 'Back to Home'}
             </Button>
             {isLearner && (
               <Button onClick={() => navigate('/wizard')} className="min-h-[44px]">
@@ -184,10 +187,10 @@ export default function TutorProfile({ currentUser, onEditProfile, showToast }) 
       <div className="mb-4">
         <button
           type="button"
-          onClick={() => navigate(-1)}
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate(currentUser ? '/dashboard' : '/'))}
           className="inline-flex min-h-[44px] items-center gap-2 text-[14px] font-semibold text-ink underline decoration-gold decoration-2 underline-offset-4 hover:decoration-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
-          <ArrowLeft className="h-4 w-4" strokeWidth={2} /> Back
+          <ArrowLeft className="h-4 w-4" strokeWidth={2} /> {currentUser ? 'Back' : 'Back to Home'}
         </button>
       </div>
 
@@ -248,12 +251,20 @@ export default function TutorProfile({ currentUser, onEditProfile, showToast }) 
                       </span>
                     )}
                   </div>
+                ) : !currentUser ? (
+                  <Button
+                    onClick={() => navigate('/')}
+                    className="min-h-[44px] w-full gap-2 sm:w-auto"
+                  >
+                    <Calendar className="h-4 w-4" strokeWidth={2} />
+                    Sign in to book
+                  </Button>
                 ) : (
                   <div className="rounded-none border-2 border-ink bg-surface-highlight px-3 py-2 text-[13px] font-semibold text-ink">
                     {currentUser?.role === 'superadmin' ? 'Administrator Review' : 'Faculty Review'}
                   </div>
                 )
-              ) : role === 'learner' ? (
+              ) : role === 'learner' && currentUser ? (
                 <Button
                   onClick={handleSendMessage}
                   variant="outline"

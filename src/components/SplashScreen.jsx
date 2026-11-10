@@ -10,12 +10,17 @@ import Logo2D from './Logo2D';
 export default function SplashScreen({ onComplete, duration = 1200 }) {
   const shouldReduceMotion = useReducedMotion();
   const effectiveDuration = shouldReduceMotion ? 200 : duration;
+  const [showColdHint, setShowColdHint] = React.useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       onComplete?.();
     }, effectiveDuration);
-    return () => clearTimeout(timer);
+    const hintTimer = setTimeout(() => setShowColdHint(true), 900);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(hintTimer);
+    };
   }, [effectiveDuration, onComplete]);
 
   return (
@@ -54,6 +59,11 @@ export default function SplashScreen({ onComplete, duration = 1200 }) {
             <span className="h-2.5 w-2.5 rounded-full bg-[#d4ac0d] animate-pulse [animation-delay:200ms]" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#0f2942] animate-pulse [animation-delay:400ms]" />
           </div>
+          {showColdHint && (
+            <p className="mt-4 max-w-[34ch] font-sans text-[12px] font-medium text-muted-foreground">
+              Connecting to the LCCB ledger (waking server on first load)…
+            </p>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>

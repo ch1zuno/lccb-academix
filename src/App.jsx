@@ -3,10 +3,11 @@ import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-
 import {
   BookOpen, Bell, ChevronDown, Check, LayoutDashboard, Search, Clock,
   ShieldCheck, Users, Award, LogOut, Menu, X, Inbox, KeyRound, MessageSquare,
-  User,
+  User, WifiOff,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from './lib/utils';
+import { usePageTitle, fmtManilaDateTime } from './lib/ux';
 import { Button } from './components/ui/button';
 
 import api from './api';
@@ -65,14 +66,27 @@ const ROLE_ROUTES = {
   '/approvals': ['superadmin'],
 };
 
-function RoleGate({ role, path, showToast, children }) {
+function RoleGate({ role, path, showToast, navigate, children }) {
   const allowed = (ROLE_ROUTES[path] ?? []).includes(role);
   useEffect(() => {
     if (!allowed) showToast('That page belongs to another workspace.', 'error');
     // showToast is intentionally not a dependency — it only calls setToast.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allowed]);
-  return allowed ? children : <Navigate to="/dashboard" replace />;
+  if (allowed) return children;
+  const ownerLabels = (ROLE_ROUTES[path] ?? []).map(r => ROLE_LABELS[r] || r).join(' or ');
+  return (
+    <div role="alert" className="panel mx-auto mt-10 max-w-[560px] p-8 text-center">
+      <p className="meta uppercase tracking-[0.14em] text-destructive">403 · Restricted workspace</p>
+      <h1 className="mt-3 font-display text-[28px] font-extrabold leading-tight tracking-[-0.03em]">
+        That page belongs to another role.
+      </h1>
+      <p className="mt-2 text-[14px] text-muted-foreground">
+        {ownerLabels ? `Only ${ownerLabels} accounts can open ${path}.` : 'Your current workspace does not have access to this page.'}
+      </p>
+      <Button className="mt-6" onClick={() => navigate('/dashboard')}>Back to my dashboard</Button>
+    </div>
+  );
 }
 
 const initialsOf = (name = '') => name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
@@ -88,14 +102,58 @@ export default function App() {
   const [accountTab, setAccountTab] = useState('profile');
   const [role, setRole] = useState(user?.role ?? 'learner');
   const [showSplash, setShowSplash] = useState(true);
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
+  const toastTimerRef = useRef(null);
 
   const navigate = useNavigate();
   const location = useLocation();
   const activeTab = location.pathname.substring(1) || 'dashboard';
 
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3200);
+  const routeTitle = (() => {
+    if (!user) {
+      if (/^\/(profile|users|tutors)\//.test(location.pathname)) return 'Public Profile';
+      if (location.pathname !== '/' && location.pathname !== '/login' && location.pathname !== '/dashboard' && !ROLE_ROUTES[location.pathname]) {
+        return '404 Not Found';
+      }
+      return '';
+    }
+    const map = {
+      '/dashboard': {
+        superadmin: 'Institution Overview',
+        faculty: 'Referral Board',
+        tutor: 'Tutor Overview',
+        learner: 'My Progress',
+      }[role] || 'Dashboard',
+      '/wizard': 'Find a Tutor',
+      '/my-tutors': 'My Tutors',
+      '/exam': role === 'tutor' ? 'Qualification Exam' : 'Become a Tutor',
+      '/tutor-pending': 'Tutor Application & Exam',
+      '/referral': 'New Faculty Referral',
+      '/checkin': 'Session Check-In',
+      '/rewards': 'Rewards Catalog',
+      '/messages': 'Messages',
+      '/approvals': 'Tutor Approvals',
+    };
+    if (/^\/(profile|users|tutors)\//.test(location.pathname)) return 'Public Profile';
+    return map[location.pathname] ?? '404 Not Found';
+  })();
+  usePageTitle(routeTitle);
+
+  useEffect(() => {
+    const onOnline = () => setIsOnline(true);
+    const onOffline = () => setIsOnline(false);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, []);
+
+  const showToast = (message, type = 'success', action = null) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ message, type, action });
+    toastTimerRef.current = setTimeout(() => setToast(null), action ? 5200 : 3200);
   };
 
   // Revalidate the persisted session against the API on boot.
@@ -265,10 +323,6 @@ export default function App() {
 
   const navItems = getNavItems();
 
-  if (!user) {
-    return <Login onLogin={(freshUser) => { setUser(freshUser); setRole(freshUser.role); showToast(`Welcome back, ${freshUser.name}.`); }} />;
-  }
-
   const Wordmark = ({ compact = false }) => (
     <div className="flex items-center gap-2.5">
       <span className="grid h-10 w-10 shrink-0 place-items-center border-2 border-ink bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]">
@@ -280,6 +334,54 @@ export default function App() {
       </div>
     </div>
   );
+
+  if (!user) {
+    const isPublicProfileRoute = /^\/(profile|users|tutors)\/[^/]+$/.test(location.pathname);
+    const isKnownRoute = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/dashboard' || Boolean(ROLE_ROUTES[location.pathname]);
+
+    if (isPublicProfileRoute || !isKnownRoute) {
+      return (
+        <div className="min-h-screen bg-stone text-ink">
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[90] focus:border-2 focus:border-ink focus:bg-gold focus:px-4 focus:py-2.5 focus:text-[13px] focus:font-bold focus:text-ink focus:shadow-[4px_4px_0_var(--color-ink)]"
+          >
+            Skip to main content
+          </a>
+          <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between border-b-2 border-ink bg-surface-sidebar px-5 pt-[env(safe-area-inset-top)]">
+            <button type="button" onClick={() => navigate('/')} className="text-left">
+              <Wordmark compact />
+            </button>
+            <Button size="sm" onClick={() => navigate('/')}>Sign in</Button>
+          </header>
+          <main id="main-content" className="mx-auto w-full max-w-[1040px] px-5 py-8">
+            <React.Suspense fallback={<div className="panel empty">Reading the ledger…</div>}>
+              {isPublicProfileRoute ? (
+                <Routes location={location}>
+                  <Route path="/profile/:id" element={<TutorProfile currentUser={null} showToast={showToast} />} />
+                  <Route path="/users/:id" element={<TutorProfile currentUser={null} showToast={showToast} />} />
+                  <Route path="/tutors/:id" element={<TutorProfile currentUser={null} showToast={showToast} />} />
+                </Routes>
+              ) : (
+                <div className="panel mx-auto mt-10 max-w-[560px] p-8 text-center">
+                  <p className="meta uppercase tracking-[0.14em]">404 · Off the ledger</p>
+                  <h1 className="mt-3 font-display text-[30px] font-extrabold leading-tight tracking-[-0.03em]">
+                    This page is not in the ledger.
+                  </h1>
+                  <p className="mt-2 text-[14px] text-muted-foreground">
+                    Check the address or return to the LCCB Academix home page.
+                  </p>
+                  <Button className="mt-6" onClick={() => navigate('/')}>Back to home</Button>
+                </div>
+              )}
+            </React.Suspense>
+          </main>
+        </div>
+      );
+    }
+
+    return <Login onLogin={(freshUser) => { setUser(freshUser); setRole(freshUser.role); showToast(`Welcome back, ${freshUser.name}.`); }} />;
+  }
 
   const NavList = ({ onNavigate }) => (
     <nav className="flex flex-col">
@@ -323,31 +425,43 @@ export default function App() {
   );
 
   const gate = (path, element) => (
-    <RoleGate role={role} path={path} showToast={showToast}>{element}</RoleGate>
+    <RoleGate role={role} path={path} showToast={showToast} navigate={navigate}>{element}</RoleGate>
   );
 
   return (
     <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[90] focus:border-2 focus:border-ink focus:bg-gold focus:px-4 focus:py-2.5 focus:text-[13px] focus:font-bold focus:text-ink focus:shadow-[4px_4px_0_var(--color-ink)]"
+      >
+        Skip to main content
+      </a>
       <AnimatePresence>
         {showSplash && (
           <SplashScreen onComplete={() => setShowSplash(false)} duration={2000} />
         )}
       </AnimatePresence>
       <div className={cn("min-h-screen bg-stone text-ink", showSplash && 'hidden')}>
+        {!isOnline && (
+          <div role="status" aria-live="polite" className="flex items-center justify-center gap-2 border-b-2 border-ink bg-surface-alert px-4 py-2 text-center text-[13px] font-bold text-destructive">
+            <WifiOff className="h-4 w-4 shrink-0" strokeWidth={2} />
+            <span>You are offline — changes cannot be saved to the ledger until your connection returns.</span>
+          </div>
+        )}
         {/* Mobile bar */}
-      <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b-2 border-ink bg-surface-sidebar px-4 lg:hidden">
+      <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between border-b-2 border-ink bg-surface-sidebar px-4 pt-[env(safe-area-inset-top)] lg:hidden">
         <Wordmark compact />
         <div className="flex items-center gap-1.5">
           <button
-            className="relative grid h-10 w-10 place-items-center border-2 border-transparent text-ink transition-colors hover:border-ink hover:bg-gold"
+            className="relative grid h-11 w-11 min-h-[44px] min-w-[44px] place-items-center border-2 border-transparent text-ink transition-colors hover:border-ink hover:bg-gold"
             aria-label="Notifications"
             onClick={() => { setShowNotifications(v => !v); refreshNotifications(); }}
           >
             <Bell className="h-[18px] w-[18px]" strokeWidth={2} />
-            {unreadNotifications > 0 && <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 border-2 border-ink bg-crimson" />}
+            {unreadNotifications > 0 && <span className="absolute right-2 top-2 h-2.5 w-2.5 border-2 border-ink bg-crimson" />}
           </button>
           <button
-            className="grid h-10 w-10 place-items-center border-2 border-ink bg-paper text-ink shadow-[2px_2px_0_var(--color-ink)] transition-transform active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+            className="grid h-11 w-11 min-h-[44px] min-w-[44px] place-items-center border-2 border-ink bg-paper text-ink shadow-[2px_2px_0_var(--color-ink)] transition-transform active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
             aria-label="Open menu"
             aria-haspopup="dialog"
             aria-controls="mobile-workspace-menu"
@@ -357,7 +471,7 @@ export default function App() {
             <Menu className="h-5 w-5" strokeWidth={2.2} />
           </button>
         </div>
-      </div>
+      </header>
 
       <div className="flex">
         {/* Desktop sidebar */}
@@ -459,7 +573,7 @@ export default function App() {
         </aside>
 
         {/* Canvas */}
-        <main className="min-w-0 flex-1">
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 focus:outline-none">
           <div className="mx-auto w-full max-w-[1240px] px-5 pb-12 pt-6 sm:px-8 lg:px-10 lg:pt-8">
             <AnimatePresence mode="wait">
               <motion.div
@@ -693,7 +807,7 @@ export default function App() {
                         <p className={cn('text-[13px] leading-snug text-ink', !n.is_read && 'font-semibold')}>
                           {n.title && n.title !== n.message ? `${n.title} — ` : ''}{n.message}
                         </p>
-                        <p className="mt-1 text-[12px] text-muted-foreground">{new Date(n.created_at).toLocaleString()}</p>
+                        <p className="mt-1 text-[12px] text-muted-foreground">{fmtManilaDateTime(n.created_at)}</p>
                       </div>
                     </div>
                   </div>
@@ -734,6 +848,19 @@ export default function App() {
           >
             <span className={cn('h-2.5 w-2.5 shrink-0 border-2 border-ink', toast.type === 'error' ? 'bg-crimson' : toast.type === 'info' ? 'bg-paper' : 'bg-emerald')} />
             <span className="text-[13px] font-semibold leading-snug">{toast.message}</span>
+            {toast.action && (
+              <button
+                type="button"
+                onClick={() => {
+                  const fn = toast.action.onClick;
+                  setToast(null);
+                  fn?.();
+                }}
+                className="ml-2 shrink-0 border-2 border-ink bg-paper px-2 py-0.5 text-[12px] font-bold text-ink shadow-[2px_2px_0_var(--color-ink)] hover:bg-surface-highlight"
+              >
+                {toast.action.label}
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

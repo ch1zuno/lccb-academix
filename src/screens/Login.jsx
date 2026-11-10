@@ -405,6 +405,12 @@ export default function LandingPage({ onLogin }) {
 
   return (
     <div className="ledger-page">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[90] focus:border-2 focus:border-ink focus:bg-gold focus:px-4 focus:py-2.5 focus:text-[13px] focus:font-bold focus:text-ink focus:shadow-[4px_4px_0_var(--color-ink)]"
+      >
+        Skip to main content
+      </a>
       {/* ── Sketch filter: the hero opens as a rough pencil draft and inks in ──
        * The whole filter animates toward identity (SMIL), so removing the class
        * at 1.2s is seamless — scale 0 + saturate 1 + slope 1 == passthrough. */}
@@ -437,6 +443,7 @@ export default function LandingPage({ onLogin }) {
         </defs>
       </svg>
 
+      <main id="main-content">
       {/* ── First screen: the ledger as an object ─────────────────────────── */}
       <section className={`ledger-hero${sketching ? ' sketching' : ''}`} aria-labelledby="hero-title">
         <div className="ledger-hero-grid">
@@ -893,6 +900,7 @@ export default function LandingPage({ onLogin }) {
           </div>
         </motion.div>
       </section>
+      </main>
 
       {/* ── Back of the object ────────────────────────────────────────────── */}
       <footer className="ledger-footer">
