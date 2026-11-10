@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ExternalLink, FileText, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { downloadApplicationDocument, openApplicationDocument, MAX_APPLICATION_FILES } from '../lib/applicationFiles';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import { useDraftState } from '../lib/ux';
 import api from '../api';
 
 const nextFileId = () => (
@@ -24,12 +26,14 @@ export default function TutorApplicant({ showToast, user }) {
   const [fileBusy, setFileBusy] = useState([]);
   const [examStarted, setExamStarted] = useState(false);
   const [questions, setQuestions] = useState(null);
-  const [answers, setAnswers] = useState({});
-  const [currentQ, setCurrentQ] = useState(0);
+  const draftKey = app?.id ? `tutor-exam-${app.id}` : 'tutor-exam-draft';
+  const [answers, setAnswers, clearAnswers] = useDraftState(`${draftKey}-answers`, {});
+  const [currentQ, setCurrentQ, clearCurrentQ] = useDraftState(`${draftKey}-currentq`, 0);
   const [timeLeft, setTimeLeft] = useState(1800);
   const [starting, setStarting] = useState(false);
   const [grading, setGrading] = useState(false);
   const [result, setResult] = useState(null);
+  const [confirmFinish, setConfirmFinish] = useState(false);
 
   const loadFiles = async (applicationId) => {
     if (!applicationId) return;
@@ -110,8 +114,6 @@ export default function TutorApplicant({ showToast, user }) {
     try {
       const res = await api.get('/accreditation/exam');
       setQuestions(res.questions);
-      setAnswers({});
-      setCurrentQ(0);
       setTimeLeft(1800);
       setExamStarted(true);
     } catch (e) {
@@ -137,6 +139,8 @@ export default function TutorApplicant({ showToast, user }) {
       const payload = {};
       (questions ?? []).forEach((q) => { payload[q.question_number] = answers[q.question_number] ?? -1; });
       const res = await api.post('/accreditation/exam', { answers: payload });
+      clearAnswers();
+      clearCurrentQ();
       setResult({ score: res.exam_score, passed: res.passed });
       setApp(a => ({ ...a, exam_score: res.exam_score }));
       setPhase('waiting');
@@ -339,7 +343,7 @@ export default function TutorApplicant({ showToast, user }) {
                   Next question
                 </Button>
               ) : (
-                <Button onClick={handleFinish} disabled={grading}>
+                <Button onClick={() => setConfirmFinish(true)} disabled={grading}>
                   {grading ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : null}
                   {grading ? 'Submitting…' : 'Submit exam'}
                 </Button>
@@ -483,6 +487,21 @@ export default function TutorApplicant({ showToast, user }) {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmFinish}
+        title="Submit qualification exam?"
+        description={`You have answered ${questions ? questions.filter(item => answers[item.question_number] != null && answers[item.question_number] !== -1).length : 0} of ${questions?.length || 0} questions. Are you sure you want to finish and lock your exam answers?`}
+        warning="Once submitted, your exam score is calculated and your accreditation application is sent for faculty review."
+        confirmLabel="Submit and lock answers"
+        variant="default"
+        busy={grading}
+        onCancel={() => setConfirmFinish(false)}
+        onConfirm={() => {
+          setConfirmFinish(false);
+          handleFinish();
+        }}
+      />
     </div>
   );
 }

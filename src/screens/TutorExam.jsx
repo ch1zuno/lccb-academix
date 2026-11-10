@@ -5,6 +5,7 @@ import { Input } from '../components/ui/input';
 import ApplicationDocumentPicker from '../components/ApplicationDocumentPicker';
 import { Check, Loader2, Trash2, Plus } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useDraftState } from '../lib/ux';
 import api from '../api';
 
 const nextFileId = () => (
@@ -18,9 +19,9 @@ export default function TutorExam({ showToast, user }) {
   const nav = useNavigate();
   const [status, setStatus] = useState('loading');
   const [subjects, setSubjects] = useState(null);
-  const [pickedSubjects, setPickedSubjects] = useState([]);
+  const [pickedSubjects, setPickedSubjects, clearPickedSubjects] = useDraftState('tutor-apply-subjects', []);
   const [staged, setStaged] = useState([]); // [{ id, file }]
-  const [docs, setDocs] = useState([{ title: '', detail: '', link: '' }]);
+  const [docs, setDocs, clearDocs] = useDraftState('tutor-apply-docs', [{ title: '', detail: '', link: '' }]);
   const [applying, setApplying] = useState(false);
   const [uploadStep, setUploadStep] = useState('');
   const [error, setError] = useState(null);
@@ -85,6 +86,8 @@ export default function TutorExam({ showToast, user }) {
           failed += 1;
         }
       }
+      clearPickedSubjects();
+      clearDocs();
       if (failed) {
         showToast(
           `Application submitted, but ${failed} file${failed === 1 ? '' : 's'} did not upload. Add ${failed === 1 ? 'it' : 'them'} from your application page.`,

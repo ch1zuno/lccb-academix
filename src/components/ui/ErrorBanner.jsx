@@ -29,3 +29,4 @@ export function ErrorBanner({ message, onRetry, retryLabel = 'Retry', className 
 }
 
 export default ErrorBanner;
+

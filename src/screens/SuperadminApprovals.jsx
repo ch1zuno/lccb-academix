@@ -8,6 +8,8 @@ import { downloadApplicationDocument, openApplicationDocument, MAX_APPLICATION_F
 import { cn } from '../lib/utils';
 import { trapTabKey } from '../lib/focusTrap';
 import Pagination from '../components/ui/Pagination';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import ErrorBanner from '../components/ui/ErrorBanner';
 import api from '../api';
 
 const fmtDate = (value) => {
@@ -29,14 +31,25 @@ export default function SuperadminApprovals({ showToast }) {
   const [busy, setBusy] = useState(null);
   const [auditEntries, setAuditEntries] = useState(null);
   const [page, setPage] = useState(1);
+  const [appsError, setAppsError] = useState(null);
+  const [confirmRejectApp, setConfirmRejectApp] = useState(null);
   const dialogRef = useRef(null);
   const closeButtonRef = useRef(null);
   const previousFocusRef = useRef(null);
 
-  useEffect(() => {
+  const loadApplications = () => {
+    setAppsError(null);
     api.get('/accreditation/applications')
       .then(({ applications: rows }) => setApplications(rows))
-      .catch((e) => { setApplications([]); showToast(e.message || 'Failed to load applications', 'error'); });
+      .catch((e) => {
+        setApplications([]);
+        setAppsError(e.message || 'Failed to load applications');
+        showToast(e.message || 'Failed to load applications', 'error');
+      });
+  };
+
+  useEffect(() => {
+    loadApplications();
   }, []);
 
   useEffect(() => {
@@ -97,18 +110,23 @@ export default function SuperadminApprovals({ showToast }) {
     }
   };
 
-  const handleReject = async (app) => {
+  const executeReject = async (app) => {
     setBusy(app.id);
+    setConfirmRejectApp(null);
     try {
       await api.post(`/accreditation/${app.id}/reject`, {});
       setApplications(rows => rows.filter(row => row.id !== app.id));
       setSelectedApp(null);
-      showToast(`Rejected ${app.name}'s application.`, 'error');
+      showToast(`Rejected ${app.name}'s application.`, 'info');
     } catch (e) {
       showToast(e.message || 'Rejection failed', 'error');
     } finally {
       setBusy(null);
     }
+  };
+
+  const handleReject = (app) => {
+    setConfirmRejectApp(app);
   };
 
   const openFile = (item) => openApplicationDocument(item.doc).catch(e => showToast(e.message, 'error'));
@@ -128,7 +146,15 @@ export default function SuperadminApprovals({ showToast }) {
         <span className="border-2 border-ink bg-gold px-2 py-1 text-[13px] font-bold text-ink shadow-[2px_2px_0_var(--color-ink)]">{applications?.length ?? '—'} pending</span>
       </div>
 
-      {applications === null && <div className="panel empty">Reading the applications…</div>}
+      {appsError && (
+        <ErrorBanner
+          message={`Applications could not be read: ${appsError}`}
+          onRetry={loadApplications}
+          className="mb-4"
+        />
+      )}
+
+      {applications === null && !appsError && <div className="panel empty">Reading the applications…</div>}
 
       {applications !== null && applications.length === 0 && (
         <div className="panel flex flex-col items-start gap-2 border-t-8 border-t-gold px-6 py-10">
@@ -453,6 +479,18 @@ export default function SuperadminApprovals({ showToast }) {
           </>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={Boolean(confirmRejectApp)}
+        title="Reject tutor application?"
+        description={`Reject ${confirmRejectApp?.name}'s tutor accreditation application?`}
+        warning="The student will be notified and this rejection will be logged in the audit trail."
+        confirmLabel="Reject application"
+        variant="destructive"
+        busy={Boolean(busy)}
+        onCancel={() => setConfirmRejectApp(null)}
+        onConfirm={() => executeReject(confirmRejectApp)}
+      />
     </div>
   );
 }

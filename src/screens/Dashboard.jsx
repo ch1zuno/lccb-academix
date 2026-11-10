@@ -7,6 +7,8 @@ import { cn } from '../lib/utils';
 import { localYmd } from '../lib/dates';
 import GoogleClassroomSessions from '../components/classroom/GoogleClassroomSessions';
 import Pagination from '../components/ui/Pagination';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import ErrorBanner from '../components/ui/ErrorBanner';
 import api from '../api';
 
 /**
@@ -127,6 +129,12 @@ export default function Dashboard({ role, user, showToast }) {
   const [requestsPage, setRequestsPage] = useState(1);
   const [tutorRequestsPage, setTutorRequestsPage] = useState(1);
   const [upcomingPage, setUpcomingPage] = useState(1);
+  const [confirmAction, setConfirmAction] = useState(null);
+
+  const reloadAnalytics = () => {
+    setAnalyticsError(null);
+    api.get('/analytics').then(data => setAnalytics(data)).catch(e => setAnalyticsError(e.message));
+  };
 
   const reloadSessions = () => {
     api.get('/sessions/mine')
@@ -180,31 +188,48 @@ export default function Dashboard({ role, user, showToast }) {
     }
   };
 
-  const handleDeclineRequest = async (requestId) => {
-    setActingRequestId(requestId);
-    try {
-      await api.post(`/session-requests/${requestId}/decline`);
-      showToast('Session request declined.', 'info');
-      reloadRequests();
-    } catch (e) {
-      showToast(e.message || 'Could not decline session request', 'error');
-    } finally {
-      setActingRequestId(null);
-    }
+  const handleDeclineRequest = (requestId) => {
+    setConfirmAction({
+      title: 'Decline session request?',
+      description: 'Are you sure you want to decline this session request? The learner will be notified.',
+      confirmLabel: 'Decline request',
+      variant: 'destructive',
+      onConfirm: async () => {
+        setActingRequestId(requestId);
+        setConfirmAction(null);
+        try {
+          await api.post(`/session-requests/${requestId}/decline`);
+          showToast('Session request declined.', 'info');
+          reloadRequests();
+        } catch (e) {
+          showToast(e.message || 'Could not decline session request', 'error');
+        } finally {
+          setActingRequestId(null);
+        }
+      },
+    });
   };
 
-  const handleCancelRequest = async (requestId) => {
-    if (!window.confirm('Withdraw this session request? The tutor will be notified.')) return;
-    setCancellingRequestId(requestId);
-    try {
-      await api.post(`/session-requests/${requestId}/cancel`);
-      showToast('Session request withdrawn. The tutor has been notified.', 'info');
-      reloadRequests();
-    } catch (e) {
-      showToast(e.message || 'Could not withdraw session request', 'error');
-    } finally {
-      setCancellingRequestId(null);
-    }
+  const handleCancelRequest = (requestId) => {
+    setConfirmAction({
+      title: 'Withdraw session request?',
+      description: 'Withdraw this session request? The tutor will be notified.',
+      confirmLabel: 'Withdraw request',
+      variant: 'destructive',
+      onConfirm: async () => {
+        setCancellingRequestId(requestId);
+        setConfirmAction(null);
+        try {
+          await api.post(`/session-requests/${requestId}/cancel`);
+          showToast('Session request withdrawn. The tutor has been notified.', 'info');
+          reloadRequests();
+        } catch (e) {
+          showToast(e.message || 'Could not withdraw session request', 'error');
+        } finally {
+          setCancellingRequestId(null);
+        }
+      },
+    });
   };
 
   const handleToggleAvailability = async () => {
@@ -221,20 +246,42 @@ export default function Dashboard({ role, user, showToast }) {
     }
   };
 
-  const handleCancelSession = async (sessionId) => {
-    const reason = window.prompt('Reason for cancelling (optional):');
-    if (reason === null) return; // user pressed Cancel on the prompt
-    setCancellingId(sessionId);
-    try {
-      await api.post(`/sessions/${sessionId}/cancel`, { reason });
-      showToast('Session cancelled. The other participant has been notified.', 'info');
-      reloadSessions();
-    } catch (e) {
-      showToast(e.message || 'Could not cancel session', 'error');
-    } finally {
-      setCancellingId(null);
-    }
+  const handleCancelSession = (sessionId) => {
+    setConfirmAction({
+      title: 'Cancel tutoring session?',
+      description: 'Are you sure you want to cancel this session? The other participant will receive a cancellation notice.',
+      warning: 'Cancellations are logged on the session record.',
+      confirmLabel: 'Cancel session',
+      variant: 'destructive',
+      onConfirm: async () => {
+        setCancellingId(sessionId);
+        setConfirmAction(null);
+        try {
+          await api.post(`/sessions/${sessionId}/cancel`, { reason: 'User requested cancellation' });
+          showToast('Session cancelled. The other participant has been notified.', 'info');
+          reloadSessions();
+        } catch (e) {
+          showToast(e.message || 'Could not cancel session', 'error');
+        } finally {
+          setCancellingId(null);
+        }
+      },
+    });
   };
+
+  const renderConfirmDialog = () => (
+    <ConfirmDialog
+      open={Boolean(confirmAction)}
+      title={confirmAction?.title}
+      description={confirmAction?.description}
+      warning={confirmAction?.warning}
+      confirmLabel={confirmAction?.confirmLabel}
+      variant={confirmAction?.variant}
+      busy={confirmAction?.busy}
+      onCancel={() => setConfirmAction(null)}
+      onConfirm={confirmAction?.onConfirm}
+    />
+  );
 
   // ── Superadmin ───────────────────────────────────────────────────────────
   if (role === 'superadmin') {
@@ -263,15 +310,24 @@ export default function Dashboard({ role, user, showToast }) {
       { label: 'Points issued', value: analytics ? fmtPoints(analytics.pointsIssued) : '—', sub: analytics ? `${analytics.avgRating ?? '—'} average session rating` : ' ' },
     ];
 
-    const removeReferral = async (referral) => {
-      if (!window.confirm(`Remove ${referral.referral_code} from the ledger? This cannot be undone.`)) return;
-      try {
-        await api.delete(`/referrals/${referral.id}`);
-        showToast(`${referral.referral_code} was removed from the ledger.`, 'success');
-        reloadReferrals();
-      } catch (e) {
-        showToast(e.message || 'Could not remove the referral', 'error');
-      }
+    const removeReferral = (referral) => {
+      setConfirmAction({
+        title: 'Remove referral from ledger?',
+        description: `Permanently remove ${referral.referral_code} for ${referral.learner}? This cannot be undone.`,
+        warning: 'This action cannot be undone and deletes the ledger record permanently.',
+        confirmLabel: 'Remove permanently',
+        variant: 'destructive',
+        onConfirm: async () => {
+          setConfirmAction(null);
+          try {
+            await api.delete(`/referrals/${referral.id}`);
+            showToast(`${referral.referral_code} was removed from the ledger.`, 'success');
+            reloadReferrals();
+          } catch (e) {
+            showToast(e.message || 'Could not remove the referral', 'error');
+          }
+        },
+      });
     };
 
     return (
@@ -288,7 +344,10 @@ export default function Dashboard({ role, user, showToast }) {
         />
 
         {analyticsError && (
-          <div className="panel px-5 py-4 text-[14px] text-crimson">Analytics could not be read: {analyticsError}</div>
+          <ErrorBanner
+            message={`Analytics could not be read: ${analyticsError}`}
+            onRetry={reloadAnalytics}
+          />
         )}
 
         <Metrics items={kpis} />
@@ -484,6 +543,7 @@ export default function Dashboard({ role, user, showToast }) {
             </div>
           </div>
         )}
+        {renderConfirmDialog()}
       </div>
     );
   }
@@ -500,14 +560,23 @@ export default function Dashboard({ role, user, showToast }) {
     ];
     const stats = columns.map(col => ({ label: col.label, value: col.items.length, sub: col.items.length === 1 ? 'referral' : 'referrals', dot: col.dot }));
 
-    const rejectReferral = async (referral) => {
-      try {
-        await api.patch(`/referrals/${referral.id}/status`, { status: 'rejected' });
-        showToast(`${referral.referral_code} was rejected.`, 'success');
-        reloadReferrals();
-      } catch (e) {
-        showToast(e.message || 'Could not reject the referral', 'error');
-      }
+    const rejectReferral = (referral) => {
+      setConfirmAction({
+        title: 'Reject referral?',
+        description: `Flag ${referral.referral_code} for ${referral.learner} as rejected?`,
+        confirmLabel: 'Reject referral',
+        variant: 'destructive',
+        onConfirm: async () => {
+          setConfirmAction(null);
+          try {
+            await api.patch(`/referrals/${referral.id}/status`, { status: 'rejected' });
+            showToast(`${referral.referral_code} was rejected.`, 'success');
+            reloadReferrals();
+          } catch (e) {
+            showToast(e.message || 'Could not reject the referral', 'error');
+          }
+        },
+      });
     };
 
     const downloadCsv = async () => {
@@ -540,7 +609,12 @@ export default function Dashboard({ role, user, showToast }) {
 
         <Metrics items={stats} />
 
-        {referralsError && <div className="panel px-5 py-4 text-[14px] text-crimson">The board could not be read: {referralsError}</div>}
+        {referralsError && (
+          <ErrorBanner
+            message={`The board could not be read: ${referralsError}`}
+            onRetry={reloadReferrals}
+          />
+        )}
         {referralsLoading && <div className="panel empty">Reading the board…</div>}
 
         {!referralsLoading && !referralsError && (
@@ -631,6 +705,7 @@ export default function Dashboard({ role, user, showToast }) {
             <Button variant="outline" size="sm" onClick={() => navigate('/referral')}>Write the first referral</Button>
           </div>
         )}
+        {renderConfirmDialog()}
       </div>
     );
   }
@@ -910,6 +985,7 @@ export default function Dashboard({ role, user, showToast }) {
             <GoogleClassroomSessions role="tutor" />
           </div>
         </div>
+        {renderConfirmDialog()}
       </div>
     );
   }
@@ -935,7 +1011,12 @@ export default function Dashboard({ role, user, showToast }) {
         action={<Button onClick={() => navigate('/wizard')}>Find a tutor</Button>}
       />
 
-      {referralsError && <div className="panel px-5 py-4 text-[14px] text-crimson">Your referral could not be read: {referralsError}</div>}
+      {referralsError && (
+        <ErrorBanner
+          message={`Your referral could not be read: ${referralsError}`}
+          onRetry={reloadReferrals}
+        />
+      )}
 
       {myReferral && (
         <div className="panel overflow-hidden">
@@ -1084,6 +1165,7 @@ export default function Dashboard({ role, user, showToast }) {
         <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.6} />
         Your record is append-only. Changes appear after each verified session.
       </div>
+      {renderConfirmDialog()}
     </div>
   );
 }

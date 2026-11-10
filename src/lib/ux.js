@@ -193,3 +193,4 @@ export function downloadSessionIcs(session) {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+

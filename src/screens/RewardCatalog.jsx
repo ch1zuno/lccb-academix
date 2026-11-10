@@ -3,6 +3,8 @@ import { Button } from '../components/ui/button';
 import { Loader2, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import ErrorBanner from '../components/ui/ErrorBanner';
 import api from '../api';
 
 const fmt = (value) => new Intl.NumberFormat('en-US').format(Number(value) || 0);
@@ -13,6 +15,7 @@ export default function RewardCatalog({ showToast }) {
   const [balance, setBalance] = useState(0);
   const [voucher, setVoucher] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const [redeemTarget, setRedeemTarget] = useState(null);
   const [filter, setFilter] = useState('All');
 
   const loadCatalog = () => {
@@ -33,8 +36,9 @@ export default function RewardCatalog({ showToast }) {
   const categories = ['All', ...new Set((rewards ?? []).map(reward => reward.category))];
   const filteredRewards = filter === 'All' ? (rewards ?? []) : (rewards ?? []).filter(reward => reward.category === filter);
 
-  const handleRedeem = async (item) => {
+  const executeRedeem = async (item) => {
     setBusyId(item.id);
+    setRedeemTarget(null);
     try {
       const res = await api.post(`/rewards/${item.id}/redeem`);
       setBalance(Number(res.balance) || 0);
@@ -46,6 +50,10 @@ export default function RewardCatalog({ showToast }) {
     } finally {
       setBusyId(null);
     }
+  };
+
+  const handleRedeem = (item) => {
+    setRedeemTarget(item);
   };
 
   if (voucher) {
@@ -119,10 +127,11 @@ export default function RewardCatalog({ showToast }) {
       </div>
 
       {error && (
-        <div className="panel mb-4 flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-          <p className="text-[14px] text-crimson">The catalog could not be read: {error}</p>
-          <Button size="sm" variant="outline" onClick={loadCatalog}>Retry</Button>
-        </div>
+        <ErrorBanner
+          message={`The catalog could not be read: ${error}`}
+          onRetry={loadCatalog}
+          className="mb-4"
+        />
       )}
 
       <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter rewards by category">
@@ -191,6 +200,18 @@ export default function RewardCatalog({ showToast }) {
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(redeemTarget)}
+        title="Redeem campus reward?"
+        description={`Redeem "${redeemTarget?.name}" for ${fmt(redeemTarget?.cost)} points? This will deduct points from your balance and generate a one-time claim voucher.`}
+        warning="Points are deducted from the institutional ledger immediately upon claim."
+        confirmLabel={`Redeem (${fmt(redeemTarget?.cost)} pts)`}
+        variant="default"
+        busy={Boolean(busyId)}
+        onCancel={() => setRedeemTarget(null)}
+        onConfirm={() => executeRedeem(redeemTarget)}
+      />
     </div>
   );
 }

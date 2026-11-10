@@ -425,6 +425,8 @@ export default function AccountDialog({
                 maxLength={100}
                 required
                 className="mt-1.5 min-h-[44px]"
+                aria-invalid={Boolean(profileError)}
+                aria-describedby={profileError ? 'profile-error-msg' : undefined}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your full display name"
@@ -510,6 +512,7 @@ export default function AccountDialog({
             {/* Error / Status */}
             {profileError && (
               <p
+                id="profile-error-msg"
                 role="alert"
                 className="border-2 border-crimson bg-surface-alert px-3 py-2 text-[13px] font-semibold text-crimson"
               >
@@ -611,6 +614,8 @@ export default function AccountDialog({
                   minLength={10}
                   maxLength={72}
                   className="mt-1.5 min-h-[44px]"
+                  aria-invalid={Boolean(securityError)}
+                  aria-describedby={securityError ? 'security-error-msg' : undefined}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
@@ -628,6 +633,8 @@ export default function AccountDialog({
                   type="password"
                   autoComplete="new-password"
                   className="mt-1.5 min-h-[44px]"
+                  aria-invalid={Boolean(securityError)}
+                  aria-describedby={securityError ? 'security-error-msg' : undefined}
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   required
@@ -636,6 +643,7 @@ export default function AccountDialog({
 
               {securityError && (
                 <p
+                  id="security-error-msg"
                   role="alert"
                   className="border-2 border-crimson bg-surface-alert px-3 py-2 text-[13px] font-semibold text-crimson"
                 >

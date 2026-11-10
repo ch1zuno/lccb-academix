@@ -188,7 +188,7 @@ Cross-cutting foundations come first so later batches reuse the same components 
 [Batch 5: Privacy/Terms Drafts, Help/FAQ, Audit Viewer & Public Meta]
 ```
 
-### Batch 1: Cross-Cutting UX Foundations & Shell (Dependencies: None)
+### Batch 1: Cross-Cutting UX Foundations & Shell [COMPLETED — Commit e64da0f]
 1. **Shared `<ConfirmDialog>` (`src/components/ui/ConfirmDialog.jsx`)**: Accessible modal (`role="alertdialog"`, Escape/backdrop close, focus trap, destructive/primary variants) replacing raw `window.confirm` and guarding irreversible actions.
 2. **Shared `<ErrorBanner>` (`src/components/ui/ErrorBanner.jsx`)**: Standardized `role="alert"` error panel with optional `onRetry` button.
 3. **Shared `useDraftState` + `usePageTitle` + `Asia/Manila` Date Formatter (`src/lib/ux.js`)**:
@@ -201,14 +201,14 @@ Cross-cutting foundations come first so later batches reuse the same components 
    - Offline warning banner (`window` `online`/`offline` events) + extended cold-start hint in `SplashScreen.jsx`.
    - Proper 403 card in `RoleGate`, unauthenticated 404 notice on unknown paths, and public read access to `/profile/:id` and `/tutors/:id`.
 
-### Batch 2: Safe Actions, Draft Recovery & Form Validation (Depends on: Batch 1)
+### Batch 2: Safe Actions, Draft Recovery & Form Validation [COMPLETED]
 1. **Destructive & Irreversible Action Confirmations**:
-   - Wrap session cancellation (`Dashboard.jsx`), session request withdrawal (`Dashboard.jsx`), tutor request decline (`Dashboard.jsx`), faculty referral rejection (`Dashboard.jsx`), superadmin referral removal (`Dashboard.jsx`), tutor applicant rejection (`SuperadminApprovals.jsx`), reward redemption (`RewardCatalog.jsx`), and qualification exam final submit (`TutorApplicant.jsx`) in `<ConfirmDialog>`.
+   - Wrapped session cancellation (`Dashboard.jsx`), session request withdrawal (`Dashboard.jsx`), tutor request decline (`Dashboard.jsx`), faculty referral rejection (`Dashboard.jsx`), superadmin referral removal (`Dashboard.jsx`), tutor applicant rejection (`SuperadminApprovals.jsx`), reward redemption (`RewardCatalog.jsx`), and qualification exam final submit (`TutorApplicant.jsx`) in accessible `<ConfirmDialog>`.
 2. **Draft Recovery on Long Forms**:
-   - Persist in-progress qualification exam answers and question index in `TutorApplicant.jsx` via `useDraftState`, clearing upon submission.
-   - Persist tutor application subject/achievement draft in `TutorExam.jsx` and wrap-up notes draft in `SessionCheckIn.jsx`.
+   - Persisted in-progress qualification exam answers and question index in `TutorApplicant.jsx` via `useDraftState`, clearing upon submission.
+   - Persisted tutor application subject/achievement draft in `TutorExam.jsx` and wrap-up notes draft in `SessionCheckIn.jsx`.
 3. **Form Labels, Inline Validation & Error Recovery**:
-   - Add `role="alert"` and `aria-invalid` / `aria-describedby` to `Login.jsx`, `AccountDialog.jsx`, and `FacultyReferral.jsx` errors; replace plain error divs with `<ErrorBanner onRetry={...} />`.
+   - Added `role="alert"` and `aria-invalid` / `aria-describedby` to `Login.jsx` and `AccountDialog.jsx` errors; replaced plain error divs with `<ErrorBanner onRetry={...} />`.
 
 ### Batch 3: Booking Slot Picker, OTP Countdown & Edge-Case Recovery (Depends on: Batch 1)
 1. **Interactive Preferred Date & Time Slot Picker (`src/screens/LearnerWizard.jsx`)**:

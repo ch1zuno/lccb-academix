@@ -1000,7 +1000,7 @@ export default function LandingPage({ onLogin }) {
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                       >
-                        <div className="login-error">{error}</div>
+                        <div id="login-error-msg" role="alert" className="login-error">{error}</div>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -1012,6 +1012,8 @@ export default function LandingPage({ onLogin }) {
                       className="login-input"
                       placeholder="TE-128 or name@lccbacolod.edu.ph"
                       autoComplete="username"
+                      aria-invalid={Boolean(error)}
+                      aria-describedby={error ? 'login-error-msg' : undefined}
                       value={schoolId}
                       onChange={(event) => setSchoolId(event.target.value)}
                     />
@@ -1024,6 +1026,8 @@ export default function LandingPage({ onLogin }) {
                       type="password"
                       placeholder="Your password"
                       autoComplete="current-password"
+                      aria-invalid={Boolean(error)}
+                      aria-describedby={error ? 'login-error-msg' : undefined}
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
                     />

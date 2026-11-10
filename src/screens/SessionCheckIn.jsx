@@ -2,18 +2,40 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Copy, Check, Loader2, Star, Sparkles, BookOpen } from 'lucide-react';
+import { Copy, Check, Loader2, Star, Clock, Award, CheckCircle2, UserCheck, ShieldCheck } from 'lucide-react';
 import { cn } from '../lib/utils';
+import ErrorBanner from '../components/ui/ErrorBanner';
+import { useDraftState } from '../lib/ux';
 import api from '../api';
 
 const LiveClassroom = React.lazy(() => import('../components/classroom/LiveClassroom'));
-const SessionQuizModal = React.lazy(() => import('../components/classroom/SessionQuizModal'));
 
-const formatTime = (totalSeconds) => {
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  return `${h > 0 ? `${h}:` : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+const formatTime = (totalSeconds = 0) => {
+  const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${h > 0 ? `${h}:` : ''}${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+};
+
+const formatDurationVerbose = (totalSeconds = 0) => {
+  const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const parts = [];
+  if (h > 0) parts.push(`${h} hr${h > 1 ? 's' : ''}`);
+  if (m > 0) parts.push(`${m} min${m > 1 ? 's' : ''}`);
+  if (sec > 0 || parts.length === 0) parts.push(`${sec} sec${sec !== 1 ? 's' : ''}`);
+  return parts.join(' ');
+};
+
+const RATING_DESCRIPTIONS = {
+  1: '1 Star · Poor — Needs significant review and clarification',
+  2: '2 Stars · Fair — Fundamental concepts partially grasped',
+  3: '3 Stars · Good — Solid progress and helpful review',
+  4: '4 Stars · Very Good — Thorough, engaging, and clear instruction',
+  5: '5 Stars · Excellent — Outstanding, fully mastered concepts',
 };
 
 const fmtDate = (value) => {
@@ -48,25 +70,36 @@ export default function SessionCheckIn({ role, user, showToast }) {
   const [confirmations, setConfirmations] = useState(0);
   const [finished, setFinished] = useState(false);
   const [wrapRating, setWrapRating] = useState(0);
-  const [wrapNotes, setWrapNotes] = useState('');
+  const [hoverRating, setHoverRating] = useState(0);
+  const [wrapNotes, setWrapNotes, clearWrapNotes] = useDraftState('wrapup-notes', '');
   const [submitting, setSubmitting] = useState(false);
   const [wrapResult, setWrapResult] = useState(null);
-  const [aiSynthesis, setAiSynthesis] = useState(null);
-  const [loadingAiWrap, setLoadingAiWrap] = useState(false);
-  const [showQuizModal, setShowQuizModal] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadSessions = () => {
+    setSessionsError(null);
     api.get('/sessions/mine')
       .then(({ sessions: rows }) => {
-        if (cancelled) return;
         setSessions(rows);
-        const next = rows.find(s => s.status === 'upcoming') || rows.find(s => s.status === 'in-progress');
+        const next = rows.find(s => s.status === 'in-progress') || rows.find(s => s.status === 'upcoming');
         if (next) setTarget(next);
       })
-      .catch((e) => { if (!cancelled) setSessionsError(e.message || 'Failed to load sessions'); });
-    return () => { cancelled = true; };
+      .catch((e) => { setSessionsError(e.message || 'Failed to load sessions'); });
+  };
+
+  useEffect(() => {
+    loadSessions();
   }, []);
+
+  // Synchronize timer from backend started_at when target is in-progress
+  useEffect(() => {
+    if (target?.status === 'in-progress' && !finished) {
+      setActive(true);
+      if (target.started_at) {
+        const startTs = new Date(target.started_at).getTime();
+        setSeconds(Math.max(0, Math.floor((Date.now() - startTs) / 1000)));
+      }
+    }
+  }, [target?.id, target?.status, target?.started_at, finished]);
 
   useEffect(() => {
     let interval = null;
@@ -116,22 +149,12 @@ export default function SessionCheckIn({ role, user, showToast }) {
     }
   };
 
-  const handleEnd = () => {
+  const handleEnd = (reportedSeconds) => {
+    const finalSec = typeof reportedSeconds === 'number' && reportedSeconds > 0 ? reportedSeconds : seconds;
+    setSeconds(finalSec);
     setFinished(true);
     setActive(false);
-    showToast(`Session ended at ${formatTime(seconds)}. Complete the wrap-up.`, 'success');
-    if (target?.id) {
-      setLoadingAiWrap(true);
-      api.post(`/sessions/${target.id}/ai/wrap-up-assist`)
-        .then((data) => {
-          setAiSynthesis(data);
-          showToast('Antigravity AI generated session synthesis and quiz.', 'success');
-        })
-        .catch((err) => {
-          console.warn('AI wrap-up error:', err.message);
-        })
-        .finally(() => setLoadingAiWrap(false));
-    }
+    showToast(`Session call ended at ${formatTime(finalSec)}. View the report below.`, 'success');
   };
 
   const handleSubmitWrap = async () => {
@@ -141,9 +164,11 @@ export default function SessionCheckIn({ role, user, showToast }) {
       const res = await api.post(`/sessions/${target.id}/wrap-up`, {
         notes: role === 'tutor' ? wrapNotes : undefined,
         rating: wrapRating,
+        durationSeconds: seconds,
       });
+      clearWrapNotes();
       setWrapResult(res);
-      showToast(res.referralResolved ? 'Session wrapped — the referral is now resolved.' : 'Session wrapped. The ledger is updated.', 'success');
+      showToast(res.referralResolved ? 'Session report saved — referral resolved.' : 'Session report and rating saved to ledger.', 'success');
     } catch (e) {
       showToast(e.message || 'Wrap-up failed', 'error');
     } finally {
@@ -153,161 +178,211 @@ export default function SessionCheckIn({ role, user, showToast }) {
 
   if (finished) {
     return (
-      <div className="mx-auto w-full max-w-[760px]">
-        <div className="section-head">
+      <div className="mx-auto w-full max-w-[820px]">
+        {/* Section Header */}
+        <div className="section-head mb-6">
           <div>
-            <h1 className="section-title">Session wrap-up</h1>
-            <p className="section-subtitle">Close the record, rate the hour, and post the points.</p>
+            <h1 className="section-title">Session Call Report</h1>
+            <p className="section-subtitle">Official tutoring session summary & ledger record.</p>
           </div>
-          <span className="status-pill"><span className="status-dot bg-emerald" /> Ended</span>
+          <span className="status-pill">
+            <span className="status-dot bg-emerald" /> {wrapResult ? 'Recorded on Ledger' : 'Call Completed'}
+          </span>
         </div>
 
-        <div className="panel p-6">
-          <div className="flex flex-wrap items-baseline justify-between gap-3 border-b-2 border-ink pb-6">
-            <div>
-              <p className="text-[13px] font-semibold text-muted-foreground">Total time</p>
-              <p className="num mt-1 text-[44px] leading-none text-ink">{formatTime(seconds)}</p>
+        {/* Main Report Card */}
+        <div className="panel p-6 shadow-[5px_5px_0_var(--color-ink)]">
+          {/* Call Duration & Timing Banner */}
+          <div className="border-2 border-ink bg-surface-quiet p-5 shadow-[3px_3px_0_var(--color-ink)] mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-ink/20 pb-4">
+              <div>
+                <p className="meta uppercase tracking-[0.08em] text-muted-foreground flex items-center gap-1.5 font-bold">
+                  <Clock className="h-4 w-4 text-emerald" /> Actual Logged Call Duration
+                </p>
+                <p className="num mt-1 text-[40px] font-extrabold leading-none text-ink">
+                  {formatTime(seconds)}
+                </p>
+                <p className="text-[13px] font-semibold text-muted-foreground mt-1">
+                  {formatDurationVerbose(seconds)}
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="status-pill inline-block border-2 border-ink bg-gold text-ink font-bold shadow-[2px_2px_0_var(--color-ink)]">
+                  2/2 Devices Verified
+                </span>
+                <p className="text-[12px] text-muted-foreground mt-2 font-mono">
+                  Code: <span className="font-bold text-ink">{target?.session_code}</span>
+                </p>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-[13px] text-muted-foreground">{target?.session_code}</p>
-              <p className="mt-1 text-[14px] text-ink">{target?.subject} · {target?.topic}</p>
+
+            {/* Time & Session Details Subgrid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-[13px]">
+              <div>
+                <p className="text-muted-foreground font-semibold">Subject & Topic</p>
+                <p className="font-bold text-ink truncate">{target?.subject}</p>
+                <p className="text-muted-foreground text-[12px] truncate">{target?.topic}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground font-semibold">Tutor</p>
+                <p className="font-bold text-ink">{target?.tutor_name || target?.tutor_custom_id}</p>
+                <p className="text-muted-foreground text-[12px]">Accredited Peer Tutor</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground font-semibold">Learner</p>
+                <p className="font-bold text-ink">{target?.learner_name || target?.learner_custom_id}</p>
+                <p className="text-muted-foreground text-[12px]">Student (Learner)</p>
+              </div>
             </div>
           </div>
 
-          <div className="mt-6">
-            <p className="field-label">How was the session?</p>
-            <div className="flex items-center gap-1.5" role="radiogroup" aria-label="Session rating">
-              {[1, 2, 3, 4, 5].map(star => (
-                <button
-                  key={star}
-                  type="button"
-                  role="radio"
-                  aria-checked={wrapRating === star}
-                  aria-label={`${star} out of 5`}
-                  className={cn(
-                    'grid h-10 w-10 place-items-center border-2 border-ink transition-colors',
-                    wrapRating >= star ? 'bg-gold' : 'bg-paper hover:bg-surface-highlight'
-                  )}
-                  onClick={() => setWrapRating(star)}
+          {/* Points & Ledger Attribution Breakdown */}
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-2 border-ink bg-surface-highlight p-4 text-[13px]">
+            <div className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-gold-ink shrink-0" />
+              <div>
+                <p className="font-bold text-ink">Ledger Credit & Attribution</p>
+                <p className="text-muted-foreground">
+                  Tutor earns <strong className="text-ink">+50 community points</strong> · Learner earns <strong className="text-ink">+25 attendance points</strong>
+                </p>
+              </div>
+            </div>
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider border border-ink/30 px-2 py-0.5 bg-paper">
+              Append-only
+            </span>
+          </div>
+
+          {/* Star Rating Section (Replaces AI Review Survey) */}
+          <div className="border-t-2 border-ink pt-6">
+            <div className="mb-3">
+              <p className="font-display text-[16px] font-bold leading-tight text-ink flex items-center gap-1.5">
+                <Star className="h-5 w-5 fill-gold text-ink" /> Session Quality Rating
+              </p>
+              <p className="text-[13px] text-muted-foreground mt-0.5">
+                {wrapResult ? 'Official rating recorded for this session:' : 'Select a rating from 1 to 5 stars to record on the ledger.'}
+              </p>
+            </div>
+
+            {wrapResult ? (
+              <div className="flex items-center gap-2 p-3 border-2 border-ink bg-paper shadow-[2px_2px_0_var(--color-ink)]">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <Star
+                      key={star}
+                      className={cn('h-6 w-6', (wrapResult.session?.rating || wrapRating) >= star ? 'fill-gold text-ink' : 'text-ink/20')}
+                    />
+                  ))}
+                </div>
+                <span className="num font-bold text-ink text-[16px] ml-2">
+                  {wrapResult.session?.rating || wrapRating} / 5 Stars
+                </span>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div
+                  className="flex items-center gap-2"
+                  role="radiogroup"
+                  aria-label="Session rating"
                 >
-                  <Star
-                    className={cn('h-6 w-6', wrapRating >= star ? 'fill-ink text-ink' : 'text-ink/30')}
-                    strokeWidth={1.8}
-                  />
-                </button>
-              ))}
-              <span className="num ml-2 text-[13px] text-muted-foreground">{wrapRating ? `${wrapRating} / 5` : 'Not rated'}</span>
-            </div>
-            <p className="mt-1 text-[13px] text-muted-foreground">1 = not yet clear, 5 = clear and useful.</p>
+                  {[1, 2, 3, 4, 5].map(star => {
+                    const isLit = (hoverRating || wrapRating) >= star;
+                    return (
+                      <button
+                        key={star}
+                        type="button"
+                        role="radio"
+                        aria-checked={wrapRating === star}
+                        aria-label={`${star} star${star > 1 ? 's' : ''}`}
+                        className={cn(
+                          'grid h-12 w-12 min-h-[44px] min-w-[44px] place-items-center border-2 border-ink shadow-[2px_2px_0_var(--color-ink)] transition-all',
+                          isLit ? 'bg-gold -translate-y-0.5 shadow-[3px_3px_0_var(--color-ink)]' : 'bg-paper hover:bg-surface-highlight'
+                        )}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setWrapRating(star)}
+                      >
+                        <Star
+                          className={cn('h-7 w-7 transition-transform', isLit ? 'fill-ink text-ink scale-110' : 'text-ink/30')}
+                          strokeWidth={1.8}
+                        />
+                      </button>
+                    );
+                  })}
+                  <span className="num ml-3 text-[15px] font-bold text-ink">
+                    {wrapRating ? `${wrapRating} / 5 Stars` : 'Select a rating'}
+                  </span>
+                </div>
+
+                <p className="text-[13px] font-medium text-muted-foreground min-h-[20px]">
+                  {RATING_DESCRIPTIONS[hoverRating || wrapRating] || 'Click a star to rate the session.'}
+                </p>
+              </div>
+            )}
           </div>
 
-          {role === 'tutor' && (
-            <div className="mt-5">
-              <label className="field-label" htmlFor="wrap-notes">Session notes (optional)</label>
+          {/* Tutor Notes */}
+          {role === 'tutor' && !wrapResult && (
+            <div className="mt-6 border-t border-ink/20 pt-5">
+              <label className="field-label" htmlFor="wrap-notes">Session Notes & Next Steps (Optional)</label>
               <textarea
                 id="wrap-notes"
                 className="textarea-field"
-                placeholder="What was covered, and what should the learner review next?"
+                placeholder="Summarize key topics covered and exercises for the learner to review before the next meeting..."
                 value={wrapNotes}
                 onChange={(e) => setWrapNotes(e.target.value)}
+                rows={3}
               />
             </div>
           )}
 
-          {Array.isArray(wrapResult?.badges) && wrapResult.badges.length > 0 && (
-            <div className="mt-5 flex items-start gap-2.5 border-2 border-ink bg-surface-quiet px-4 py-3 text-[13px] text-ink shadow-[3px_3px_0_var(--color-ink)]">
-              <span className="mt-1 h-2 w-2 shrink-0 border border-ink bg-gold" />
-              Badge unlocked — {wrapResult.badges.join(', ')}.
+          {/* If already submitted and tutor notes existed */}
+          {wrapResult && wrapNotes && (
+            <div className="mt-5 border-2 border-ink bg-surface-quiet p-4 text-[13px]">
+              <p className="font-bold text-ink">Tutor Session Notes</p>
+              <p className="mt-1 text-muted-foreground whitespace-pre-wrap">{wrapNotes}</p>
             </div>
           )}
 
-          {/* Antigravity AI End-of-Session Synthesis & Quiz Section */}
-          <div className="mt-6 border-t-2 border-ink pt-5">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="flex items-center gap-1.5 text-[13px] font-bold text-ink">
-                <Sparkles className="h-4 w-4 text-gold-ink" /> Antigravity AI Synthesis
-              </span>
-              {loadingAiWrap && (
-                <span className="text-[12px] text-muted-foreground flex items-center gap-1">
-                  <Loader2 className="h-3 w-3 animate-spin" /> Synthesizing transcript…
-                </span>
-              )}
+          {/* Badges unlocked */}
+          {Array.isArray(wrapResult?.badges) && wrapResult.badges.length > 0 && (
+            <div className="mt-5 flex items-start gap-2.5 border-2 border-ink bg-gold px-4 py-3 text-[13px] font-bold text-ink shadow-[3px_3px_0_var(--color-ink)]">
+              <Award className="h-5 w-5 shrink-0" />
+              <span>Badge unlocked — {wrapResult.badges.join(', ')}!</span>
             </div>
+          )}
 
-            {aiSynthesis?.summary ? (
-              <div className="border-2 border-ink bg-surface-quiet p-4 text-[13px] leading-relaxed shadow-[2px_2px_0_var(--color-ink)]">
-                <div className="prose prose-sm max-w-none text-ink whitespace-pre-line mb-3">
-                  {aiSynthesis.summary}
+          {/* Actions */}
+          <div className="mt-6 border-t-2 border-ink pt-6">
+            {wrapResult ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-[14px] font-bold text-emerald">
+                  <Check className="h-5 w-5 border border-emerald rounded-full p-0.5" strokeWidth={3} />
+                  Session report saved to ledger{wrapResult.referralResolved ? ' — referral resolved!' : '.'}
+                  {role === 'tutor' && wrapResult.tutorBalance != null ? (
+                    <span className="num text-muted-foreground font-normal ml-1">New Balance: {wrapResult.tutorBalance} pts</span>
+                  ) : null}
                 </div>
-                {Array.isArray(aiSynthesis.quiz) && aiSynthesis.quiz.length > 0 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowQuizModal(true)}
-                    className="border-2 border-ink bg-gold text-ink font-bold shadow-[2px_2px_0_var(--color-ink)] hover:bg-[#e3bb19]"
-                  >
-                    <BookOpen className="mr-1.5 h-3.5 w-3.5" />
-                    Review Custom Quiz ({aiSynthesis.quiz.length} Questions)
-                  </Button>
-                )}
+                <Button
+                  size="lg"
+                  className="w-full font-bold shadow-[3px_3px_0_var(--color-ink)]"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Return to Dashboard
+                </Button>
               </div>
-            ) : !loadingAiWrap && (
+            ) : (
               <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (!target?.id) return;
-                  setLoadingAiWrap(true);
-                  api.post(`/sessions/${target.id}/ai/wrap-up-assist`)
-                    .then((data) => setAiSynthesis(data))
-                    .catch(() => {})
-                    .finally(() => setLoadingAiWrap(false));
-                }}
-                className="w-full border-2 border-ink bg-surface-highlight text-ink font-bold"
+                size="lg"
+                className="w-full font-bold shadow-[4px_4px_0_var(--color-ink)]"
+                disabled={submitting || wrapRating < 1}
+                onClick={handleSubmitWrap}
               >
-                <Sparkles className="mr-1.5 h-3.5 w-3.5 text-gold-ink" />
-                Generate AI Lesson Summary & Review Quiz
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : null}
+                {submitting ? 'Recording to ledger…' : 'Confirm & Save Session Report'}
               </Button>
             )}
           </div>
-
-          {!wrapResult && (
-            <div className="mt-5 flex flex-wrap items-baseline justify-between gap-2 border-2 border-ink bg-gold px-4 py-3">
-              <p className="text-[13px] font-semibold text-ink">On submit: <span className="num">+50</span> points to the tutor, <span className="num">+25</span> attendance points to the learner.</p>
-              <p className="text-[13px] text-ink/70">Entries are append-only.</p>
-            </div>
-          )}
-
-          {wrapResult ? (
-            <div className="mt-5 flex items-center gap-2 text-[14px] text-ink">
-              <Check className="h-4 w-4" strokeWidth={2} />
-              Wrap-up saved{wrapResult.referralResolved ? ' — the referral is resolved' : ''}.
-              {role === 'tutor' && wrapResult.tutorBalance != null ? <span className="num text-muted-foreground">Balance {wrapResult.tutorBalance} pts.</span> : null}
-            </div>
-          ) : (
-            <Button
-              size="lg"
-              className="mt-6 w-full"
-              disabled={submitting || wrapRating < 1}
-              onClick={handleSubmitWrap}
-            >
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : null}
-              {submitting ? 'Saving…' : 'Save wrap-up'}
-            </Button>
-          )}
         </div>
-
-        {showQuizModal && aiSynthesis?.quiz && (
-          <React.Suspense fallback={null}>
-            <SessionQuizModal
-              quiz={aiSynthesis.quiz}
-              summary={aiSynthesis.summary}
-              onClose={() => setShowQuizModal(false)}
-            />
-          </React.Suspense>
-        )}
       </div>
     );
   }
@@ -338,7 +413,13 @@ export default function SessionCheckIn({ role, user, showToast }) {
         {target && <SessionStatus status={target.status} active={active} />}
       </div>
 
-      {sessionsError && <div className="panel px-5 py-4 text-[14px] text-crimson">Sessions could not be read: {sessionsError}</div>}
+      {sessionsError && (
+        <ErrorBanner
+          message={`Sessions could not be read: ${sessionsError}`}
+          onRetry={loadSessions}
+          className="mb-4"
+        />
+      )}
       {sessions === null && !sessionsError && <div className="panel empty">Reading your sessions…</div>}
       {sessions !== null && !target && (
         <div className="panel empty">
