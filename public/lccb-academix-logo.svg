@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 220" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&amp;family=Geist:wght@600;700&amp;display=swap');
+      .txt-brand {
+        font-family: 'Bricolage Grotesque', system-ui, -apple-system, sans-serif;
+        font-weight: 800;
+        paint-order: stroke;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+      }
+      .txt-sub {
+        font-family: 'Geist', system-ui, -apple-system, sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+      }
+    </style>
+  </defs>
+
+  <!-- LCCB Stamp Badge -->
+  <g transform="translate(18, 12)">
+    <g transform="rotate(-2 20 12)">
+      <text
+        x="7" y="24" class="txt-brand"
+        font-size="20" letter-spacing="3"
+        stroke="#0F2942" stroke-width="3.6" fill="#D4AC0D"
+        rotate="2 -2 2 -1"
+      >LCCB</text>
+      <text
+        x="7" y="24" class="txt-brand"
+        font-size="20" letter-spacing="3"
+        stroke="#0F2942" stroke-width="1.2" fill="#0F2942"
+        rotate="2 -2 2 -1"
+      >LCCB</text>
+    </g>
+
+    <!-- ACADEMIX — gold offset shadow + navy sticker lettering -->
+    <g transform="translate(0, 36)">
+      <!-- Gold offset shadow -->
+      <text
+        x="10" y="86" class="txt-brand"
+        font-size="82" letter-spacing="-2" textLength="600" lengthAdjust="spacing"
+        stroke="#0F2942" stroke-width="4.8" fill="#D4AC0D"
+        rotate="-3 2 -1 3 -2 2 -1 2"
+      >ACADEMIX</text>
+      <!-- Front navy block -->
+      <text
+        x="4" y="80" class="txt-brand"
+        font-size="82" letter-spacing="-2" textLength="600" lengthAdjust="spacing"
+        stroke="#0F2942" stroke-width="5.8" fill="#0F2942"
+        rotate="-3 2 -1 3 -2 2 -1 2"
+      >ACADEMIX</text>
+    </g>
+
+    <!-- Institutional Subtitle -->
+    <g transform="translate(8, 150)">
+      <text x="0" y="0" class="txt-sub" font-size="12" fill="#5B5A52">
+        LA CONSOLACION COLLEGE BACOLOD
+      </text>
+      <text x="0" y="18" class="txt-sub" font-size="10.5" fill="#8C887B">
+        FACULTY-GUIDED PEER TUTORING &amp; INCENTIVE LEDGER
+      </text>
+    </g>
+  </g>
+</svg>
