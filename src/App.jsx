@@ -573,8 +573,22 @@ export default function App() {
         </aside>
 
         {/* Canvas */}
-        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 focus:outline-none">
-          <div className="mx-auto w-full max-w-[1240px] px-5 pb-12 pt-6 sm:px-8 lg:px-10 lg:pt-8">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className={cn(
+            'min-w-0 flex-1 focus:outline-none',
+            location.pathname === '/checkin' && 'lg:h-screen lg:overflow-hidden'
+          )}
+        >
+          <div
+            className={cn(
+              'mx-auto w-full min-w-0',
+              location.pathname === '/checkin'
+                ? 'max-w-[1400px] h-full flex flex-col p-2.5 sm:p-3 lg:p-3'
+                : 'max-w-[1360px] px-5 pb-12 pt-6 sm:px-8 lg:px-10 lg:pt-8'
+            )}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab + role}
@@ -582,7 +596,11 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.16 }}
-                className="min-h-[calc(100vh-7rem)]"
+                className={cn(
+                  location.pathname === '/checkin'
+                    ? 'flex-1 min-h-0 flex flex-col'
+                    : 'min-h-[calc(100vh-7rem)]'
+                )}
               >
                 <React.Suspense fallback={<div className="panel empty">Opening workspace…</div>}>
                   <Routes location={location} key={location.pathname}>

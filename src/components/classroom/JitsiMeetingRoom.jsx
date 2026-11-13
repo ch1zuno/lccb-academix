@@ -238,7 +238,7 @@ const JitsiMeetingRoom = forwardRef(function JitsiMeetingRoom(
     <div
       id="video-container"
       ref={containerRef}
-      className="relative flex h-full min-h-[420px] w-full flex-col items-center justify-center overflow-hidden bg-[#0c1f30] text-paper"
+      className="relative flex h-full min-h-0 w-full flex-col items-center justify-center overflow-hidden bg-[#0c1f30] text-paper"
     >
       {/* Access Denied State */}
       {accessDenied && (

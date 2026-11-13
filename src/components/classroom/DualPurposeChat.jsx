@@ -145,22 +145,22 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
   });
 
   return (
-    <div className="flex h-full flex-col border-2 border-ink bg-paper shadow-[4px_4px_0_var(--color-ink)]">
+    <div className="flex h-full flex-col border-2 border-ink bg-paper shadow-[3px_3px_0_var(--color-ink)] min-w-0 min-h-0 overflow-hidden">
       {/* Header with Mode Tabs */}
-      <div className="border-b-2 border-ink bg-surface-quiet p-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex rounded-none border-2 border-ink bg-paper p-0.5" role="tablist">
+      <div className="border-b-2 border-ink bg-surface-quiet p-2 sm:p-2.5 shrink-0">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+          <div className="flex rounded-none border-2 border-ink bg-paper p-0.5 shrink-0" role="tablist">
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === 'classroom'}
               onClick={() => setActiveTab('classroom')}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1 text-[12px] font-bold transition-colors',
+                'flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 text-[11px] sm:text-[12px] font-bold transition-colors',
                 activeTab === 'classroom' ? 'bg-gold text-ink' : 'text-muted-foreground hover:bg-surface-highlight'
               )}
             >
-              <User className="h-3.5 w-3.5" />
+              <User className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               Classroom
             </button>
             <button
@@ -169,29 +169,29 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
               aria-selected={activeTab === 'ai'}
               onClick={() => setActiveTab('ai')}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1 text-[12px] font-bold transition-colors',
+                'flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 text-[11px] sm:text-[12px] font-bold transition-colors',
                 activeTab === 'ai' ? 'bg-ink text-paper' : 'text-muted-foreground hover:bg-surface-highlight'
               )}
             >
-              <Bot className="h-3.5 w-3.5" />
+              <Bot className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               AI Assistant
             </button>
           </div>
 
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <span className="truncate text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             {activeTab === 'classroom' ? 'Peer & Tutor' : 'Antigravity AI'}
           </span>
         </div>
 
         {/* Quick Socratic Prompt Buttons */}
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
+        <div className="mt-2 flex flex-wrap gap-1 sm:gap-1.5">
           <Button
             type="button"
             variant="outline"
             size="sm"
             disabled={askingAi}
             onClick={() => handleTriggerAiHint('Give me a conceptual hint on this problem.')}
-            className="h-7 border border-ink bg-paper px-2 text-[11px] font-semibold shadow-none hover:bg-gold"
+            className="h-6 sm:h-7 border border-ink bg-paper px-1.5 sm:px-2 text-[10px] sm:text-[11px] font-semibold shadow-none hover:bg-gold shrink-0"
           >
             {askingAi ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 text-gold-ink" />}
             Ask AI for Hint
@@ -202,7 +202,7 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
             size="sm"
             disabled={askingAi}
             onClick={() => handleTriggerAiHint('Can you explain this with a simple real-world analogy?')}
-            className="h-7 border border-ink bg-paper px-2 text-[11px] font-semibold shadow-none hover:bg-gold"
+            className="h-6 sm:h-7 border border-ink bg-paper px-1.5 sm:px-2 text-[10px] sm:text-[11px] font-semibold shadow-none hover:bg-gold shrink-0"
           >
             <HelpCircle className="h-3 w-3 text-muted-foreground" />
             Simple Analogy
@@ -211,20 +211,20 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
       </div>
 
       {/* Messages Scroll Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-2 sm:p-2.5 space-y-2 min-h-0 min-w-0">
         {visibleMessages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center p-6 text-center text-muted-foreground">
+          <div className="flex h-full flex-col items-center justify-center p-4 text-center text-muted-foreground">
             {activeTab === 'classroom' ? (
               <>
-                <User className="h-8 w-8 text-ink/30 mb-2" />
-                <p className="text-[13px] font-semibold text-ink">Classroom chat is ready.</p>
-                <p className="text-[12px]">Messages sent here are visible to both tutor and student.</p>
+                <User className="h-7 w-7 text-ink/30 mb-1.5" />
+                <p className="text-[12px] sm:text-[13px] font-semibold text-ink">Classroom chat is ready.</p>
+                <p className="text-[11px]">Messages sent here are visible to both tutor and student.</p>
               </>
             ) : (
               <>
-                <Bot className="h-8 w-8 text-ink/30 mb-2" />
-                <p className="text-[13px] font-semibold text-ink">Antigravity AI is standing by.</p>
-                <p className="text-[12px]">Tap &quot;Ask AI for Hint&quot; or type below to receive real-time peer-tutoring cues.</p>
+                <Bot className="h-7 w-7 text-ink/30 mb-1.5" />
+                <p className="text-[12px] sm:text-[13px] font-semibold text-ink">Antigravity AI is standing by.</p>
+                <p className="text-[11px]">Tap &quot;Ask AI for Hint&quot; or type below to receive real-time peer-tutoring cues.</p>
               </>
             )}
           </div>
@@ -238,22 +238,22 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
               <div
                 key={msg.id}
                 className={cn(
-                  'flex flex-col',
+                  'flex flex-col min-w-0 max-w-full',
                   isAi ? 'items-start' : isMe ? 'items-end' : 'items-start'
                 )}
               >
-                <div className="flex items-center gap-1.5 mb-1 text-[11px]">
-                  <span className={cn('px-1.5 py-0.2 border text-[10px] font-bold', badge.bg, badge.border, badge.text)}>
+                <div className="flex items-center gap-1.5 mb-0.5 text-[10px] sm:text-[11px] max-w-full">
+                  <span className={cn('px-1 py-0.2 border text-[9px] sm:text-[10px] font-bold shrink-0', badge.bg, badge.border, badge.text)}>
                     {badge.label}
                   </span>
-                  <span className="font-semibold text-ink">{msg.sender_name}</span>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="font-semibold text-ink truncate max-w-[120px] sm:max-w-[160px]">{msg.sender_name}</span>
+                  <span className="text-[9px] sm:text-[10px] text-muted-foreground shrink-0">
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
                 <div
                   className={cn(
-                    'max-w-[88%] border-2 border-ink p-2.5 text-[13px] leading-snug shadow-[2px_2px_0_var(--color-ink)]',
+                    'max-w-[92%] border-2 border-ink p-2 sm:p-2.5 text-[12px] sm:text-[13px] leading-snug shadow-[2px_2px_0_var(--color-ink)] break-words [overflow-wrap:anywhere]',
                     isAi
                       ? 'bg-paper border-ink font-sans text-ink'
                       : isMe
@@ -270,19 +270,19 @@ export default function DualPurposeChat({ sessionId, user, role, showToast }) {
       </div>
 
       {/* Input Composer */}
-      <form onSubmit={handleSend} className="border-t-2 border-ink bg-surface-quiet p-2.5 flex items-center gap-2">
+      <form onSubmit={handleSend} className="border-t-2 border-ink bg-surface-quiet p-2 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 shrink-0">
         <Input
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder={activeTab === 'ai' ? 'Ask Antigravity AI a question...' : 'Message the classroom...'}
-          className="h-10 text-[13px] border-2 border-ink bg-paper"
+          placeholder={activeTab === 'ai' ? 'Ask Antigravity AI...' : 'Message the classroom...'}
+          className="h-9 sm:h-10 text-[12px] sm:text-[13px] border-2 border-ink bg-paper min-w-0 flex-1"
           disabled={sending}
         />
         <Button
           type="submit"
           size="sm"
           disabled={sending || !inputText.trim()}
-          className="h-10 px-3 shrink-0"
+          className="h-9 sm:h-10 px-2.5 sm:px-3 shrink-0"
           aria-label="Send message"
         >
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

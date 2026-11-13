@@ -48,6 +48,7 @@ graphify-out/2026*/
 graphify-out/*.sig
 .taste-skill/
 .agents/
+scratch/
 .vercel/
 disktree/
 *.tmp
