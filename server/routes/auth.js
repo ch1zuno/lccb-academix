@@ -91,7 +91,8 @@ export async function verifyGoogleIdentity(
   }
 
   if (demoEmail) {
-    if (!demoMode) {
+    const isDemoAllowed = demoMode || (!expectedClientId && demoMode !== false);
+    if (!isDemoAllowed) {
       throw Object.assign(new Error('Demo Google sign-in is disabled in production'), { status: 401 });
     }
     const email = String(demoEmail).trim().toLowerCase();

@@ -8,22 +8,22 @@ import { focusFirst, trapTabKey } from '../lib/focusTrap';
 import Logo2D from '../components/Logo2D';
 import './Landing.css';
 
-const DEV = import.meta.env.DEV || import.meta.env.VITE_DEMO_MODE === '1';
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+const DEV = import.meta.env.DEV || import.meta.env.VITE_DEMO_MODE === '1' || !GOOGLE_CLIENT_ID;
 
-const DEMO_ACCOUNTS = DEV ? [
+const DEMO_ACCOUNTS = [
   { role: 'superadmin', loginId: 'l.betita.admin@lccbacolod.edu.ph', label: 'Sir Lenuel Betita' },
   { role: 'faculty', loginId: 'b.tisuela@lccbacolod.edu.ph', label: 'Mrs. Bethel Tisuela' },
   { role: 'tutor', loginId: 'TU-042', label: 'Mark Antipo' },
   { role: 'learner', loginId: 'TE-128', label: 'Julian Gemelo' },
-] : [];
+];
 
-const GOOGLE_DEMO_PERSONAS = DEV ? [
+const GOOGLE_DEMO_PERSONAS = [
   { name: 'Cemer Daniel L. Miranda', email: 'cemerdaniel.miranda@lccbonline.edu.ph', badge: 'Student · 24-0870-103', role: 'learner' },
   { name: 'Mark Antipo', email: 'm.antipo@lccbonline.edu.ph', badge: 'Accredited Tutor · TU-042', role: 'tutor' },
   { name: 'Mrs. Bethel Tisuela', email: 'b.tisuela@lccbonline.edu.ph', badge: 'Faculty · FA-017', role: 'faculty' },
   { name: 'Juan Dela Cruz', email: 'juan.delacruz@gmail.com', badge: 'Personal Gmail · tests 403 block', role: 'blocked' },
-] : [];
+];
 
 function GoogleMark() {
   return (
@@ -425,16 +425,8 @@ export default function LandingPage({ onLogin }) {
       return;
     }
 
-    if (DEV) {
-      setShowGoogleChooser((prev) => !prev);
-      return;
-    }
-
-    setError(
-      GOOGLE_CLIENT_ID
-        ? 'Google Sign-In script is still loading. Try again in a moment.'
-        : 'Google OAuth is not configured yet (missing VITE_GOOGLE_CLIENT_ID). Sign in with your LCCB school ID below.',
-    );
+    // Fallback to Google Demo Account Chooser when VITE_GOOGLE_CLIENT_ID is not configured
+    setShowGoogleChooser((prev) => !prev);
   };
 
   const handleCustomGoogleSubmit = (event) => {
@@ -1118,7 +1110,7 @@ export default function LandingPage({ onLogin }) {
                   <span>{googleLoading ? 'Verifying Google account…' : 'Continue with Google (@lccbonline.edu.ph)'}</span>
                 </button>
 
-                {DEV && showGoogleChooser && (
+                {showGoogleChooser && (
                   <div className="login-google-chooser" role="region" aria-label="Google OAuth Demo Account Chooser">
                     <div className="login-google-chooser-head">
                       <span>Choose a Google account (Demo)</span>
