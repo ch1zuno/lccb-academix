@@ -23,5 +23,10 @@ export const config = {
   centrifugoProxySecret: process.env.CENTRIFUGO_PROXY_SECRET || '',
   jitsiRoomSecret: process.env.JITSI_ROOM_SECRET || process.env.JWT_SECRET || 'dev-jitsi-room-secret-change-me',
   jitsiDomain: process.env.VITE_JITSI_DOMAIN || process.env.JITSI_DOMAIN || 'meet.jit.si',
+  googleClientId: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '',
+  allowedEmailDomains: (process.env.ALLOWED_EMAIL_DOMAINS || 'lccbonline.edu.ph,lccbacolod.edu.ph')
+    .split(',')
+    .map((d) => d.trim().toLowerCase())
+    .filter(Boolean),
   isProd,
 };

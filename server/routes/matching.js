@@ -23,8 +23,8 @@ const todayYmd = () => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
-const TUTOR_SQL = (orderClause) => `
-  SELECT u.id, u.custom_id, u.name, u.program, u.avatar, u.bio, u.is_available,
+const TUTOR_SQL = (roleLiteral, orderClause) => `
+  SELECT u.id, u.custom_id, u.name, u.role, u.title, u.department, u.program, u.avatar, u.bio, u.is_available,
          u.hourly_rate, u.certified_by_id,
          COALESCE(
            (SELECT json_agg(json_build_object('code', s.code, 'name', s.name, 'department', s.department))
@@ -38,40 +38,41 @@ const TUTOR_SQL = (orderClause) => `
               WHERE status IN ('completed') AND rating IS NOT NULL
               GROUP BY tutor_id
             ) s2 WHERE s2.tutor_id = u.id),
-           '{"sessions": 0, "rating": 0}') AS stats,
+           '{"sessions": 0, "rating": 5.0}') AS stats,
          (SELECT COALESCE(SUM(amount), 0) FROM points_ledger l WHERE l.user_id = u.id) AS points
   FROM users u
-  WHERE u.role = 'tutor' ${orderClause}`;
+  WHERE u.role = '${roleLiteral}' ${orderClause}`;
 
-/** GET /tutors?subject=PROG+201&available=1&q=mark — live tutor directory for the wizard */
+/** GET /tutors?subject=PROG+201&available=1&role=tutor|faculty&q=mark — live tutor/faculty directory for the wizard */
 router.get('/tutors', requireAuth, async (req, res, next) => {
   try {
+    const targetRole = req.query.role === 'faculty' ? 'faculty' : 'tutor';
     const clauses = [];
     const params = [];
     if (req.query.available === '1' || req.query.available === 'true') clauses.push('u.is_available AND u.is_verified');
-    if (req.query.q) { params.push(`%${String(req.query.q).trim()}%`); clauses.push(`(u.name ILIKE $${params.length} OR u.program ILIKE $${params.length})`); }
+    if (req.query.q) { params.push(`%${String(req.query.q).trim()}%`); clauses.push(`(u.name ILIKE $${params.length} OR COALESCE(u.program, u.department, '') ILIKE $${params.length})`); }
     if (req.query.subject) {
       params.push(req.query.subject);
       clauses.push(`EXISTS (SELECT 1 FROM user_subjects us JOIN subjects s ON s.id = us.subject_id WHERE us.user_id = u.id AND s.code = $${params.length})`);
     }
     const where = clauses.length ? 'AND ' + clauses.join(' AND ') + ' ' : '';
-    const { rows } = await query(TUTOR_SQL(where + 'AND u.is_verified ORDER BY u.name'), params);
+    const { rows } = await query(TUTOR_SQL(targetRole, where + 'AND u.is_verified ORDER BY u.name'), params);
     res.json({ tutors: rows });
   } catch (e) { next(e); }
 });
 
-/** GET /tutors/:id — public-safe profile for an accredited tutor */
+/** GET /tutors/:id — public-safe profile for an accredited tutor or faculty specialist */
 router.get('/tutors/:id', requireAuth, async (req, res, next) => {
   try {
     const { id } = req.params;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id));
 
     const userResult = await query(
-      `SELECT u.id, u.custom_id, u.name, u.role, u.bio, u.avatar, u.program, u.department,
+      `SELECT u.id, u.custom_id, u.name, u.role, u.title, u.bio, u.avatar, u.program, u.department,
               u.is_available, u.is_verified,
               EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id) AS has_avatar
        FROM users u
-       WHERE ${isUuid ? 'u.id = $1' : 'u.custom_id = $1'} AND u.role = 'tutor'`,
+       WHERE ${isUuid ? 'u.id = $1' : 'u.custom_id = $1'} AND u.role IN ('tutor', 'faculty')`,
       [id]
     );
 
@@ -84,7 +85,7 @@ router.get('/tutors/:id', requireAuth, async (req, res, next) => {
     const statsResult = await query(
       `SELECT count(*)::int AS completed_sessions
        FROM sessions
-       WHERE tutor_id = $1 AND status = 'completed'`,
+       WHERE (tutor_id = $1 OR faculty_id = $1) AND status = 'completed'`,
       [user.id]
     );
     const stats = { completed_sessions: statsResult.rows[0]?.completed_sessions || 0 };
@@ -243,11 +244,11 @@ router.post('/session-requests', requireAuth, requireRole('learner'), async (req
   }
 });
 
-/** GET /session-requests — tutor sees own pending; learner sees own history */
+/** GET /session-requests — tutor/faculty sees own pending; learner sees own history */
 router.get('/session-requests', requireAuth, async (req, res, next) => {
   try {
-    const col = req.user.role === 'learner' ? 'sr.learner_id' : req.user.role === 'tutor' ? 'sr.tutor_id' : null;
-    if (!col) throw httpError(403, 'Learners and tutors only');
+    const col = req.user.role === 'learner' ? 'sr.learner_id' : (req.user.role === 'tutor' || req.user.role === 'faculty') ? 'sr.tutor_id' : null;
+    if (!col) throw httpError(403, 'Learners, tutors, and faculty only');
 
     const limit = req.query.limit ? Math.min(100, Math.max(1, parseInt(req.query.limit, 10))) : null;
     const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
@@ -280,7 +281,7 @@ router.get('/session-requests', requireAuth, async (req, res, next) => {
 });
 
 /** POST /session-requests/:id/accept — creates a real session from the request. */
-router.post('/session-requests/:id/accept', requireAuth, requireRole('tutor'), async (req, res, next) => {
+router.post('/session-requests/:id/accept', requireAuth, requireRole('tutor', 'faculty'), async (req, res, next) => {
   try {
     const created = await withTransaction(async (client) => {
       const { rows: reqRows } = await client.query(
@@ -354,7 +355,7 @@ router.post('/session-requests/:id/accept', requireAuth, requireRole('tutor'), a
 });
 
 /** POST /session-requests/:id/decline */
-router.post('/session-requests/:id/decline', requireAuth, requireRole('tutor'), async (req, res, next) => {
+router.post('/session-requests/:id/decline', requireAuth, requireRole('tutor', 'faculty'), async (req, res, next) => {
   try {
     const { rows } = await query(
       `UPDATE session_requests SET status = 'declined' WHERE id = $1 AND tutor_id = $2 AND status = 'pending' RETURNING id, status`,

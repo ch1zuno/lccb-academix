@@ -91,3 +91,30 @@ test('toPublicProfile includes safe program, status and completed sessions', () 
   assert.equal(profile.email, undefined);
 });
 
+test('toPublicProfile includes specialized subjects and title for faculty role', () => {
+  const faculty = {
+    id: 'a9b8c7d6-e5f4-3210-fedc-ba9876543210',
+    name: 'Prof. Elena Marcos',
+    role: 'faculty',
+    title: 'Mathematics Department',
+    department: 'General',
+    is_available: true,
+    is_verified: true,
+    email: 'e.marcos@lccbacolod.edu.ph',
+  };
+
+  const subjects = [
+    { id: 's-math', code: 'MATH 201', name: 'Calculus I', department: 'General' },
+    { id: 's-stat', code: 'STAT 101', name: 'Probability & Statistics', department: 'General' },
+  ];
+
+  const profile = toPublicProfile(faculty, subjects, { completed_sessions: 5 });
+  assert.equal(profile.role, 'faculty');
+  assert.equal(profile.title, 'Mathematics Department');
+  assert.equal(profile.department, 'General');
+  assert.deepEqual(profile.subjects, subjects);
+  assert.deepEqual(profile.stats, { completed_sessions: 5 });
+  assert.equal(profile.email, undefined);
+  assert.equal(profile.id, undefined);
+});
+

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { PhoneOff, Clock, Wifi, WifiOff, AlertTriangle, Video, Globe } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
@@ -10,6 +10,12 @@ import NativeVideoRoom from './NativeVideoRoom';
 export default function LiveClassroom({ session, user, role, seconds, onEnd, showToast }) {
   const [videoEngine, setVideoEngine] = useState('webrtc'); // 'webrtc' (instant direct peer-to-peer) | 'jitsi'
   const { isReconnecting, accessDenied, isOnline, isRoleOnline } = useRealtime(session?.id);
+  const flushNotesRef = useRef(null);
+
+  const handleEndSession = () => {
+    flushNotesRef.current?.();
+    onEnd(seconds);
+  };
 
   const peerId = role === 'tutor' ? session?.learner_id : session?.tutor_id;
   const peerRole = role === 'tutor' ? 'learner' : 'tutor';
@@ -70,7 +76,7 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
             <Clock className="h-4 w-4 text-emerald" />
             <span className="num text-[16px] font-extrabold">{formatTimer(seconds)}</span>
           </div>
-          <Button variant="destructive" size="sm" onClick={() => onEnd(seconds)} className="h-8 text-xs font-bold px-3">
+          <Button variant="destructive" size="sm" onClick={handleEndSession} className="h-8 text-xs font-bold px-3">
             <PhoneOff className="mr-1.5 h-3.5 w-3.5" /> End Session
           </Button>
         </div>
@@ -122,14 +128,14 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
                 user={user}
                 peerName={peerName}
                 isPeerOnline={isPeerOnline}
-                onHangup={() => onEnd(seconds)}
+                onHangup={handleEndSession}
               />
             ) : (
               <JitsiMeetingRoom
                 roomId={session.id}
                 user={{ displayName: user?.name || 'Participant' }}
                 active={true}
-                onHangup={() => onEnd(seconds)}
+                onHangup={handleEndSession}
                 onError={() => {
                   showToast?.('Jitsi blocked or unavailable. Switched to Direct WebRTC.', 'warning');
                   setVideoEngine('webrtc');
@@ -140,13 +146,17 @@ export default function LiveClassroom({ session, user, role, seconds, onEnd, sho
           </div>
         </div>
 
-        {/* Right Dual-Purpose Chat (5 cols on lg, 4 cols on xl) */}
+        {/* Right Classroom Chat & Session Notepad (5 cols on lg, 4 cols on xl) */}
         <div className="lg:col-span-5 xl:col-span-4 flex flex-col h-full min-h-[380px] lg:min-h-0 min-w-0 overflow-hidden">
           <DualPurposeChat
             sessionId={session.id}
+            session={session}
             user={user}
             role={role}
             showToast={showToast}
+            onRegisterNoteFlush={(fn) => {
+              flushNotesRef.current = fn;
+            }}
           />
         </div>
       </div>

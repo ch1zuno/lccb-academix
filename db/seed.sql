@@ -28,15 +28,15 @@ VALUES
 
 INSERT INTO users (custom_id, name, email, role, avatar, title, department, program, is_available, is_verified, bio, hourly_rate, password_hash)
 VALUES
-('FA-017', 'Mrs. Bethel Tisuela', 'b.tisuela@lccbacolod.edu.ph', 'faculty', '👩‍🏫', 'IT Department — Program Head', 'BSIT', NULL, true, true, NULL, NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
-('FA-021', 'Sir Charles Torres', 'c.torres@lccbacolod.edu.ph', 'faculty', '👨‍🏫', 'IT Department — Senior Faculty', 'BSIT', NULL, true, true, NULL, NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
-('FA-025', 'Sir Lenuel Betita', 'l.betita@lccbacolod.edu.ph', 'faculty', '👨‍🏫', 'IT Department — Faculty', 'BSIT', NULL, true, true, NULL, NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
-('FA-029', 'Sir Vincent Bonifacio', 'v.bonifacio@lccbacolod.edu.ph', 'faculty', '👨‍🏫', 'IT Department — Faculty', 'BSIT', NULL, true, true, NULL, NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
-('FA-033', 'Prof. Ricardo Santos', 'r.santos@lccbacolod.edu.ph', 'faculty', '👨‍🏫', 'Accounting Department', 'BSA', NULL, true, true, NULL, NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
-('FA-037', 'Prof. Elena Marcos', 'e.marcos@lccbacolod.edu.ph', 'faculty', '👩‍🏫', 'Mathematics Department', 'General', NULL, true, true, NULL, NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
-('FA-041', 'Prof. James Navarro', 'j.navarro@lccbacolod.edu.ph', 'faculty', '👨‍🏫', 'IT Department — Adjunct', 'BSIT', NULL, true, true, NULL, NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
-('FA-045', 'Prof. Carmen Villanueva', 'c.villanueva@lccbacolod.edu.ph', 'faculty', '👩‍🏫', 'English Department', 'General', NULL, true, true, NULL, NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
-('FA-049', 'Prof. Antonio Lacson', 'a.lacson@lccbacolod.edu.ph', 'faculty', '👨‍🏫', 'Business Administration Dept.', 'BSBA', NULL, true, true, NULL, NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu');
+('FA-017', 'Mrs. Bethel Tisuela', 'b.tisuela@lccbacolod.edu.ph', 'faculty', '👩‍🏫', 'IT Department — Program Head', 'BSIT', NULL, true, true, 'IT Department Program Head specializing in Computing Fundamentals, Data Structures, and Systems Analysis & Design.', NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('FA-021', 'Sir Charles Torres', 'c.torres@lccbacolod.edu.ph', 'faculty', '👨‍🏫', 'IT Department — Senior Faculty', 'BSIT', NULL, true, true, 'Senior IT Faculty specializing in Networking Fundamentals, Cisco Infrastructure, and Computing Foundations.', NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('FA-025', 'Sir Lenuel Betita', 'l.betita@lccbacolod.edu.ph', 'faculty', '👨‍🏫', 'IT Department — Faculty', 'BSIT', NULL, true, true, 'IT Faculty mentor specializing in Object-Oriented Programming and Full-Stack Web Development.', NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('FA-029', 'Sir Vincent Bonifacio', 'v.bonifacio@lccbacolod.edu.ph', 'faculty', '👨‍🏫', 'IT Department — Faculty', 'BSIT', NULL, true, true, 'IT Faculty specializing in Relational Database Management Systems, SQL Optimization, and Systems Architecture.', NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('FA-033', 'Prof. Ricardo Santos', 'r.santos@lccbacolod.edu.ph', 'faculty', '👨‍🏫', 'Accounting Department', 'BSA', NULL, true, true, 'Accounting Department Faculty specializing in Financial Accounting, Auditing, and Corporate Financial Management.', NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('FA-037', 'Prof. Elena Marcos', 'e.marcos@lccbacolod.edu.ph', 'faculty', '👩‍🏫', 'Mathematics Department', 'General', NULL, true, true, 'Mathematics Department Faculty specializing in Calculus, Applied Probability, and Statistical Analysis.', NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('FA-041', 'Prof. James Navarro', 'j.navarro@lccbacolod.edu.ph', 'faculty', '👨‍🏫', 'IT Department — Adjunct', 'BSIT', NULL, true, true, 'Adjunct IT Faculty specializing in Modern Web Technologies and Enterprise Network Administration.', NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('FA-045', 'Prof. Carmen Villanueva', 'c.villanueva@lccbacolod.edu.ph', 'faculty', '👩‍🏫', 'English Department', 'General', NULL, true, true, 'Languages & Literature Faculty specializing in Academic English Communication and Komunikasyon sa Filipino.', NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
+('FA-049', 'Prof. Antonio Lacson', 'a.lacson@lccbacolod.edu.ph', 'faculty', '👨‍🏫', 'Business Administration Dept.', 'BSBA', NULL, true, true, 'Business Administration Faculty specializing in Strategic Management and Marketing Principles.', NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu');
 
 INSERT INTO users (custom_id, name, email, role, avatar, program, is_available, is_verified, bio, hourly_rate, password_hash) VALUES
 ('TU-042', 'Mark Antipo', 'm.antipo@lccbacolod.edu.ph', 'tutor', '🧑‍🎓', 'BSIT 3-A', true, true, 'Dean''s Lister | Passionate about helping fellow Consolacionians excel in Computing.', 15, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
@@ -92,7 +92,16 @@ SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'TU-056' AND s.co
 SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'TU-059' AND s.code IN ('ACCT 102', 'FIN 301') UNION ALL
 SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'TU-062' AND s.code IN ('SYS 401', 'DBMS 301', 'PROG 301') UNION ALL
 SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'TU-065' AND s.code IN ('MGMT 301', 'MKT 201') UNION ALL
-SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'TU-068' AND s.code IN ('NET 201', 'IT 101');
+SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'TU-068' AND s.code IN ('NET 201', 'IT 101') UNION ALL
+SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'FA-017' AND s.code IN ('IT 101', 'PROG 201', 'SYS 401') UNION ALL
+SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'FA-021' AND s.code IN ('IT 101', 'NET 201') UNION ALL
+SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'FA-025' AND s.code IN ('PROG 301', 'WEB 301') UNION ALL
+SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'FA-029' AND s.code IN ('DBMS 301', 'SYS 401') UNION ALL
+SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'FA-033' AND s.code IN ('ACCT 102', 'FIN 301') UNION ALL
+SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'FA-037' AND s.code IN ('MATH 201', 'STAT 101') UNION ALL
+SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'FA-041' AND s.code IN ('NET 201', 'WEB 301') UNION ALL
+SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'FA-045' AND s.code IN ('ENGL 101', 'FIL 102') UNION ALL
+SELECT u.id, s.id FROM users u, subjects s WHERE u.custom_id = 'FA-049' AND s.code IN ('MGMT 301', 'MKT 201');
 
 INSERT INTO referrals (referral_code, learner_id, faculty_id, assigned_tutor_id, subject_id, topic, urgency, status, date, notes, hours_required)
 VALUES

@@ -22,10 +22,12 @@ export function toPublicProfile(user, subjects = [], stats = null) {
       ? `/api/users/${user.id}/avatar`
       : user.avatar || null,
     role: user.role || 'learner',
+    title: typeof user.title === 'string' && user.title ? user.title : undefined,
+    department: typeof user.department === 'string' && user.department ? user.department : undefined,
     program: typeof user.program === 'string' ? user.program : undefined,
     is_available: typeof user.is_available === 'boolean' ? user.is_available : undefined,
     is_verified: typeof user.is_verified === 'boolean' ? user.is_verified : undefined,
-    subjects: user.role === 'tutor'
+    subjects: (user.role === 'tutor' || user.role === 'faculty')
       ? (Array.isArray(subjects) ? subjects : []).map(s => {
           const item = {
             code: String(s.code || ''),

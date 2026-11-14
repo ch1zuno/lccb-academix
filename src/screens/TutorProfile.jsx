@@ -16,13 +16,15 @@ import {
   MessageSquare,
   GraduationCap,
   Building,
+  Award,
 } from 'lucide-react';
 import api from '../api';
 import { usePageTitle } from '../lib/ux';
+import { findMockMentorById } from '../data';
 
 const ROLE_META = {
   superadmin: { label: 'Superadmin (Dean)', badgeClass: 'bg-ink text-paper border border-ink' },
-  faculty: { label: 'Faculty / Advisor', badgeClass: 'bg-stone text-ink border border-ink' },
+  faculty: { label: 'LCCB Faculty Specialist', badgeClass: 'bg-ink text-gold border-2 border-ink shadow-[2px_2px_0_var(--color-gold)] uppercase tracking-wider' },
   tutor: { label: 'Accredited Tutor', badgeClass: 'bg-gold text-ink border border-ink' },
   learner: { label: 'Student (Learner)', badgeClass: 'bg-surface-highlight text-ink border border-ink' },
 };
@@ -42,18 +44,45 @@ export default function TutorProfile({ currentUser, onEditProfile, showToast }) 
     setLoading(true);
     setError(null);
 
-    // Fetch from universal public profile, with fallback to tutor endpoint
+    const enrichWithMock = (rawProfile, rawId) => {
+      const mock =
+        findMockMentorById(rawId) ||
+        findMockMentorById(id) ||
+        findMockMentorById(rawProfile?.custom_id) ||
+        findMockMentorById(rawProfile?.name);
+      if (!mock) return rawProfile;
+      return {
+        ...mock,
+        ...rawProfile,
+        specialization: rawProfile?.specialization || mock.specialization,
+        subjects:
+          Array.isArray(rawProfile?.subjects) && rawProfile.subjects.length > 0
+            ? rawProfile.subjects
+            : mock.subjects || [],
+      };
+    };
+
+    // Fetch from universal public profile, with fallback to tutor endpoint and src/data.js
     api.get(`/users/${id}/public`)
       .catch(() => api.get(`/tutors/${id}`))
       .then((res) => {
         if (!active) return;
-        setProfile(res.profile);
-        setTargetUserId(res.userId || res.tutorId || null);
-        setTargetCustomId(res.customId || null);
+        const resolvedId = res.userId || res.tutorId || id;
+        setProfile(enrichWithMock(res.profile, resolvedId));
+        setTargetUserId(resolvedId);
+        setTargetCustomId(res.customId || res.profile?.custom_id || null);
         setLoading(false);
       })
       .catch((err) => {
         if (!active) return;
+        const mockFallback = findMockMentorById(id);
+        if (mockFallback) {
+          setProfile(mockFallback);
+          setTargetUserId(mockFallback.id);
+          setTargetCustomId(mockFallback.custom_id || null);
+          setLoading(false);
+          return;
+        }
         setError(err.status === 404 ? 'not_found' : err.message || 'Failed to load profile');
         setLoading(false);
       });
@@ -73,6 +102,8 @@ export default function TutorProfile({ currentUser, onEditProfile, showToast }) 
   const isLearner = currentUser?.role === 'learner';
   const role = profile?.role || 'learner';
   const isTutor = role === 'tutor';
+  const isFaculty = role === 'faculty';
+  const isMentor = isTutor || isFaculty;
   const isAvailable = profile?.is_available !== false;
   const isAccredited = profile?.is_verified !== false;
   const roleInfo = ROLE_META[role] || ROLE_META.learner;
@@ -81,28 +112,33 @@ export default function TutorProfile({ currentUser, onEditProfile, showToast }) 
 
   const handleBookSession = () => {
     if (!isLearner) {
-      showToast?.('Only students with learner accounts can book peer tutoring sessions.', 'error');
+      showToast?.('Only students with learner accounts can book tutoring sessions.', 'error');
       return;
     }
     if (!isAccredited) {
-      showToast?.('This tutor is not currently accredited for bookings.', 'error');
+      showToast?.('This mentor is not currently accredited for bookings.', 'error');
       return;
     }
     if (!isAvailable) {
-      showToast?.('This tutor is currently unavailable for new bookings.', 'error');
+      showToast?.('This mentor is currently unavailable for new bookings.', 'error');
       return;
     }
 
     const prefilledTutor = {
       id: targetUserId || id,
+      custom_id: targetCustomId || profile.custom_id || id,
       name: profile.name,
+      role: profile.role,
+      title: profile.title,
+      department: profile.department,
+      specialization: profile.specialization,
       avatar: profile.avatar,
-      program: profile.program,
+      program: profile.program || profile.title || profile.department,
       subjects: profile.subjects || [],
       stats: profile.stats,
     };
 
-    navigate('/wizard', { state: { prefilledTutor } });
+    navigate('/wizard', { state: { prefilledTutor, flow: 'tutor' } });
   };
 
   const handleSendMessage = () => {
@@ -229,25 +265,25 @@ export default function TutorProfile({ currentUser, onEditProfile, showToast }) 
                   <Edit3 className="h-4 w-4" strokeWidth={2} />
                   Edit Profile
                 </Button>
-              ) : isTutor ? (
+              ) : isMentor ? (
                 isLearner ? (
                   <div className="flex flex-col items-start gap-1 sm:items-end">
                     <Button
                       onClick={handleBookSession}
                       disabled={!isAccredited || !isAvailable}
-                      className="min-h-[44px] w-full gap-2 sm:w-auto"
+                      className="min-h-[44px] w-full gap-2 px-5 sm:w-auto"
                     >
                       <Calendar className="h-4 w-4" strokeWidth={2} />
-                      Book session
+                      Book
                     </Button>
                     {!isAccredited && (
                       <span className="text-[12px] font-medium text-destructive">
-                        This tutor is not currently accredited.
+                        This mentor is not currently verified.
                       </span>
                     )}
                     {isAccredited && !isAvailable && (
                       <span className="text-[12px] font-medium text-amber-700">
-                        This tutor is currently unavailable for new bookings.
+                        This mentor is currently unavailable for new bookings.
                       </span>
                     )}
                   </div>
@@ -287,11 +323,15 @@ export default function TutorProfile({ currentUser, onEditProfile, showToast }) 
               <h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
                 {profile.name}
               </h1>
-              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[12px] font-bold ${roleInfo.badgeClass}`}>
-                <UserCheck className="h-3.5 w-3.5" strokeWidth={2.2} />
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[12px] font-extrabold ${roleInfo.badgeClass}`}>
+                {isFaculty ? (
+                  <Award className="h-3.5 w-3.5 text-gold" strokeWidth={2.4} />
+                ) : (
+                  <UserCheck className="h-3.5 w-3.5" strokeWidth={2.2} />
+                )}
                 {roleInfo.label}
               </span>
-              {isTutor && (
+              {isMentor && (
                 isAvailable ? (
                   <span className="inline-flex items-center gap-1 border border-emerald-800 bg-emerald-100 px-2 py-0.5 text-[12px] font-bold text-emerald-900">
                     <span className="h-2 w-2 rounded-full bg-emerald-600" />
@@ -305,12 +345,18 @@ export default function TutorProfile({ currentUser, onEditProfile, showToast }) 
                 )
               )}
             </div>
-            {profile.program && (
-              <p className="mt-1 text-[14px] font-medium text-ink/75">
-                {profile.program}
+            {(profile.title || profile.program) && (
+              <p className="mt-1 text-[14px] font-semibold text-ink/80">
+                {profile.title || profile.program}
+                {profile.title && profile.department ? ` · ${profile.department}` : ''}
               </p>
             )}
-            {profile.department && !profile.program && (
+            {profile.specialization && (
+              <p className="mt-0.5 text-[13px] font-semibold text-muted-foreground">
+                Specialization: {profile.specialization}
+              </p>
+            )}
+            {profile.department && !profile.program && !profile.title && (
               <p className="mt-1 text-[14px] font-medium text-ink/75">
                 {profile.department}
               </p>
@@ -337,13 +383,24 @@ export default function TutorProfile({ currentUser, onEditProfile, showToast }) 
               </div>
             </section>
 
-            {/* Subjects Card (Tutors) */}
-            {isTutor && (
+            {/* Subjects Card (Tutors & Faculty Specialists) */}
+            {isMentor && (
               <section aria-labelledby="subjects-heading" className="border-2 border-ink bg-paper p-5 shadow-[3px_3px_0_var(--color-ink)]">
-                <h2 id="subjects-heading" className="font-display flex items-center gap-2 text-[16px] font-bold text-ink">
-                  <Sparkles className="h-4 w-4" strokeWidth={2} />
-                  Subjects Taught
-                </h2>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 id="subjects-heading" className="font-display flex items-center gap-2 text-[16px] font-bold text-ink">
+                    {isFaculty ? (
+                      <Award className="h-4 w-4 text-ink" strokeWidth={2.2} />
+                    ) : (
+                      <Sparkles className="h-4 w-4" strokeWidth={2} />
+                    )}
+                    {isFaculty ? 'Specialized Subjects' : 'Subjects Taught'}
+                  </h2>
+                  {isFaculty && (
+                    <span className="inline-flex items-center gap-1 border border-ink bg-ink px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-gold">
+                      Faculty Subject Specialist
+                    </span>
+                  )}
+                </div>
                 {Array.isArray(profile.subjects) && profile.subjects.length > 0 ? (
                   <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                     {profile.subjects.map((sub) => (

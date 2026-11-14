@@ -59,7 +59,7 @@ router.get('/users/:id/public', async (req, res, next) => {
     const isUuid = UUID_RE.test(String(id));
 
     const { rows } = await query(
-      `SELECT u.id, u.custom_id, u.name, u.role, u.bio, u.avatar, u.program, u.department,
+      `SELECT u.id, u.custom_id, u.name, u.role, u.title, u.bio, u.avatar, u.program, u.department,
               u.is_available, u.is_verified,
               EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id) AS has_avatar
        FROM users u
@@ -81,6 +81,14 @@ router.get('/users/:id/public', async (req, res, next) => {
         [user.id]
       );
       stats = { completed_sessions: statsRes.rows[0]?.completed_sessions || 0 };
+    } else if (user.role === 'faculty') {
+      const statsRes = await query(
+        `SELECT count(*)::int AS completed_sessions
+         FROM sessions
+         WHERE (tutor_id = $1 OR faculty_id = $1) AND status = 'completed'`,
+        [user.id]
+      );
+      stats = { completed_sessions: statsRes.rows[0]?.completed_sessions || 0 };
     } else if (user.role === 'learner') {
       const statsRes = await query(
         `SELECT count(*)::int AS completed_sessions
@@ -92,7 +100,7 @@ router.get('/users/:id/public', async (req, res, next) => {
     }
 
     let subjects = [];
-    if (user.role === 'tutor') {
+    if (user.role === 'tutor' || user.role === 'faculty') {
       const subRows = await query(
         `SELECT s.id, s.code, s.name, s.department
          FROM user_subjects us

@@ -9,6 +9,7 @@ import Logo2D from '../components/Logo2D';
 import './Landing.css';
 
 const DEV = import.meta.env.DEV || import.meta.env.VITE_DEMO_MODE === '1';
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 const DEMO_ACCOUNTS = DEV ? [
   { role: 'superadmin', loginId: 'l.betita.admin@lccbacolod.edu.ph', label: 'Sir Lenuel Betita' },
@@ -16,6 +17,24 @@ const DEMO_ACCOUNTS = DEV ? [
   { role: 'tutor', loginId: 'TU-042', label: 'Mark Antipo' },
   { role: 'learner', loginId: 'TE-128', label: 'Julian Gemelo' },
 ] : [];
+
+const GOOGLE_DEMO_PERSONAS = DEV ? [
+  { name: 'Cemer Daniel L. Miranda', email: 'cemerdaniel.miranda@lccbonline.edu.ph', badge: 'Student · 24-0870-103', role: 'learner' },
+  { name: 'Mark Antipo', email: 'm.antipo@lccbonline.edu.ph', badge: 'Accredited Tutor · TU-042', role: 'tutor' },
+  { name: 'Mrs. Bethel Tisuela', email: 'b.tisuela@lccbonline.edu.ph', badge: 'Faculty · FA-017', role: 'faculty' },
+  { name: 'Juan Dela Cruz', email: 'juan.delacruz@gmail.com', badge: 'Personal Gmail · tests 403 block', role: 'blocked' },
+] : [];
+
+function GoogleMark() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.54-5.17 3.54-8.87Z" />
+      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.07.72-2.44 1.15-4.05 1.15-3.12 0-5.77-2.11-6.72-4.96H1.28v3.09A12 12 0 0 0 12 24Z" />
+      <path fill="#FBBC05" d="M5.28 14.28A7.12 7.12 0 0 1 4.91 12c0-.79.14-1.56.37-2.28V6.63H1.28a12 12 0 0 0 0 10.74l4-3.09Z" />
+      <path fill="#EA4335" d="M12 4.75c1.76 0 3.34.61 4.58 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.28 6.63l4 3.09c.95-2.85 3.6-4.97 6.72-4.97Z" />
+    </svg>
+  );
+}
 
 const ROLE_TITLES = {
   learner: 'Student sign in',
@@ -229,6 +248,9 @@ export default function LandingPage({ onLogin }) {
   }, []);
   const [loginRole, setLoginRole] = useState('learner');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [showGoogleChooser, setShowGoogleChooser] = useState(false);
+  const [customGoogleEmail, setCustomGoogleEmail] = useState('');
   const [schoolId, setSchoolId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -333,14 +355,96 @@ export default function LandingPage({ onLogin }) {
   const openLogin = (role = 'learner') => {
     setLoginRole(role);
     setShowLogin(true);
+    setShowGoogleChooser(false);
+    setCustomGoogleEmail('');
+    setGoogleLoading(false);
     setError('');
     setPassword('');
   };
 
   const closeLogin = () => {
     setShowLogin(false);
+    setShowGoogleChooser(false);
+    setCustomGoogleEmail('');
+    setGoogleLoading(false);
     setError('');
     setPassword('');
+  };
+
+  const completeGoogleAuth = async (payload) => {
+    setError('');
+    setGoogleLoading(true);
+    try {
+      const { user } = await api.post('/auth/google', payload);
+      saveSession(user);
+      onLogin(user);
+      setShowGoogleChooser(false);
+      setCustomGoogleEmail('');
+      setShowLogin(false);
+    } catch (err) {
+      setError(err.message || 'Google sign in failed.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = () => {
+    setError('');
+    if (GOOGLE_CLIENT_ID && window.google?.accounts?.oauth2) {
+      try {
+        setGoogleLoading(true);
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'openid email profile',
+          hd: 'lccbonline.edu.ph',
+          prompt: 'select_account',
+          callback: (tokenResponse) => {
+            if (tokenResponse?.access_token) {
+              completeGoogleAuth({ accessToken: tokenResponse.access_token });
+              return;
+            }
+            setGoogleLoading(false);
+            if (tokenResponse?.error && tokenResponse.error !== 'access_denied') {
+              setError('Google sign in could not be completed.');
+            }
+          },
+          error_callback: (err) => {
+            setGoogleLoading(false);
+            if (err?.type === 'popup_failed_to_open') {
+              setError('Popup was blocked. Allow popups or sign in with your LCCB school ID.');
+            } else if (err?.type !== 'popup_closed') {
+              setError('Google sign in window closed before completion.');
+            }
+          },
+        });
+        tokenClient.requestAccessToken();
+      } catch {
+        setGoogleLoading(false);
+        setError('Google Sign-In could not initialize. Use your LCCB school ID below.');
+      }
+      return;
+    }
+
+    if (DEV) {
+      setShowGoogleChooser((prev) => !prev);
+      return;
+    }
+
+    setError(
+      GOOGLE_CLIENT_ID
+        ? 'Google Sign-In script is still loading. Try again in a moment.'
+        : 'Google OAuth is not configured yet (missing VITE_GOOGLE_CLIENT_ID). Sign in with your LCCB school ID below.',
+    );
+  };
+
+  const handleCustomGoogleSubmit = (event) => {
+    event.preventDefault();
+    const trimmed = customGoogleEmail.trim();
+    if (!trimmed || !trimmed.includes('@')) {
+      setError('Enter an email address (e.g. name@lccbonline.edu.ph).');
+      return;
+    }
+    completeGoogleAuth({ demoEmail: trimmed });
   };
 
   const handleLogin = async (event) => {
@@ -991,26 +1095,74 @@ export default function LandingPage({ onLogin }) {
                   ))}
                 </div>
 
-                <form className="login-form" onSubmit={handleLogin}>
-                  <AnimatePresence>
-                    {error && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div id="login-error-msg" role="alert" className="login-error">{error}</div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div id="login-error-msg" role="alert" className="login-error">{error}</div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
+                <button
+                  className="login-google-btn"
+                  type="button"
+                  disabled={loading || googleLoading}
+                  onClick={handleGoogleSignIn}
+                >
+                  {googleLoading ? <Loader2 size={18} className="animate-spin" /> : <GoogleMark />}
+                  <span>{googleLoading ? 'Verifying Google account…' : 'Continue with Google (@lccbonline.edu.ph)'}</span>
+                </button>
+
+                {DEV && showGoogleChooser && (
+                  <div className="login-google-chooser" role="region" aria-label="Google OAuth Demo Account Chooser">
+                    <div className="login-google-chooser-head">
+                      <span>Choose a Google account (Demo)</span>
+                      <button type="button" onClick={() => setShowGoogleChooser(false)}>Cancel</button>
+                    </div>
+                    <div className="login-google-chooser-list">
+                      {GOOGLE_DEMO_PERSONAS.map((persona) => (
+                        <button
+                          key={persona.email}
+                          type="button"
+                          disabled={googleLoading}
+                          className={`login-google-persona${persona.role === 'blocked' ? ' is-blocked' : ''}`}
+                          onClick={() => completeGoogleAuth({ demoEmail: persona.email, demoName: persona.name })}
+                        >
+                          <strong>{persona.name}</strong>
+                          <span>{persona.email}</span>
+                          <small>{persona.badge}</small>
+                        </button>
+                      ))}
+                    </div>
+                    <form className="login-google-custom" onSubmit={handleCustomGoogleSubmit}>
+                      <input
+                        type="email"
+                        aria-label="Test any Google email"
+                        placeholder="panelist@lccbonline.edu.ph"
+                        value={customGoogleEmail}
+                        onChange={(event) => setCustomGoogleEmail(event.target.value)}
+                      />
+                      <button type="submit" disabled={googleLoading}>Test email</button>
+                    </form>
+                  </div>
+                )}
+
+                <div className="login-divider" aria-hidden="true">
+                  <span>or use school ID &amp; password</span>
+                </div>
+
+                <form className="login-form" onSubmit={handleLogin}>
                   <div className="login-field">
                     <label htmlFor="school-id">School ID or email</label>
                     <input
                       id="school-id"
                       className="login-input"
-                      placeholder="TE-128 or name@lccbacolod.edu.ph"
+                      placeholder="24-0870-103 or name@lccbonline.edu.ph"
                       autoComplete="username"
                       aria-invalid={Boolean(error)}
                       aria-describedby={error ? 'login-error-msg' : undefined}
@@ -1033,7 +1185,7 @@ export default function LandingPage({ onLogin }) {
                     />
                   </div>
 
-                  <button className="login-submit" type="submit" disabled={loading}>
+                  <button className="login-submit" type="submit" disabled={loading || googleLoading}>
                     {loading ? <Loader2 size={18} className="animate-spin" /> : null}
                     {loading ? 'Signing in…' : 'Sign in'}
                   </button>
@@ -1047,7 +1199,18 @@ export default function LandingPage({ onLogin }) {
 
                 {DEMO_ACCOUNTS.length > 0 && (
                   <div className="login-demo">
-                    <p>Demo accounts — tap to fill</p>
+                    <div className="login-demo-head">
+                      <p>Demo accounts — tap to fill</p>
+                      {GOOGLE_CLIENT_ID ? (
+                        <button
+                          type="button"
+                          className="login-demo-google-link"
+                          onClick={() => setShowGoogleChooser((prev) => !prev)}
+                        >
+                          {showGoogleChooser ? 'Hide Google demo' : 'Simulate Google OAuth'}
+                        </button>
+                      ) : null}
+                    </div>
                     <div className="login-demo-grid">
                       {DEMO_ACCOUNTS.map(account => (
                         <button

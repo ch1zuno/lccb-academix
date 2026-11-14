@@ -10,6 +10,7 @@ import {
   Trash2,
   Check,
   BookOpen,
+  Award,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -69,26 +70,30 @@ export default function AccountDialog({
     return () => restoreRef.current?.focus?.();
   }, [tab]);
 
-  // Load available subjects if user is a tutor
+  const isSubjectSpecialist = user?.role === 'tutor' || user?.role === 'faculty';
+
+  // Load available subjects and fresh user subjects if user is a tutor or faculty
   useEffect(() => {
-    if (user?.role === 'tutor') {
+    if (isSubjectSpecialist) {
       setLoadingSubjects(true);
-      api
-        .get('/subjects')
-        .then((res) => {
-          const list = Array.isArray(res.subjects) ? res.subjects : [];
+      Promise.all([
+        api.get('/subjects'),
+        api.get('/auth/me').catch(() => ({ user })),
+      ])
+        .then(([subRes, meRes]) => {
+          const list = Array.isArray(subRes.subjects) ? subRes.subjects : [];
           setAllSubjects(list);
-          // If user.subjects only had codes, map them to IDs
-          if (user.subjects?.length && (!selectedSubjectIds || selectedSubjectIds.length === 0)) {
-            const currentCodes = new Set(user.subjects.map((s) => s.code));
-            const ids = list.filter((s) => currentCodes.has(s.code)).map((s) => s.id);
+          const freshSubjects = meRes?.user?.subjects || user?.subjects || [];
+          if (freshSubjects.length) {
+            const currentCodes = new Set(freshSubjects.map((s) => s.code));
+            const ids = list.filter((s) => s.id && (freshSubjects.some((fs) => fs.id === s.id) || currentCodes.has(s.code))).map((s) => s.id);
             setSelectedSubjectIds(ids);
           }
         })
         .catch(() => {})
         .finally(() => setLoadingSubjects(false));
     }
-  }, [user?.role]);
+  }, [isSubjectSpecialist]);
 
   const onKeyDown = (event) => {
     if (event.key === 'Escape') {
@@ -164,8 +169,12 @@ export default function AccountDialog({
       return;
     }
 
-    if (user?.role === 'tutor' && selectedSubjectIds.length === 0) {
-      setProfileError('Please select at least one subject you teach.');
+    if (isSubjectSpecialist && selectedSubjectIds.length === 0) {
+      setProfileError(
+        user?.role === 'faculty'
+          ? 'Please select at least one specialized subject.'
+          : 'Please select at least one subject you teach.'
+      );
       return;
     }
 
@@ -180,7 +189,7 @@ export default function AccountDialog({
         payload.avatarBase64 = avatarBase64;
       }
 
-      if (user?.role === 'tutor') {
+      if (isSubjectSpecialist) {
         payload.subjectIds = selectedSubjectIds;
       }
 
@@ -250,7 +259,7 @@ export default function AccountDialog({
     name.trim() !== (user?.name || '') ||
     bio.trim() !== (user?.bio || '') ||
     avatarBase64 !== undefined ||
-    (user?.role === 'tutor' &&
+    (isSubjectSpecialist &&
       JSON.stringify(selectedSubjectIds.slice().sort()) !==
         JSON.stringify(
           (user?.subjects || [])
@@ -281,7 +290,15 @@ export default function AccountDialog({
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b-2 border-ink px-5 py-4">
           <div>
-            <p className="meta uppercase tracking-[0.12em]">Account</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="meta uppercase tracking-[0.12em]">Account</p>
+              {user?.role === 'faculty' && (
+                <span className="inline-flex items-center gap-1 border-2 border-ink bg-ink px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-gold shadow-[2px_2px_0_var(--color-gold)]">
+                  <Award className="h-3 w-3 text-gold" strokeWidth={2.4} />
+                  Faculty Specialist
+                </span>
+              )}
+            </div>
             <h2
               id="account-dialog-title"
               className="mt-1 font-display text-[22px] font-extrabold leading-tight tracking-[-0.02em]"
@@ -462,17 +479,26 @@ export default function AccountDialog({
               />
             </div>
 
-            {/* Tutors: Subjects they teach */}
-            {user?.role === 'tutor' && (
+            {/* Tutors & Faculty: Subjects they teach / specialize in */}
+            {isSubjectSpecialist && (
               <div className="border-t-2 border-ink/15 pt-3">
-                <div className="flex items-center gap-1.5">
-                  <BookOpen className="h-4 w-4" strokeWidth={2} />
-                  <span className="text-[12px] font-bold uppercase tracking-[0.05em] text-muted-foreground">
-                    Subjects You Teach <span className="text-crimson">*</span>
-                  </span>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <BookOpen className="h-4 w-4" strokeWidth={2} />
+                    <span className="text-[12px] font-bold uppercase tracking-[0.05em] text-muted-foreground">
+                      {user?.role === 'faculty' ? 'Specialized Subjects' : 'Subjects You Teach'} <span className="text-crimson">*</span>
+                    </span>
+                  </div>
+                  {user?.role === 'faculty' && (
+                    <span className="inline-flex items-center gap-1 border border-ink bg-ink px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-gold">
+                      <Award className="h-3 w-3 text-gold" /> Faculty Specialist
+                    </span>
+                  )}
                 </div>
                 <p className="mt-0.5 text-[12px] text-muted-foreground">
-                  Select the subjects you are accredited and available to teach.
+                  {user?.role === 'faculty'
+                    ? 'Select the courses you specialize in for academic consultation and fallback tutor matchmaking.'
+                    : 'Select the subjects you are accredited and available to teach.'}
                 </p>
 
                 {loadingSubjects ? (
@@ -556,7 +582,7 @@ export default function AccountDialog({
               >
                 Cancel
               </Button>
-              {user?.role === 'tutor' && (
+              {isSubjectSpecialist && (
                 <Button
                   type="button"
                   variant="ghost"

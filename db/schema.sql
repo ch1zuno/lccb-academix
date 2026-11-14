@@ -374,4 +374,20 @@ CREATE TABLE session_messages (
 );
 CREATE INDEX idx_session_messages_session_id ON session_messages(session_id, created_at ASC);
 
+-- ── User avatars stored as bytea for ephemeral hosts ──
+CREATE TABLE IF NOT EXISTS user_avatars (
+  user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  data bytea NOT NULL,
+  mime_type text NOT NULL,
+  size_bytes int NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_user_avatars_updated_at ON user_avatars(updated_at);
+
+-- ── Real session call durations and start/end timestamps ──
+ALTER TABLE sessions
+  ADD COLUMN IF NOT EXISTS started_at timestamptz,
+  ADD COLUMN IF NOT EXISTS ended_at timestamptz,
+  ADD COLUMN IF NOT EXISTS actual_duration_seconds integer DEFAULT 0;
+
 COMMIT;

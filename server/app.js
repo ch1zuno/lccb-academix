@@ -36,17 +36,21 @@ app.use(
           "'unsafe-inline'",
           "'unsafe-eval'",
           'blob:',
+          'https://accounts.google.com',
           'https://meet.jit.si',
           'https://*.jit.si',
           'https://*.jitsi.net',
           'https://8x8.vc',
           'https://*.8x8.vc',
         ],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
         imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
         connectSrc: [
           "'self'",
+          'https://accounts.google.com',
+          'https://oauth2.googleapis.com',
+          'https://www.googleapis.com',
           'https://*.supabase.co',
           'wss://*.supabase.co',
           'https://meet.jit.si',
@@ -63,6 +67,7 @@ app.use(
         ],
         frameSrc: [
           "'self'",
+          'https://accounts.google.com',
           'https://meet.jit.si',
           'https://*.jit.si',
           'https://*.jitsi.net',
@@ -75,6 +80,7 @@ app.use(
       },
     },
     crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
   })
 );
 app.use(cors({ origin: config.frontendOrigins, credentials: true }));
@@ -92,6 +98,7 @@ const loginLimiter = rateLimit({
 });
 
 app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/google', loginLimiter);
 app.use('/api', routes);
 
 /* Real health: proves the API *and* its database are reachable. Returns 503
