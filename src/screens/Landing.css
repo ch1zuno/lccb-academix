@@ -1176,6 +1176,12 @@
   transform: translateY(-18px) rotateZ(4deg) scale(1.06);
 }
 
+@media (hover: none) {
+  .hs-w:hover {
+    transform: none;
+  }
+}
+
 /* Object placement matching the poster mockup */
 .hs-star {
   left: 21%;
@@ -2932,35 +2938,31 @@
   }
 
   .hs-scene {
-    --hs-scale: 0.68;
+    --hs-scale: 0.52;
+    pointer-events: none;
   }
 
   .hs-book2,
-  .hs-coins {
-    display: none;
+  .hs-clock,
+  .hs-coins,
+  .hs-chip-pts {
+    display: none !important;
   }
 
   .hs-star {
-    left: 4%;
-    top: 4%;
+    left: 2%;
+    top: 1%;
   }
 
   .hs-cap {
-    left: 72%;
-    top: 3%;
+    left: auto;
+    right: 2%;
+    top: 0%;
   }
 
-  .hs-clock {
-    left: 75%;
-    top: 42%;
-  }
-
-  .hs-chip-pts {
-    left: 73%;
-    top: 58%;
-    padding: 5px 9px;
-    font-size: 12px;
-    box-shadow: 3px 3px 0 var(--lg-navy);
+  .hero-poster-copy {
+    position: relative;
+    z-index: 12;
   }
 
   .ledger-brand-2d {
@@ -3278,8 +3280,9 @@
   /* Thin the 3D scene on small screens so nothing collides */
   .hs-book2,
   .hs-clock,
-  .hs-coins {
-    display: none;
+  .hs-coins,
+  .hs-chip-pts {
+    display: none !important;
   }
 
   .ledger-brand-2d {
@@ -3288,23 +3291,24 @@
   }
 
   .hs-scene {
-    --hs-scale: 0.52;
+    --hs-scale: 0.36;
+    pointer-events: none;
   }
 
   .hs-star {
     left: 1%;
-    top: 2%;
+    top: 0%;
   }
 
   .hs-cap {
-    left: 66%;
-    top: 1%;
+    left: auto;
+    right: 0%;
+    top: -6px;
   }
 
-  .hs-chip-pts {
-    left: auto;
-    right: 4%;
-    top: 48%;
+  .hero-poster-copy {
+    position: relative;
+    z-index: 12;
   }
 
   .hero-poster-copy h1 {
