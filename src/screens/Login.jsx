@@ -281,22 +281,41 @@ export default function LandingPage({ onLogin }) {
     const stage = stageRef.current;
     if (!stage) return undefined;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) return undefined;
+    if (reduce) {
+      stage.setAttribute('data-bg-paused', 'true');
+      return undefined;
+    }
+    let inView = true;
+    const syncPause = () => {
+      if (!inView || document.hidden) stage.setAttribute('data-bg-paused', 'true');
+      else stage.removeAttribute('data-bg-paused');
+    };
+    const io = typeof IntersectionObserver !== 'undefined'
+      ? new IntersectionObserver(([entry]) => {
+          inView = entry.isIntersecting;
+          syncPause();
+        })
+      : null;
+    io?.observe(stage);
+    document.addEventListener('visibilitychange', syncPause);
+
     const onMove = (event) => {
       const rect = stage.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
       const x = (event.clientX - rect.left) / rect.width - 0.5;
       const y = (event.clientY - rect.top) / rect.height - 0.5;
-      stage.style.setProperty('--tilt-x', `${(-x * 24).toFixed(2)}deg`);
-      stage.style.setProperty('--tilt-y', `${(9 + y * 16).toFixed(2)}deg`);
+      stage.style.setProperty('--tilt-x', `${(-8 - x * 20).toFixed(2)}deg`);
+      stage.style.setProperty('--tilt-y', `${(6 + y * 14).toFixed(2)}deg`);
     };
     const onLeave = () => {
-      stage.style.setProperty('--tilt-x', '-17deg');
-      stage.style.setProperty('--tilt-y', '9deg');
+      stage.style.setProperty('--tilt-x', '-8deg');
+      stage.style.setProperty('--tilt-y', '6deg');
     };
     stage.addEventListener('pointermove', onMove);
     stage.addEventListener('pointerleave', onLeave);
     return () => {
+      io?.disconnect();
+      document.removeEventListener('visibilitychange', syncPause);
       stage.removeEventListener('pointermove', onMove);
       stage.removeEventListener('pointerleave', onLeave);
     };
@@ -540,80 +559,190 @@ export default function LandingPage({ onLogin }) {
       </svg>
 
       <main id="main-content">
-      {/* ── First screen: the ledger as an object ─────────────────────────── */}
-      <section className={`ledger-hero${sketching ? ' sketching' : ''}`} aria-labelledby="hero-title">
-        <div className="ledger-hero-grid">
-          <div className="ledger-card">
-            <div className="ledger-band" aria-hidden="true">
-              {Array.from({ length: 48 }).map((_, i) => <span key={i} />)}
+        {/* ── First screen: full-width neo-brutalist poster ────────────────── */}
+        <section
+          className={`ledger-hero hero-poster${sketching ? ' sketching' : ''}`}
+          ref={stageRef}
+          aria-labelledby="hero-title"
+        >
+          {/* ── Live Network Telemetry Background (z-0, non-interactive) ──── */}
+          <div className="hero-telemetry-bg" aria-hidden="true">
+            <div className="hero-telemetry-grid" />
+
+            {/* Full-width responsive SVG with 3 cubic-bezier dotted paths + glowing packets */}
+            <svg
+              className="hero-telemetry-svg"
+              viewBox="0 0 1440 720"
+              preserveAspectRatio="none"
+              focusable="false"
+            >
+              <defs>
+                <filter id="tel-dot-glow" x="-80%" y="-80%" width="260%" height="260%">
+                  <feGaussianBlur stdDeviation="3.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <path
+                  id="tel-path-1"
+                  d="M -40 190 C 310 70, 560 330, 880 175 C 1120 65, 1290 250, 1480 140"
+                />
+                <path
+                  id="tel-path-2"
+                  d="M -40 370 C 260 470, 590 200, 910 350 C 1150 460, 1310 290, 1480 380"
+                />
+                <path
+                  id="tel-path-3"
+                  d="M -40 510 C 340 360, 650 540, 1020 390 C 1220 310, 1350 470, 1480 430"
+                />
+              </defs>
+
+              <use href="#tel-path-1" className="hero-telemetry-path" />
+              <use href="#tel-path-2" className="hero-telemetry-path hero-telemetry-path-alt" />
+              <use href="#tel-path-3" className="hero-telemetry-path" />
+
+              {/* Traveling glowing telemetry packets */}
+              <g className="hero-telemetry-packets" filter="url(#tel-dot-glow)">
+                <circle r="5" className="tel-packet tel-packet-gold">
+                  <animateMotion dur="16s" repeatCount="indefinite" rotate="auto">
+                    <mpath href="#tel-path-1" />
+                  </animateMotion>
+                </circle>
+                <circle r="4" className="tel-packet tel-packet-green">
+                  <animateMotion dur="16s" begin="-8s" repeatCount="indefinite" rotate="auto">
+                    <mpath href="#tel-path-1" />
+                  </animateMotion>
+                </circle>
+                <circle r="5" className="tel-packet tel-packet-green">
+                  <animateMotion dur="19s" begin="-3s" repeatCount="indefinite" rotate="auto">
+                    <mpath href="#tel-path-2" />
+                  </animateMotion>
+                </circle>
+                <circle r="4.5" className="tel-packet tel-packet-gold">
+                  <animateMotion dur="19s" begin="-12s" repeatCount="indefinite" rotate="auto">
+                    <mpath href="#tel-path-2" />
+                  </animateMotion>
+                </circle>
+                <circle r="5" className="tel-packet tel-packet-gold">
+                  <animateMotion dur="22s" begin="-5s" repeatCount="indefinite" rotate="auto">
+                    <mpath href="#tel-path-3" />
+                  </animateMotion>
+                </circle>
+                <circle r="4" className="tel-packet tel-packet-green">
+                  <animateMotion dur="22s" begin="-15s" repeatCount="indefinite" rotate="auto">
+                    <mpath href="#tel-path-3" />
+                  </animateMotion>
+                </circle>
+              </g>
+            </svg>
+
+            {/* 5 Floating Live Nodes along the curves */}
+            <div className="hero-telemetry-nodes">
+              <div className="hero-live-node node-1">
+                <span className="hero-node-avatar hero-node-avatar-gold">MA</span>
+                <span className="hero-node-dot" />
+                <span className="hero-node-label">IT 101 · <b>LIVE</b></span>
+              </div>
+              <div className="hero-live-node node-2">
+                <span className="hero-node-avatar hero-node-avatar-navy">AD</span>
+                <span className="hero-node-dot" />
+                <span className="hero-node-label">PROG 201 · <b>LIVE</b></span>
+              </div>
+              <div className="hero-live-node node-3">
+                <span className="hero-node-avatar hero-node-avatar-teal">RT</span>
+                <span className="hero-node-dot" />
+                <span className="hero-node-label">CALC 1 · <b>LIVE</b></span>
+              </div>
+              <div className="hero-live-node node-4">
+                <span className="hero-node-avatar hero-node-avatar-gold">JC</span>
+                <span className="hero-node-dot" />
+                <span className="hero-node-label">ACCTG · <b>LIVE</b></span>
+              </div>
+              <div className="hero-live-node node-5">
+                <span className="hero-node-avatar hero-node-avatar-navy">KL</span>
+                <span className="hero-node-dot" />
+                <span className="hero-node-label">NURS 102 · <b>LIVE</b></span>
+              </div>
             </div>
-            <span className="ledger-sticker" aria-hidden="true">Peer<br />verified</span>
-            <motion.div
-              className="ledger-card-inner"
-              initial={{ y: 12 }}
-              animate={{ y: 0 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-            >
-              <div className="ledger-wordmark">
-                <Logo2D className="ledger-brand-2d" />
-                <small>La Consolacion College Bacolod</small>
+
+            {/* Corner Telemetry Wireframe Window Cards (opacity-40) */}
+            <div className="hero-telemetry-card hero-telemetry-card-left">
+              <div className="hero-tel-bar">
+                <span className="hero-tel-dots"><i /><i /><i /></span>
+                <span className="hero-tel-title">NET_TELEMETRY // PEER_NODES</span>
               </div>
-              <h1 id="hero-title">Peer tutoring<br />that <span className="ledger-mark">counts.</span></h1>
-              <p className="ledger-summary">
-                Book a verified student tutor, check in together, and watch every hour
-                land on the official LCCB community ledger.
-              </p>
-              <button className="ledger-action" type="button" onClick={() => openLogin('learner')}>
-                Find a tutor <ArrowRight size={18} strokeWidth={2.2} />
-              </button>
-            </motion.div>
-            <motion.div
-              className="ledger-card-foot"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.25 }}
-            >
-              <p className="ledger-live">
-                <span className="ledger-live-dot" aria-hidden="true" />
-                {totals ? (
-                  <>
-                    Live ledger · <b>{fmt(totals.tutors)}</b> tutors
-                    <span className="sep">·</span> <b>{fmtHours(totals.hours)}</b> hours
-                    <span className="sep">·</span> <b>{fmt(totals.points_issued)}</b> points
-                  </>
-                ) : overviewFailed ? (
-                  <>Ledger offline · sign-in still works</>
-                ) : (
-                  <>Live ledger · reading the record…</>
-                )}
-              </p>
-              <div className="ledger-links">
-                <button className="ledger-link" type="button" onClick={() => openLogin('learner')}>Student sign in</button>
-                <button className="ledger-link" type="button" onClick={() => openLogin('tutor')}>Tutor portal</button>
-                <button className="ledger-link" type="button" onClick={() => openLogin('faculty')}>Faculty &amp; admin</button>
+              <div className="hero-tel-body">
+                <div className="hero-tel-metric">
+                  <span className="hero-tel-count">{totals ? fmt(totals.tutors) : '12'}</span>
+                  <span className="hero-tel-meta">ACTIVE TUTORS<small>SYNC · 99.8%</small></span>
+                </div>
+                <div className="hero-tel-eq">
+                  {Array.from({ length: 9 }).map((_, i) => (
+                    <span key={i} style={{ '--eq-i': i }} />
+                  ))}
+                </div>
               </div>
-            </motion.div>
+            </div>
+
+            <div className="hero-telemetry-card hero-telemetry-card-right">
+              <div className="hero-tel-bar">
+                <span className="hero-tel-dots"><i /><i /><i /></span>
+                <span className="hero-tel-title">LEDGER_SYNC // ACTIVITY</span>
+              </div>
+              <div className="hero-tel-body">
+                <div className="hero-tel-metric">
+                  <span className="hero-tel-count">{totals ? fmtHours(totals.hours) : '21'}h</span>
+                  <span className="hero-tel-meta">VERIFIED HOURS<small>LIVE FEED</small></span>
+                </div>
+                <div className="hero-tel-chart">
+                  {[42, 68, 54, 86, 62, 94, 78].map((h, i) => (
+                    <span key={i} style={{ '--bar-h': `${h}%`, '--bar-i': i }} />
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div
-            className="ledger-hero-stage"
-            ref={stageRef}
-            aria-label="Interactive peer-tutoring scene: move your pointer to tilt the blocks"
-          >
-            <div className="hs-floor" aria-hidden="true" />
-            <div className="hs-sun" aria-hidden="true" />
-            <div className="hs-shadow hs-shadow-a" aria-hidden="true" />
-            <div className="hs-shadow hs-shadow-b" aria-hidden="true" />
+          <span className="ledger-sticker" aria-hidden="true">Peer<br />verified</span>
+
+          <div className="hero-poster-stage">
+            {/* Interactive 3D floating brutalist blocks (hover + pointer tilt) */}
             <div className="hs-scene" aria-hidden="true">
-              {/* graduation cap with a swinging tassel */}
+              {/* Upper-left gold star cube */}
+              <HsCube
+                name="hs-star"
+                float="hs-bob-a"
+                w={68}
+                h={72}
+                d={24}
+                cF="var(--lg-gold)"
+                cS="var(--lg-paper)"
+                cT="var(--lg-navy)"
+              />
+
+              {/* Far upper-left LCCB horizontal block */}
+              <HsCube
+                name="hs-book2"
+                float="hs-bob-b"
+                w={114}
+                h={40}
+                d={84}
+                cF="var(--lg-paper)"
+                cS="var(--lg-gold)"
+                cT="var(--lg-navy)"
+                label="LCCB"
+              />
+
+              {/* Upper-right graduation cap with swinging tassel */}
               <div className="hs-w hs-cap">
                 <HsCube
                   bare
                   float="hs-bob-a"
-                  style={{ left: 5, top: 44 }}
-                  w={150}
-                  h={20}
-                  d={150}
+                  style={{ left: 5, top: 34, '--rx': '16deg', '--ry': '-18deg' }}
+                  w={144}
+                  h={18}
+                  d={144}
                   cF="#1E3D5C"
                   cS="#1E3D5C"
                   cT="var(--lg-gold)"
@@ -621,10 +750,10 @@ export default function LandingPage({ onLogin }) {
                 <HsCube
                   bare
                   float="hs-bob-a"
-                  style={{ left: 62, top: 20 }}
-                  w={26}
-                  h={26}
-                  d={26}
+                  style={{ left: 60, top: 14, '--rx': '16deg', '--ry': '-18deg' }}
+                  w={24}
+                  h={22}
+                  d={24}
                   cF="var(--lg-gold)"
                   cS="var(--lg-gold)"
                   cT="var(--lg-gold)"
@@ -633,20 +762,20 @@ export default function LandingPage({ onLogin }) {
                   <div className="hs-cap-swing">
                     <HsCube
                       bare
-                      style={{ left: 7, top: 0 }}
-                      w={12}
-                      h={52}
-                      d={12}
+                      style={{ left: 6, top: 0 }}
+                      w={10}
+                      h={46}
+                      d={10}
                       cF="var(--lg-gold)"
                       cS="var(--lg-gold)"
                       cT="var(--lg-gold)"
                     />
                     <HsCube
                       bare
-                      style={{ left: 0, top: 54 }}
-                      w={24}
-                      h={24}
-                      d={24}
+                      style={{ left: 0, top: 46 }}
+                      w={22}
+                      h={22}
+                      d={22}
                       cF="var(--lg-gold)"
                       cS="var(--lg-gold)"
                       cT="var(--lg-gold)"
@@ -655,64 +784,15 @@ export default function LandingPage({ onLogin }) {
                 </div>
               </div>
 
-              {/* the record: a stack of ledgers */}
-              <HsCube
-                name="hs-book1"
-                float="hs-bob-a"
-                w={168}
-                h={212}
-                d={74}
-                cF="var(--lg-gold)"
-                cS="var(--lg-navy)"
-                cT="var(--lg-paper)"
-                label="A+"
-              />
-              <HsCube
-                name="hs-book2"
-                float="hs-bob-b"
-                w={124}
-                h={44}
-                d={102}
-                cF="var(--lg-paper)"
-                cS="var(--lg-gold)"
-                cT="var(--lg-navy)"
-                label="LCCB"
-              />
-
-              {/* one-on-one, on the clock */}
-              <HsCube
-                name="hs-clock"
-                float="hs-bob-b"
-                w={112}
-                h={112}
-                d={34}
-                cF="var(--lg-paper)"
-                cS="var(--lg-gold)"
-                cT="var(--lg-navy)"
-                label="1:1"
-              />
-
-              {/* honor-roll star */}
-              <HsCube
-                name="hs-star"
-                float="hs-bob-a"
-                w={82}
-                h={82}
-                d={28}
-                cF="var(--lg-gold)"
-                cS="var(--lg-paper)"
-                cT="var(--lg-navy)"
-              />
-
-              {/* session points in coins */}
+              {/* Mid-left stack of 3 gold point bars */}
               <div className="hs-w hs-coins">
                 <HsCube
                   bare
                   float="hs-bob-b"
-                  style={{ left: -4, top: -26, '--rx': '0deg', '--ry': '0deg' }}
-                  w={96}
-                  h={28}
-                  d={96}
+                  style={{ left: -2, top: -22, '--rx': '-6deg', '--ry': '-18deg' }}
+                  w={74}
+                  h={18}
+                  d={46}
                   cF="var(--lg-gold)"
                   cS="var(--lg-navy)"
                   cT="var(--lg-gold)"
@@ -720,10 +800,10 @@ export default function LandingPage({ onLogin }) {
                 <HsCube
                   bare
                   float="hs-bob-b"
-                  style={{ left: 2, top: 0, animationDelay: '0.45s', '--rx': '0deg', '--ry': '0deg' }}
-                  w={96}
-                  h={28}
-                  d={96}
+                  style={{ left: 2, top: 0, animationDelay: '0.45s', '--rx': '-6deg', '--ry': '-18deg' }}
+                  w={74}
+                  h={18}
+                  d={46}
                   cF="var(--lg-gold)"
                   cS="var(--lg-navy)"
                   cT="var(--lg-paper)"
@@ -731,271 +811,437 @@ export default function LandingPage({ onLogin }) {
                 <HsCube
                   bare
                   float="hs-bob-b"
-                  style={{ left: -2, top: 26, animationDelay: '0.9s', '--rx': '0deg', '--ry': '0deg' }}
-                  w={96}
-                  h={28}
-                  d={96}
+                  style={{ left: -3, top: 22, animationDelay: '0.9s', '--rx': '-6deg', '--ry': '-18deg' }}
+                  w={74}
+                  h={18}
+                  d={46}
                   cF="var(--lg-gold)"
                   cS="var(--lg-navy)"
                   cT="var(--lg-paper)"
                 />
               </div>
 
-              {/* subject letter tiles, stacked like a stairway */}
-              <div className="hs-w hs-math">
-                {['M', 'A', 'T', 'H'].map((ch, i) => (
-                  <HsCube
-                    key={ch}
-                    bare
-                    float="hs-bob-b"
-                    style={{
-                      left: i * 57,
-                      top: i * 27,
-                      animationDelay: `${i * 0.5}s`,
-                      '--rx': '-10deg',
-                      '--ry': '-24deg',
-                      '--tz': '26px',
-                    }}
-                    w={54}
-                    h={54}
-                    d={18}
-                    cF="var(--lg-paper)"
-                    cS="var(--lg-gold)"
-                    cT="var(--lg-navy)"
-                    label={ch}
+              {/* Mid-right 1:1 square block */}
+              <HsCube
+                name="hs-clock"
+                float="hs-bob-b"
+                w={82}
+                h={82}
+                d={26}
+                cF="var(--lg-paper)"
+                cS="var(--lg-gold)"
+                cT="var(--lg-navy)"
+                label="1:1"
+              />
+
+              {/* +50 pts sticker chip below 1:1 */}
+              <div className="hs-chip hs-chip-pts">+50 pts</div>
+            </div>
+
+            {/* Centered brand wordmark + giant display headline */}
+            <motion.div
+              className="hero-poster-copy"
+              initial={{ y: 12 }}
+              animate={{ y: 0 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            >
+              <div className="ledger-wordmark hero-poster-wordmark">
+                <Logo2D className="ledger-brand-2d" />
+                <small className="sr-only">La Consolacion College Bacolod</small>
+              </div>
+              <h1 id="hero-title">Peer tutoring<br />that <span className="ledger-mark">counts.</span></h1>
+              <p className="sr-only">
+                Book a verified student tutor, check in together, and watch every hour
+                land on the official LCCB community ledger.
+              </p>
+            </motion.div>
+
+            {/* Students cutout + unified telemetry bridge button wired into laptops */}
+            <div className="hero-poster-visual">
+              <div className="hero-bridge-wrap">
+                <button
+                  className="hero-bridge-btn"
+                  type="button"
+                  onClick={() => openLogin('learner')}
+                  aria-label="Find a tutor - connect to verified student peer"
+                >
+                  <span className="hero-bridge-pill">
+                    <span className="hero-bridge-pill-dot" />
+                    PEER LINK
+                  </span>
+                  <span className="hero-bridge-label">
+                    Find a tutor <ArrowRight size={18} strokeWidth={2.4} />
+                  </span>
+                </button>
+
+                {/* Unified connection lines emerging from bottom socket jacks of the button */}
+                <svg
+                  className="hero-bridge-svg"
+                  viewBox="0 0 320 84"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <defs>
+                    <linearGradient id="bridgeCableLeft" x1="110" y1="0" x2="38" y2="72" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#0F1E36" />
+                      <stop offset="0.6" stopColor="#0F1E36" />
+                      <stop offset="1" stopColor="#1E3D5C" />
+                    </linearGradient>
+                    <linearGradient id="bridgeCableRight" x1="210" y1="0" x2="282" y2="72" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#0F1E36" />
+                      <stop offset="0.6" stopColor="#0F1E36" />
+                      <stop offset="1" stopColor="#1E3D5C" />
+                    </linearGradient>
+                    <filter id="bridgePulseGlow" x="-60%" y="-60%" width="220%" height="220%">
+                      <feGaussianBlur stdDeviation="2.5" result="glow" />
+                      <feMerge>
+                        <feMergeNode in="glow" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <path
+                      id="bridgePathL"
+                      d="M 112 0 C 82 14, 52 40, 38 70"
+                    />
+                    <path
+                      id="bridgePathR"
+                      d="M 208 0 C 238 14, 268 40, 282 70"
+                    />
+                  </defs>
+
+                  {/* Socket Jack Connectors directly docking the button casing */}
+                  <rect x="104" y="0" width="16" height="7" rx="1.5" fill="#0F1E36" stroke="#0F1E36" strokeWidth="1" />
+                  <rect x="200" y="0" width="16" height="7" rx="1.5" fill="#0F1E36" stroke="#0F1E36" strokeWidth="1" />
+                  <rect x="108" y="0" width="8" height="3" fill="var(--lg-gold)" />
+                  <rect x="204" y="0" width="8" height="3" fill="var(--lg-gold)" />
+
+                  {/* Heavy base pipelines (thick neo-brutalist border) */}
+                  <path
+                    d="M 112 0 C 82 14, 52 40, 38 70"
+                    stroke="#0F1E36"
+                    strokeWidth="7"
+                    strokeLinecap="round"
                   />
-                ))}
+                  <path
+                    d="M 208 0 C 238 14, 268 40, 282 70"
+                    stroke="#0F1E36"
+                    strokeWidth="7"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Core interior conduit lines (amber gold neon core) */}
+                  <path
+                    d="M 112 0 C 82 14, 52 40, 38 70"
+                    stroke="var(--lg-gold)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M 208 0 C 238 14, 268 40, 282 70"
+                    stroke="var(--lg-gold)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Live flowing telemetry pulses streaming into laptops */}
+                  <g filter="url(#bridgePulseGlow)">
+                    <circle r="3.5" fill="#22C55E" stroke="#0F1E36" strokeWidth="1">
+                      <animateMotion dur="2.8s" repeatCount="indefinite">
+                        <mpath href="#bridgePathL" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--lg-gold-bright)" stroke="#0F1E36" strokeWidth="1">
+                      <animateMotion dur="2.8s" begin="-1.4s" repeatCount="indefinite">
+                        <mpath href="#bridgePathL" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="#22C55E" stroke="#0F1E36" strokeWidth="1">
+                      <animateMotion dur="2.8s" begin="-0.7s" repeatCount="indefinite">
+                        <mpath href="#bridgePathR" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--lg-gold-bright)" stroke="#0F1E36" strokeWidth="1">
+                      <animateMotion dur="2.8s" begin="-2.1s" repeatCount="indefinite">
+                        <mpath href="#bridgePathR" />
+                      </animateMotion>
+                    </circle>
+                  </g>
+
+                  {/* Left Laptop Magnetic Terminal Plug */}
+                  <circle cx="38" cy="70" r="9" fill="#0F1E36" />
+                  <circle cx="38" cy="70" r="6" fill="#FAF9F5" stroke="#0F1E36" strokeWidth="1.5" />
+                  <circle cx="38" cy="70" r="3" fill="#22C55E" className="hero-bridge-led" />
+
+                  {/* Right Laptop Magnetic Terminal Plug */}
+                  <circle cx="282" cy="70" r="9" fill="#0F1E36" />
+                  <circle cx="282" cy="70" r="6" fill="#FAF9F5" stroke="#0F1E36" strokeWidth="1.5" />
+                  <circle cx="282" cy="70" r="3" fill="#22C55E" className="hero-bridge-led" />
+                </svg>
               </div>
 
-              <div className="hs-chip hs-chip-pts">+50 pts</div>
-              <div className="hs-chip hs-chip-role">TUTOR</div>
-            </div>
-            <div className="ledger-photo-stamp">
-              LCCB, on the record.
-              <span>Move your pointer — the blocks tilt. No photos, just brutalist 3D.</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="ledger-ticker" aria-hidden="true">
-        <div className="ledger-ticker-track" ref={tickerRef}>
-          {[0, 1].map(run => (
-            <div className="ledger-ticker-run" key={run}>
-              {tickerItems.map(item => (
-                <span className="ledger-ticker-item" key={item}>
-                  {item}<i>/</i>
-                </span>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── 1. Capabilities as a printed menu ─────────────────────────────── */}
-      <section id="ledger" className="ledger-section ledger-field-navy">
-        <motion.div {...reveal}>
-          <div className="ledger-menu-sheet">
-            <h2>What’s on the ledger</h2>
-            <div className="ledger-menu-groups">
-              {MENU_GROUPS.map(group => (
-                <div className="ledger-menu-group" key={group.name}>
-                  <h3>{group.name}</h3>
-                  {group.items.map(item => (
-                    <div className="ledger-menu-row" key={item.name}>
-                      <span className="name">{item.name}</span>
-                      <span className="leader" aria-hidden="true" />
-                      <span className="value">{item.value}</span>
-                      <span className="desc">{item.desc}</span>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-
-            <div className="ledger-lookup">
-              <label htmlFor="course-lookup">Check a course</label>
-              <select
-                id="course-lookup"
-                value={selectedSubject}
-                onChange={(event) => setSelectedSubject(event.target.value)}
-                disabled={!overview}
-              >
-                <option value="">
-                  {overviewFailed ? 'Ledger unavailable' : overview ? 'Choose a course code' : 'Reading the ledger…'}
-                </option>
-                {subjects.map(subject => (
-                  <option key={subject.code} value={subject.code}>
-                    {subject.code} — {subject.name}
-                  </option>
-                ))}
-              </select>
-              <p className="ledger-lookup-result" aria-live="polite">{subjectResult}</p>
-            </div>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ── 2. How it’s filed — a horizontal row of moments ───────────────── */}
-      <section id="how-it-works" className="ledger-section ledger-field-paper" aria-labelledby="how-title">
-        <motion.div {...reveal}>
-          <div className="ledger-row-head">
-            <div>
-              <h2 id="how-title">How it’s filed</h2>
-              <p style={{ color: 'var(--lg-muted)', fontSize: 16, margin: '10px 0 0', maxWidth: '38ch' }}>
-                Six moments, one record. Drag the row or use the arrows.
-              </p>
-            </div>
-            <div className="ledger-row-buttons">
-              <button className="ledger-square-btn" type="button" aria-label="Previous moments" onClick={() => scrollRail(-1)}>
-                <ArrowLeft size={20} strokeWidth={1.7} />
-              </button>
-              <button className="ledger-square-btn" type="button" aria-label="Next moments" onClick={() => scrollRail(1)}>
-                <ArrowRight size={20} strokeWidth={1.7} />
-              </button>
-            </div>
-          </div>
-          <div className="ledger-progress" aria-hidden="true">
-            <span style={{ width: `${Math.max(6, railProgress)}%` }} />
-          </div>
-          <div className="ledger-rail" ref={railRef}>
-            {STEPS.map(step => (
-              <article className="ledger-step" key={step.title}>
-                <h3>{step.title}</h3>
-                <p>{step.text}</p>
-                <figure>
-                  <img
-                    src={step.image}
-                    alt={step.alt}
-                    loading="lazy"
-                    style={{ objectPosition: step.position }}
-                  />
-                  <figcaption>{step.credit}</figcaption>
-                </figure>
-              </article>
-            ))}
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ── 3. Proof as a printed honor roll ──────────────────────────────── */}
-      <section id="proof" className="ledger-proof" aria-labelledby="proof-title">
-        <motion.div {...reveal}>
-          <div className="ledger-section-head">
-            <div>
-              <h2 id="proof-title">On the record</h2>
-              <p>This term’s tutor balances, read live from the ledger.</p>
-            </div>
-          </div>
-          <div className="ledger-proof-stage">
-            <article className="ledger-proof-card">
-              <h2>This term’s honor roll</h2>
               <img
-                className="ledger-proof-photo"
-                src="/illustrations/graduation.svg"
-                alt="An LCCB graduate receives a diploma at commencement"
-                loading="lazy"
-                width="1600"
-                height="900"
+                className="hero-students-img"
+                src="/hero-students.png"
+                width="1200"
+                height="512"
+                alt="LCCB peer tutor with headset and student taking notes during a live video tutoring session"
               />
-              <div className="ledger-proof-names">
-                {honorRoll.length === 0 ? (
-                  <p className="ledger-proof-row">{overviewFailed ? 'The ledger is offline.' : 'Reading the ledger…'}</p>
-                ) : honorRoll.map(tutor => (
-                  <span className="ledger-proof-row" key={tutor.name}>
-                    {tutor.name}
-                    <span className="dot">·</span>
-                    {tutor.program || 'LCCB'}
-                    <span className="dot">·</span>
-                    <span className="pts">{fmt(tutor.points)} pts</span>
+            </div>
+          </div>
+
+          <motion.div
+            className="ledger-card-foot hero-poster-foot"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+          >
+            <p className="ledger-live">
+              <span className="ledger-live-dot" aria-hidden="true" />
+              {totals ? (
+                <>
+                  Live ledger · <b>{fmt(totals.tutors)}</b> tutors
+                  <span className="sep">·</span> <b>{fmtHours(totals.hours)}</b> hours
+                  <span className="sep">·</span> <b>{fmt(totals.points_issued)}</b> points
+                </>
+              ) : overviewFailed ? (
+                <>Ledger offline · sign-in still works</>
+              ) : (
+                <>Live ledger · reading the record…</>
+              )}
+            </p>
+            <div className="ledger-links">
+              <button className="ledger-link" type="button" onClick={() => openLogin('learner')}>Student sign in</button>
+              <button className="ledger-link" type="button" onClick={() => openLogin('tutor')}>Tutor portal</button>
+              <button className="ledger-link" type="button" onClick={() => openLogin('faculty')}>Faculty &amp; admin</button>
+            </div>
+          </motion.div>
+        </section>
+
+        <div className="ledger-ticker" aria-hidden="true">
+          <div className="ledger-ticker-track" ref={tickerRef}>
+            {[0, 1].map(run => (
+              <div className="ledger-ticker-run" key={run}>
+                {tickerItems.map(item => (
+                  <span className="ledger-ticker-item" key={item}>
+                    {item}<i>/</i>
                   </span>
                 ))}
               </div>
-              <p className="ledger-proof-note">
-                {totals
-                  ? `${fmt(totals.tutors)} verified tutors · ${plural(totals.sessions, 'completed session', 'completed sessions')}`
-                  : 'Balances post after each wrap-up.'}
-              </p>
-            </article>
+            ))}
           </div>
-        </motion.div>
-      </section>
+        </div>
 
-      {/* ── 4. Questions beside a tall photograph ─────────────────────────── */}
-      <section id="faq" className="ledger-section ledger-field-paper" aria-labelledby="faq-title">
-        <div className="ledger-faq-grid">
+        {/* ── 1. Capabilities as a printed menu ─────────────────────────────── */}
+        <section id="ledger" className="ledger-section ledger-field-navy">
           <motion.div {...reveal}>
-            <div className="ledger-faq-left">
-              <h2 id="faq-title">Before you book</h2>
-              <div className="ledger-faq-facts">
-                <p><span>Where · </span>Library study rooms</p>
-                <p><span>When · </span>By appointment, set at booking</p>
-                <p><span>Cost · </span>Free for enrolled students</p>
+            <div className="ledger-menu-sheet">
+              <span className="ledger-sheet-tag" aria-hidden="true">Official ledger</span>
+              <h2>What’s on the <span className="ledger-title-mark">ledger</span></h2>
+              <div className="ledger-menu-groups">
+                {MENU_GROUPS.map(group => (
+                  <div className="ledger-menu-group" key={group.name}>
+                    <h3>{group.name}</h3>
+                    {group.items.map(item => (
+                      <div className="ledger-menu-row" key={item.name}>
+                        <span className="name">{item.name}</span>
+                        <span className="leader" aria-hidden="true" />
+                        <span className="value">{item.value}</span>
+                        <span className="desc">{item.desc}</span>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              <div className="ledger-lookup">
+                <label htmlFor="course-lookup">Check a course</label>
+                <select
+                  id="course-lookup"
+                  value={selectedSubject}
+                  onChange={(event) => setSelectedSubject(event.target.value)}
+                  disabled={!overview}
+                >
+                  <option value="">
+                    {overviewFailed ? 'Ledger unavailable' : overview ? 'Choose a course code' : 'Reading the ledger…'}
+                  </option>
+                  {subjects.map(subject => (
+                    <option key={subject.code} value={subject.code}>
+                      {subject.code} — {subject.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="ledger-lookup-result" aria-live="polite">{subjectResult}</p>
               </div>
             </div>
+          </motion.div>
+        </section>
 
-            <div className="ledger-faq-list">
-              {FAQS.map((item, index) => (
-                <details className="ledger-faq-item" key={item.q} open={index === 0}>
-                  <summary>
-                    {item.q}
-                    <span className="ledger-faq-chevron" aria-hidden="true" />
-                  </summary>
-                  <p>{item.a}</p>
-                </details>
+        {/* ── 2. How it’s filed — a horizontal row of moments ───────────────── */}
+        <section id="how-it-works" className="ledger-section ledger-field-paper" aria-labelledby="how-title">
+          <motion.div {...reveal}>
+            <div className="ledger-row-head">
+              <div>
+                <h2 id="how-title">How it’s <span className="ledger-title-mark">filed</span></h2>
+                <p style={{ color: 'var(--lg-muted)', fontSize: 16, margin: '10px 0 0', maxWidth: '38ch' }}>
+                  Six moments, one record. Drag the row or use the arrows.
+                </p>
+              </div>
+              <div className="ledger-row-buttons">
+                <button className="ledger-square-btn" type="button" aria-label="Previous moments" onClick={() => scrollRail(-1)}>
+                  <ArrowLeft size={20} strokeWidth={1.7} />
+                </button>
+                <button className="ledger-square-btn" type="button" aria-label="Next moments" onClick={() => scrollRail(1)}>
+                  <ArrowRight size={20} strokeWidth={1.7} />
+                </button>
+              </div>
+            </div>
+            <div className="ledger-progress" aria-hidden="true">
+              <span style={{ width: `${Math.max(6, railProgress)}%` }} />
+            </div>
+            <div className="ledger-rail" ref={railRef}>
+              {STEPS.map((step, idx) => (
+                <article className="ledger-step" key={step.title}>
+                  <span className="ledger-step-num" aria-hidden="true">0{idx + 1}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.text}</p>
+                  <figure>
+                    <img
+                      src={step.image}
+                      alt={step.alt}
+                      loading="lazy"
+                      style={{ objectPosition: step.position }}
+                    />
+                    <figcaption>{step.credit}</figcaption>
+                  </figure>
+                </article>
               ))}
             </div>
+          </motion.div>
+        </section>
 
-            <div className="ledger-faq-actions">
-              <button className="ledger-action" type="button" onClick={() => openLogin('learner')} style={{ marginTop: 0, height: 52 }}>
-                Find a tutor <ArrowRight size={18} strokeWidth={1.7} />
-              </button>
-              <button className="ledger-link" type="button" onClick={() => jumpTo('ledger')}>
-                Read the ledger again
-              </button>
+        {/* ── 3. Proof as a printed honor roll ──────────────────────────────── */}
+        <section id="proof" className="ledger-proof" aria-labelledby="proof-title">
+          <motion.div {...reveal}>
+            <div className="ledger-section-head">
+              <div>
+                <h2 id="proof-title">On the <span className="ledger-title-mark">record</span></h2>
+                <p>This term’s tutor balances, read live from the ledger.</p>
+              </div>
+            </div>
+            <div className="ledger-proof-stage">
+              <article className="ledger-proof-card">
+                <h2>This term’s honor roll</h2>
+                <img
+                  className="ledger-proof-photo"
+                  src="/illustrations/graduation.svg"
+                  alt="An LCCB graduate receives a diploma at commencement"
+                  loading="lazy"
+                  width="1600"
+                  height="900"
+                />
+                <div className="ledger-proof-names">
+                  {honorRoll.length === 0 ? (
+                    <p className="ledger-proof-row">{overviewFailed ? 'The ledger is offline.' : 'Reading the ledger…'}</p>
+                  ) : honorRoll.map((tutor, idx) => (
+                    <span className="ledger-proof-row" key={tutor.name}>
+                      <span className="ledger-proof-rank" aria-hidden="true">#{idx + 1}</span>
+                      {tutor.name}
+                      <span className="dot">·</span>
+                      {tutor.program || 'LCCB'}
+                      <span className="dot">·</span>
+                      <span className="pts">{fmt(tutor.points)} pts</span>
+                    </span>
+                  ))}
+                </div>
+                <p className="ledger-proof-note">
+                  {totals
+                    ? `${fmt(totals.tutors)} verified tutors · ${plural(totals.sessions, 'completed session', 'completed sessions')}`
+                    : 'Balances post after each wrap-up.'}
+                </p>
+              </article>
             </div>
           </motion.div>
+        </section>
 
-          <motion.div {...reveal} className="ledger-faq-photos">
-            <img
-              className="ledger-faq-tall"
-              src="/illustrations/classroom.svg"
-              alt="Students working in a classroom"
-              loading="lazy"
-              width="800"
-              height="1066"
-            />
-            <img
-              className="ledger-faq-square"
-              src="/illustrations/back-to-school.svg"
-              alt="Students with books and a backpack"
-              loading="lazy"
-              width="600"
-              height="600"
-            />
-            <p className="ledger-photo-credit">
-              Flat illustrations from Storyset (freepik labs), free for personal and commercial use.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+        {/* ── 4. Questions beside a tall photograph ─────────────────────────── */}
+        <section id="faq" className="ledger-section ledger-field-paper" aria-labelledby="faq-title">
+          <div className="ledger-faq-grid">
+            <motion.div {...reveal}>
+              <div className="ledger-faq-left">
+                <h2 id="faq-title">Before you <span className="ledger-title-mark">book</span></h2>
+                <div className="ledger-faq-facts">
+                  <p><span>Where · </span>Library study rooms</p>
+                  <p><span>When · </span>By appointment, set at booking</p>
+                  <p><span>Cost · </span>Free for enrolled students</p>
+                </div>
+              </div>
 
-      {/* ── 5. The reply card ─────────────────────────────────────────────── */}
-      <section id="sign-in" className="ledger-cta" aria-labelledby="cta-title">
-        <motion.div {...reveal} className="ledger-cta-grid">
-          <p className="ledger-cta-note">
-            Help becomes a record.
-          </p>
-          <div className="ledger-reply-card">
-            <h2 id="cta-title">Start your first entry.</h2>
-            <p>Sign in with your LCCB school ID. Booking, check-in, and points are already wired.</p>
-            <button className="ledger-action" type="button" onClick={() => openLogin('learner')}>
-              Go to sign in <ArrowRight size={18} strokeWidth={1.7} />
-            </button>
-            <p className="ledger-reply-small">Official use · La Consolacion College Bacolod</p>
+              <div className="ledger-faq-list">
+                {FAQS.map((item, index) => (
+                  <details className="ledger-faq-item" key={item.q} open={index === 0}>
+                    <summary>
+                      {item.q}
+                      <span className="ledger-faq-chevron" aria-hidden="true" />
+                    </summary>
+                    <p>{item.a}</p>
+                  </details>
+                ))}
+              </div>
+
+              <div className="ledger-faq-actions">
+                <button className="ledger-action" type="button" onClick={() => openLogin('learner')} style={{ marginTop: 0, height: 52 }}>
+                  Find a tutor <ArrowRight size={18} strokeWidth={1.7} />
+                </button>
+                <button className="ledger-link" type="button" onClick={() => jumpTo('ledger')}>
+                  Read the ledger again
+                </button>
+              </div>
+            </motion.div>
+
+            <motion.div {...reveal} className="ledger-faq-photos">
+              <img
+                className="ledger-faq-tall"
+                src="/illustrations/classroom.svg"
+                alt="Students working in a classroom"
+                loading="lazy"
+                width="800"
+                height="1066"
+              />
+              <img
+                className="ledger-faq-square"
+                src="/illustrations/back-to-school.svg"
+                alt="Students with books and a backpack"
+                loading="lazy"
+                width="600"
+                height="600"
+              />
+              <p className="ledger-photo-credit">
+                Flat illustrations from Storyset (freepik labs), free for personal and commercial use.
+              </p>
+            </motion.div>
           </div>
-        </motion.div>
-      </section>
+        </section>
+
+        {/* ── 5. The reply card ─────────────────────────────────────────────── */}
+        <section id="sign-in" className="ledger-cta" aria-labelledby="cta-title">
+          <div className="ledger-hazard-band" aria-hidden="true" />
+          <motion.div {...reveal} className="ledger-cta-grid">
+            <p className="ledger-cta-note">
+              Help becomes a <span className="ledger-title-mark ledger-title-mark-paper">record.</span>
+            </p>
+            <div className="ledger-reply-card">
+              <span className="ledger-reply-stamp" aria-hidden="true">Instant check-in</span>
+              <h2 id="cta-title">Start your first entry.</h2>
+              <p>Sign in with your LCCB school ID. Booking, check-in, and points are already wired.</p>
+              <button className="ledger-action" type="button" onClick={() => openLogin('learner')}>
+                Go to sign in <ArrowRight size={18} strokeWidth={1.7} />
+              </button>
+              <p className="ledger-reply-small">Official use · La Consolacion College Bacolod</p>
+            </div>
+          </motion.div>
+        </section>
       </main>
 
       {/* ── Back of the object ────────────────────────────────────────────── */}

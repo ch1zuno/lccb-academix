@@ -78,15 +78,15 @@
     "semantic_hash": ""
   },
   "src/screens/LearnerWizard.jsx": {
-    "mtime": 1794680349.1176765,
-    "seen": 1794680387.6667194,
+    "mtime": 1794680658.5554204,
+    "seen": 1794747206.7760274,
     "ast_hash": "06b38905ace27d1d3eb6dc52f382c6f9",
     "semantic_hash": ""
   },
   "src/screens/Login.jsx": {
-    "mtime": 1794665776.8731098,
-    "seen": 1794669074.0195663,
-    "ast_hash": "8c8273ece1a4c6fdc1b0262f00b7522e",
+    "mtime": 1794758369.8363948,
+    "seen": 1794758489.110246,
+    "ast_hash": "6d87b74fdb864f5a21cef45b0e705441",
     "semantic_hash": ""
   },
   "src/screens/RewardCatalog.jsx": {
@@ -240,9 +240,9 @@
     "semantic_hash": ""
   },
   "server/routes/auth.js": {
-    "mtime": 1794669642.8038027,
-    "seen": 1794674494.6085906,
-    "ast_hash": "46c2551f335ccab8be621411be96161d",
+    "mtime": 1794681351.4842074,
+    "seen": 1794747206.7280865,
+    "ast_hash": "d195ec03f4ed8076d11f5dff00016bce",
     "semantic_hash": ""
   },
   "server/routes/index.js": {
@@ -1293,6 +1293,12 @@
     "mtime": 1794679245.8380933,
     "seen": 1794679810.628925,
     "ast_hash": "d7733b15b128199400c9b4cf241211f4",
+    "semantic_hash": ""
+  },
+  "public/hero-students.png": {
+    "mtime": 1794749885.3088188,
+    "seen": 1794750195.926345,
+    "ast_hash": "01be4886b09e16451da2c062249d3280",
     "semantic_hash": ""
   }
 }

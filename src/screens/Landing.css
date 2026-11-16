@@ -212,7 +212,7 @@
   background: var(--lg-gold-bright);
 }
 
-.ledger-page.dark-mode .login-demo > p:first-child {
+.ledger-page.dark-mode .login-demo>p:first-child {
   color: var(--lg-navy);
 }
 
@@ -355,69 +355,381 @@
   font-weight: 800;
 }
 
-/* ── Hero ───────────────────────────────────────────────────────────────── */
+/* ── Hero (Full-Width Neo-Brutalist Poster) ─────────────────────────────── */
 
 .ledger-hero {
   position: relative;
   min-height: calc(100svh - 56px);
-  padding: 16px;
-  background: var(--lg-navy);
+  padding: 0;
+  background: #FAF9F5;
+  color: #0F1E36;
 }
 
-.ledger-hero-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
-  gap: 16px;
-  min-height: calc(100svh - 88px);
-}
-
-.ledger-card {
-  position: relative;
+.hero-poster {
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  background: var(--lg-sheet);
-  border: 3px solid var(--lg-navy);
-  box-shadow: 10px 10px 0 var(--lg-gold);
-}
-
-.ledger-band {
-  display: flex;
-  flex-shrink: 0;
-  height: 14px;
+  justify-content: space-between;
   overflow: hidden;
-  border-bottom: 3px solid var(--lg-navy);
-  background: var(--lg-navy);
+  perspective: 1150px;
 }
 
-.ledger-band span {
-  flex: 1 1 0;
-  min-width: 0;
+/* ── Live Network Telemetry Background (z-0, non-interactive) ───────────── */
+
+.hero-telemetry-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
 }
 
-.ledger-band span:nth-child(odd) {
+.hero-telemetry-grid {
+  position: absolute;
+  inset: 0;
+  background-color: #FAF9F5;
+  background-image:
+    radial-gradient(ellipse 58% 48% at 50% 34%, rgba(250, 249, 245, 0.72) 0%, rgba(250, 249, 245, 0) 100%),
+    linear-gradient(to right, rgba(15, 30, 54, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 30, 54, 0.055) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+
+.hero-telemetry-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hero-telemetry-path {
+  fill: none;
+  stroke: #0F1E36;
+  stroke-width: 1.6;
+  stroke-opacity: 0.16;
+  stroke-dasharray: 6 9;
+}
+
+.hero-telemetry-path-alt {
+  stroke-opacity: 0.12;
+  stroke-dasharray: 4 10;
+}
+
+.tel-packet-gold {
+  fill: #E5B80B;
+  stroke: #0F1E36;
+  stroke-width: 1.5;
+  opacity: 0.78;
+}
+
+.tel-packet-green {
+  fill: #22C55E;
+  stroke: #0F1E36;
+  stroke-width: 1.5;
+  opacity: 0.78;
+}
+
+/* Floating Live Nodes along the curves */
+.hero-telemetry-nodes {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-live-node {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px 4px 5px;
+  background: rgba(250, 249, 245, 0.88);
+  color: #0F1E36;
+  border: 2px solid #0F1E36;
+  border-radius: 999px;
+  box-shadow: 3px 3px 0px #0F1E36;
+  font-family: "Geist", sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  opacity: 0.62;
+  animation: tel-node-float 10s ease-in-out infinite;
+}
+
+.hero-live-node.node-1 {
+  left: 14%;
+  top: 26%;
+  animation-delay: 0s;
+}
+
+.hero-live-node.node-2 {
+  left: 31%;
+  top: 39%;
+  animation-delay: -2.4s;
+}
+
+.hero-live-node.node-3 {
+  right: 29%;
+  top: 36%;
+  animation-delay: -4.8s;
+}
+
+.hero-live-node.node-4 {
+  right: 12%;
+  top: 25%;
+  animation-delay: -7.1s;
+}
+
+.hero-live-node.node-5 {
+  left: 44%;
+  top: 28%;
+  animation-delay: -3.6s;
+}
+
+@keyframes tel-node-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+.hero-node-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid #0F1E36;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.hero-node-avatar-gold {
+  background: var(--lg-gold);
+  color: #0F1E36;
+}
+
+.hero-node-avatar-navy {
+  background: #0F1E36;
+  color: #FAF9F5;
+}
+
+.hero-node-avatar-teal {
+  background: #bfe3d0;
+  color: #0F1E36;
+}
+
+.hero-node-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22C55E;
+  border: 1.5px solid #0F1E36;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
+  animation: tel-dot-pulse 2.4s ease-out infinite;
+}
+
+@keyframes tel-dot-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55); }
+  70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.hero-node-label b {
+  color: #15803d;
+  font-weight: 800;
+}
+
+/* Corner Telemetry Wireframe Window Cards (opacity-40) */
+.hero-telemetry-card {
+  position: absolute;
+  width: 214px;
+  background: rgba(250, 249, 245, 0.76);
+  color: #0F1E36;
+  border: 2px solid #0F1E36;
+  box-shadow: 4px 4px 0px #0F1E36;
+  opacity: 0.4;
+}
+
+.hero-telemetry-card-left {
+  top: 18px;
+  left: 18px;
+}
+
+.hero-telemetry-card-right {
+  top: 84px;
+  right: 18px;
+}
+
+.hero-tel-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  border-bottom: 2px solid #0F1E36;
+  background: rgba(15, 30, 54, 0.06);
+}
+
+.hero-tel-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.hero-tel-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1.5px solid #0F1E36;
+  background: #FAF9F5;
+}
+
+.hero-tel-dots i:first-child {
   background: var(--lg-gold);
 }
 
-.ledger-band span:nth-child(even) {
-  background: var(--lg-navy);
+.hero-tel-title {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
-.ledger-card-inner {
+.hero-tel-body {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+}
+
+.hero-tel-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hero-tel-count {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.hero-tel-meta {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 8.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+}
+
+.hero-tel-meta small {
+  display: block;
+  color: #15803d;
+  font-size: 8px;
+}
+
+/* Equalizer / waveform visual */
+.hero-tel-eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 28px;
+}
+
+.hero-tel-eq span {
+  width: 4px;
+  height: 24px;
+  background: #0F1E36;
+  transform-origin: 50% 100%;
+  animation: tel-eq-bounce 1.8s ease-in-out infinite;
+  animation-delay: calc(var(--eq-i, 0) * -0.19s);
+}
+
+.hero-tel-eq span:nth-child(odd) {
+  background: var(--lg-gold);
+  border: 1px solid #0F1E36;
+}
+
+@keyframes tel-eq-bounce {
+  0%, 100% { transform: scaleY(0.28); }
+  50% { transform: scaleY(0.96); }
+}
+
+/* Mini activity bar chart */
+.hero-tel-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3.5px;
+  height: 28px;
+  padding-top: 2px;
+}
+
+.hero-tel-chart span {
+  width: 5px;
+  height: var(--bar-h, 60%);
+  background: var(--lg-gold);
+  border: 1.2px solid #0F1E36;
+  transform-origin: 50% 100%;
+  animation: tel-chart-pulse 3.2s ease-in-out infinite;
+  animation-delay: calc(var(--bar-i, 0) * -0.35s);
+}
+
+.hero-tel-chart span:nth-child(even) {
+  background: #0F1E36;
+}
+
+@keyframes tel-chart-pulse {
+  0%, 100% { transform: scaleY(0.82); }
+  50% { transform: scaleY(1.06); }
+}
+
+/* Pause background telemetry when offscreen or reduced-motion */
+.ledger-hero[data-bg-paused="true"] .hero-live-node,
+.ledger-hero[data-bg-paused="true"] .hero-node-dot,
+.ledger-hero[data-bg-paused="true"] .hero-tel-eq span,
+.ledger-hero[data-bg-paused="true"] .hero-tel-chart span {
+  animation-play-state: paused !important;
+}
+
+.ledger-hero[data-bg-paused="true"] .hero-telemetry-packets {
+  display: none;
+}
+
+/* ── Foreground Stage (z-10) ────────────────────────────────────────────── */
+
+.hero-poster-stage {
+  position: relative;
+  z-index: 10;
   display: flex;
   flex: 1;
   flex-direction: column;
-  align-items: flex-start;
-  padding: clamp(26px, 4.2vw, 54px);
-  padding-top: clamp(34px, 4.8vw, 64px);
+  align-items: center;
+  justify-content: space-between;
+  width: min(1320px, 100%);
+  margin: 0 auto;
+  padding: clamp(22px, 3vw, 38px) clamp(12px, 2.4vw, 32px) 0;
+}
+
+.hero-poster-copy {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
 }
 
 .ledger-wordmark {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 14px;
   max-width: 100%;
-  /* frameless — the three.js wordmark stands bare on the cream card */
+  pointer-events: auto;
 }
 
 .ledger-monogram {
@@ -436,13 +748,13 @@
 }
 
 /* 2D wordmark (SVG). "ACADEMIX" is the hero row; "LCCB" sits as a small
- * stamp above it. Frameless on the cream card. */
+ * stamp above it. Frameless on the cream poster. */
 .ledger-brand-2d {
   display: block;
   flex-shrink: 0;
-  width: 318px;
+  width: clamp(190px, 19vw, 248px);
   height: auto;
-  transform-origin: 0 100%;
+  transform-origin: 50% 100%;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -452,7 +764,7 @@
   }
 
   .ledger-wordmark:hover .ledger-brand-2d {
-    transform: rotate(-1deg) translateY(-3px);
+    transform: rotate(-1.5deg) translateY(-3px) scale(1.02);
   }
 }
 
@@ -466,71 +778,52 @@
   display: block;
 }
 
-.ledger-wordmark strong {
-  display: block;
-  font-family: "Bricolage Grotesque", sans-serif;
-  font-size: 21px;
-  font-weight: 800;
-  line-height: 0.95;
-  letter-spacing: -0.03em;
-}
-
-.ledger-wordmark small {
-  display: block;
-  margin-top: 0;
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
-}
-
 .ledger-sticker {
   position: absolute;
-  top: 36px;
-  right: 26px;
-  z-index: 2;
-  padding: 9px 11px;
-  background: var(--lg-navy);
+  top: clamp(20px, 2.6vw, 32px);
+  right: clamp(24px, 5vw, 72px);
+  z-index: 12;
+  padding: 10px 13px;
+  background: #0F1E36;
   color: var(--lg-gold);
-  border: 3px solid var(--lg-navy);
-  box-shadow: 4px 4px 0 var(--lg-gold);
+  border: 2px solid #0F1E36;
+  box-shadow: 4px 4px 0px var(--lg-gold);
   font-family: "Bricolage Grotesque", sans-serif;
   font-size: 13px;
   font-weight: 800;
-  line-height: 0.95;
+  line-height: 0.98;
+  letter-spacing: 0.03em;
+  text-align: center;
   text-transform: uppercase;
   transform: rotate(6deg);
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
-.ledger-card h1 {
-  margin: clamp(38px, 5.5vh, 70px) 0 24px;
-  font-size: clamp(48px, 5.15vw, 84px);
+.ledger-sticker:hover {
+  transform: rotate(2deg) translateY(-3px) scale(1.04);
+  box-shadow: 6px 6px 0px var(--lg-gold);
+}
+
+.hero-poster-copy h1 {
+  margin: clamp(12px, 1.6vw, 20px) 0 0;
+  font-size: clamp(44px, 6.1vw, 84px);
   font-weight: 800;
-  line-height: 0.88;
-  letter-spacing: -0.06em;
+  line-height: 0.92;
+  letter-spacing: -0.055em;
   text-transform: uppercase;
-  text-wrap: balance;
-  overflow-wrap: normal;
+  color: #0F1E36;
 }
 
 .ledger-mark {
   display: inline-block;
-  padding: 0 0.06em 0.045em;
+  margin-left: 0.06em;
+  padding: 0.02em 0.09em 0.055em;
   background: var(--lg-gold);
-  color: var(--lg-navy);
-  border: 3px solid var(--lg-navy);
-  box-shadow: 5px 5px 0 var(--lg-navy);
-  line-height: 0.88;
+  color: #0F1E36;
+  border: 2.5px solid #0F1E36;
+  box-shadow: 4px 4px 0px #0F1E36;
+  line-height: 0.9;
   transform: rotate(-1.3deg);
-}
-
-.ledger-summary {
-  max-width: 38ch;
-  margin: 0 0 30px;
-  color: #263648;
-  font-size: clamp(16px, 1.25vw, 18px);
-  line-height: 1.55;
 }
 
 .ledger-action {
@@ -538,16 +831,16 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  height: 56px;
-  padding: 0 22px;
+  height: 54px;
+  padding: 0 24px;
   background: var(--lg-gold);
-  color: var(--lg-navy);
-  border: 3px solid var(--lg-navy);
-  box-shadow: 5px 5px 0 var(--lg-navy);
+  color: #0F1E36;
+  border: 2px solid #0F1E36;
+  box-shadow: 4px 4px 0px #0F1E36;
   font-family: "Bricolage Grotesque", sans-serif;
   font-size: 15px;
   font-weight: 800;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.015em;
   text-transform: uppercase;
   transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
 }
@@ -555,7 +848,7 @@
 .ledger-action:hover {
   transform: translate(-2px, -2px);
   background: var(--lg-gold-bright);
-  box-shadow: 7px 7px 0 var(--lg-navy);
+  box-shadow: 6px 6px 0px #0F1E36;
 }
 
 .ledger-action:active {
@@ -563,134 +856,221 @@
   box-shadow: none;
 }
 
+/* ── Students Cutout + Centered CTA & Curved Cables (z-10) ──────────────── */
+
+.hero-poster-visual {
+  position: relative;
+  z-index: 10;
+  width: min(1240px, 100%);
+  margin: clamp(-74px, -6.2vw, -24px) auto 0;
+}
+
+.hero-students-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Unified Telemetry Bridge Button & Dynamic Conduits (z-12) ──────────── */
+
+.hero-bridge-wrap {
+  position: absolute;
+  left: 50.4%;
+  top: 31.5%;
+  transform: translateX(-50%);
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-bridge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(8px, 1vw, 12px);
+  height: clamp(48px, 4.4vw, 56px);
+  padding: 0 clamp(16px, 2vw, 24px);
+  background: var(--lg-gold);
+  color: #0F1E36;
+  border: 3px solid #0F1E36;
+  border-radius: 4px;
+  box-shadow: 5px 5px 0px #0F1E36;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 800;
+  cursor: pointer;
+  outline: none;
+  transition: transform 140ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.hero-bridge-btn:hover {
+  transform: translate(-2px, -2px);
+  background: var(--lg-gold-bright);
+  box-shadow: 7px 7px 0px #0F1E36;
+}
+
+.hero-bridge-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 2px 2px 0px #0F1E36;
+}
+
+.hero-bridge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px;
+  background: #0F1E36;
+  color: #FAF9F5;
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.hero-bridge-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22C55E;
+  box-shadow: 0 0 5px #22C55E;
+  animation: bridge-pill-pulse 2s ease-in-out infinite;
+}
+
+@keyframes bridge-pill-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}
+
+.hero-bridge-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(14px, 1.3vw, 16px);
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
+}
+
+.hero-bridge-svg {
+  display: block;
+  width: clamp(210px, 24vw, 320px);
+  height: auto;
+  margin-top: -1px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.hero-bridge-led {
+  animation: bridge-led-glow 2s ease-in-out infinite;
+}
+
+@keyframes bridge-led-glow {
+  0%, 100% { fill: #22C55E; filter: drop-shadow(0 0 2px #22C55E); }
+  50% { fill: #16a34a; filter: none; }
+}
+
+/* Speed up cable pulses on button hover */
+.hero-bridge-wrap:hover .hero-bridge-svg animateMotion {
+  dur: 1.4s !important;
+}
+
+/* ── Poster Footer Strip ────────────────────────────────────────────────── */
+
 .ledger-card-foot {
   display: flex;
   flex-direction: column;
-  gap: 13px;
-  padding: 17px clamp(26px, 4.2vw, 54px) 21px;
-  border-top: 3px solid var(--lg-navy);
+  gap: 11px;
+  padding: 18px clamp(20px, 4vw, 54px) 22px;
+  border-top: 6px solid #0F1E36;
+  background: #FAF9F5;
+}
+
+.hero-poster-foot {
+  position: relative;
+  z-index: 10;
+  align-items: center;
+  text-align: center;
 }
 
 .ledger-live {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 6px;
   margin: 0;
-  font-size: 14px;
+  font-size: clamp(14px, 1.3vw, 17px);
   line-height: 1.45;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .ledger-live b {
   font-weight: 800;
-  border-bottom: 2px solid var(--lg-gold);
+  border-bottom: 2.5px solid var(--lg-gold);
 }
 
 .ledger-live-dot {
   display: inline-block;
-  width: 9px;
-  height: 9px;
-  margin-right: 3px;
-  background: #2f8a55;
-  border: 2px solid var(--lg-navy);
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  background: #87b398;
+  border: 2px solid #0F1E36;
   animation: ledger-blink 2.6s steps(1) infinite;
 }
 
 @keyframes ledger-blink {
-  0%, 54% { opacity: 1; }
-  55%, 100% { opacity: 0.3; }
+
+  0%,
+  54% {
+    opacity: 1;
+  }
+
+  55%,
+  100% {
+    opacity: 0.35;
+  }
 }
 
 .ledger-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 20px;
+  justify-content: center;
+  gap: 8px 26px;
 }
 
 .ledger-link {
   padding: 0 0 2px;
   background: transparent;
-  color: var(--lg-navy);
+  color: #0F1E36;
   border: 0;
-  font-size: 14px;
+  font-size: clamp(14px, 1.25vw, 16px);
   font-weight: 700;
   text-decoration: underline;
   text-decoration-color: var(--lg-gold);
-  text-decoration-thickness: 2px;
+  text-decoration-thickness: 2.5px;
   text-underline-offset: 4px;
-  transition: text-decoration-color 150ms ease;
+  transition: text-decoration-color 150ms ease, transform 150ms ease;
 }
 
 .ledger-link:hover {
-  text-decoration-color: var(--lg-navy);
+  text-decoration-color: #0F1E36;
+  transform: translateY(-1px);
 }
 
-/* ── Hero 3D stage ───────────────────────────────────────────────────────
-   Cartoonish brutalist cubes in pure CSS. The panel perspective + pointer
-   tilt (--tilt-x / --tilt-y set from Login.jsx) drive the whole scene.    */
-
-.ledger-hero-stage {
-  position: relative;
-  min-height: 0;
-  overflow: hidden;
-  background: #0a1d31;
-  border: 3px solid var(--lg-paper);
-  box-shadow: 10px 10px 0 var(--lg-gold);
-  perspective: 1150px;
-  cursor: grab;
-  touch-action: pan-y;
-}
-
-.ledger-hero-stage:active {
-  cursor: grabbing;
-}
-
-/* Flat cartoon sun-disc behind the scene */
-.hs-sun {
-  position: absolute;
-  left: -7%;
-  top: 9%;
-  width: 240px;
-  height: 240px;
-  border-radius: 50%;
-  background: rgba(212, 172, 13, 0.2);
-}
-
-/* Faint blueprint floor — SVG grid tile, no gradients */
-.hs-floor {
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46' height='46'%3E%3Cpath d='M0 45h46M45 0v46' stroke='%23f2ede1' stroke-opacity='0.08' stroke-width='2'/%3E%3C/svg%3E");
-}
-
-/* Flat cast shadows on the floor */
-.hs-shadow {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(6, 16, 27, 0.5);
-  filter: blur(9px);
-}
-
-.hs-shadow-a {
-  left: 27%;
-  bottom: 11%;
-  width: 32%;
-  height: 8%;
-}
-
-.hs-shadow-b {
-  left: 9%;
-  bottom: 10%;
-  width: 18%;
-  height: 5%;
-}
+/* ── Hero 3D floating brutalist blocks (z-11) ────────────────────────────
+   Cartoonish brutalist cubes in pure CSS. Pointer tilt (--tilt-x / --tilt-y)
+   plus individual hover lift keep all 3D elements interactive.            */
 
 .hs-scene {
   position: absolute;
   inset: 0;
+  z-index: 11;
+  pointer-events: none;
   transform-style: preserve-3d;
-  transform: rotateX(var(--tilt-y, 9deg)) rotateY(var(--tilt-x, -17deg)) scale(var(--hs-scale, 1));
+  transform: rotateX(var(--tilt-y, 6deg)) rotateY(var(--tilt-x, -8deg)) scale(var(--hs-scale, 1));
   transition: transform 0.35s cubic-bezier(0.22, 0.9, 0.28, 1);
 }
 
@@ -707,7 +1087,7 @@
   top: 0;
   left: 0;
   border: 3px solid var(--ink, #0f2942);
-  box-shadow: inset -10px -10px 0 rgba(15, 41, 66, 0.14);
+  box-shadow: inset -8px -8px 0 rgba(15, 41, 66, 0.12);
 }
 
 .hs-cube .f-front {
@@ -776,8 +1156,8 @@
 /* CSS-drawn star on the badge cube (no emoji) */
 .hs-star .f-front::after {
   content: '';
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   background: var(--ink, #0f2942);
   clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
 }
@@ -786,56 +1166,40 @@
    while its inner cube keeps bobbing (animation on wrapper would block it). */
 .hs-w {
   position: absolute;
+  pointer-events: auto;
+  cursor: pointer;
   transform-style: preserve-3d;
-  transition: transform 0.3s cubic-bezier(0.34, 1.45, 0.5, 1);
+  transition: transform 0.28s cubic-bezier(0.34, 1.45, 0.5, 1);
 }
 
 .hs-w:hover {
-  transform: translateY(-18px) rotateZ(3deg);
+  transform: translateY(-18px) rotateZ(4deg) scale(1.06);
 }
 
-/* Object placement + float loops. The bob keyframes read each object's
-   resting rotation from CSS vars (--rx/--ry/--tz), so one set of
-   keyframes drives every pose. */
-.hs-book1 {
-  left: 50%;
-  top: 30%;
-  margin: -106px 0 0 -84px;
+/* Object placement matching the poster mockup */
+.hs-star {
+  left: 21%;
+  top: 4.5%;
+  --rx: -10deg;
+  --ry: 24deg;
 }
 
 .hs-book2 {
-  left: 50%;
-  top: 36%;
-  margin: -228px 0 0 -86px;
-}
-
-.hs-clock {
-  left: 11%;
-  top: 42%;
-  --rx: -13deg;
-  --ry: -24deg;
-}
-
-.hs-star {
-  left: 38%;
-  bottom: 20%;
-}
-
-.hs-coins {
-  left: 13%;
-  bottom: 14%;
-  width: 110px;
-  height: 92px;
+  left: 7%;
+  top: 15.5%;
+  margin: 0;
+  --rx: -8deg;
+  --ry: 26deg;
 }
 
 /* Graduation cap: flat board + button + a swinging tassel group */
 .hs-cap {
-  left: 62%;
-  top: 5%;
-  width: 160px;
-  height: 150px;
-  --rx: -5deg;
-  --ry: 22deg;
+  left: 66.5%;
+  top: 6%;
+  width: 154px;
+  height: 130px;
+  --rx: 16deg;
+  --ry: -18deg;
 }
 
 .hs-cap .hs-cube {
@@ -846,10 +1210,10 @@
 
 .hs-cap-tassel {
   position: absolute;
-  right: -6px;
-  top: 52px;
-  width: 26px;
-  height: 92px;
+  right: 0;
+  top: 42px;
+  width: 24px;
+  height: 82px;
   transform-style: preserve-3d;
   animation: hs-bob-a 8s ease-in-out infinite;
 }
@@ -863,98 +1227,88 @@
 }
 
 @keyframes hs-swing {
-  0%, 100% { transform: rotateZ(-7deg); }
-  50% { transform: rotateZ(9deg); }
+
+  0%,
+  100% {
+    transform: rotateZ(-7deg);
+  }
+
+  50% {
+    transform: rotateZ(9deg);
+  }
 }
 
-/* Subject letter tiles, cascading like a stairway */
-.hs-math {
-  right: 7%;
-  bottom: 34%;
-  width: 216px;
-  height: 140px;
+.hs-coins {
+  left: 26.5%;
+  top: 57%;
+  width: 82px;
+  height: 68px;
+}
+
+.hs-clock {
+  left: 71.5%;
+  top: 47.5%;
+  --rx: -10deg;
+  --ry: -24deg;
 }
 
 /* Double-bounce bob: rises, overshoots down past rest, settles */
-.hs-bob-a { animation: hs-bob-a 8s ease-in-out infinite; }
+.hs-bob-a {
+  animation: hs-bob-a 8s ease-in-out infinite;
+}
 
 @keyframes hs-bob-a {
-  0%, 100% { transform: rotateX(var(--rx, -13deg)) rotateY(var(--ry, 27deg)) translateY(0); }
-  40% { transform: rotateX(var(--rx, -13deg)) rotateY(calc(var(--ry, 27deg) + 4deg)) translateY(-20px); }
-  58% { transform: rotateX(var(--rx, -13deg)) rotateY(var(--ry, 27deg)) translateY(-6px); }
+
+  0%,
+  100% {
+    transform: rotateX(var(--rx, -10deg)) rotateY(var(--ry, 24deg)) translateY(0);
+  }
+
+  40% {
+    transform: rotateX(var(--rx, -10deg)) rotateY(calc(var(--ry, 24deg) + 4deg)) translateY(-16px);
+  }
+
+  58% {
+    transform: rotateX(var(--rx, -10deg)) rotateY(var(--ry, 24deg)) translateY(-5px);
+  }
 }
 
 /* Pop bob: lifts toward the viewer at the apex (--tz) */
-.hs-bob-b { animation: hs-bob-b 9s ease-in-out infinite; }
+.hs-bob-b {
+  animation: hs-bob-b 9s ease-in-out infinite;
+}
 
 @keyframes hs-bob-b {
-  0%, 100% { transform: rotateX(var(--rx, -13deg)) rotateY(var(--ry, 27deg)) translateZ(0) translateY(0); }
-  50% { transform: rotateX(var(--rx, -13deg)) rotateY(var(--ry, 27deg)) translateZ(var(--tz, 0px)) translateY(-13px); }
+
+  0%,
+  100% {
+    transform: rotateX(var(--rx, -10deg)) rotateY(var(--ry, 24deg)) translateZ(0) translateY(0);
+  }
+
+  50% {
+    transform: rotateX(var(--rx, -10deg)) rotateY(var(--ry, 24deg)) translateZ(var(--tz, 0px)) translateY(-12px);
+  }
 }
 
-/* Face label sizes per object (reuse the existing type scale) */
-.hs-book1 .hs-face-label {
-  font-size: 56px;
-}
-
+/* Face label sizes per object */
 .hs-book2 .hs-face-label {
-  font-size: 17px;
-  letter-spacing: 0.2em;
+  font-size: 15px;
+  font-style: italic;
+  letter-spacing: 0.16em;
 }
 
 .hs-clock .hs-face-label {
-  font-size: 24px;
+  font-size: 20px;
+  font-style: italic;
 }
 
-.hs-math .hs-face-label {
-  font-size: 24px;
-}
-
-/* Flat floating chips — stickers drifting in front of the cubes */
+/* Floating sticker chip (+50 pts) below 1:1 block */
 .hs-chip {
   position: absolute;
-  z-index: 2;
-  padding: 9px 14px;
-  background: var(--lg-paper);
-  color: var(--lg-navy);
-  border: 3px solid var(--lg-navy);
-  box-shadow: 6px 6px 0 var(--lg-navy);
-  font-family: "Bricolage Grotesque", sans-serif;
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-
-.hs-chip-pts {
-  left: 7%;
-  top: 58%;
-  background: var(--lg-gold);
-  animation: hs-chip-bob-a 7s ease-in-out infinite;
-}
-
-.hs-chip-role {
-  right: 8%;
-  top: 46%;
-  animation: hs-chip-bob-b 6s ease-in-out infinite;
-}
-
-@keyframes hs-chip-bob-a {
-  0%, 100% { transform: rotate(-5deg) translateY(0); }
-  50% { transform: rotate(-5deg) translateY(-13px); }
-}
-
-@keyframes hs-chip-bob-b {
-  0%, 100% { transform: rotate(4deg) translateY(0); }
-  50% { transform: rotate(4deg) translateY(-10px); }
-}
-
-.ledger-photo-stamp {
-  position: absolute;
-  right: 18px;
-  bottom: 18px;
-  z-index: 3;
-  max-width: 310px;
-  padding: 10px 13px;
+  z-index: 4;
+  pointer-events: auto;
+  cursor: pointer;
+  padding: 6px 12px;
   background: var(--lg-gold);
   color: var(--lg-navy);
   border: 3px solid var(--lg-navy);
@@ -962,24 +1316,38 @@
   font-family: "Bricolage Grotesque", sans-serif;
   font-size: 15px;
   font-weight: 800;
-  line-height: 1.1;
-  text-transform: uppercase;
-  transform: rotate(-1.2deg);
-  pointer-events: none;
+  letter-spacing: 0.02em;
+  transition: transform 0.25s cubic-bezier(0.34, 1.45, 0.5, 1), box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
-.ledger-photo-stamp span {
-  display: block;
-  margin-top: 4px;
-  color: #263648;
-  font-family: "Geist", sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.35;
-  text-transform: none;
+.hs-chip-pts {
+  left: 70%;
+  top: 62%;
+  transform: rotate(-4deg);
+  animation: hs-chip-bob-a 7s ease-in-out infinite;
+}
+
+.hs-chip-pts:hover {
+  animation-play-state: paused;
+  transform: rotate(2deg) translateY(-10px) scale(1.07);
+  background: var(--lg-gold-bright);
+  box-shadow: 8px 8px 0 var(--lg-navy);
+}
+
+@keyframes hs-chip-bob-a {
+
+  0%,
+  100% {
+    transform: rotate(-4deg) translateY(0);
+  }
+
+  50% {
+    transform: rotate(-4deg) translateY(-10px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .hs-scene,
   .hs-w,
   .hs-cap-tassel,
@@ -1069,9 +1437,31 @@
   margin: 0;
   font-size: clamp(40px, 5.2vw, 72px);
   font-weight: 800;
-  line-height: 0.88;
+  line-height: 0.92;
   letter-spacing: -0.055em;
   text-transform: uppercase;
+}
+
+.ledger-title-mark {
+  display: inline-block;
+  margin-left: 0.04em;
+  padding: 0.01em 0.09em 0.05em;
+  background: var(--lg-gold);
+  color: var(--lg-navy);
+  border: 3px solid var(--lg-navy);
+  box-shadow: 5px 5px 0 var(--lg-navy);
+  line-height: 0.9;
+  transform: rotate(-1.2deg);
+}
+
+.ledger-section-head h2 .ledger-title-mark {
+  box-shadow: 5px 5px 0 var(--lg-sheet);
+}
+
+.ledger-title-mark-paper {
+  background: var(--lg-sheet);
+  color: var(--lg-navy);
+  box-shadow: 6px 6px 0 var(--lg-navy);
 }
 
 .ledger-row-buttons {
@@ -1109,31 +1499,37 @@
   width: min(980px, 100%);
   margin: 0 auto;
   padding: clamp(26px, 4.4vw, 52px);
-  padding-top: clamp(40px, 5.5vw, 64px);
+  padding-top: clamp(42px, 5.5vw, 66px);
   background: var(--lg-sheet);
   color: var(--lg-navy);
   border: 3px solid var(--lg-navy);
   box-shadow: 14px 14px 0 var(--lg-gold);
 }
 
-.ledger-menu-sheet::before {
-  content: "";
+.ledger-sheet-tag {
   position: absolute;
-  top: -15px;
-  left: 30px;
-  width: 142px;
-  height: 30px;
+  top: -17px;
+  left: 28px;
+  padding: 6px 14px;
   background: var(--lg-gold);
+  color: var(--lg-navy);
   border: 3px solid var(--lg-navy);
+  box-shadow: 4px 4px 0 var(--lg-navy);
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   transform: rotate(-2deg);
 }
 
 .ledger-menu-sheet h2 {
-  max-width: 11ch;
+  max-width: 12ch;
   margin: 0 0 38px;
   font-size: clamp(38px, 4.9vw, 62px);
   font-weight: 800;
-  line-height: 0.9;
+  line-height: 0.94;
   letter-spacing: -0.05em;
   text-transform: uppercase;
 }
@@ -1286,16 +1682,32 @@
 }
 
 .ledger-step {
+  position: relative;
   display: flex;
   flex: 0 0 clamp(280px, 25vw, 342px);
   flex-direction: column;
-  padding: 18px;
+  padding: 20px 18px 18px;
   background: var(--lg-sheet);
   color: var(--lg-navy);
   border: 3px solid var(--lg-navy);
   box-shadow: 7px 7px 0 var(--lg-navy);
   scroll-snap-align: start;
-  transition: transform 180ms ease;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.ledger-step-num {
+  align-self: flex-start;
+  margin-bottom: 10px;
+  padding: 3px 9px;
+  background: var(--lg-gold);
+  color: var(--lg-navy);
+  border: 2.5px solid var(--lg-navy);
+  box-shadow: 3px 3px 0 var(--lg-navy);
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
 }
 
 .ledger-step:nth-child(odd) {
@@ -1307,7 +1719,8 @@
 }
 
 .ledger-step:hover {
-  transform: rotate(0) translateY(-4px);
+  transform: rotate(0) translateY(-5px);
+  box-shadow: 9px 9px 0 var(--lg-gold);
 }
 
 .ledger-step h3 {
@@ -1451,16 +1864,31 @@
 .ledger-proof-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   margin: 0;
-  padding: 9px 0;
-  border-bottom: 1px solid rgba(15, 41, 66, 0.2);
+  padding: 10px 0;
+  border-bottom: 2px solid rgba(15, 41, 66, 0.22);
   font-family: "Bricolage Grotesque", sans-serif;
   font-size: 20px;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
+}
+
+.ledger-proof-rank {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 25px;
+  padding: 0 6px;
+  background: var(--lg-navy);
+  color: var(--lg-gold);
+  border: 2px solid var(--lg-navy);
+  box-shadow: 2px 2px 0 var(--lg-gold);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .ledger-proof-row:last-child {
@@ -1544,10 +1972,17 @@
   background: var(--lg-sheet);
   border: 3px solid var(--lg-navy);
   box-shadow: 5px 5px 0 var(--lg-navy);
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.ledger-faq-item:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 7px 7px 0 var(--lg-navy);
 }
 
 .ledger-faq-item[open] {
   background: #fff7d6;
+  box-shadow: 7px 7px 0 var(--lg-navy);
 }
 
 .ledger-faq-item summary {
@@ -1600,7 +2035,7 @@
   opacity: 0;
 }
 
-.ledger-faq-item > p {
+.ledger-faq-item>p {
   max-width: 62ch;
   margin: 0;
   padding: 0 0 18px;
@@ -1659,10 +2094,20 @@
 /* ── Reply card ─────────────────────────────────────────────────────────── */
 
 .ledger-cta {
-  padding: clamp(62px, 9vw, 120px) clamp(20px, 6vw, 88px);
+  position: relative;
+  padding: 0 0 clamp(62px, 9vw, 120px);
   background: var(--lg-gold);
   border-top: 3px solid var(--lg-navy);
   border-bottom: 3px solid var(--lg-navy);
+}
+
+.ledger-hazard-band {
+  height: 14px;
+  margin-bottom: clamp(54px, 8vw, 100px);
+  border-bottom: 3px solid var(--lg-navy);
+  background: repeating-linear-gradient(-45deg,
+      var(--lg-navy) 0 14px,
+      var(--lg-gold) 14px 28px);
 }
 
 .ledger-cta-grid {
@@ -1672,6 +2117,7 @@
   align-items: center;
   width: min(1240px, 100%);
   margin: 0 auto;
+  padding: 0 clamp(20px, 6vw, 88px);
 }
 
 .ledger-cta-note {
@@ -1680,18 +2126,37 @@
   font-family: "Bricolage Grotesque", sans-serif;
   font-size: clamp(38px, 5vw, 72px);
   font-weight: 800;
-  line-height: 0.9;
+  line-height: 0.94;
   letter-spacing: -0.055em;
   text-transform: uppercase;
 }
 
 .ledger-reply-card {
-  padding: clamp(24px, 4vw, 44px);
+  position: relative;
+  padding: clamp(28px, 4vw, 44px);
   background: var(--lg-sheet);
   color: var(--lg-navy);
   border: 3px solid var(--lg-navy);
   box-shadow: 14px 14px 0 var(--lg-navy);
   transform: rotate(1.4deg);
+}
+
+.ledger-reply-stamp {
+  position: absolute;
+  top: -16px;
+  right: 22px;
+  padding: 5px 11px;
+  background: var(--lg-navy);
+  color: var(--lg-gold);
+  border: 2.5px solid var(--lg-navy);
+  box-shadow: 3px 3px 0 var(--lg-gold);
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transform: rotate(4deg);
 }
 
 .ledger-reply-card h2 {
@@ -1703,7 +2168,7 @@
   text-transform: uppercase;
 }
 
-.ledger-reply-card > p {
+.ledger-reply-card>p {
   max-width: 38ch;
   margin: 0 0 24px;
   color: #3c4652;
@@ -2345,42 +2810,74 @@
 }
 
 @media (max-width: 1220px) {
-  .ledger-sticker {
-    display: none;
+  .hero-poster-copy h1 {
+    font-size: clamp(42px, 5.8vw, 74px);
   }
 
-  .ledger-card h1 {
-    font-size: clamp(46px, 5.3vw, 74px);
+  .hs-book2 {
+    left: 4%;
+  }
+
+  .hs-cap {
+    left: 69%;
+  }
+
+  .hero-telemetry-card {
+    width: 188px;
   }
 }
 
 @media (max-width: 980px) {
-  .ledger-hero,
-  .ledger-hero-stage {
+  .ledger-hero {
     min-height: auto;
   }
 
-  .ledger-hero-grid {
-    grid-template-columns: 1fr;
-    min-height: 0;
+  .hero-poster-stage {
+    padding-top: 22px;
+    --hs-scale: 0.86;
   }
 
-  .ledger-card {
-    min-height: 0;
+  .hero-poster-visual {
+    margin-top: -18px;
   }
 
-  .ledger-hero-stage {
-    height: 54svh;
-    min-height: 360px;
-    --hs-scale: 0.88;
+  .hero-telemetry-card {
+    width: 168px;
+    opacity: 0.32;
   }
 
-  .hs-chip-pts {
-    top: 66%;
+  .hero-live-node.node-5 {
+    display: none;
+  }
+
+  .hs-book2 {
+    left: 2%;
+    top: 14%;
+  }
+
+  .hs-star {
+    left: 17%;
+    top: 3%;
+  }
+
+  .hs-cap {
+    left: 71%;
+    top: 4%;
+  }
+
+  .hs-coins {
+    left: 24%;
+    top: 58%;
   }
 
   .hs-clock {
-    top: 36%;
+    left: 73%;
+    top: 47%;
+  }
+
+  .hs-chip-pts {
+    left: 71%;
+    top: 63%;
   }
 
   .ledger-faq-grid,
@@ -2403,66 +2900,104 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .ledger-footer-grid > div:first-child {
+  .ledger-footer-grid>div:first-child {
     grid-column: 1 / -1;
   }
 }
 
 @media (max-width: 760px) {
-  .ledger-hero {
-    padding: 10px;
+  .hero-telemetry-card-right,
+  .hero-live-node.node-2,
+  .hero-live-node.node-3 {
+    display: none;
   }
 
-  .ledger-hero-grid {
-    gap: 12px;
+  .hero-telemetry-card-left {
+    top: 10px;
+    left: 10px;
+    width: 148px;
+    opacity: 0.28;
   }
 
-  .ledger-card {
-    min-height: 0;
-    box-shadow: 6px 6px 0 var(--lg-gold);
+  .ledger-sticker {
+    top: 14px;
+    right: 14px;
+    padding: 7px 9px;
+    font-size: 11px;
+    box-shadow: 3px 3px 0 var(--lg-gold);
   }
 
-  .ledger-card-inner {
-    padding: 22px;
-    padding-top: 28px;
+  .hero-poster-stage {
+    padding: 18px 12px 0;
   }
 
-  .ledger-wordmark {
-    gap: 12px;
+  .hs-scene {
+    --hs-scale: 0.68;
   }
 
-  .ledger-monogram {
-    width: 42px;
-    height: 42px;
-    font-size: 13px;
+  .hs-book2,
+  .hs-coins {
+    display: none;
+  }
+
+  .hs-star {
+    left: 4%;
+    top: 4%;
+  }
+
+  .hs-cap {
+    left: 72%;
+    top: 3%;
+  }
+
+  .hs-clock {
+    left: 75%;
+    top: 42%;
+  }
+
+  .hs-chip-pts {
+    left: 73%;
+    top: 58%;
+    padding: 5px 9px;
+    font-size: 12px;
+    box-shadow: 3px 3px 0 var(--lg-navy);
   }
 
   .ledger-brand-2d {
-    width: 248px;
+    width: 196px;
     height: auto;
   }
 
-  .ledger-wordmark strong {
-    font-size: 19px;
-  }
-
-  .ledger-wordmark small {
-    font-size: 9.5px;
-  }
-
-  .ledger-card h1 {
-    margin: 34px 0 20px;
-    font-size: clamp(42px, 11vw, 58px);
+  .hero-poster-copy h1 {
+    margin: 12px 0 0;
+    font-size: clamp(34px, 9.2vw, 52px);
   }
 
   .ledger-mark {
-    border-width: 2px;
+    border-width: 2.5px;
     box-shadow: 4px 4px 0 var(--lg-navy);
   }
 
-  .ledger-summary {
-    font-size: 16px;
-    margin-bottom: 24px;
+  .hero-poster-visual {
+    margin-top: 6px;
+  }
+
+  .hero-bridge-wrap {
+    top: 18%;
+  }
+
+  .hero-bridge-btn {
+    height: 42px;
+    padding: 0 14px;
+    box-shadow: 4px 4px 0px #0F1E36;
+  }
+
+  .hero-bridge-label {
+    font-size: 13px;
+  }
+
+  .hero-bridge-svg {
+    width: 240px;
   }
 
   .ledger-action {
@@ -2472,54 +3007,8 @@
   }
 
   .ledger-card-foot {
-    padding: 15px 22px 18px;
-  }
-
-  .ledger-hero-stage {
-    height: 46svh;
-    min-height: 320px;
-    box-shadow: 6px 6px 0 var(--lg-gold);
-    --hs-scale: 0.76;
-  }
-
-  .hs-chip-pts {
-    top: 66%;
-  }
-
-  .hs-clock {
-    top: 36%;
-  }
-
-  .ledger-photo-stamp {
-    right: 12px;
-    bottom: 12px;
-    max-width: 260px;
-    padding: 8px 10px;
-    font-size: 13px;
-    box-shadow: 4px 4px 0 var(--lg-navy);
-  }
-
-  .hs-chip {
-    padding: 7px 11px;
-    font-size: 14px;
-    box-shadow: 4px 4px 0 var(--lg-navy);
-  }
-
-  .hs-chip-role {
-    top: 37%;
-    right: 6%;
-  }
-
-  .hs-chip-pts {
-    top: 66%;
-  }
-
-  .hs-clock {
-    top: 36%;
-  }
-
-  .hs-math {
-    bottom: 30%;
+    padding: 15px 18px 18px;
+    border-top-width: 4px;
   }
 
   .ledger-ticker {
@@ -2542,11 +3031,11 @@
     box-shadow: 7px 7px 0 var(--lg-gold);
   }
 
-  .ledger-menu-sheet::before {
-    left: 20px;
-    width: 112px;
-    height: 26px;
-    top: -13px;
+  .ledger-sheet-tag {
+    left: 18px;
+    top: -14px;
+    padding: 5px 11px;
+    font-size: 11.5px;
   }
 
   .ledger-menu-sheet h2 {
@@ -2688,7 +3177,7 @@
     font-size: 17px;
   }
 
-  .ledger-faq-item > p {
+  .ledger-faq-item>p {
     font-size: 14.5px;
   }
 
@@ -2717,7 +3206,15 @@
   }
 
   .ledger-cta {
-    padding: 64px 18px;
+    padding: 0 0 64px;
+  }
+
+  .ledger-hazard-band {
+    margin-bottom: 48px;
+  }
+
+  .ledger-cta-grid {
+    padding: 0 18px;
   }
 
   .ledger-cta-note {
@@ -2725,7 +3222,7 @@
   }
 
   .ledger-reply-card {
-    padding: 22px 18px;
+    padding: 26px 18px 22px;
     box-shadow: 8px 8px 0 var(--lg-navy);
     transform: rotate(0.7deg);
   }
@@ -2734,7 +3231,7 @@
     font-size: 30px;
   }
 
-  .ledger-reply-card > p {
+  .ledger-reply-card>p {
     font-size: 15px;
   }
 
@@ -2768,93 +3265,90 @@
 }
 
 @media (max-width: 480px) {
+  .ledger-sticker {
+    display: none;
+  }
+
+  /* Keep background clean and spacious on phones */
+  .hero-telemetry-card,
+  .hero-telemetry-nodes {
+    display: none;
+  }
+
   /* Thin the 3D scene on small screens so nothing collides */
   .hs-book2,
   .hs-clock,
-  .hs-chip-role {
+  .hs-coins {
     display: none;
   }
 
   .ledger-brand-2d {
-    width: 100%;
+    width: 168px;
     height: auto;
   }
 
-  .ledger-wordmark {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  .ledger-wordmark > small {
-    max-width: none;
-  }
-
-  .hs-book1 {
-    top: 46%;
-  }
-
-  .hs-cap {
-    left: 48%;
-    top: 3%;
+  .hs-scene {
+    --hs-scale: 0.52;
   }
 
   .hs-star {
-    left: 6%;
-    bottom: 40%;
+    left: 1%;
+    top: 2%;
   }
 
-  .hs-math {
-    right: 5%;
-    bottom: 22%;
-  }
-
-  .hs-coins {
-    left: 6%;
-    bottom: 12%;
+  .hs-cap {
+    left: 66%;
+    top: 1%;
   }
 
   .hs-chip-pts {
-    top: 64%;
+    left: auto;
+    right: 4%;
+    top: 48%;
   }
 
-  .ledger-card h1 {
-    font-size: 40px;
+  .hero-poster-copy h1 {
+    font-size: clamp(28px, 8.8vw, 38px);
+    letter-spacing: -0.04em;
+    line-height: 0.95;
   }
 
-  .ledger-summary {
-    font-size: 15px;
+  .hero-poster-visual {
+    margin-top: 8px;
   }
 
-  .ledger-card .ledger-action {
-    width: 100%;
+  .hero-bridge-wrap {
+    top: 2%;
   }
 
-  .ledger-hero-stage {
-    height: 40svh;
-    min-height: 280px;
-    --hs-scale: 0.62;
+  .hero-bridge-btn {
+    height: 38px;
+    padding: 0 11px;
+    box-shadow: 3px 3px 0px #0F1E36;
   }
 
-  .ledger-photo-stamp {
-    max-width: 230px;
+  .hero-bridge-pill {
+    display: none;
+  }
+
+  .hero-bridge-label {
     font-size: 12px;
   }
 
-  .ledger-photo-stamp span {
-    font-size: 11px;
+  .hero-bridge-svg {
+    width: 190px;
   }
 
   .ledger-live {
-    font-size: 13px;
+    font-size: 12.5px;
   }
 
   .ledger-links {
-    gap: 7px 14px;
+    gap: 6px 12px;
   }
 
   .ledger-link {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .ledger-menu-sheet h2 {
@@ -2916,6 +3410,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .ledger-page *,
   .ledger-page *::before,
   .ledger-page *::after {
