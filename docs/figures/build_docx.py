@@ -113,6 +113,24 @@ with open(SRC, encoding="utf-8") as f:
 first_hr = next(i for i, l in enumerate(lines) if l.strip() == "---")
 title_lines, lines = lines[:first_hr], lines[first_hr + 1:]
 
+# ---------- TORNEA MIRANDA roster variant (env: TORNEA=1) ----------
+# Real 2-researcher roster: first [Researcher Name] row becomes the pair,
+# the second name/role rows and the [External Advisor] line are dropped.
+if os.environ.get("TORNEA"):
+    OUT = os.path.join(ROOT, "docs", "LCCB-Academix-Chapters-1-3 TORNEA MIRANDA .docx")
+    filtered, researcher_seen = [], 0
+    for l in title_lines:
+        s = l.strip()
+        if s.startswith("|") and ("Researcher Name" in s or "Documenter" in s or "Developer" in s):
+            researcher_seen += 1
+            if researcher_seen == 1:
+                filtered.append("| Cemer Daniel Miranda | Jose Ady Tornea |")
+            continue
+        if "External Advisor" in s:
+            continue
+        filtered.append(l)
+    title_lines = filtered
+
 # ---------- title page ----------
 for l in title_lines:
     s = l.rstrip()

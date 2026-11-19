@@ -36,7 +36,7 @@ However, despite the maturity of the practice, most tutorial programs in local c
 
 La Consolacion College Bacolod, an Augustinian institution in Bacolod City, exemplifies this operational reality. The college has accredited student-tutors across its departments — Information Technology, Accountancy, Education, Business Administration — and faculty members who actively refer students for remediation, yet the entire cycle from referral to incentive lives on disconnected forms and informal accounts. The absence of a unified digital platform not only exposes the program to disputes, duplicated claims, and audit failure, but also denies the college the one thing a service program needs to justify its budget and scale: reliable data on who is being helped, by whom, and how effectively.
 
-By implementing LCCB ACADEMIX — a faculty-guided peer tutoring and incentive ledger system — the college will not only resolve its immediate record-keeping bottlenecks but also transform peer tutoring from an unrecorded favor into an official, quotable program. Faculty referrals are tracked to resolution; tutor matching is performed through a verifiable directory of accredited, available tutors per subject; session attendance is double-confirmed through one-time identification tokens or through a fingerprint-capable check-in device; and every completed session closes with a tutor's note, a learner rating, an automatic hour deduction from the referral, and an automatic posting of community points to a permanent, append-only ledger that learners can redeem against an official campus rewards catalog. The college gains a single dashboard of live analytics — active tutors, delivered hours, points issued, referral recovery rate — that turns the tutoring program into a defensible, data-driven institutional service.
+By implementing LCCB ACADEMIX — a faculty-guided peer tutoring and incentive ledger system — the college will not only resolve its immediate record-keeping bottlenecks but also transform peer tutoring from an unrecorded favor into an official, quotable program. Faculty referrals are tracked to resolution; tutor matching is performed through a verifiable directory of accredited, available tutors per subject; session attendance is double-confirmed through one-time identification tokens or through a fingerprint-capable check-in device; and every completed session closes with a tutor's note, a learner rating, an automatic hour deduction from the referral, and an automatic posting of community points to a permanent, append-only ledger that learners can redeem against an official campus rewards catalog. The college gains a single dashboard of live analytics — active tutors, monthly session volume, points issued, and referral recovery rate — that turns the tutoring program into a defensible, data-driven institutional service.
 
 ---
 
@@ -69,7 +69,7 @@ To design, develop, and evaluate a centralized, auditable, Faculty-Guided Peer T
 
 To assess the current status of peer tutoring operations at La Consolacion College Bacolod regarding referral handling, session attendance, and service-hour and reward recording.
 
-To identify manual operational challenges and develop a web-based system featuring a faculty referral board, an accredited tutor matching wizard, a double-confirmed OTP/QR and device-fingerprint check-in, an atomic session wrap-up that posts points and badges, and a superadmin approval board with live analytics — all governed by an append-only points ledger.
+To identify manual operational challenges and develop a web-based system featuring a faculty referral board, an accredited tutor matching wizard, a double-confirmed OTP and device-fingerprint check-in, an atomic session wrap-up that posts points and badges, and a superadmin approval board with live analytics — all governed by an append-only points ledger.
 
 To evaluate the level of acceptability of the developed system among learners, tutors, faculty, and administrators based on ISO 25010 quality standards in terms of Functional Suitability, Performance Efficiency, Usability, and Security.
 
@@ -81,7 +81,7 @@ The development of the Faculty-Guided Peer Tutoring and Incentive Ledger System 
 
 **Faculty / Academic Advisers**
 
-Teachers no longer have to chase paper referral slips or wonder whether a referred student is actually attending sessions. The referral board gives them a live status for every flagged learner — flagged, assigned, in-progress, resolved — together with the remaining mandatory hours and the tutor's accompanying notes after every wrap-up. Early intervention becomes measurable: a professor can see at a glance which referrals are recovering and which have stalled.
+Teachers no longer have to chase paper referral slips or wonder whether a referred student is actually attending sessions. The referral board gives them a live status for every flagged learner — flagged, assigned, in-progress, resolved — together with the remaining mandatory hours, the assigned tutor, and each referral's hour-progress bar. Early intervention becomes measurable: a professor can see at a glance which referrals are recovering and which have stalled.
 
 **Students (Learners)**
 
@@ -93,7 +93,7 @@ Tutors earn verifiable community service points (+50 per completed session), ach
 
 **College Administration (Superadmin / Dean)**
 
-The administrator gains a single "bird's-eye view" of the entire tutoring program through a dashboard of CTE-powered analytics: active accredited tutors, delivered hours, points issued, referral recovery rates, per-department breakdowns, and six-week trends. Every approval (tutor accreditation, with the dean's certification recorded) and every point issuance sits on an append-only ledger, giving the college a trustworthy audit trail it has never had.
+The administrator gains a single "bird's-eye view" of the entire tutoring program through a dashboard of CTE-powered analytics: active accredited tutors, monthly session volume, points issued, referral recovery rates, per-department breakdowns, and six-week trends. Every tutor approval records the dean's certification, and every point issuance and redemption sits on an append-only ledger, giving the college a trustworthy audit trail it has never had.
 
 **Future Researchers**
 
@@ -111,9 +111,9 @@ The study focuses on the development and implementation of a web-based peer tuto
 
 **Referral Management:** A faculty-and-superadmin module for flagging at-risk learners. Each referral records the learner, subject, urgency, topic, and required number of hours, and is tracked through a strict lifecycle (flagged → assigned → in-progress → resolved) with a provision that the referral auto-resolves when its remaining hours reach zero.
 
-**Tutor Matching and Booking:** A public tutor directory filterable by subject accreditation and availability, and a learner matching wizard that produces session requests carrying topic, preferred date, time, and room. Only tutors accredited for the requested subject may accept, and double-accept is prevented at the server level.
+**Tutor Matching and Booking:** A public tutor directory filterable by subject accreditation and availability, and a learner matching wizard that produces session requests carrying topic and preferred date and time. Only tutors accredited for the requested subject may accept, and double-accept is prevented at the server level.
 
-**Session Check-In:** A two-party attendance verification module. The tutor stages a one-time identification token (OTP/QR code pair) with a ten-minute validity; both participants must confirm the same token before the session officially starts. A secondary physical channel allows a fingerprint-capable device to import a session roster and verify participants through a secured device key.
+**Session Check-In:** A two-party attendance verification module. The tutor stages a one-time identification token (a six-digit OTP pair) with a ten-minute, single-use validity; both participants must confirm the same token before the session officially starts. A secondary physical channel allows a fingerprint-capable device to import a session roster and verify participants through a secured device key.
 
 **Session Wrap-Up (Incentive Ledger Core):** A single atomic transaction that closes the session by recording the tutor's notes and the learner's 1–5 rating, debiting the hours from the referral, crediting the points ledger (+50 to the tutor, +25 to the learner), and awarding achievement badges.
 
@@ -133,7 +133,7 @@ To ensure the project remains focused and achievable, the proposed system is sub
 
 **Real-Time Biometric Sync:** The system does not pull fingerprint logs live from the physical device over the cloud. The device posts imported rosters and verification records through its own secured HTTPS client (batch processing), keeping the web application independent of any specific hardware vendor.
 
-**Native Mobile Application:** The system is a progressive web-style application accessed through a standard browser. Learners and tutors cannot install a native Android/iOS package, and offline check-in requires an active network connection to the school's server.
+**Native Mobile Application:** The system is a responsive web application accessed through a standard browser. Learners and tutors cannot install a native Android/iOS package, and offline check-in requires an active network connection to the school's server.
 
 **Academic Records Integration:** The system's analytics are limited to the data it captures. It does not import grades from the registrar or connect to the Learning Management System; referral urgency and progress are judged by faculty, not automatically predicted.
 
@@ -159,7 +159,7 @@ For the purpose of clarity and better understanding of this study, the following
 
 *Conceptual:* A visual emblem awarded to recognize the completion of a notable accomplishment.
 
-*Operational:* The achievement markers (e.g., "First Session") the system automatically grants after a completed wrap-up transaction.
+*Operational:* The achievement markers (e.g., "First Session") that the system automatically grants to the tutor after completed wrap-up transactions.
 
 **Check-In**
 
@@ -207,7 +207,7 @@ For the purpose of clarity and better understanding of this study, the following
 
 *Conceptual:* An official list of items or privileges available to participants in exchange for their accumulated reward currency.
 
-*Operational:* The college's official list of campus perks (library passes, photocopy vouchers, printing credits) priced in community points, with server-enforced stock levels and voucher issuance per successful redemption.
+*Operational:* The college's official list of campus perks — the Library Extended Hours Pass, Free Photocopying (100 pages), Campus Printing Credits (50 pages), and the Cafeteria Meal Voucher — priced in community points, with server-enforced stock levels and voucher issuance per successful redemption.
 
 **Session**
 
@@ -219,7 +219,7 @@ For the purpose of clarity and better understanding of this study, the following
 
 *Conceptual:* The highest-level administrator of a system, with unrestricted access to all modules and data.
 
-*Operational:* The dean-level role that manages tutor accreditation approvals, rewards stock, referral oversight, and all institutional analytics for the college.
+*Operational:* The dean-level role that manages tutor accreditation approvals and referral oversight and holds full access to all institutional analytics for the college.
 
 **Voucher**
 
@@ -273,7 +273,7 @@ This section presents existing research on implemented systems for tutoring prog
 
 *Peer Tutorial Programs and Student Recognition.* A study of a university-based peer tutorial program in the Philippines documented through thematic analysis the programs' benefits to students who were at risk of failing: good study habits, improved academic performance, reinforced subject mastery, and confidence — but also emphasized that participation and recognition must be made *visible and institutionally backed* for these benefits to be sustained (Tan, 2020). This validates the present system's insistence that recognition be mechanical rather than occasional: each completed wrap-up posts credits and badges regardless of whether anyone remembers to do so manually.
 
-*Web-Based Biometric and QR Attendance Systems in Philippine Institutions.* A system developed for a state university in Sorsogon demonstrated that QR-based recording dramatically reduced manual verification time and produced defensible, timestamped attendance records in an institutional setting (Agripa & Astillero, 2022). This supports the present system's dual-channel design: a fully digital check-in (OTP/QR confirmations) for online or device-capable sessions, and a device-fingerprint channel (`/device/import-roster`, `/device/verify` secured by a device key) for physically held laboratory sessions where participants lack reliable personal devices.
+*Web-Based Biometric and QR Attendance Systems in Philippine Institutions.* A system developed for a state university in Sorsogon demonstrated that QR-based recording dramatically reduced manual verification time and produced defensible, timestamped attendance records in an institutional setting (Agripa & Astillero, 2022). This supports the present system's dual-channel design: a fully digital check-in (dual OTP confirmations) for online or device-capable sessions, and a device-fingerprint channel (`/device/import-roster`, `/device/verify` secured by a device key) for physically held laboratory sessions where participants lack reliable personal devices.
 
 **Synthesis of Related Foreign and Local Studies**
 
@@ -291,7 +291,7 @@ The system was developed through iterative sprints (an Agile-style workflow) so 
 
 The Context Flow Diagram presented below illustrates the highest-level overview of the Faculty-Guided Peer Tutoring and Incentive Ledger System developed for La Consolacion College Bacolod. It depicts the system as a single central process — represented by a cylinder labeled "LCCB ACADEMIX" — surrounded by all external entities that interact with it. The CFD does not show internal processes or data stores; instead, it focuses on identifying the key actors in the system and the nature of the data that flows between them and the system as a whole. Six external entities are identified in the diagram.
 
-The **Superadmin**, who represents the dean or department head, has full access to manage users, roles, tutor accreditation approvals, and rewards stock, and in return receives the full institutional dashboard, analytics, and the append-only ledger record. The **Faculty / Academic Adviser** submits referrals for at-risk learners and assigns or monitors them, and in return receives live referral statuses, remaining mandatory hours, and wrap-up notes. The **Accredited Student-Tutor** applies for accreditation, answers the qualification exam, accepts session requests, stages check-in tokens, and submits wrap-up notes and ratings, and in return receives session details, community-point credits, badges, and a permanent service record. The **Learner (Tutee)** searches accredited tutors, books sessions, confirms check-ins, and redeems points, and in return receives booking confirmations, session records, attendance credits, and redemption vouchers. The **Biometric / Check-In Device** sends imported session rosters and fingerprint verification events to the system and receives roster validity results in exchange. Finally, the **General Public (Visitor)** sends no credentials at all: the anonymous landing page hands the community's live ledger totals — verified tutors, delivered hours, points issued — to anyone who signs in or browses.
+The **Superadmin**, who represents the dean or department head, formally approves tutor accreditation and oversees the referral pipeline, and in return receives the full institutional dashboard with its analytics and the append-only ledger record. The **Faculty / Academic Adviser** submits referrals for at-risk learners and assigns or monitors them, and in return receives live referral statuses, remaining mandatory hours, and hour-progress overviews for every referral. The **Accredited Student-Tutor** applies for accreditation, answers the qualification exam, accepts session requests, stages check-in tokens, and submits session wrap-ups, and in return receives session details, community-point credits, badges, and a permanent service record. The **Learner (Tutee)** searches accredited tutors, books sessions, confirms check-ins, and redeems points, and in return receives booking confirmations, session records, attendance credits, and redemption vouchers. The **Biometric / Check-In Device** sends imported session rosters and fingerprint verification events to the system and receives the matched session and check-in results in exchange. Finally, the **General Public (Visitor)** sends no credentials at all: the anonymous landing page hands the community's live ledger totals — verified tutors, delivered hours, points issued — to anyone who browses.
 
 ![Figure 1. Context Flow Diagram (CFD) of the LCCB Academix Peer Tutoring and Incentive Ledger System](../lccb_academix_cfd.svg)
 
@@ -299,9 +299,9 @@ The **Superadmin**, who represents the dean or department head, has full access 
 
 ## Data Flow Diagram (Level 0 DFD)
 
-The Data Flow Diagram at Level 0 presented below provides a more detailed representation of the internal processes of the LCCB Academix system. Unlike the CFD, the DFD decomposes the system into its six major processes and shows how data flows between external entities, processes, and data stores. Each process is numbered and labeled to clearly indicate its function, and the data stores are represented using the standard open-ended rectangle notation, identified as DS1 through DS6.
+The Data Flow Diagram at Level 0 presented below provides a more detailed representation of the internal processes of the LCCB Academix system. Unlike the CFD, the DFD decomposes the system into its six major processes and shows how data flows between external entities, processes, and data stores. Each process is numbered and labeled to clearly indicate its function, and the data stores are represented using the standard open-ended rectangle notation, identified as DS1 through DS7.
 
-**Process 1 (P1), Login and Authentication,** handles the verification of user credentials against the users data store (DS1) and issues a signed session token (JWT) with the user's role upon successful validation. All four human entities — Superadmin, Faculty, Accredited Tutor, and Learner — interact with this process. **Process 2 (P2), Referral Management,** is operated by the Faculty and Superadmin entities and records referrals into the referrals data store (DS2), tracks their lifecycle status (flagged → assigned → in-progress → resolved), and feeds referral positions to the analytics process. **Process 3 (P3), Matching and Session Request,** is the core dispatch process: the Learner sends a search (subject accreditation and availability), the process matches it against accreditation data within DS1, and a tutor's acceptance writes the resulting session to the sessions data store (DS3), with double-accept prevented at the server level.
+**Process 1 (P1), Login and Authentication,** handles the verification of user credentials against the users data store (DS1) and issues a signed session token (JWT) with the user's role upon successful validation. All four human entities — Superadmin, Faculty, Accredited Tutor, and Learner — interact with this process. **Process 2 (P2), Referral Management,** is operated by the Faculty and Superadmin entities and records referrals into the referrals data store (DS2), tracks their lifecycle status (flagged → assigned → in-progress → resolved), and feeds referral positions to the analytics process. **Process 3 (P3), Matching and Session Request,** is the core dispatch process: the Learner sends a search (subject accreditation and availability), the process matches it against accreditation data within the subjects-and-accreditations data store (DS7), and a tutor's acceptance writes the resulting session to the sessions data store (DS3), with double-accept prevented at the server level.
 
 **Process 4 (P4), Check-In and Verification,** receives the one-time token staged by the Tutor, the confirmations from both the Learner and the Tutor (each token usable once within a ten-minute window), and roster/fingerprint verifications passed from the Biometric Device; it writes confirmed attendance rows into DS3 and starts the session when both confirmations are present. **Process 5 (P5), Wrap-Up and Incentive Ledger,** receives the notes and 1–5 rating submitted at the session's end, debits the hours from the referral record in DS2 (auto-resolving referrals at zero hours remaining), and posts the tutor's and learner's credits, badges, and the wrap-up audit trail into the points ledger data store (DS4). **Process 6 (P6), Rewards Redemption,** receives the learner's redemption request, applies row-locked stock decrements and ledger debits against the rewards data store (DS5), and issues a voucher back to the Learner at the point of purchase; accreditation applications and the one-shot, server-graded examination answers are also held and graded against the applications data store (DS6), with the Superadmin's approval (or rejection) writing the dean's certification back into DS1. Together, these six processes represent the complete operational scope of the LCCB Academix Peer Tutoring and Incentive Ledger System.
 
