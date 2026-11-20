@@ -9,6 +9,7 @@ const API_PORT = process.env.PORT || 4000
 export default defineConfig({
   plugins: [react(), tailwindcss(), basicSsl()],
   build: {
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks(id) {
