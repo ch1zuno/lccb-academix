@@ -6,6 +6,7 @@ import api from '../api';
 import { saveSession } from '../authToken';
 import { focusFirst, trapTabKey } from '../lib/focusTrap';
 import Logo2D from '../components/Logo2D';
+import { supabase, signInWithGoogleLccb } from '../lib/supabase';
 import './Landing.css';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
@@ -407,8 +408,42 @@ export default function LandingPage({ onLogin }) {
     }
   };
 
-  const handleGoogleSignIn = () => {
+  // Listen for Supabase OAuth redirect completion
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        if (session.provider_token) {
+          await completeGoogleAuth({ accessToken: session.provider_token });
+        } else if (session.user.email) {
+          await completeGoogleAuth({
+            demoEmail: session.user.email,
+            demoName: session.user.user_metadata?.full_name || session.user.user_metadata?.name,
+          });
+        }
+      }
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, []);
+
+  const handleGoogleSignIn = async () => {
     setError('');
+    // 1. Supabase Google Sign-In with LCCB domain restriction
+    if (import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      try {
+        setGoogleLoading(true);
+        await signInWithGoogleLccb();
+        return;
+      } catch (err) {
+        setGoogleLoading(false);
+        setError(err.message || 'Supabase Google sign-in could not start.');
+        return;
+      }
+    }
+
+    // 2. Google Identity Services (GIS) direct client
     if (GOOGLE_CLIENT_ID && window.google?.accounts?.oauth2) {
       try {
         setGoogleLoading(true);
