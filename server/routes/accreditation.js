@@ -13,6 +13,7 @@ import {
   uploadApplicationDocument,
   validateApplicationFile,
 } from '../lib/application-files.js';
+import { isR2Configured, uploadToR2, deleteFromR2, getFromR2 } from '../lib/storage.js';
 
 const router = express.Router();
 const uploadLimiter = rateLimit({
@@ -307,11 +308,20 @@ router.post(
         if (count >= MAX_APPLICATION_FILES) {
           throw httpError(409, `Up to ${MAX_APPLICATION_FILES} files per application`);
         }
+        let r2Key = null;
+        let r2Url = null;
+        if (isR2Configured()) {
+          const ext = file.fileName.split('.').pop() || 'bin';
+          r2Key = `documents/${app.id}/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+          const uploadResult = await uploadToR2({ key: r2Key, buffer: file.data, mimeType: file.mimeType });
+          r2Url = uploadResult.url;
+        }
+
         const { rows } = await client.query(
-          `INSERT INTO application_documents (application_id, file_name, mime_type, size_bytes, data)
-           VALUES ($1, $2, $3, $4, $5)
-           RETURNING id, application_id, file_name, mime_type, size_bytes, created_at`,
-          [app.id, file.fileName, file.mimeType, file.sizeBytes, file.data]);
+          `INSERT INTO application_documents (application_id, file_name, mime_type, size_bytes, data, r2_key, r2_url)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           RETURNING id, application_id, file_name, mime_type, size_bytes, created_at, r2_url`,
+          [app.id, file.fileName, file.mimeType, file.sizeBytes, isR2Configured() ? null : file.data, r2Key, r2Url]);
         await audit({
           actorId: req.user.id,
           actorRole: req.user.role,
@@ -343,7 +353,7 @@ router.get('/accreditation/documents/:id', requireAuth, async (req, res, next) =
   try {
     if (!UUID_RE.test(String(req.params.id))) throw httpError(404, 'Document not found');
     const { rows } = await query(
-      `SELECT d.file_name, d.mime_type, d.size_bytes, d.data, a.user_id
+      `SELECT d.file_name, d.mime_type, d.size_bytes, d.data, d.r2_key, d.r2_url, a.user_id
        FROM application_documents d JOIN tutor_applications a ON a.id = d.application_id
        WHERE d.id = $1`, [req.params.id]);
     const doc = rows[0];
@@ -355,6 +365,23 @@ router.get('/accreditation/documents/:id', requireAuth, async (req, res, next) =
     const safeName = String(doc.file_name)
       .replace(/["\\\r\n]/g, '')
       .replace(/[^\x20-\x7e]/g, '_');
+
+    if (doc.r2_key && isR2Configured()) {
+      try {
+        const { stream, contentType, contentLength } = await getFromR2(doc.r2_key);
+        res.set({
+          'Content-Type': contentType || doc.mime_type,
+          ...(contentLength ? { 'Content-Length': String(contentLength) } : {}),
+          'Content-Disposition': `${disposition}; filename="${safeName || 'supporting-document'}"`,
+          'Cache-Control': 'private, no-store',
+          'X-Content-Type-Options': 'nosniff',
+        });
+        return stream.pipe(res);
+      } catch (err) {
+        if (!doc.data) throw err;
+      }
+    }
+
     res.set({
       'Content-Type': doc.mime_type,
       'Content-Length': String(doc.size_bytes),
@@ -375,13 +402,16 @@ router.delete('/accreditation/documents/:id', requireAuth, requireRole('learner'
   try {
     if (!UUID_RE.test(String(req.params.id))) throw httpError(404, 'Document not found');
     const { rows } = await query(
-      `SELECT d.id, a.user_id, a.status
+      `SELECT d.id, d.r2_key, a.user_id, a.status
        FROM application_documents d JOIN tutor_applications a ON a.id = d.application_id
        WHERE d.id = $1`, [req.params.id]);
     const doc = rows[0];
     if (!doc) throw httpError(404, 'Document not found');
     if (doc.user_id !== req.user.id) throw httpError(403, 'Not your document');
     if (doc.status !== 'pending') throw httpError(409, 'Documents are locked once the application is decided');
+    if (doc.r2_key) {
+      try { await deleteFromR2(doc.r2_key); } catch (e) { console.error('R2 delete document failed:', e); }
+    }
     await query(`DELETE FROM application_documents WHERE id = $1`, [doc.id]);
     await audit({
       actorId: req.user.id,
