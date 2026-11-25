@@ -3,7 +3,8 @@
 import { config } from '../config.js';
 
 export const SESSION_COOKIE = 'academix_session';
-const MAX_AGE_MS = 12 * 60 * 60 * 1000; // matches signToken's 12h expiry
+export const SESSION_TTL_SECONDS = 48 * 60 * 60; // hard 48h cap before re-login
+export const SESSION_TTL_MS = SESSION_TTL_SECONDS * 1000;
 
 export function readCookie(req, name) {
   const raw = req.headers?.cookie;
@@ -32,7 +33,7 @@ export function setSessionCookie(res, token) {
     secure: config.isProd,
     sameSite: 'strict',
     path: '/',
-    maxAge: MAX_AGE_MS,
+    maxAge: SESSION_TTL_MS,
   });
 }
 

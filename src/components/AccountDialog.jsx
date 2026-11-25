@@ -227,7 +227,7 @@ export default function AccountDialog({
         currentPassword,
         newPassword,
       });
-      saveSession(result.user);
+      saveSession(result.user, result.sessionExpiresAt);
       setSecurityDone('Password changed. Other devices were signed out.');
       setCurrentPassword('');
       setNewPassword('');

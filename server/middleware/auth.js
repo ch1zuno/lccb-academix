@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { pool } from '../db.js';
 import { config } from '../config.js';
-import { requestToken } from '../lib/sessionCookie.js';
+import { requestToken, SESSION_TTL_SECONDS } from '../lib/sessionCookie.js';
 
 export function signToken(user) {
   return jwt.sign(
@@ -12,7 +12,7 @@ export function signToken(user) {
       tv: Number(user.token_version) || 0,
     },
     config.jwtSecret,
-    { expiresIn: '12h' },
+    { expiresIn: SESSION_TTL_SECONDS },
   );
 }
 
@@ -36,6 +36,7 @@ export const requireAuth = async (req, res, next) => {
       return unauthorized(res, 'Session revoked — sign in again');
     }
     req.user = rows[0];
+    req.authExp = payload.exp ?? null;
     next();
   } catch {
     return unauthorized(res, 'Invalid or expired token');

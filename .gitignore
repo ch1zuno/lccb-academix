@@ -41,6 +41,7 @@ build/
 # Local operations output (backups and subject exports contain PII)
 backups/
 exports/
+uploads/
 
 # Cache & skills
 graphify-out/cache/

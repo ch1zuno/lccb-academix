@@ -255,4 +255,38 @@ ON CONFLICT DO NOTHING;
 INSERT INTO points_ledger (user_id, amount, description)
 SELECT id, 100, 'Academix joining bonus' FROM users WHERE role = 'learner';
 
+-- Sample Classroom-style tasks from TU-042 to active tutees TE-128 and TE-178
+WITH seeded_task AS (
+  INSERT INTO tasks (tutor_id, title, description, due_at, form_url)
+  VALUES (
+    (SELECT id FROM users WHERE custom_id = 'TU-042'),
+    'Linked Lists Dry-Run Worksheet',
+    'Trace insertion and deletion on a singly linked list with 4 nodes. Upload a photo of your diagram or type your pointer trace, then complete the short check-in form.',
+    CURRENT_TIMESTAMP + interval '3 days',
+    'https://forms.gle/LccbAcademixLinkedListsDemo'
+  )
+  RETURNING id, title
+),
+assigned_rows AS (
+  INSERT INTO task_assignments (task_id, learner_id, status, submission_text, form_completed, submitted_at, is_late)
+  SELECT st.id, u.id,
+         CASE WHEN u.custom_id = 'TE-178' THEN 'submitted' ELSE 'assigned' END,
+         CASE WHEN u.custom_id = 'TE-178' THEN 'Completed pointer trace for head/tail insert and delete.' ELSE NULL END,
+         CASE WHEN u.custom_id = 'TE-178' THEN true ELSE false END,
+         CASE WHEN u.custom_id = 'TE-178' THEN CURRENT_TIMESTAMP - interval '2 hours' ELSE NULL END,
+         false
+  FROM seeded_task st
+  JOIN users u ON u.custom_id IN ('TE-128', 'TE-178')
+  RETURNING task_id, learner_id
+)
+INSERT INTO notifications (user_id, title, message, type, priority, entity_type, entity_id)
+SELECT ar.learner_id,
+       'New task assigned',
+       'Mark assigned "Linked Lists Dry-Run Worksheet".',
+       'warning',
+       'high',
+       'task',
+       ar.task_id
+FROM assigned_rows ar;
+
 COMMIT;

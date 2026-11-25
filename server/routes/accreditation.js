@@ -288,7 +288,7 @@ router.post('/accreditation/:id/reset-exam', requireAuth, requireRole('superadmi
 router.post(
   '/accreditation/:id/documents',
   requireAuth,
-  requireRole('learner'),
+  requireRole('learner', 'tutor'),
   uploadLimiter,
   uploadApplicationDocument,
   async (req, res, next) => {
@@ -398,7 +398,7 @@ router.get('/accreditation/documents/:id', requireAuth, async (req, res, next) =
  * own files while the application is still pending. Approved/rejected files are
  * the review record and stay locked.
  */
-router.delete('/accreditation/documents/:id', requireAuth, requireRole('learner'), async (req, res, next) => {
+router.delete('/accreditation/documents/:id', requireAuth, requireRole('learner', 'tutor'), async (req, res, next) => {
   try {
     if (!UUID_RE.test(String(req.params.id))) throw httpError(404, 'Document not found');
     const { rows } = await query(

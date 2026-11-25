@@ -16,6 +16,7 @@ import realtimeRoutes from './realtime.js';
 import videoRoutes from './video.js';
 import messageRoutes from './messages.js';
 import usersRoutes from './users.js';
+import tasksRoutes from './tasks.js';
 
 const router = Router();
 
@@ -49,6 +50,8 @@ router.use(analyticsRoutes);
 router.use(notificationRoutes);
 // 1:1 learner↔tutor messaging (booking-gated, text only)
 router.use(messageRoutes);
+// Classroom-style tutor tasks, submissions, and image attachments
+router.use(tasksRoutes);
 // append-only audit trail (superadmin read-only)
 router.use(auditRoutes);
 

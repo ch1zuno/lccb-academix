@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-
 import {
   BookOpen, Bell, ChevronDown, Check, LayoutDashboard, Search, Clock,
   ShieldCheck, Users, Award, LogOut, Menu, X, Inbox, KeyRound, MessageSquare,
-  User, WifiOff,
+  User, WifiOff, ClipboardList,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from './lib/utils';
@@ -12,6 +12,7 @@ import { Button } from './components/ui/button';
 
 import api from './api';
 import { loadSession, saveSession, clearSession } from './authToken';
+import { supabase } from './lib/supabase';
 
 import Login from './screens/Login';
 import AccountDialog from './components/AccountDialog';
@@ -31,6 +32,8 @@ const RewardCatalog = React.lazy(() => import('./screens/RewardCatalog'));
 const Messages = React.lazy(() => import('./screens/Messages'));
 const TutorProfile = React.lazy(() => import('./screens/TutorProfile'));
 const MyTutors = React.lazy(() => import('./screens/MyTutors'));
+const Tasks = React.lazy(() => import('./screens/Tasks'));
+const TaskDetail = React.lazy(() => import('./screens/TaskDetail'));
 
 /* Production builds hide the demo switcher unless VITE_DEMO_MODE=1. Local dev
  * keeps it on; VITE_DEMO_MODE=0 can disable it during a local production test. */
@@ -63,6 +66,7 @@ const ROLE_ROUTES = {
   '/checkin': ['learner', 'tutor'],
   '/rewards': ['learner', 'tutor'],
   '/messages': ['learner', 'tutor'],
+  '/tasks': ['learner', 'tutor'],
   '/approvals': ['superadmin'],
 };
 
@@ -92,7 +96,9 @@ function RoleGate({ role, path, showToast, navigate, children }) {
 const initialsOf = (name = '') => name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
 export default function App() {
-  const [user, setUser] = useState(() => loadSession()?.user ?? null);
+  const initialSession = useRef(loadSession());
+  const [user, setUser] = useState(() => initialSession.current?.user ?? null);
+  const [sessionExpiresAt, setSessionExpiresAt] = useState(() => initialSession.current?.expiresAt ?? null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const mobileCloseRef = useRef(null);
   const [toast, setToast] = useState(null);
@@ -107,12 +113,12 @@ export default function App() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const activeTab = location.pathname.substring(1) || 'dashboard';
+  const activeTab = location.pathname.split('/')[1] || 'dashboard';
 
   const routeTitle = (() => {
     if (!user) {
       if (/^\/(profile|users|tutors)\//.test(location.pathname)) return 'Public Profile';
-      if (location.pathname !== '/' && location.pathname !== '/login' && location.pathname !== '/dashboard' && !ROLE_ROUTES[location.pathname]) {
+      if (location.pathname !== '/' && location.pathname !== '/login' && location.pathname !== '/dashboard' && !ROLE_ROUTES[location.pathname] && !/^\/tasks\/[^/]+$/.test(location.pathname)) {
         return '404 Not Found';
       }
       return '';
@@ -132,8 +138,10 @@ export default function App() {
       '/checkin': 'Session Check-In',
       '/rewards': 'Rewards Catalog',
       '/messages': 'Messages',
+      '/tasks': 'Tasks',
       '/approvals': 'Tutor Approvals',
     };
+    if (/^\/tasks\/[^/]+$/.test(location.pathname)) return 'Task Details';
     if (/^\/(profile|users|tutors)\//.test(location.pathname)) return 'Public Profile';
     return map[location.pathname] ?? '404 Not Found';
   })();
@@ -161,8 +169,17 @@ export default function App() {
     const stored = loadSession();
     if (!stored?.user) return;
     api.get('/auth/me')
-      .then(({ user: fresh }) => { setUser(fresh); setRole(fresh.role); saveSession(fresh); })
-      .catch(() => { clearSession(); setUser(null); });
+      .then(({ user: fresh, sessionExpiresAt: exp }) => {
+        setUser(fresh);
+        setRole(fresh.role);
+        setSessionExpiresAt(exp ?? stored.expiresAt ?? null);
+        saveSession(fresh, exp);
+      })
+      .catch(() => {
+        clearSession();
+        setUser(null);
+        setSessionExpiresAt(null);
+      });
   }, []);
 
   useEffect(() => {
@@ -211,20 +228,53 @@ export default function App() {
   };
   useEffect(() => { if (user) refreshNotifications(); }, [user?.id]);
 
+  const finishSignOut = (expiredMessage = null) => {
+    // Clearing the HttpOnly cookie requires a round trip; drop all local and
+    // OAuth tokens immediately so no session persists on this device.
+    api.post('/auth/logout').catch(() => {});
+    supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+    window.google?.accounts?.id?.disableAutoSelect?.();
+    clearSession();
+    setUser(null);
+    setSessionExpiresAt(null);
+    setAccountOpen(false);
+    setShowNotifications(false);
+    setShowRoleMenu(false);
+    setMobileOpen(false);
+    navigate('/', { replace: true });
+    if (expiredMessage) showToast(expiredMessage, 'error');
+  };
+
   // Token expiry / revoke: api.js emits this on any 401 outside the login call.
   useEffect(() => {
     const onExpired = () => {
-      clearSession();
-      setUser(null);
-      setShowRoleMenu(false);
-      setMobileOpen(false);
-      navigate('/dashboard');
-      showToast('Session expired — sign in again.', 'error');
+      finishSignOut('Session expired after 48 hours — please sign in again to verify your account.');
     };
     window.addEventListener('academix:unauthorized', onExpired);
     return () => window.removeEventListener('academix:unauthorized', onExpired);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
+
+  // Enforce the 48-hour session ceiling even if a tab sits idle or wakes from sleep.
+  useEffect(() => {
+    if (!user || !sessionExpiresAt) return undefined;
+    const checkExpiry = () => {
+      if (Date.now() >= sessionExpiresAt) {
+        finishSignOut('Session expired after 48 hours — please sign in again to verify your account.');
+      }
+    };
+    checkExpiry();
+    const timer = setInterval(checkExpiry, 60_000);
+    const onVisible = () => { if (!document.hidden) checkExpiry(); };
+    window.addEventListener('focus', checkExpiry);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('focus', checkExpiry);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, sessionExpiresAt]);
 
   // Keep the notification badge honest without a socket: focus + 30s poll.
   useEffect(() => {
@@ -263,10 +313,11 @@ export default function App() {
 
   const switchDemoRole = async (rId, loginId) => {
     try {
-      const { token, user: fresh } = await api.post('/auth/login', { loginId, password: 'demo1234' });
-      saveSession(token, fresh);
+      const { user: fresh, sessionExpiresAt: exp } = await api.post('/auth/login', { loginId, password: 'demo1234' });
+      saveSession(fresh, exp);
       setUser(fresh);
       setRole(fresh.role);
+      setSessionExpiresAt(exp ?? null);
       setShowRoleMenu(false);
       setMobileOpen(false);
       navigate('/dashboard');
@@ -276,16 +327,7 @@ export default function App() {
     }
   };
 
-  const signOut = () => {
-    // Clearing the HttpOnly cookie requires a round trip; local state can drop
-    // immediately so the UI never looks signed in after the click.
-    api.post('/auth/logout').catch(() => {});
-    clearSession();
-    setUser(null);
-    setShowRoleMenu(false);
-    setMobileOpen(false);
-    navigate('/dashboard');
-  };
+  const signOut = () => finishSignOut();
 
   const getNavItems = () => {
     switch (role) {
@@ -302,6 +344,7 @@ export default function App() {
       case 'tutor':
         return [
           { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+          { id: 'tasks', label: 'Tasks', icon: ClipboardList },
           { id: 'messages', label: 'Messages', icon: MessageSquare },
           { id: 'checkin', label: 'Session check-in', icon: Clock },
           { id: 'rewards', label: 'Rewards catalog', icon: Award },
@@ -312,6 +355,7 @@ export default function App() {
           { id: 'wizard', label: 'Find a tutor', icon: Search },
           { id: 'my-tutors', label: 'My tutors', icon: Users },
           { id: 'dashboard', label: 'My progress', icon: LayoutDashboard },
+          { id: 'tasks', label: 'Tasks', icon: ClipboardList },
           { id: 'messages', label: 'Messages', icon: MessageSquare },
           { id: 'checkin', label: 'Session check-in', icon: Clock },
           { id: 'exam', label: 'Become a tutor', icon: Award },
@@ -337,7 +381,7 @@ export default function App() {
 
   if (!user) {
     const isPublicProfileRoute = /^\/(profile|users|tutors)\/[^/]+$/.test(location.pathname);
-    const isKnownRoute = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/dashboard' || Boolean(ROLE_ROUTES[location.pathname]);
+    const isKnownRoute = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/dashboard' || Boolean(ROLE_ROUTES[location.pathname]) || /^\/tasks\/[^/]+$/.test(location.pathname);
 
     if (isPublicProfileRoute || !isKnownRoute) {
       return (
@@ -380,7 +424,7 @@ export default function App() {
       );
     }
 
-    return <Login onLogin={(freshUser) => { setUser(freshUser); setRole(freshUser.role); showToast(`Welcome back, ${freshUser.name}.`); }} />;
+    return <Login onLogin={(freshUser, exp) => { setUser(freshUser); setRole(freshUser.role); setSessionExpiresAt(exp ?? null); showToast(`Welcome back, ${freshUser.name}.`); }} />;
   }
 
   const NavList = ({ onNavigate }) => (
@@ -614,6 +658,8 @@ export default function App() {
                   <Route path="/checkin" element={gate('/checkin', <SessionCheckIn role={role} user={user} showToast={showToast} />)} />
                   <Route path="/rewards" element={gate('/rewards', <RewardCatalog showToast={showToast} />)} />
                   <Route path="/messages" element={gate('/messages', <Messages user={user} showToast={showToast} onRead={refreshUnreadMessages} />)} />
+                  <Route path="/tasks" element={gate('/tasks', <Tasks role={role} showToast={showToast} />)} />
+                  <Route path="/tasks/:id" element={gate('/tasks', <TaskDetail role={role} showToast={showToast} />)} />
                   <Route path="/approvals" element={gate('/approvals', <SuperadminApprovals showToast={showToast} />)} />
                   <Route
                     path="/profile/:id"
@@ -817,19 +863,46 @@ export default function App() {
                     <p className="text-[14px] text-muted-foreground">Nothing on the wire yet.</p>
                   </div>
                 )}
-                {notifications.slice(0, 8).map(n => (
-                  <div key={n.id} className={cn('border-b border-ink/15 px-4 py-3 last:border-0', !n.is_read && 'bg-surface-highlight')}>
-                    <div className="flex items-start gap-2.5">
-                      <span className={cn('mt-1.5 h-2 w-2 shrink-0 border border-ink', n.type === 'warning' ? 'bg-crimson' : n.type === 'success' ? 'bg-emerald' : 'bg-ink/30')} />
-                      <div className="min-w-0">
-                        <p className={cn('text-[13px] leading-snug text-ink', !n.is_read && 'font-semibold')}>
-                          {n.title && n.title !== n.message ? `${n.title} — ` : ''}{n.message}
-                        </p>
-                        <p className="mt-1 text-[12px] text-muted-foreground">{fmtManilaDateTime(n.created_at)}</p>
+                {[...notifications]
+                  .sort((a, b) => Number(b.priority === 'high') - Number(a.priority === 'high'))
+                  .slice(0, 12)
+                  .map(n => {
+                    const isHigh = n.priority === 'high';
+                    const isTaskLink = n.entity_type === 'task' && n.entity_id;
+                    return (
+                      <div
+                        key={n.id}
+                        role={isTaskLink ? 'button' : undefined}
+                        tabIndex={isTaskLink ? 0 : undefined}
+                        onClick={isTaskLink ? () => { setShowNotifications(false); navigate(`/tasks/${n.entity_id}`); } : undefined}
+                        onKeyDown={isTaskLink ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowNotifications(false); navigate(`/tasks/${n.entity_id}`); } } : undefined}
+                        className={cn(
+                          'border-b border-ink/15 px-4 py-3 last:border-0',
+                          isHigh && 'border-l-4 border-l-crimson bg-gold/25',
+                          !isHigh && !n.is_read && 'bg-surface-highlight',
+                          isTaskLink && 'cursor-pointer hover:bg-gold/40',
+                        )}
+                      >
+                        <div className="flex items-start gap-2.5">
+                          <span className={cn('mt-1.5 h-2 w-2 shrink-0 border border-ink', isHigh || n.type === 'warning' ? 'bg-crimson' : n.type === 'success' ? 'bg-emerald' : 'bg-ink/30')} />
+                          <div className="min-w-0 flex-1">
+                            {isHigh && (
+                              <span className="mb-1 inline-block border border-ink bg-crimson px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.06em] text-paper">
+                                High priority
+                              </span>
+                            )}
+                            <p className={cn('text-[13px] leading-snug text-ink', (!n.is_read || isHigh) && 'font-semibold')}>
+                              {n.title && n.title !== n.message ? `${n.title} — ` : ''}{n.message}
+                            </p>
+                            <div className="mt-1 flex items-center justify-between gap-2 text-[12px] text-muted-foreground">
+                              <span>{fmtManilaDateTime(n.created_at)}</span>
+                              {isTaskLink && <span className="font-bold text-ink underline decoration-gold decoration-2">Open task →</span>}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })}
               </div>
             </motion.div>
           </>

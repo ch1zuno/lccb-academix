@@ -5,7 +5,7 @@ import { query, withTransaction } from '../db.js';
 import { requireAuth, signToken } from '../middleware/auth.js';
 import { config } from '../config.js';
 import { audit, requestIp } from '../lib/audit.js';
-import { clearSessionCookie, setSessionCookie } from '../lib/sessionCookie.js';
+import { clearSessionCookie, setSessionCookie, SESSION_TTL_MS } from '../lib/sessionCookie.js';
 import { isR2Configured, uploadToR2, deleteFromR2 } from '../lib/storage.js';
 
 const router = express.Router();
@@ -191,7 +191,7 @@ router.post('/login', async (req, res, next) => {
     });
     res.set('Cache-Control', 'no-store');
     setSessionCookie(res, token);
-    res.json({ token, user: fullUser });
+    res.json({ token, user: fullUser, sessionExpiresAt: Date.now() + SESSION_TTL_MS });
   } catch (e) { next(e); }
 });
 
@@ -281,7 +281,7 @@ router.post('/google', async (req, res, next) => {
 
     res.set('Cache-Control', 'no-store');
     setSessionCookie(res, token);
-    res.json({ token, user: fullUser });
+    res.json({ token, user: fullUser, sessionExpiresAt: Date.now() + SESSION_TTL_MS });
   } catch (e) { next(e); }
 });
 
@@ -290,7 +290,7 @@ router.get('/me', requireAuth, async (req, res, next) => {
   try {
     const user = await fetchFullUser(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({ user });
+    res.json({ user, sessionExpiresAt: req.authExp ? req.authExp * 1000 : null });
   } catch (e) { next(e); }
 });
 
@@ -481,7 +481,7 @@ router.post('/change-password', requireAuth, async (req, res, next) => {
     });
     res.set('Cache-Control', 'no-store');
     setSessionCookie(res, token);
-    res.json({ token, user: fresh });
+    res.json({ token, user: fresh, sessionExpiresAt: Date.now() + SESSION_TTL_MS });
   } catch (e) { next(e); }
 });
 

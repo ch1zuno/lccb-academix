@@ -395,15 +395,17 @@ export default function LandingPage({ onLogin }) {
     setError('');
     setGoogleLoading(true);
     try {
-      const { user } = await api.post('/auth/google', payload);
-      saveSession(user);
-      onLogin(user);
+      const { user, sessionExpiresAt } = await api.post('/auth/google', payload);
+      saveSession(user, sessionExpiresAt);
+      onLogin(user, sessionExpiresAt);
       setShowGoogleChooser(false);
       setCustomGoogleEmail('');
       setShowLogin(false);
     } catch (err) {
       setError(err.message || 'Google sign in failed.');
     } finally {
+      // Supabase is only a login handoff; drop its local token so it cannot auto-refresh forever.
+      supabase.auth.signOut({ scope: 'local' }).catch(() => {});
       setGoogleLoading(false);
     }
   };
@@ -502,9 +504,9 @@ export default function LandingPage({ onLogin }) {
     }
     setLoading(true);
     try {
-      const { user } = await api.post('/auth/login', { loginId: schoolId.trim(), password });
-      saveSession(user);
-      onLogin(user);
+      const { user, sessionExpiresAt } = await api.post('/auth/login', { loginId: schoolId.trim(), password });
+      saveSession(user, sessionExpiresAt);
+      onLogin(user, sessionExpiresAt);
       setShowLogin(false);
     } catch (err) {
       setError(err.message || 'Sign in failed. Check your credentials.');
