@@ -72,19 +72,6 @@
       "source_location": "L32"
     },
     {
-      "id": "src_api_apierror",
-      "label": "ApiError",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "api.js",
-      "file_type": "code",
-      "norm_label": "apierror",
-      "source_file": "src/api.js",
-      "source_location": "L5"
-    },
-    {
       "id": "server_scripts_test_jitsi_component_mockjitsimeetexternalapi",
       "label": "MockJitsiMeetExternalAPI",
       "_callable": true,
@@ -137,6 +124,19 @@
       "source_location": "L28"
     },
     {
+      "id": "src_api_apierror",
+      "label": "ApiError",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "LearnerWizard.jsx",
+      "file_type": "code",
+      "norm_label": "apierror",
+      "source_file": "src/api.js",
+      "source_location": "L5"
+    },
+    {
       "id": "src_services_realtime_wsrealtimeservice_wsrealtimeservice",
       "label": "WsRealtimeService",
       "_callable": true,
@@ -150,12 +150,144 @@
       "source_location": "L14"
     },
     {
+      "id": "server_scripts_e2e_accreditation_check",
+      "label": "check()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "check()",
+      "source_file": "server/scripts/e2e-accreditation.js",
+      "source_location": "L17"
+    },
+    {
+      "id": "server_scripts_e2e_accreditation_download",
+      "label": "download()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "download()",
+      "source_file": "server/scripts/e2e-accreditation.js",
+      "source_location": "L49"
+    },
+    {
+      "id": "server_scripts_e2e_accreditation_login",
+      "label": "login()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "login()",
+      "source_file": "server/scripts/e2e-accreditation.js",
+      "source_location": "L55"
+    },
+    {
+      "id": "server_scripts_e2e_accreditation_request",
+      "label": "request()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "request()",
+      "source_file": "server/scripts/e2e-accreditation.js",
+      "source_location": "L27"
+    },
+    {
+      "id": "server_scripts_e2e_accreditation_upload",
+      "label": "upload()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "upload()",
+      "source_file": "server/scripts/e2e-accreditation.js",
+      "source_location": "L37"
+    },
+    {
+      "id": "server_scripts_e2e_audit_assert",
+      "label": "assert()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "assert()",
+      "source_file": "server/scripts/e2e-audit.js",
+      "source_location": "L20"
+    },
+    {
+      "id": "server_scripts_e2e_audit_login",
+      "label": "login()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "login()",
+      "source_file": "server/scripts/e2e-audit.js",
+      "source_location": "L19"
+    },
+    {
+      "id": "server_scripts_e2e_audit_request",
+      "label": "request()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "request()",
+      "source_file": "server/scripts/e2e-audit.js",
+      "source_location": "L10"
+    },
+    {
+      "id": "server_scripts_e2e_concurrency_assert",
+      "label": "assert()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "assert()",
+      "source_file": "server/scripts/e2e-concurrency.js",
+      "source_location": "L22"
+    },
+    {
+      "id": "server_scripts_e2e_concurrency_login",
+      "label": "login()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "login()",
+      "source_file": "server/scripts/e2e-concurrency.js",
+      "source_location": "L21"
+    },
+    {
+      "id": "server_scripts_e2e_concurrency_request",
+      "label": "request()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "request()",
+      "source_file": "server/scripts/e2e-concurrency.js",
+      "source_location": "L12"
+    },
+    {
       "id": "server_scripts_e2e_ledger_integrity_probe",
       "label": "probe()",
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "probe()",
       "source_file": "server/scripts/e2e-ledger-integrity.js",
@@ -167,7 +299,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "login()",
       "source_file": "server/scripts/e2e-referrals.js",
@@ -179,7 +311,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "request()",
       "source_file": "server/scripts/e2e-referrals.js",
@@ -191,7 +323,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "login()",
       "source_file": "server/scripts/e2e-wrapup.js",
@@ -203,7 +335,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "request()",
       "source_file": "server/scripts/e2e-wrapup.js",
@@ -244,90 +376,6 @@
       "norm_label": "request()",
       "source_file": "server/scripts/demo-check.js",
       "source_location": "L27"
-    },
-    {
-      "id": "server_lib_publicprofile_topublicprofile",
-      "label": "toPublicProfile()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "topublicprofile()",
-      "source_file": "server/lib/publicProfile.js",
-      "source_location": "L14"
-    },
-    {
-      "id": "server_lib_storage_deletefromr2",
-      "label": "deleteFromR2()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "deletefromr2()",
-      "source_file": "server/lib/storage.js",
-      "source_location": "L77"
-    },
-    {
-      "id": "server_lib_storage_getfromr2",
-      "label": "getFromR2()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "getfromr2()",
-      "source_file": "server/lib/storage.js",
-      "source_location": "L95"
-    },
-    {
-      "id": "server_lib_storage_getr2client",
-      "label": "getR2Client()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "getr2client()",
-      "source_file": "server/lib/storage.js",
-      "source_location": "L25"
-    },
-    {
-      "id": "server_lib_storage_isr2configured",
-      "label": "isR2Configured()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "isr2configured()",
-      "source_file": "server/lib/storage.js",
-      "source_location": "L16"
-    },
-    {
-      "id": "server_lib_storage_resetclientfortesting",
-      "label": "_resetClientForTesting()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "_resetclientfortesting()",
-      "source_file": "server/lib/storage.js",
-      "source_location": "L115"
-    },
-    {
-      "id": "server_lib_storage_uploadtor2",
-      "label": "uploadToR2()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "uploadtor2()",
-      "source_file": "server/lib/storage.js",
-      "source_location": "L54"
     },
     {
       "id": "server_lib_task_storage_deletetaskimage",
@@ -414,54 +462,6 @@
       "source_location": "L50"
     },
     {
-      "id": "server_routes_video_derivejitsiroomname",
-      "label": "deriveJitsiRoomName()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "derivejitsiroomname()",
-      "source_file": "server/routes/video.js",
-      "source_location": "L17"
-    },
-    {
-      "id": "server_scripts_migrate_bytea_to_r2_runmigration",
-      "label": "runMigration()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "runmigration()",
-      "source_file": "server/scripts/migrate_bytea_to_r2.js",
-      "source_location": "L10"
-    },
-    {
-      "id": "server_scripts_test_video_room_loginuser",
-      "label": "loginUser()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "loginuser()",
-      "source_file": "server/scripts/test-video-room.js",
-      "source_location": "L6"
-    },
-    {
-      "id": "server_scripts_test_video_room_runtests",
-      "label": "runTests()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "runtests()",
-      "source_file": "server/scripts/test-video-room.js",
-      "source_location": "L21"
-    },
-    {
       "id": "server_scripts_e2e_matching_login",
       "label": "login()",
       "_callable": true,
@@ -496,6 +496,30 @@
       "norm_label": "request()",
       "source_file": "server/scripts/e2e-matching.js",
       "source_location": "L4"
+    },
+    {
+      "id": "server_lib_aiassistant_generatetutoringhint",
+      "label": "generateTutoringHint()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "routes/index.js",
+      "file_type": "code",
+      "norm_label": "generatetutoringhint()",
+      "source_file": "server/lib/aiAssistant.js",
+      "source_location": "L16"
+    },
+    {
+      "id": "server_lib_aiassistant_generatewrapupsynthesis",
+      "label": "generateWrapUpSynthesis()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "routes/index.js",
+      "file_type": "code",
+      "norm_label": "generatewrapupsynthesis()",
+      "source_file": "server/lib/aiAssistant.js",
+      "source_location": "L66"
     },
     {
       "id": "server_middleware_auth_requireauth",
@@ -534,42 +558,6 @@
       "source_location": "L19"
     },
     {
-      "id": "server_routes_matching_timetominutes",
-      "label": "timeToMinutes()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "code",
-      "norm_label": "timetominutes()",
-      "source_file": "server/routes/matching.js",
-      "source_location": "L13"
-    },
-    {
-      "id": "server_routes_matching_todayymd",
-      "label": "todayYmd()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "code",
-      "norm_label": "todayymd()",
-      "source_file": "server/routes/matching.js",
-      "source_location": "L20"
-    },
-    {
-      "id": "server_routes_matching_tutor_sql",
-      "label": "TUTOR_SQL()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "code",
-      "norm_label": "tutor_sql()",
-      "source_file": "server/routes/matching.js",
-      "source_location": "L26"
-    },
-    {
       "id": "server_routes_notifications_syncduesoonnotifications",
       "label": "syncDueSoonNotifications()",
       "_callable": true,
@@ -580,18 +568,6 @@
       "norm_label": "syncduesoonnotifications()",
       "source_file": "server/routes/notifications.js",
       "source_location": "L9"
-    },
-    {
-      "id": "server_routes_sessions_requiredevicekey",
-      "label": "requireDeviceKey()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "code",
-      "norm_label": "requiredevicekey()",
-      "source_file": "server/routes/sessions.js",
-      "source_location": "L228"
     },
     {
       "id": "server_scripts_e2e_auth_assert",
@@ -700,114 +676,6 @@
       "norm_label": "request()",
       "source_file": "server/scripts/e2e-rewards.js",
       "source_location": "L4"
-    },
-    {
-      "id": "src_components_applicationdocumentpicker_applicationdocumentpicker",
-      "label": "ApplicationDocumentPicker()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
-      "file_type": "code",
-      "norm_label": "applicationdocumentpicker()",
-      "source_file": "src/components/ApplicationDocumentPicker.jsx",
-      "source_location": "L120"
-    },
-    {
-      "id": "src_components_applicationdocumentpicker_applicationfilelist",
-      "label": "ApplicationFileList()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
-      "file_type": "code",
-      "norm_label": "applicationfilelist()",
-      "source_file": "src/components/ApplicationDocumentPicker.jsx",
-      "source_location": "L57"
-    },
-    {
-      "id": "src_components_applicationdocumentpicker_documentthumb",
-      "label": "DocumentThumb()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
-      "file_type": "code",
-      "norm_label": "documentthumb()",
-      "source_file": "src/components/ApplicationDocumentPicker.jsx",
-      "source_location": "L16"
-    },
-    {
-      "id": "src_lib_applicationfiles_canpreviewfile",
-      "label": "canPreviewFile()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
-      "file_type": "code",
-      "norm_label": "canpreviewfile()",
-      "source_file": "src/lib/applicationFiles.js",
-      "source_location": "L23"
-    },
-    {
-      "id": "src_lib_applicationfiles_fileextension",
-      "label": "fileExtension()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
-      "file_type": "code",
-      "norm_label": "fileextension()",
-      "source_file": "src/lib/applicationFiles.js",
-      "source_location": "L10"
-    },
-    {
-      "id": "src_lib_applicationfiles_formatfilesize",
-      "label": "formatFileSize()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
-      "file_type": "code",
-      "norm_label": "formatfilesize()",
-      "source_file": "src/lib/applicationFiles.js",
-      "source_location": "L15"
-    },
-    {
-      "id": "src_lib_applicationfiles_isimagefile",
-      "label": "isImageFile()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
-      "file_type": "code",
-      "norm_label": "isimagefile()",
-      "source_file": "src/lib/applicationFiles.js",
-      "source_location": "L22"
-    },
-    {
-      "id": "src_lib_applicationfiles_validateapplicationfiles",
-      "label": "validateApplicationFiles()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
-      "file_type": "code",
-      "norm_label": "validateapplicationfiles()",
-      "source_file": "src/lib/applicationFiles.js",
-      "source_location": "L29"
-    },
-    {
-      "id": "src_components_classroom_dualpurposechat_dualpurposechat",
-      "label": "DualPurposeChat()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "dualpurposechat()",
-      "source_file": "src/components/classroom/DualPurposeChat.jsx",
-      "source_location": "L29"
     },
     {
       "id": "src_components_classroom_liveclassroom_liveclassroom",
@@ -1011,7 +879,7 @@
       "file_type": "code",
       "norm_label": "app()",
       "source_file": "src/App.jsx",
-      "source_location": "L98"
+      "source_location": "L99"
     },
     {
       "id": "src_app_initialsof",
@@ -1023,7 +891,7 @@
       "file_type": "code",
       "norm_label": "initialsof()",
       "source_file": "src/App.jsx",
-      "source_location": "L96"
+      "source_location": "L97"
     },
     {
       "id": "src_app_rolegate",
@@ -1035,7 +903,7 @@
       "file_type": "code",
       "norm_label": "rolegate()",
       "source_file": "src/App.jsx",
-      "source_location": "L73"
+      "source_location": "L74"
     },
     {
       "id": "src_components_logo2d_logo2d",
@@ -1060,6 +928,102 @@
       "norm_label": "splashscreen()",
       "source_file": "src/components/SplashScreen.jsx",
       "source_location": "L10"
+    },
+    {
+      "id": "src_lib_ux_downloadsessionics",
+      "label": "downloadSessionIcs()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "downloadsessionics()",
+      "source_file": "src/lib/ux.js",
+      "source_location": "L151"
+    },
+    {
+      "id": "src_lib_ux_fmtmaniladate",
+      "label": "fmtManilaDate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "fmtmaniladate()",
+      "source_file": "src/lib/ux.js",
+      "source_location": "L104"
+    },
+    {
+      "id": "src_lib_ux_fmtmaniladatetime",
+      "label": "fmtManilaDateTime()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "fmtmaniladatetime()",
+      "source_file": "src/lib/ux.js",
+      "source_location": "L115"
+    },
+    {
+      "id": "src_lib_ux_manilatodayymd",
+      "label": "manilaTodayYmd()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "manilatodayymd()",
+      "source_file": "src/lib/ux.js",
+      "source_location": "L82"
+    },
+    {
+      "id": "src_lib_ux_toicsutcstamp",
+      "label": "toIcsUtcStamp()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "toicsutcstamp()",
+      "source_file": "src/lib/ux.js",
+      "source_location": "L131"
+    },
+    {
+      "id": "src_lib_ux_usepagetitle",
+      "label": "usePageTitle()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "usepagetitle()",
+      "source_file": "src/lib/ux.js",
+      "source_location": "L8"
+    },
+    {
+      "id": "src_screens_tasks_studentbadge",
+      "label": "studentBadge()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "studentbadge()",
+      "source_file": "src/screens/Tasks.jsx",
+      "source_location": "L27"
+    },
+    {
+      "id": "src_screens_tasks_tasks",
+      "label": "Tasks()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "tasks()",
+      "source_file": "src/screens/Tasks.jsx",
+      "source_location": "L42"
     },
     {
       "id": "vite_config_manualchunks",
@@ -1734,6 +1698,18 @@
       "source_location": "L28"
     },
     {
+      "id": "src_lib_ux_usedraftstate",
+      "label": "useDraftState()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "src/screens/SessionCheckIn.jsx",
+      "file_type": "code",
+      "norm_label": "usedraftstate()",
+      "source_file": "src/lib/ux.js",
+      "source_location": "L18"
+    },
+    {
       "id": "src_screens_sessioncheckin_fmtdate",
       "label": "fmtDate()",
       "_callable": true,
@@ -1799,7 +1775,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "contentmatchesextension()",
       "source_file": "server/lib/application-files.js",
@@ -1811,11 +1787,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "fileextension()",
       "source_file": "server/lib/application-files.js",
       "source_location": "L26"
+    },
+    {
+      "id": "server_lib_application_files_uploadapplicationdocument",
+      "label": "uploadApplicationDocument()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 404,
+      "community_name": "accreditation.js",
+      "file_type": "code",
+      "norm_label": "uploadapplicationdocument()",
+      "source_file": "server/lib/application-files.js",
+      "source_location": "L78"
     },
     {
       "id": "server_lib_application_files_validateapplicationfile",
@@ -1823,95 +1811,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "validateapplicationfile()",
       "source_file": "server/lib/application-files.js",
       "source_location": "L92"
     },
     {
-      "id": "src_lib_pdfnotes_downloadnotespdf",
-      "label": "downloadNotesPdf()",
+      "id": "server_routes_accreditation_readableapplication",
+      "label": "readableApplication()",
       "_callable": true,
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
-      "norm_label": "downloadnotespdf()",
-      "source_file": "src/lib/pdfNotes.js",
-      "source_location": "L225"
-    },
-    {
-      "id": "src_lib_pdfnotes_escapepdftext",
-      "label": "escapePdfText()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 404,
-      "community_name": "application-files.js",
-      "file_type": "code",
-      "norm_label": "escapepdftext()",
-      "source_file": "src/lib/pdfNotes.js",
-      "source_location": "L17"
-    },
-    {
-      "id": "src_lib_pdfnotes_formatautosavefilename",
-      "label": "formatAutoSaveFilename()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 404,
-      "community_name": "application-files.js",
-      "file_type": "code",
-      "norm_label": "formatautosavefilename()",
-      "source_file": "src/lib/pdfNotes.js",
-      "source_location": "L63"
-    },
-    {
-      "id": "src_lib_pdfnotes_generatenotespdfbytes",
-      "label": "generateNotesPdfBytes()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 404,
-      "community_name": "application-files.js",
-      "file_type": "code",
-      "norm_label": "generatenotespdfbytes()",
-      "source_file": "src/lib/pdfNotes.js",
-      "source_location": "L90"
-    },
-    {
-      "id": "src_lib_pdfnotes_sanitizepdffilename",
-      "label": "sanitizePdfFilename()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 404,
-      "community_name": "application-files.js",
-      "file_type": "code",
-      "norm_label": "sanitizepdffilename()",
-      "source_file": "src/lib/pdfNotes.js",
-      "source_location": "L74"
-    },
-    {
-      "id": "src_lib_pdfnotes_towinansisafe",
-      "label": "toWinAnsiSafe()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 404,
-      "community_name": "application-files.js",
-      "file_type": "code",
-      "norm_label": "towinansisafe()",
-      "source_file": "src/lib/pdfNotes.js",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_lib_pdfnotes_wrapnotelines",
-      "label": "wrapNoteLines()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 404,
-      "community_name": "application-files.js",
-      "file_type": "code",
-      "norm_label": "wrapnotelines()",
-      "source_file": "src/lib/pdfNotes.js",
-      "source_location": "L24"
+      "norm_label": "readableapplication()",
+      "source_file": "server/routes/accreditation.js",
+      "source_location": "L43"
     },
     {
       "id": "server_lib_google_auth_test_json",
@@ -2046,160 +1962,136 @@
       "source_location": "L44"
     },
     {
-      "id": "src_api_apierror_constructor",
-      "label": ".constructor()",
+      "id": "src_components_classroom_dualpurposechat_dualpurposechat",
+      "label": "DualPurposeChat()",
       "_callable": true,
       "_origin": "ast",
       "community": 42,
-      "community_name": "api.js",
+      "community_name": "DualPurposeChat.jsx",
       "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/api.js",
-      "source_location": "L6"
+      "norm_label": "dualpurposechat()",
+      "source_file": "src/components/classroom/DualPurposeChat.jsx",
+      "source_location": "L29"
     },
     {
-      "id": "src_api_request",
-      "label": "request()",
+      "id": "src_lib_pdfnotes_downloadnotespdf",
+      "label": "downloadNotesPdf()",
       "_callable": true,
       "_origin": "ast",
       "community": 42,
-      "community_name": "api.js",
+      "community_name": "DualPurposeChat.jsx",
       "file_type": "code",
-      "norm_label": "request()",
-      "source_file": "src/api.js",
-      "source_location": "L13"
+      "norm_label": "downloadnotespdf()",
+      "source_file": "src/lib/pdfNotes.js",
+      "source_location": "L225"
     },
     {
-      "id": "src_api_requestblob",
-      "label": "requestBlob()",
+      "id": "src_lib_pdfnotes_escapepdftext",
+      "label": "escapePdfText()",
       "_callable": true,
       "_origin": "ast",
       "community": 42,
-      "community_name": "api.js",
+      "community_name": "DualPurposeChat.jsx",
       "file_type": "code",
-      "norm_label": "requestblob()",
-      "source_file": "src/api.js",
-      "source_location": "L38"
+      "norm_label": "escapepdftext()",
+      "source_file": "src/lib/pdfNotes.js",
+      "source_location": "L17"
     },
     {
-      "id": "src_lib_ux_downloadsessionics",
-      "label": "downloadSessionIcs()",
+      "id": "src_lib_pdfnotes_formatautosavefilename",
+      "label": "formatAutoSaveFilename()",
       "_callable": true,
       "_origin": "ast",
       "community": 42,
-      "community_name": "api.js",
+      "community_name": "DualPurposeChat.jsx",
       "file_type": "code",
-      "norm_label": "downloadsessionics()",
-      "source_file": "src/lib/ux.js",
-      "source_location": "L151"
+      "norm_label": "formatautosavefilename()",
+      "source_file": "src/lib/pdfNotes.js",
+      "source_location": "L63"
     },
     {
-      "id": "src_lib_ux_fmtmaniladate",
-      "label": "fmtManilaDate()",
+      "id": "src_lib_pdfnotes_generatenotespdfbytes",
+      "label": "generateNotesPdfBytes()",
       "_callable": true,
       "_origin": "ast",
       "community": 42,
-      "community_name": "api.js",
+      "community_name": "DualPurposeChat.jsx",
       "file_type": "code",
-      "norm_label": "fmtmaniladate()",
-      "source_file": "src/lib/ux.js",
-      "source_location": "L104"
+      "norm_label": "generatenotespdfbytes()",
+      "source_file": "src/lib/pdfNotes.js",
+      "source_location": "L90"
     },
     {
-      "id": "src_lib_ux_fmtmaniladatetime",
-      "label": "fmtManilaDateTime()",
+      "id": "src_lib_pdfnotes_sanitizepdffilename",
+      "label": "sanitizePdfFilename()",
       "_callable": true,
       "_origin": "ast",
       "community": 42,
-      "community_name": "api.js",
+      "community_name": "DualPurposeChat.jsx",
       "file_type": "code",
-      "norm_label": "fmtmaniladatetime()",
-      "source_file": "src/lib/ux.js",
-      "source_location": "L115"
+      "norm_label": "sanitizepdffilename()",
+      "source_file": "src/lib/pdfNotes.js",
+      "source_location": "L74"
     },
     {
-      "id": "src_lib_ux_manilatodayymd",
-      "label": "manilaTodayYmd()",
+      "id": "src_lib_pdfnotes_towinansisafe",
+      "label": "toWinAnsiSafe()",
       "_callable": true,
       "_origin": "ast",
       "community": 42,
-      "community_name": "api.js",
+      "community_name": "DualPurposeChat.jsx",
       "file_type": "code",
-      "norm_label": "manilatodayymd()",
-      "source_file": "src/lib/ux.js",
-      "source_location": "L82"
+      "norm_label": "towinansisafe()",
+      "source_file": "src/lib/pdfNotes.js",
+      "source_location": "L7"
     },
     {
-      "id": "src_lib_ux_toicsutcstamp",
-      "label": "toIcsUtcStamp()",
+      "id": "src_lib_pdfnotes_wrapnotelines",
+      "label": "wrapNoteLines()",
       "_callable": true,
       "_origin": "ast",
       "community": 42,
-      "community_name": "api.js",
+      "community_name": "DualPurposeChat.jsx",
       "file_type": "code",
-      "norm_label": "toicsutcstamp()",
-      "source_file": "src/lib/ux.js",
-      "source_location": "L131"
+      "norm_label": "wrapnotelines()",
+      "source_file": "src/lib/pdfNotes.js",
+      "source_location": "L24"
     },
     {
-      "id": "src_screens_taskdetail_statuspill",
-      "label": "statusPill()",
+      "id": "src_components_applicationdocumentpicker_applicationdocumentpicker",
+      "label": "ApplicationDocumentPicker()",
       "_callable": true,
       "_origin": "ast",
-      "community": 42,
-      "community_name": "api.js",
+      "community": 43,
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
-      "norm_label": "statuspill()",
-      "source_file": "src/screens/TaskDetail.jsx",
-      "source_location": "L38"
+      "norm_label": "applicationdocumentpicker()",
+      "source_file": "src/components/ApplicationDocumentPicker.jsx",
+      "source_location": "L120"
     },
     {
-      "id": "src_screens_taskdetail_taskdetail",
-      "label": "TaskDetail()",
+      "id": "src_components_applicationdocumentpicker_applicationfilelist",
+      "label": "ApplicationFileList()",
       "_callable": true,
       "_origin": "ast",
-      "community": 42,
-      "community_name": "api.js",
+      "community": 43,
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
-      "norm_label": "taskdetail()",
-      "source_file": "src/screens/TaskDetail.jsx",
-      "source_location": "L53"
+      "norm_label": "applicationfilelist()",
+      "source_file": "src/components/ApplicationDocumentPicker.jsx",
+      "source_location": "L57"
     },
     {
-      "id": "src_screens_taskdetail_tolocalinputvalue",
-      "label": "toLocalInputValue()",
+      "id": "src_components_applicationdocumentpicker_documentthumb",
+      "label": "DocumentThumb()",
       "_callable": true,
       "_origin": "ast",
-      "community": 42,
-      "community_name": "api.js",
+      "community": 43,
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
-      "norm_label": "tolocalinputvalue()",
-      "source_file": "src/screens/TaskDetail.jsx",
-      "source_location": "L30"
-    },
-    {
-      "id": "src_screens_tasks_studentbadge",
-      "label": "studentBadge()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "api.js",
-      "file_type": "code",
-      "norm_label": "studentbadge()",
-      "source_file": "src/screens/Tasks.jsx",
-      "source_location": "L27"
-    },
-    {
-      "id": "src_screens_tasks_tasks",
-      "label": "Tasks()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "api.js",
-      "file_type": "code",
-      "norm_label": "tasks()",
-      "source_file": "src/screens/Tasks.jsx",
-      "source_location": "L42"
+      "norm_label": "documentthumb()",
+      "source_file": "src/components/ApplicationDocumentPicker.jsx",
+      "source_location": "L16"
     },
     {
       "id": "src_components_ui_confirmdialog_confirmdialog",
@@ -2207,7 +2099,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "confirmdialog()",
       "source_file": "src/components/ui/ConfirmDialog.jsx",
@@ -2219,11 +2111,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "errorbanner()",
       "source_file": "src/components/ui/ErrorBanner.jsx",
       "source_location": "L6"
+    },
+    {
+      "id": "src_lib_applicationfiles_canpreviewfile",
+      "label": "canPreviewFile()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "SuperadminApprovals.jsx",
+      "file_type": "code",
+      "norm_label": "canpreviewfile()",
+      "source_file": "src/lib/applicationFiles.js",
+      "source_location": "L23"
     },
     {
       "id": "src_lib_applicationfiles_downloadapplicationdocument",
@@ -2231,11 +2135,47 @@
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "downloadapplicationdocument()",
       "source_file": "src/lib/applicationFiles.js",
       "source_location": "L68"
+    },
+    {
+      "id": "src_lib_applicationfiles_fileextension",
+      "label": "fileExtension()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "SuperadminApprovals.jsx",
+      "file_type": "code",
+      "norm_label": "fileextension()",
+      "source_file": "src/lib/applicationFiles.js",
+      "source_location": "L10"
+    },
+    {
+      "id": "src_lib_applicationfiles_formatfilesize",
+      "label": "formatFileSize()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "SuperadminApprovals.jsx",
+      "file_type": "code",
+      "norm_label": "formatfilesize()",
+      "source_file": "src/lib/applicationFiles.js",
+      "source_location": "L15"
+    },
+    {
+      "id": "src_lib_applicationfiles_isimagefile",
+      "label": "isImageFile()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "SuperadminApprovals.jsx",
+      "file_type": "code",
+      "norm_label": "isimagefile()",
+      "source_file": "src/lib/applicationFiles.js",
+      "source_location": "L22"
     },
     {
       "id": "src_lib_applicationfiles_openapplicationdocument",
@@ -2243,23 +2183,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "openapplicationdocument()",
       "source_file": "src/lib/applicationFiles.js",
       "source_location": "L53"
     },
     {
-      "id": "src_lib_ux_usedraftstate",
-      "label": "useDraftState()",
+      "id": "src_lib_applicationfiles_validateapplicationfiles",
+      "label": "validateApplicationFiles()",
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
-      "norm_label": "usedraftstate()",
-      "source_file": "src/lib/ux.js",
-      "source_location": "L18"
+      "norm_label": "validateapplicationfiles()",
+      "source_file": "src/lib/applicationFiles.js",
+      "source_location": "L29"
     },
     {
       "id": "src_screens_rewardcatalog_fmt",
@@ -2267,7 +2207,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "fmt()",
       "source_file": "src/screens/RewardCatalog.jsx",
@@ -2279,7 +2219,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "rewardcatalog()",
       "source_file": "src/screens/RewardCatalog.jsx",
@@ -2291,7 +2231,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "fmtdate()",
       "source_file": "src/screens/SuperadminApprovals.jsx",
@@ -2303,7 +2243,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "initials()",
       "source_file": "src/screens/SuperadminApprovals.jsx",
@@ -2315,7 +2255,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "subjectcode()",
       "source_file": "src/screens/SuperadminApprovals.jsx",
@@ -2327,7 +2267,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "superadminapprovals()",
       "source_file": "src/screens/SuperadminApprovals.jsx",
@@ -2339,7 +2279,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "nextfileid()",
       "source_file": "src/screens/TutorApplicant.jsx",
@@ -2351,7 +2291,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "tutorapplicant()",
       "source_file": "src/screens/TutorApplicant.jsx",
@@ -2862,18 +2802,6 @@
       "source_location": "L41"
     },
     {
-      "id": "server_lib_application_files_uploadapplicationdocument",
-      "label": "uploadApplicationDocument()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 49,
-      "community_name": "query",
-      "file_type": "code",
-      "norm_label": "uploadapplicationdocument()",
-      "source_file": "server/lib/application-files.js",
-      "source_location": "L78"
-    },
-    {
       "id": "server_lib_audit_audit",
       "label": "audit()",
       "_callable": true,
@@ -2898,18 +2826,6 @@
       "source_location": "L29"
     },
     {
-      "id": "server_routes_accreditation_readableapplication",
-      "label": "readableApplication()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 49,
-      "community_name": "query",
-      "file_type": "code",
-      "norm_label": "readableapplication()",
-      "source_file": "server/routes/accreditation.js",
-      "source_location": "L43"
-    },
-    {
       "id": "server_routes_auth_fetchfulluser",
       "label": "fetchFullUser()",
       "_callable": true,
@@ -2920,6 +2836,42 @@
       "norm_label": "fetchfulluser()",
       "source_file": "server/routes/auth.js",
       "source_location": "L123"
+    },
+    {
+      "id": "server_routes_matching_timetominutes",
+      "label": "timeToMinutes()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 49,
+      "community_name": "query",
+      "file_type": "code",
+      "norm_label": "timetominutes()",
+      "source_file": "server/routes/matching.js",
+      "source_location": "L13"
+    },
+    {
+      "id": "server_routes_matching_todayymd",
+      "label": "todayYmd()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 49,
+      "community_name": "query",
+      "file_type": "code",
+      "norm_label": "todayymd()",
+      "source_file": "server/routes/matching.js",
+      "source_location": "L20"
+    },
+    {
+      "id": "server_routes_matching_tutor_sql",
+      "label": "TUTOR_SQL()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 49,
+      "community_name": "query",
+      "file_type": "code",
+      "norm_label": "tutor_sql()",
+      "source_file": "server/routes/matching.js",
+      "source_location": "L26"
     },
     {
       "id": "server_routes_messages_assertcanchat",
@@ -3726,6 +3678,42 @@
       "source_location": "L41"
     },
     {
+      "id": "src_api_apierror_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "LearnerWizard.jsx",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/api.js",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_api_request",
+      "label": "request()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "LearnerWizard.jsx",
+      "file_type": "code",
+      "norm_label": "request()",
+      "source_file": "src/api.js",
+      "source_location": "L13"
+    },
+    {
+      "id": "src_api_requestblob",
+      "label": "requestBlob()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "LearnerWizard.jsx",
+      "file_type": "code",
+      "norm_label": "requestblob()",
+      "source_file": "src/api.js",
+      "source_location": "L38"
+    },
+    {
       "id": "src_components_matchmakinganimation_matchmakinganimation",
       "label": "MatchmakingAnimation()",
       "_callable": true,
@@ -3798,18 +3786,6 @@
       "source_location": "L28"
     },
     {
-      "id": "src_lib_ux_usepagetitle",
-      "label": "usePageTitle()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "LearnerWizard.jsx",
-      "file_type": "code",
-      "norm_label": "usepagetitle()",
-      "source_file": "src/lib/ux.js",
-      "source_location": "L8"
-    },
-    {
       "id": "src_screens_learnerwizard_learnerwizard",
       "label": "LearnerWizard()",
       "_callable": true,
@@ -3858,28 +3834,28 @@
       "source_location": "L9"
     },
     {
-      "id": "server_lib_aiassistant_generatetutoringhint",
-      "label": "generateTutoringHint()",
+      "id": "server_lib_ws_realtime_setupwebsocketserver",
+      "label": "setupWebSocketServer()",
       "_callable": true,
       "_origin": "ast",
       "community": 52,
       "community_name": "app.js",
       "file_type": "code",
-      "norm_label": "generatetutoringhint()",
-      "source_file": "server/lib/aiAssistant.js",
-      "source_location": "L16"
+      "norm_label": "setupwebsocketserver()",
+      "source_file": "server/lib/ws-realtime.js",
+      "source_location": "L8"
     },
     {
-      "id": "server_lib_aiassistant_generatewrapupsynthesis",
-      "label": "generateWrapUpSynthesis()",
+      "id": "server_lib_ws_realtime_setupwebsocketserver_broadcastpresence",
+      "label": "broadcastPresence()",
       "_callable": true,
       "_origin": "ast",
       "community": 52,
       "community_name": "app.js",
       "file_type": "code",
-      "norm_label": "generatewrapupsynthesis()",
-      "source_file": "server/lib/aiAssistant.js",
-      "source_location": "L66"
+      "norm_label": "broadcastpresence()",
+      "source_file": "server/lib/ws-realtime.js",
+      "source_location": "L14"
     },
     {
       "id": "server_middleware_errors_errorhandler",
@@ -3904,6 +3880,30 @@
       "norm_label": "notfound()",
       "source_file": "server/middleware/errors.js",
       "source_location": "L2"
+    },
+    {
+      "id": "server_routes_sessions_requiredevicekey",
+      "label": "requireDeviceKey()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 52,
+      "community_name": "app.js",
+      "file_type": "code",
+      "norm_label": "requiredevicekey()",
+      "source_file": "server/routes/sessions.js",
+      "source_location": "L228"
+    },
+    {
+      "id": "server_lib_application_files_test_file",
+      "label": "file()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "pg-embed.js",
+      "file_type": "code",
+      "norm_label": "file()",
+      "source_file": "server/lib/application-files.test.js",
+      "source_location": "L5"
     },
     {
       "id": "server_pg_embed_ensurepostgres",
@@ -3966,112 +3966,88 @@
       "source_location": "L13"
     },
     {
-      "id": "server_scripts_db_reset_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "pg-embed.js",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "server/scripts/db-reset.js",
-      "source_location": "L31"
-    },
-    {
-      "id": "server_scripts_db_reset_onfatal",
-      "label": "onFatal()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "pg-embed.js",
-      "file_type": "code",
-      "norm_label": "onfatal()",
-      "source_file": "server/scripts/db-reset.js",
-      "source_location": "L14"
-    },
-    {
-      "id": "server_scripts_db_reset_quoteident",
-      "label": "quoteIdent()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "pg-embed.js",
-      "file_type": "code",
-      "norm_label": "quoteident()",
-      "source_file": "server/scripts/db-reset.js",
-      "source_location": "L99"
-    },
-    {
-      "id": "server_scripts_db_reset_read",
-      "label": "read()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "pg-embed.js",
-      "file_type": "code",
-      "norm_label": "read()",
-      "source_file": "server/scripts/db-reset.js",
-      "source_location": "L26"
-    },
-    {
-      "id": "server_scripts_e2e_accreditation_check",
-      "label": "check()",
+      "id": "server_lib_storage_deletefromr2",
+      "label": "deleteFromR2()",
       "_callable": true,
       "_origin": "ast",
       "community": 55,
-      "community_name": "e2e-accreditation.js",
+      "community_name": "storage.js",
       "file_type": "code",
-      "norm_label": "check()",
-      "source_file": "server/scripts/e2e-accreditation.js",
-      "source_location": "L17"
+      "norm_label": "deletefromr2()",
+      "source_file": "server/lib/storage.js",
+      "source_location": "L77"
     },
     {
-      "id": "server_scripts_e2e_accreditation_download",
-      "label": "download()",
+      "id": "server_lib_storage_getfromr2",
+      "label": "getFromR2()",
       "_callable": true,
       "_origin": "ast",
       "community": 55,
-      "community_name": "e2e-accreditation.js",
+      "community_name": "storage.js",
       "file_type": "code",
-      "norm_label": "download()",
-      "source_file": "server/scripts/e2e-accreditation.js",
-      "source_location": "L49"
+      "norm_label": "getfromr2()",
+      "source_file": "server/lib/storage.js",
+      "source_location": "L95"
     },
     {
-      "id": "server_scripts_e2e_accreditation_login",
-      "label": "login()",
+      "id": "server_lib_storage_getr2client",
+      "label": "getR2Client()",
       "_callable": true,
       "_origin": "ast",
       "community": 55,
-      "community_name": "e2e-accreditation.js",
+      "community_name": "storage.js",
       "file_type": "code",
-      "norm_label": "login()",
-      "source_file": "server/scripts/e2e-accreditation.js",
-      "source_location": "L55"
+      "norm_label": "getr2client()",
+      "source_file": "server/lib/storage.js",
+      "source_location": "L25"
     },
     {
-      "id": "server_scripts_e2e_accreditation_request",
-      "label": "request()",
+      "id": "server_lib_storage_isr2configured",
+      "label": "isR2Configured()",
       "_callable": true,
       "_origin": "ast",
       "community": 55,
-      "community_name": "e2e-accreditation.js",
+      "community_name": "storage.js",
       "file_type": "code",
-      "norm_label": "request()",
-      "source_file": "server/scripts/e2e-accreditation.js",
-      "source_location": "L27"
+      "norm_label": "isr2configured()",
+      "source_file": "server/lib/storage.js",
+      "source_location": "L16"
     },
     {
-      "id": "server_scripts_e2e_accreditation_upload",
-      "label": "upload()",
+      "id": "server_lib_storage_resetclientfortesting",
+      "label": "_resetClientForTesting()",
       "_callable": true,
       "_origin": "ast",
       "community": 55,
-      "community_name": "e2e-accreditation.js",
+      "community_name": "storage.js",
       "file_type": "code",
-      "norm_label": "upload()",
-      "source_file": "server/scripts/e2e-accreditation.js",
-      "source_location": "L37"
+      "norm_label": "_resetclientfortesting()",
+      "source_file": "server/lib/storage.js",
+      "source_location": "L115"
+    },
+    {
+      "id": "server_lib_storage_uploadtor2",
+      "label": "uploadToR2()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 55,
+      "community_name": "storage.js",
+      "file_type": "code",
+      "norm_label": "uploadtor2()",
+      "source_file": "server/lib/storage.js",
+      "source_location": "L54"
+    },
+    {
+      "id": "server_scripts_migrate_bytea_to_r2_runmigration",
+      "label": "runMigration()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 55,
+      "community_name": "storage.js",
+      "file_type": "code",
+      "norm_label": "runmigration()",
+      "source_file": "server/scripts/migrate_bytea_to_r2.js",
+      "source_location": "L10"
     },
     {
       "id": "server_lib_points_awardwithincap",
@@ -4108,30 +4084,6 @@
       "norm_label": "verifyroommembership()",
       "source_file": "server/lib/room-membership.js",
       "source_location": "L10"
-    },
-    {
-      "id": "server_lib_ws_realtime_setupwebsocketserver",
-      "label": "setupWebSocketServer()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "realtime.js",
-      "file_type": "code",
-      "norm_label": "setupwebsocketserver()",
-      "source_file": "server/lib/ws-realtime.js",
-      "source_location": "L8"
-    },
-    {
-      "id": "server_lib_ws_realtime_setupwebsocketserver_broadcastpresence",
-      "label": "broadcastPresence()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "realtime.js",
-      "file_type": "code",
-      "norm_label": "broadcastpresence()",
-      "source_file": "server/lib/ws-realtime.js",
-      "source_location": "L14"
     },
     {
       "id": "server_scripts_test_centrifugo_assert",
@@ -4194,16 +4146,52 @@
       "source_location": "L24"
     },
     {
-      "id": "server_lib_application_files_test_file",
-      "label": "file()",
+      "id": "server_lib_publicprofile_topublicprofile",
+      "label": "toPublicProfile()",
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "db-migrate.js",
+      "community_name": "ref_node_assert",
       "file_type": "code",
-      "norm_label": "file()",
-      "source_file": "server/lib/application-files.test.js",
-      "source_location": "L5"
+      "norm_label": "topublicprofile()",
+      "source_file": "server/lib/publicProfile.js",
+      "source_location": "L14"
+    },
+    {
+      "id": "server_routes_video_derivejitsiroomname",
+      "label": "deriveJitsiRoomName()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 60,
+      "community_name": "ref_node_assert",
+      "file_type": "code",
+      "norm_label": "derivejitsiroomname()",
+      "source_file": "server/routes/video.js",
+      "source_location": "L17"
+    },
+    {
+      "id": "server_scripts_test_video_room_loginuser",
+      "label": "loginUser()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 60,
+      "community_name": "ref_node_assert",
+      "file_type": "code",
+      "norm_label": "loginuser()",
+      "source_file": "server/scripts/test-video-room.js",
+      "source_location": "L6"
+    },
+    {
+      "id": "server_scripts_test_video_room_runtests",
+      "label": "runTests()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 60,
+      "community_name": "ref_node_assert",
+      "file_type": "code",
+      "norm_label": "runtests()",
+      "source_file": "server/scripts/test-video-room.js",
+      "source_location": "L21"
     },
     {
       "id": "server_scripts_e2e_tasks_check",
@@ -4470,76 +4458,88 @@
       "source_location": "L31"
     },
     {
-      "id": "server_scripts_e2e_audit_assert",
-      "label": "assert()",
+      "id": "src_screens_taskdetail_statuspill",
+      "label": "statusPill()",
       "_callable": true,
       "_origin": "ast",
-      "community": 63,
-      "community_name": "e2e-audit.js",
+      "community": 62,
+      "community_name": "Avatar",
       "file_type": "code",
-      "norm_label": "assert()",
-      "source_file": "server/scripts/e2e-audit.js",
-      "source_location": "L20"
+      "norm_label": "statuspill()",
+      "source_file": "src/screens/TaskDetail.jsx",
+      "source_location": "L38"
     },
     {
-      "id": "server_scripts_e2e_audit_login",
-      "label": "login()",
+      "id": "src_screens_taskdetail_taskdetail",
+      "label": "TaskDetail()",
       "_callable": true,
       "_origin": "ast",
-      "community": 63,
-      "community_name": "e2e-audit.js",
+      "community": 62,
+      "community_name": "Avatar",
       "file_type": "code",
-      "norm_label": "login()",
-      "source_file": "server/scripts/e2e-audit.js",
-      "source_location": "L19"
+      "norm_label": "taskdetail()",
+      "source_file": "src/screens/TaskDetail.jsx",
+      "source_location": "L53"
     },
     {
-      "id": "server_scripts_e2e_audit_request",
-      "label": "request()",
+      "id": "src_screens_taskdetail_tolocalinputvalue",
+      "label": "toLocalInputValue()",
       "_callable": true,
       "_origin": "ast",
-      "community": 63,
-      "community_name": "e2e-audit.js",
+      "community": 62,
+      "community_name": "Avatar",
       "file_type": "code",
-      "norm_label": "request()",
-      "source_file": "server/scripts/e2e-audit.js",
-      "source_location": "L10"
+      "norm_label": "tolocalinputvalue()",
+      "source_file": "src/screens/TaskDetail.jsx",
+      "source_location": "L30"
     },
     {
-      "id": "server_scripts_e2e_concurrency_assert",
-      "label": "assert()",
+      "id": "server_scripts_db_reset_main",
+      "label": "main()",
       "_callable": true,
       "_origin": "ast",
       "community": 64,
-      "community_name": "e2e-concurrency.js",
+      "community_name": "db-reset.js",
       "file_type": "code",
-      "norm_label": "assert()",
-      "source_file": "server/scripts/e2e-concurrency.js",
-      "source_location": "L22"
+      "norm_label": "main()",
+      "source_file": "server/scripts/db-reset.js",
+      "source_location": "L31"
     },
     {
-      "id": "server_scripts_e2e_concurrency_login",
-      "label": "login()",
+      "id": "server_scripts_db_reset_onfatal",
+      "label": "onFatal()",
       "_callable": true,
       "_origin": "ast",
       "community": 64,
-      "community_name": "e2e-concurrency.js",
+      "community_name": "db-reset.js",
       "file_type": "code",
-      "norm_label": "login()",
-      "source_file": "server/scripts/e2e-concurrency.js",
-      "source_location": "L21"
+      "norm_label": "onfatal()",
+      "source_file": "server/scripts/db-reset.js",
+      "source_location": "L14"
     },
     {
-      "id": "server_scripts_e2e_concurrency_request",
-      "label": "request()",
+      "id": "server_scripts_db_reset_quoteident",
+      "label": "quoteIdent()",
       "_callable": true,
       "_origin": "ast",
       "community": 64,
-      "community_name": "e2e-concurrency.js",
+      "community_name": "db-reset.js",
       "file_type": "code",
-      "norm_label": "request()",
-      "source_file": "server/scripts/e2e-concurrency.js",
-      "source_location": "L12"
+      "norm_label": "quoteident()",
+      "source_file": "server/scripts/db-reset.js",
+      "source_location": "L99"
+    },
+    {
+      "id": "server_scripts_db_reset_read",
+      "label": "read()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "db-reset.js",
+      "file_type": "code",
+      "norm_label": "read()",
+      "source_file": "server/scripts/db-reset.js",
+      "source_location": "L26"
     },
     {
       "id": "src_services_realtime_wsrealtimeservice_getwsurl",
@@ -5959,11 +5959,99 @@
       "source_location": "L24"
     },
     {
+      "id": "server_scripts_e2e_accreditation",
+      "label": "e2e-accreditation.js",
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "e2e-accreditation.js",
+      "source_file": "server/scripts/e2e-accreditation.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_scripts_e2e_accreditation_correct",
+      "label": "CORRECT",
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "correct",
+      "source_file": "server/scripts/e2e-accreditation.js",
+      "source_location": "L59"
+    },
+    {
+      "id": "server_scripts_e2e_accreditation_demo_png",
+      "label": "DEMO_PNG",
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "demo_png",
+      "source_file": "server/scripts/e2e-accreditation.js",
+      "source_location": "L11"
+    },
+    {
+      "id": "server_scripts_e2e_accreditation_psql",
+      "label": "psql",
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "psql",
+      "source_file": "server/scripts/e2e-accreditation.js",
+      "source_location": "L57"
+    },
+    {
+      "id": "server_scripts_e2e_audit",
+      "label": "e2e-audit.js",
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "e2e-audit.js",
+      "source_file": "server/scripts/e2e-audit.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_scripts_e2e_audit_client",
+      "label": "client",
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "client",
+      "source_file": "server/scripts/e2e-audit.js",
+      "source_location": "L7"
+    },
+    {
+      "id": "server_scripts_e2e_concurrency",
+      "label": "e2e-concurrency.js",
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "e2e-concurrency.js",
+      "source_file": "server/scripts/e2e-concurrency.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_scripts_e2e_concurrency_client",
+      "label": "client",
+      "_origin": "ast",
+      "community": 111,
+      "community_name": "e2e-accreditation.js",
+      "file_type": "code",
+      "norm_label": "client",
+      "source_file": "server/scripts/e2e-concurrency.js",
+      "source_location": "L9"
+    },
+    {
       "id": "server_scripts_e2e_db",
       "label": "e2e-db.js",
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "e2e-db.js",
       "source_file": "server/scripts/e2e-db.js",
@@ -5974,7 +6062,7 @@
       "label": "E2E_DATABASE_URL",
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "e2e_database_url",
       "source_file": "server/scripts/e2e-db.js",
@@ -5985,7 +6073,7 @@
       "label": "host",
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "host",
       "source_file": "server/scripts/e2e-db.js",
@@ -5996,7 +6084,7 @@
       "label": "LOCAL_HOSTS",
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "local_hosts",
       "source_file": "server/scripts/e2e-db.js",
@@ -6007,7 +6095,7 @@
       "label": "e2e-ledger-integrity.js",
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "e2e-ledger-integrity.js",
       "source_file": "server/scripts/e2e-ledger-integrity.js",
@@ -6018,7 +6106,7 @@
       "label": "client",
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "client",
       "source_file": "server/scripts/e2e-ledger-integrity.js",
@@ -6029,7 +6117,7 @@
       "label": "e2e-referrals.js",
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "e2e-referrals.js",
       "source_file": "server/scripts/e2e-referrals.js",
@@ -6040,7 +6128,7 @@
       "label": "e2e-wrapup.js",
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "e2e-wrapup.js",
       "source_file": "server/scripts/e2e-wrapup.js",
@@ -6051,7 +6139,7 @@
       "label": "psql",
       "_origin": "ast",
       "community": 111,
-      "community_name": "e2e-db.js",
+      "community_name": "e2e-accreditation.js",
       "file_type": "code",
       "norm_label": "psql",
       "source_file": "server/scripts/e2e-wrapup.js",
@@ -6135,72 +6223,6 @@
       "source_location": "L16"
     },
     {
-      "id": "scripts_fix_seed",
-      "label": "fix-seed.mjs",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "fix-seed.mjs",
-      "source_file": "scripts/fix-seed.mjs",
-      "source_location": "L1"
-    },
-    {
-      "id": "scripts_fix_seed_s",
-      "label": "s",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "s",
-      "source_file": "scripts/fix-seed.mjs",
-      "source_location": "L3"
-    },
-    {
-      "id": "server_lib_publicprofile",
-      "label": "server/lib/publicProfile.js",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "server/lib/publicprofile.js",
-      "source_file": "server/lib/publicProfile.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_lib_publicprofile_test",
-      "label": "publicProfile.test.js",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "publicprofile.test.js",
-      "source_file": "server/lib/publicProfile.test.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_lib_storage",
-      "label": "storage.js",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "storage.js",
-      "source_file": "server/lib/storage.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_lib_storage_test",
-      "label": "storage.test.js",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "storage.test.js",
-      "source_file": "server/lib/storage.test.js",
-      "source_location": "L1"
-    },
-    {
       "id": "server_lib_task_storage",
       "label": "task-storage.js",
       "_origin": "ast",
@@ -6265,248 +6287,6 @@
       "norm_label": "tiny_png",
       "source_file": "server/lib/tasks.test.js",
       "source_location": "L17"
-    },
-    {
-      "id": "server_routes_users",
-      "label": "users.js",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "users.js",
-      "source_file": "server/routes/users.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_routes_users_router",
-      "label": "router",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "router",
-      "source_file": "server/routes/users.js",
-      "source_location": "L6"
-    },
-    {
-      "id": "server_scripts_check_bundle",
-      "label": "check-bundle.js",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "check-bundle.js",
-      "source_file": "server/scripts/check-bundle.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_scripts_check_bundle_dir",
-      "label": "dir",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "dir",
-      "source_file": "server/scripts/check-bundle.js",
-      "source_location": "L7"
-    },
-    {
-      "id": "server_scripts_check_bundle_main",
-      "label": "main",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "main",
-      "source_file": "server/scripts/check-bundle.js",
-      "source_location": "L17"
-    },
-    {
-      "id": "server_scripts_check_bundle_sizes",
-      "label": "sizes",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "sizes",
-      "source_file": "server/scripts/check-bundle.js",
-      "source_location": "L13"
-    },
-    {
-      "id": "server_scripts_check_bundle_totalgzip",
-      "label": "totalGzip",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "totalgzip",
-      "source_file": "server/scripts/check-bundle.js",
-      "source_location": "L18"
-    },
-    {
-      "id": "server_scripts_db_backup",
-      "label": "db-backup.js",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "db-backup.js",
-      "source_file": "server/scripts/db-backup.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_scripts_db_backup_args",
-      "label": "args",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "args",
-      "source_file": "server/scripts/db-backup.js",
-      "source_location": "L32"
-    },
-    {
-      "id": "server_scripts_db_backup_dir",
-      "label": "dir",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "dir",
-      "source_file": "server/scripts/db-backup.js",
-      "source_location": "L27"
-    },
-    {
-      "id": "server_scripts_db_backup_local",
-      "label": "local",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "local",
-      "source_file": "server/scripts/db-backup.js",
-      "source_location": "L24"
-    },
-    {
-      "id": "server_scripts_db_backup_password",
-      "label": "password",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "password",
-      "source_file": "server/scripts/db-backup.js",
-      "source_location": "L23"
-    },
-    {
-      "id": "server_scripts_db_backup_result",
-      "label": "result",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "result",
-      "source_file": "server/scripts/db-backup.js",
-      "source_location": "L44"
-    },
-    {
-      "id": "server_scripts_db_backup_stamp",
-      "label": "stamp",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "stamp",
-      "source_file": "server/scripts/db-backup.js",
-      "source_location": "L26"
-    },
-    {
-      "id": "server_scripts_db_backup_target",
-      "label": "target",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "target",
-      "source_file": "server/scripts/db-backup.js",
-      "source_location": "L29"
-    },
-    {
-      "id": "server_scripts_db_backup_url",
-      "label": "url",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "url",
-      "source_file": "server/scripts/db-backup.js",
-      "source_location": "L18"
-    },
-    {
-      "id": "server_scripts_db_backup_user",
-      "label": "user",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "user",
-      "source_file": "server/scripts/db-backup.js",
-      "source_location": "L22"
-    },
-    {
-      "id": "server_scripts_export_user",
-      "label": "export-user.js",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "export-user.js",
-      "source_file": "server/scripts/export-user.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_scripts_export_user_client",
-      "label": "client",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "client",
-      "source_file": "server/scripts/export-user.js",
-      "source_location": "L23"
-    },
-    {
-      "id": "server_scripts_migrate_bytea_to_r2",
-      "label": "migrate_bytea_to_r2.js",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "migrate_bytea_to_r2.js",
-      "source_file": "server/scripts/migrate_bytea_to_r2.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_scripts_test_video_room",
-      "label": "test-video-room.js",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "code",
-      "norm_label": "test-video-room.js",
-      "source_file": "server/scripts/test-video-room.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "ref_aws_sdk_client_s3",
-      "label": "@aws-sdk/client-s3",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "file_type": "concept",
-      "norm_label": "@aws-sdk/client-s3",
-      "source_file": "package.json",
-      "source_location": "L42"
     },
     {
       "id": "run_the_demo",
@@ -7102,6 +6882,39 @@
       "source_location": "L7"
     },
     {
+      "id": "server_lib_aiassistant",
+      "label": "aiAssistant.js",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "routes/index.js",
+      "file_type": "code",
+      "norm_label": "aiassistant.js",
+      "source_file": "server/lib/aiAssistant.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_routes_ai",
+      "label": "ai.js",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "routes/index.js",
+      "file_type": "code",
+      "norm_label": "ai.js",
+      "source_file": "server/routes/ai.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_routes_ai_router",
+      "label": "router",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "routes/index.js",
+      "file_type": "code",
+      "norm_label": "router",
+      "source_file": "server/routes/ai.js",
+      "source_location": "L7"
+    },
+    {
       "id": "server_routes_analytics",
       "label": "analytics.js",
       "_origin": "ast",
@@ -7190,28 +7003,6 @@
       "source_location": "L21"
     },
     {
-      "id": "server_routes_matching",
-      "label": "matching.js",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "code",
-      "norm_label": "matching.js",
-      "source_file": "server/routes/matching.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_routes_matching_router",
-      "label": "router",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "code",
-      "norm_label": "router",
-      "source_file": "server/routes/matching.js",
-      "source_location": "L8"
-    },
-    {
       "id": "server_routes_notifications",
       "label": "notifications.js",
       "_origin": "ast",
@@ -7267,39 +7058,6 @@
       "source_location": "L4"
     },
     {
-      "id": "server_routes_sessions",
-      "label": "sessions.js",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "code",
-      "norm_label": "sessions.js",
-      "source_file": "server/routes/sessions.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_routes_sessions_router",
-      "label": "router",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "code",
-      "norm_label": "router",
-      "source_file": "server/routes/sessions.js",
-      "source_location": "L10"
-    },
-    {
-      "id": "server_routes_sessions_tokenlimiter",
-      "label": "tokenLimiter",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "routes/index.js",
-      "file_type": "code",
-      "norm_label": "tokenlimiter",
-      "source_file": "server/routes/sessions.js",
-      "source_location": "L12"
-    },
-    {
       "id": "server_scripts_repro",
       "label": "repro.js",
       "_origin": "ast",
@@ -7342,6 +7100,17 @@
       "norm_label": "express",
       "source_file": "package.json",
       "source_location": "L64"
+    },
+    {
+      "id": "ref_google_genai",
+      "label": "@google/genai",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "routes/index.js",
+      "file_type": "concept",
+      "norm_label": "@google/genai",
+      "source_file": "package.json",
+      "source_location": "L43"
     },
     {
       "id": "lccb_academix_cfd",
@@ -7491,70 +7260,103 @@
       "source_file": "/examples/jsm/loaders/HDRLoader.js"
     },
     {
-      "id": "src_components_applicationdocumentpicker",
-      "label": "ApplicationDocumentPicker.jsx",
+      "id": "scripts_fix_seed",
+      "label": "fix-seed.mjs",
       "_origin": "ast",
       "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
+      "community_name": "ref_node_path",
       "file_type": "code",
-      "norm_label": "applicationdocumentpicker.jsx",
-      "source_file": "src/components/ApplicationDocumentPicker.jsx",
+      "norm_label": "fix-seed.mjs",
+      "source_file": "scripts/fix-seed.mjs",
       "source_location": "L1"
     },
     {
-      "id": "src_lib_applicationfiles",
-      "label": "applicationFiles.js",
+      "id": "scripts_fix_seed_s",
+      "label": "s",
       "_origin": "ast",
       "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
+      "community_name": "ref_node_path",
       "file_type": "code",
-      "norm_label": "applicationfiles.js",
-      "source_file": "src/lib/applicationFiles.js",
+      "norm_label": "s",
+      "source_file": "scripts/fix-seed.mjs",
+      "source_location": "L3"
+    },
+    {
+      "id": "server_scripts_check_bundle",
+      "label": "check-bundle.js",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "ref_node_path",
+      "file_type": "code",
+      "norm_label": "check-bundle.js",
+      "source_file": "server/scripts/check-bundle.js",
       "source_location": "L1"
     },
     {
-      "id": "src_lib_applicationfiles_allowed_extensions",
-      "label": "ALLOWED_EXTENSIONS",
+      "id": "server_scripts_check_bundle_dir",
+      "label": "dir",
       "_origin": "ast",
       "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
+      "community_name": "ref_node_path",
       "file_type": "code",
-      "norm_label": "allowed_extensions",
-      "source_file": "src/lib/applicationFiles.js",
-      "source_location": "L8"
+      "norm_label": "dir",
+      "source_file": "server/scripts/check-bundle.js",
+      "source_location": "L7"
     },
     {
-      "id": "src_lib_applicationfiles_application_file_accept",
-      "label": "APPLICATION_FILE_ACCEPT",
+      "id": "server_scripts_check_bundle_main",
+      "label": "main",
       "_origin": "ast",
       "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
+      "community_name": "ref_node_path",
       "file_type": "code",
-      "norm_label": "application_file_accept",
-      "source_file": "src/lib/applicationFiles.js",
-      "source_location": "L6"
+      "norm_label": "main",
+      "source_file": "server/scripts/check-bundle.js",
+      "source_location": "L17"
     },
     {
-      "id": "src_lib_applicationfiles_max_application_file_bytes",
-      "label": "MAX_APPLICATION_FILE_BYTES",
+      "id": "server_scripts_check_bundle_sizes",
+      "label": "sizes",
       "_origin": "ast",
       "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
+      "community_name": "ref_node_path",
       "file_type": "code",
-      "norm_label": "max_application_file_bytes",
-      "source_file": "src/lib/applicationFiles.js",
-      "source_location": "L5"
+      "norm_label": "sizes",
+      "source_file": "server/scripts/check-bundle.js",
+      "source_location": "L13"
     },
     {
-      "id": "src_lib_applicationfiles_max_application_files",
-      "label": "MAX_APPLICATION_FILES",
+      "id": "server_scripts_check_bundle_totalgzip",
+      "label": "totalGzip",
       "_origin": "ast",
       "community": 17,
-      "community_name": "ApplicationDocumentPicker.jsx",
+      "community_name": "ref_node_path",
       "file_type": "code",
-      "norm_label": "max_application_files",
-      "source_file": "src/lib/applicationFiles.js",
-      "source_location": "L4"
+      "norm_label": "totalgzip",
+      "source_file": "server/scripts/check-bundle.js",
+      "source_location": "L18"
+    },
+    {
+      "id": "server_scripts_export_user",
+      "label": "export-user.js",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "ref_node_path",
+      "file_type": "code",
+      "norm_label": "export-user.js",
+      "source_file": "server/scripts/export-user.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_scripts_export_user_client",
+      "label": "client",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "ref_node_path",
+      "file_type": "code",
+      "norm_label": "client",
+      "source_file": "server/scripts/export-user.js",
+      "source_location": "L23"
     },
     {
       "id": "package_devdependencies",
@@ -7656,28 +7458,6 @@
       "source_location": "L30"
     },
     {
-      "id": "src_components_classroom_dualpurposechat",
-      "label": "DualPurposeChat.jsx",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "dualpurposechat.jsx",
-      "source_file": "src/components/classroom/DualPurposeChat.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_components_classroom_dualpurposechat_role_badges",
-      "label": "ROLE_BADGES",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "role_badges",
-      "source_file": "src/components/classroom/DualPurposeChat.jsx",
-      "source_location": "L24"
-    },
-    {
       "id": "src_components_classroom_jitsimeetingroom",
       "label": "JitsiMeetingRoom.jsx",
       "_origin": "ast",
@@ -7777,6 +7557,17 @@
       "source_location": "L1"
     },
     {
+      "id": "src_components_ui_button_button",
+      "label": "Button",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "button",
+      "source_file": "src/components/ui/button.jsx",
+      "source_location": "L5"
+    },
+    {
       "id": "src_components_ui_card",
       "label": "src/components/ui/card.jsx",
       "_origin": "ast",
@@ -7852,6 +7643,17 @@
       "norm_label": "cardtitle",
       "source_file": "src/components/ui/card.jsx",
       "source_location": "L14"
+    },
+    {
+      "id": "src_components_ui_errorbanner",
+      "label": "ErrorBanner.jsx",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "errorbanner.jsx",
+      "source_file": "src/components/ui/ErrorBanner.jsx",
+      "source_location": "L1"
     },
     {
       "id": "src_components_ui_input",
@@ -8258,7 +8060,7 @@
       "file_type": "code",
       "norm_label": "dashboard",
       "source_file": "src/App.jsx",
-      "source_location": "L26"
+      "source_location": "L27"
     },
     {
       "id": "src_app_demo_roles",
@@ -8269,7 +8071,7 @@
       "file_type": "code",
       "norm_label": "demo_roles",
       "source_file": "src/App.jsx",
-      "source_location": "L50"
+      "source_location": "L51"
     },
     {
       "id": "src_app_facultyreferral",
@@ -8280,7 +8082,7 @@
       "file_type": "code",
       "norm_label": "facultyreferral",
       "source_file": "src/App.jsx",
-      "source_location": "L29"
+      "source_location": "L30"
     },
     {
       "id": "src_app_learnerwizard",
@@ -8291,7 +8093,7 @@
       "file_type": "code",
       "norm_label": "learnerwizard",
       "source_file": "src/App.jsx",
-      "source_location": "L25"
+      "source_location": "L26"
     },
     {
       "id": "src_app_messages",
@@ -8302,7 +8104,7 @@
       "file_type": "code",
       "norm_label": "messages",
       "source_file": "src/App.jsx",
-      "source_location": "L32"
+      "source_location": "L33"
     },
     {
       "id": "src_app_mytutors",
@@ -8313,7 +8115,7 @@
       "file_type": "code",
       "norm_label": "mytutors",
       "source_file": "src/App.jsx",
-      "source_location": "L34"
+      "source_location": "L35"
     },
     {
       "id": "src_app_rewardcatalog",
@@ -8324,7 +8126,7 @@
       "file_type": "code",
       "norm_label": "rewardcatalog",
       "source_file": "src/App.jsx",
-      "source_location": "L31"
+      "source_location": "L32"
     },
     {
       "id": "src_app_role_labels",
@@ -8335,7 +8137,7 @@
       "file_type": "code",
       "norm_label": "role_labels",
       "source_file": "src/App.jsx",
-      "source_location": "L43"
+      "source_location": "L44"
     },
     {
       "id": "src_app_role_routes",
@@ -8346,7 +8148,7 @@
       "file_type": "code",
       "norm_label": "role_routes",
       "source_file": "src/App.jsx",
-      "source_location": "L59"
+      "source_location": "L60"
     },
     {
       "id": "src_app_sessioncheckin",
@@ -8357,7 +8159,7 @@
       "file_type": "code",
       "norm_label": "sessioncheckin",
       "source_file": "src/App.jsx",
-      "source_location": "L30"
+      "source_location": "L31"
     },
     {
       "id": "src_app_superadminapprovals",
@@ -8368,7 +8170,7 @@
       "file_type": "code",
       "norm_label": "superadminapprovals",
       "source_file": "src/App.jsx",
-      "source_location": "L24"
+      "source_location": "L25"
     },
     {
       "id": "src_app_taskdetail",
@@ -8379,7 +8181,7 @@
       "file_type": "code",
       "norm_label": "taskdetail",
       "source_file": "src/App.jsx",
-      "source_location": "L36"
+      "source_location": "L37"
     },
     {
       "id": "src_app_tasks",
@@ -8390,7 +8192,7 @@
       "file_type": "code",
       "norm_label": "tasks",
       "source_file": "src/App.jsx",
-      "source_location": "L35"
+      "source_location": "L36"
     },
     {
       "id": "src_app_tutorapplicant",
@@ -8401,7 +8203,7 @@
       "file_type": "code",
       "norm_label": "tutorapplicant",
       "source_file": "src/App.jsx",
-      "source_location": "L28"
+      "source_location": "L29"
     },
     {
       "id": "src_app_tutorexam",
@@ -8412,7 +8214,7 @@
       "file_type": "code",
       "norm_label": "tutorexam",
       "source_file": "src/App.jsx",
-      "source_location": "L27"
+      "source_location": "L28"
     },
     {
       "id": "src_app_tutorprofile",
@@ -8423,7 +8225,7 @@
       "file_type": "code",
       "norm_label": "tutorprofile",
       "source_file": "src/App.jsx",
-      "source_location": "L33"
+      "source_location": "L34"
     },
     {
       "id": "src_components_logo2d",
@@ -8446,6 +8248,51 @@
       "norm_label": "splashscreen.jsx",
       "source_file": "src/components/SplashScreen.jsx",
       "source_location": "L1"
+    },
+    {
+      "id": "src_lib_ux",
+      "label": "ux.js",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "ux.js",
+      "source_file": "src/lib/ux.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_screens_tasks",
+      "label": "Tasks.jsx",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "tasks.jsx",
+      "source_file": "src/screens/Tasks.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_screens_tasks_accepted_types",
+      "label": "ACCEPTED_TYPES",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "accepted_types",
+      "source_file": "src/screens/Tasks.jsx",
+      "source_location": "L25"
+    },
+    {
+      "id": "docs_ux_plan_batch_1_cross_cutting_ux_foundations_shell_completed_commit_e64da0f",
+      "label": "Batch 1: Cross-Cutting UX Foundations & Shell [COMPLETED \u2014 Commit e64da0f]",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "App.jsx",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "batch 1: cross-cutting ux foundations & shell [completed \u2014 commit e64da0f]",
+      "source_file": "docs/ux-plan.md",
+      "source_location": "L191"
     },
     {
       "id": "vite_config",
@@ -10092,7 +9939,7 @@
       "label": "application-files.js",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "application-files.js",
       "source_file": "server/lib/application-files.js",
@@ -10103,7 +9950,7 @@
       "label": "APPLICATION_FILE_ACCEPT",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "application_file_accept",
       "source_file": "server/lib/application-files.js",
@@ -10114,7 +9961,7 @@
       "label": "EXTENSION_MIME",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "extension_mime",
       "source_file": "server/lib/application-files.js",
@@ -10125,7 +9972,7 @@
       "label": "MAX_APPLICATION_FILE_BYTES",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "max_application_file_bytes",
       "source_file": "server/lib/application-files.js",
@@ -10136,7 +9983,7 @@
       "label": "MAX_APPLICATION_FILES",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "max_application_files",
       "source_file": "server/lib/application-files.js",
@@ -10147,7 +9994,7 @@
       "label": "application-files.test.js",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "application-files.test.js",
       "source_file": "server/lib/application-files.test.js",
@@ -10158,7 +10005,7 @@
       "label": "doc",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "doc",
       "source_file": "server/lib/application-files.test.js",
@@ -10169,7 +10016,7 @@
       "label": "docx",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "docx",
       "source_file": "server/lib/application-files.test.js",
@@ -10180,7 +10027,7 @@
       "label": "jpg",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "jpg",
       "source_file": "server/lib/application-files.test.js",
@@ -10191,7 +10038,7 @@
       "label": "pdf",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "pdf",
       "source_file": "server/lib/application-files.test.js",
@@ -10202,7 +10049,7 @@
       "label": "png",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "png",
       "source_file": "server/lib/application-files.test.js",
@@ -10213,44 +10060,44 @@
       "label": "upload",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
       "norm_label": "upload",
       "source_file": "server/lib/application-files.js",
       "source_location": "L57"
     },
     {
-      "id": "server_lib_pdfnotes_test",
-      "label": "pdfNotes.test.js",
+      "id": "server_routes_accreditation",
+      "label": "accreditation.js",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
-      "norm_label": "pdfnotes.test.js",
-      "source_file": "server/lib/pdfNotes.test.js",
+      "norm_label": "accreditation.js",
+      "source_file": "server/routes/accreditation.js",
       "source_location": "L1"
     },
     {
-      "id": "src_lib_pdfnotes",
-      "label": "pdfNotes.js",
+      "id": "server_routes_accreditation_router",
+      "label": "router",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "file_type": "code",
-      "norm_label": "pdfnotes.js",
-      "source_file": "src/lib/pdfNotes.js",
-      "source_location": "L1"
+      "norm_label": "router",
+      "source_file": "server/routes/accreditation.js",
+      "source_location": "L18"
     },
     {
-      "id": "ref_multer",
-      "label": "multer",
+      "id": "server_routes_accreditation_uploadlimiter",
+      "label": "uploadLimiter",
       "_origin": "ast",
       "community": 404,
-      "community_name": "application-files.js",
-      "file_type": "concept",
-      "norm_label": "multer",
-      "source_file": "package.json",
-      "source_location": "L71"
+      "community_name": "accreditation.js",
+      "file_type": "code",
+      "norm_label": "uploadlimiter",
+      "source_file": "server/routes/accreditation.js",
+      "source_location": "L19"
     },
     {
       "id": "server_lib_google_auth_test",
@@ -10363,122 +10210,132 @@
       "source_location": "L56"
     },
     {
-      "id": "src_api",
-      "label": "api.js",
+      "id": "server_lib_pdfnotes_test",
+      "label": "pdfNotes.test.js",
       "_origin": "ast",
       "community": 42,
-      "community_name": "api.js",
+      "community_name": "DualPurposeChat.jsx",
       "file_type": "code",
-      "norm_label": "api.js",
-      "source_file": "src/api.js",
+      "norm_label": "pdfnotes.test.js",
+      "source_file": "server/lib/pdfNotes.test.js",
       "source_location": "L1"
     },
     {
-      "id": "src_lib_ux",
-      "label": "ux.js",
+      "id": "src_components_classroom_dualpurposechat",
+      "label": "DualPurposeChat.jsx",
       "_origin": "ast",
       "community": 42,
-      "community_name": "api.js",
+      "community_name": "DualPurposeChat.jsx",
       "file_type": "code",
-      "norm_label": "ux.js",
-      "source_file": "src/lib/ux.js",
+      "norm_label": "dualpurposechat.jsx",
+      "source_file": "src/components/classroom/DualPurposeChat.jsx",
       "source_location": "L1"
     },
     {
-      "id": "src_screens_taskdetail",
-      "label": "TaskDetail.jsx",
+      "id": "src_components_classroom_dualpurposechat_role_badges",
+      "label": "ROLE_BADGES",
       "_origin": "ast",
       "community": 42,
-      "community_name": "api.js",
+      "community_name": "DualPurposeChat.jsx",
       "file_type": "code",
-      "norm_label": "taskdetail.jsx",
-      "source_file": "src/screens/TaskDetail.jsx",
+      "norm_label": "role_badges",
+      "source_file": "src/components/classroom/DualPurposeChat.jsx",
+      "source_location": "L24"
+    },
+    {
+      "id": "src_lib_pdfnotes",
+      "label": "pdfNotes.js",
+      "_origin": "ast",
+      "community": 42,
+      "community_name": "DualPurposeChat.jsx",
+      "file_type": "code",
+      "norm_label": "pdfnotes.js",
+      "source_file": "src/lib/pdfNotes.js",
       "source_location": "L1"
     },
     {
-      "id": "src_screens_taskdetail_accepted_types",
-      "label": "ACCEPTED_TYPES",
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "api.js",
-      "file_type": "code",
-      "norm_label": "accepted_types",
-      "source_file": "src/screens/TaskDetail.jsx",
-      "source_location": "L28"
-    },
-    {
-      "id": "src_screens_tasks",
-      "label": "Tasks.jsx",
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "api.js",
-      "file_type": "code",
-      "norm_label": "tasks.jsx",
-      "source_file": "src/screens/Tasks.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_screens_tasks_accepted_types",
-      "label": "ACCEPTED_TYPES",
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "api.js",
-      "file_type": "code",
-      "norm_label": "accepted_types",
-      "source_file": "src/screens/Tasks.jsx",
-      "source_location": "L25"
-    },
-    {
-      "id": "docs_ux_plan_batch_1_cross_cutting_ux_foundations_shell_completed_commit_e64da0f",
-      "label": "Batch 1: Cross-Cutting UX Foundations & Shell [COMPLETED \u2014 Commit e64da0f]",
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "api.js",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "batch 1: cross-cutting ux foundations & shell [completed \u2014 commit e64da0f]",
-      "source_file": "docs/ux-plan.md",
-      "source_location": "L191"
-    },
-    {
-      "id": "src_components_ui_button_button",
-      "label": "Button",
+      "id": "src_components_applicationdocumentpicker",
+      "label": "ApplicationDocumentPicker.jsx",
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
-      "norm_label": "button",
-      "source_file": "src/components/ui/button.jsx",
-      "source_location": "L5"
+      "norm_label": "applicationdocumentpicker.jsx",
+      "source_file": "src/components/ApplicationDocumentPicker.jsx",
+      "source_location": "L1"
     },
     {
       "id": "src_components_ui_confirmdialog",
       "label": "ConfirmDialog.jsx",
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "confirmdialog.jsx",
       "source_file": "src/components/ui/ConfirmDialog.jsx",
       "source_location": "L1"
     },
     {
-      "id": "src_components_ui_errorbanner",
-      "label": "ErrorBanner.jsx",
+      "id": "src_lib_applicationfiles",
+      "label": "applicationFiles.js",
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
-      "norm_label": "errorbanner.jsx",
-      "source_file": "src/components/ui/ErrorBanner.jsx",
+      "norm_label": "applicationfiles.js",
+      "source_file": "src/lib/applicationFiles.js",
       "source_location": "L1"
+    },
+    {
+      "id": "src_lib_applicationfiles_allowed_extensions",
+      "label": "ALLOWED_EXTENSIONS",
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "SuperadminApprovals.jsx",
+      "file_type": "code",
+      "norm_label": "allowed_extensions",
+      "source_file": "src/lib/applicationFiles.js",
+      "source_location": "L8"
+    },
+    {
+      "id": "src_lib_applicationfiles_application_file_accept",
+      "label": "APPLICATION_FILE_ACCEPT",
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "SuperadminApprovals.jsx",
+      "file_type": "code",
+      "norm_label": "application_file_accept",
+      "source_file": "src/lib/applicationFiles.js",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_lib_applicationfiles_max_application_file_bytes",
+      "label": "MAX_APPLICATION_FILE_BYTES",
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "SuperadminApprovals.jsx",
+      "file_type": "code",
+      "norm_label": "max_application_file_bytes",
+      "source_file": "src/lib/applicationFiles.js",
+      "source_location": "L5"
+    },
+    {
+      "id": "src_lib_applicationfiles_max_application_files",
+      "label": "MAX_APPLICATION_FILES",
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "SuperadminApprovals.jsx",
+      "file_type": "code",
+      "norm_label": "max_application_files",
+      "source_file": "src/lib/applicationFiles.js",
+      "source_location": "L4"
     },
     {
       "id": "src_screens_rewardcatalog",
       "label": "src/screens/RewardCatalog.jsx",
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "src/screens/rewardcatalog.jsx",
       "source_file": "src/screens/RewardCatalog.jsx",
@@ -10489,7 +10346,7 @@
       "label": "SuperadminApprovals.jsx",
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "superadminapprovals.jsx",
       "source_file": "src/screens/SuperadminApprovals.jsx",
@@ -10500,7 +10357,7 @@
       "label": "TutorApplicant.jsx",
       "_origin": "ast",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "file_type": "code",
       "norm_label": "tutorapplicant.jsx",
       "source_file": "src/screens/TutorApplicant.jsx",
@@ -10626,6 +10483,17 @@
       "norm_label": "router",
       "source_file": "server/routes/tasks.js",
       "source_location": "L17"
+    },
+    {
+      "id": "ref_multer",
+      "label": "multer",
+      "_origin": "ast",
+      "community": 45,
+      "community_name": "httpError",
+      "file_type": "concept",
+      "norm_label": "multer",
+      "source_file": "package.json",
+      "source_location": "L71"
     },
     {
       "id": "src_components_accountdialog",
@@ -10989,37 +10857,26 @@
       "source_location": "L1"
     },
     {
-      "id": "server_routes_accreditation",
-      "label": "accreditation.js",
+      "id": "server_routes_matching",
+      "label": "matching.js",
       "_origin": "ast",
       "community": 49,
       "community_name": "query",
       "file_type": "code",
-      "norm_label": "accreditation.js",
-      "source_file": "server/routes/accreditation.js",
+      "norm_label": "matching.js",
+      "source_file": "server/routes/matching.js",
       "source_location": "L1"
     },
     {
-      "id": "server_routes_accreditation_router",
+      "id": "server_routes_matching_router",
       "label": "router",
       "_origin": "ast",
       "community": 49,
       "community_name": "query",
       "file_type": "code",
       "norm_label": "router",
-      "source_file": "server/routes/accreditation.js",
-      "source_location": "L18"
-    },
-    {
-      "id": "server_routes_accreditation_uploadlimiter",
-      "label": "uploadLimiter",
-      "_origin": "ast",
-      "community": 49,
-      "community_name": "query",
-      "file_type": "code",
-      "norm_label": "uploadlimiter",
-      "source_file": "server/routes/accreditation.js",
-      "source_location": "L19"
+      "source_file": "server/routes/matching.js",
+      "source_location": "L8"
     },
     {
       "id": "server_routes_messages",
@@ -11330,6 +11187,17 @@
       "source_location": "L14"
     },
     {
+      "id": "src_api",
+      "label": "api.js",
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "LearnerWizard.jsx",
+      "file_type": "code",
+      "norm_label": "api.js",
+      "source_file": "src/api.js",
+      "source_location": "L1"
+    },
+    {
       "id": "src_components_matchmakinganimation",
       "label": "MatchmakingAnimation.jsx",
       "_origin": "ast",
@@ -11572,14 +11440,25 @@
       "source_location": "L90"
     },
     {
-      "id": "server_lib_aiassistant",
-      "label": "aiAssistant.js",
+      "id": "server_index",
+      "label": "server/index.js",
       "_origin": "ast",
       "community": 52,
       "community_name": "app.js",
       "file_type": "code",
-      "norm_label": "aiassistant.js",
-      "source_file": "server/lib/aiAssistant.js",
+      "norm_label": "server/index.js",
+      "source_file": "server/index.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "server_lib_ws_realtime",
+      "label": "ws-realtime.js",
+      "_origin": "ast",
+      "community": 52,
+      "community_name": "app.js",
+      "file_type": "code",
+      "norm_label": "ws-realtime.js",
+      "source_file": "server/lib/ws-realtime.js",
       "source_location": "L1"
     },
     {
@@ -11594,26 +11473,37 @@
       "source_location": "L1"
     },
     {
-      "id": "server_routes_ai",
-      "label": "ai.js",
+      "id": "server_routes_sessions",
+      "label": "sessions.js",
       "_origin": "ast",
       "community": 52,
       "community_name": "app.js",
       "file_type": "code",
-      "norm_label": "ai.js",
-      "source_file": "server/routes/ai.js",
+      "norm_label": "sessions.js",
+      "source_file": "server/routes/sessions.js",
       "source_location": "L1"
     },
     {
-      "id": "server_routes_ai_router",
+      "id": "server_routes_sessions_router",
       "label": "router",
       "_origin": "ast",
       "community": 52,
       "community_name": "app.js",
       "file_type": "code",
       "norm_label": "router",
-      "source_file": "server/routes/ai.js",
-      "source_location": "L7"
+      "source_file": "server/routes/sessions.js",
+      "source_location": "L10"
+    },
+    {
+      "id": "server_routes_sessions_tokenlimiter",
+      "label": "tokenLimiter",
+      "_origin": "ast",
+      "community": 52,
+      "community_name": "app.js",
+      "file_type": "code",
+      "norm_label": "tokenlimiter",
+      "source_file": "server/routes/sessions.js",
+      "source_location": "L12"
     },
     {
       "id": "ref_cors",
@@ -11627,15 +11517,26 @@
       "source_location": "L62"
     },
     {
-      "id": "ref_google_genai",
-      "label": "@google/genai",
+      "id": "ref_dotenv",
+      "label": "dotenv",
       "_origin": "ast",
       "community": 52,
       "community_name": "app.js",
       "file_type": "concept",
-      "norm_label": "@google/genai",
+      "norm_label": "dotenv",
       "source_file": "package.json",
-      "source_location": "L43"
+      "source_location": "L63"
+    },
+    {
+      "id": "ref_express_rate_limit",
+      "label": "express-rate-limit",
+      "_origin": "ast",
+      "community": 52,
+      "community_name": "app.js",
+      "file_type": "concept",
+      "norm_label": "express-rate-limit",
+      "source_file": "package.json",
+      "source_location": "L65"
     },
     {
       "id": "ref_helmet",
@@ -11704,37 +11605,70 @@
       "source_location": "L10"
     },
     {
-      "id": "server_scripts_db_reset",
-      "label": "db-reset.js",
+      "id": "server_scripts_db_migrate",
+      "label": "db-migrate.js",
       "_origin": "ast",
       "community": 53,
       "community_name": "pg-embed.js",
       "file_type": "code",
-      "norm_label": "db-reset.js",
-      "source_file": "server/scripts/db-reset.js",
+      "norm_label": "db-migrate.js",
+      "source_file": "server/scripts/db-migrate.js",
       "source_location": "L1"
     },
     {
-      "id": "server_scripts_db_reset_dbdir",
+      "id": "server_scripts_db_migrate_dbdir",
       "label": "dbDir",
       "_origin": "ast",
       "community": 53,
       "community_name": "pg-embed.js",
       "file_type": "code",
       "norm_label": "dbdir",
-      "source_file": "server/scripts/db-reset.js",
-      "source_location": "L24"
+      "source_file": "server/scripts/db-migrate.js",
+      "source_location": "L16"
     },
     {
-      "id": "server_scripts_db_reset_here",
+      "id": "server_scripts_db_migrate_here",
       "label": "here",
       "_origin": "ast",
       "community": 53,
       "community_name": "pg-embed.js",
       "file_type": "code",
       "norm_label": "here",
-      "source_file": "server/scripts/db-reset.js",
+      "source_file": "server/scripts/db-migrate.js",
+      "source_location": "L15"
+    },
+    {
+      "id": "server_scripts_db_migrate_local",
+      "label": "local",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "pg-embed.js",
+      "file_type": "code",
+      "norm_label": "local",
+      "source_file": "server/scripts/db-migrate.js",
+      "source_location": "L24"
+    },
+    {
+      "id": "server_scripts_db_migrate_parsed",
+      "label": "parsed",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "pg-embed.js",
+      "file_type": "code",
+      "norm_label": "parsed",
+      "source_file": "server/scripts/db-migrate.js",
       "source_location": "L23"
+    },
+    {
+      "id": "server_scripts_db_migrate_pool",
+      "label": "pool",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "pg-embed.js",
+      "file_type": "code",
+      "norm_label": "pool",
+      "source_file": "server/scripts/db-migrate.js",
+      "source_location": "L28"
     },
     {
       "id": "server_scripts_dbcheck",
@@ -11880,48 +11814,48 @@
       "source_location": "L72"
     },
     {
-      "id": "server_scripts_e2e_accreditation",
-      "label": "e2e-accreditation.js",
+      "id": "server_lib_storage",
+      "label": "storage.js",
       "_origin": "ast",
       "community": 55,
-      "community_name": "e2e-accreditation.js",
+      "community_name": "storage.js",
       "file_type": "code",
-      "norm_label": "e2e-accreditation.js",
-      "source_file": "server/scripts/e2e-accreditation.js",
+      "norm_label": "storage.js",
+      "source_file": "server/lib/storage.js",
       "source_location": "L1"
     },
     {
-      "id": "server_scripts_e2e_accreditation_correct",
-      "label": "CORRECT",
+      "id": "server_lib_storage_test",
+      "label": "storage.test.js",
       "_origin": "ast",
       "community": 55,
-      "community_name": "e2e-accreditation.js",
+      "community_name": "storage.js",
       "file_type": "code",
-      "norm_label": "correct",
-      "source_file": "server/scripts/e2e-accreditation.js",
-      "source_location": "L59"
+      "norm_label": "storage.test.js",
+      "source_file": "server/lib/storage.test.js",
+      "source_location": "L1"
     },
     {
-      "id": "server_scripts_e2e_accreditation_demo_png",
-      "label": "DEMO_PNG",
+      "id": "server_scripts_migrate_bytea_to_r2",
+      "label": "migrate_bytea_to_r2.js",
       "_origin": "ast",
       "community": 55,
-      "community_name": "e2e-accreditation.js",
+      "community_name": "storage.js",
       "file_type": "code",
-      "norm_label": "demo_png",
-      "source_file": "server/scripts/e2e-accreditation.js",
-      "source_location": "L11"
+      "norm_label": "migrate_bytea_to_r2.js",
+      "source_file": "server/scripts/migrate_bytea_to_r2.js",
+      "source_location": "L1"
     },
     {
-      "id": "server_scripts_e2e_accreditation_psql",
-      "label": "psql",
+      "id": "ref_aws_sdk_client_s3",
+      "label": "@aws-sdk/client-s3",
       "_origin": "ast",
       "community": 55,
-      "community_name": "e2e-accreditation.js",
-      "file_type": "code",
-      "norm_label": "psql",
-      "source_file": "server/scripts/e2e-accreditation.js",
-      "source_location": "L57"
+      "community_name": "storage.js",
+      "file_type": "concept",
+      "norm_label": "@aws-sdk/client-s3",
+      "source_file": "package.json",
+      "source_location": "L42"
     },
     {
       "id": "server_lib_points",
@@ -12034,17 +11968,6 @@
       "source_location": "L14"
     },
     {
-      "id": "server_index",
-      "label": "server/index.js",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "realtime.js",
-      "file_type": "code",
-      "norm_label": "server/index.js",
-      "source_file": "server/index.js",
-      "source_location": "L1"
-    },
-    {
       "id": "server_lib_centrifugo",
       "label": "centrifugo.js",
       "_origin": "ast",
@@ -12075,17 +11998,6 @@
       "file_type": "code",
       "norm_label": "room-membership.js",
       "source_file": "server/lib/room-membership.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "server_lib_ws_realtime",
-      "label": "ws-realtime.js",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "realtime.js",
-      "file_type": "code",
-      "norm_label": "ws-realtime.js",
-      "source_file": "server/lib/ws-realtime.js",
       "source_location": "L1"
     },
     {
@@ -12164,28 +12076,6 @@
       "norm_label": "test-centrifugo.js",
       "source_file": "server/scripts/test-centrifugo.js",
       "source_location": "L1"
-    },
-    {
-      "id": "ref_dotenv",
-      "label": "dotenv",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "realtime.js",
-      "file_type": "concept",
-      "norm_label": "dotenv",
-      "source_file": "package.json",
-      "source_location": "L63"
-    },
-    {
-      "id": "ref_express_rate_limit",
-      "label": "express-rate-limit",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "realtime.js",
-      "file_type": "concept",
-      "norm_label": "express-rate-limit",
-      "source_file": "package.json",
-      "source_location": "L65"
     },
     {
       "id": "ref_jsonwebtoken",
@@ -12738,70 +12628,59 @@
       "source_location": "L77"
     },
     {
-      "id": "server_scripts_db_migrate",
-      "label": "db-migrate.js",
+      "id": "server_lib_publicprofile",
+      "label": "server/lib/publicProfile.js",
       "_origin": "ast",
       "community": 60,
-      "community_name": "db-migrate.js",
+      "community_name": "ref_node_assert",
       "file_type": "code",
-      "norm_label": "db-migrate.js",
-      "source_file": "server/scripts/db-migrate.js",
+      "norm_label": "server/lib/publicprofile.js",
+      "source_file": "server/lib/publicProfile.js",
       "source_location": "L1"
     },
     {
-      "id": "server_scripts_db_migrate_dbdir",
-      "label": "dbDir",
+      "id": "server_lib_publicprofile_test",
+      "label": "publicProfile.test.js",
       "_origin": "ast",
       "community": 60,
-      "community_name": "db-migrate.js",
+      "community_name": "ref_node_assert",
       "file_type": "code",
-      "norm_label": "dbdir",
-      "source_file": "server/scripts/db-migrate.js",
-      "source_location": "L16"
+      "norm_label": "publicprofile.test.js",
+      "source_file": "server/lib/publicProfile.test.js",
+      "source_location": "L1"
     },
     {
-      "id": "server_scripts_db_migrate_here",
-      "label": "here",
+      "id": "server_routes_users",
+      "label": "users.js",
       "_origin": "ast",
       "community": 60,
-      "community_name": "db-migrate.js",
+      "community_name": "ref_node_assert",
       "file_type": "code",
-      "norm_label": "here",
-      "source_file": "server/scripts/db-migrate.js",
-      "source_location": "L15"
+      "norm_label": "users.js",
+      "source_file": "server/routes/users.js",
+      "source_location": "L1"
     },
     {
-      "id": "server_scripts_db_migrate_local",
-      "label": "local",
+      "id": "server_routes_users_router",
+      "label": "router",
       "_origin": "ast",
       "community": 60,
-      "community_name": "db-migrate.js",
+      "community_name": "ref_node_assert",
       "file_type": "code",
-      "norm_label": "local",
-      "source_file": "server/scripts/db-migrate.js",
-      "source_location": "L24"
+      "norm_label": "router",
+      "source_file": "server/routes/users.js",
+      "source_location": "L6"
     },
     {
-      "id": "server_scripts_db_migrate_parsed",
-      "label": "parsed",
+      "id": "server_scripts_test_video_room",
+      "label": "test-video-room.js",
       "_origin": "ast",
       "community": 60,
-      "community_name": "db-migrate.js",
+      "community_name": "ref_node_assert",
       "file_type": "code",
-      "norm_label": "parsed",
-      "source_file": "server/scripts/db-migrate.js",
-      "source_location": "L23"
-    },
-    {
-      "id": "server_scripts_db_migrate_pool",
-      "label": "pool",
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "db-migrate.js",
-      "file_type": "code",
-      "norm_label": "pool",
-      "source_file": "server/scripts/db-migrate.js",
-      "source_location": "L28"
+      "norm_label": "test-video-room.js",
+      "source_file": "server/scripts/test-video-room.js",
+      "source_location": "L1"
     },
     {
       "id": "server_scripts_e2e_tasks",
@@ -12901,6 +12780,28 @@
       "norm_label": "mytutors.jsx",
       "source_file": "src/screens/MyTutors.jsx",
       "source_location": "L1"
+    },
+    {
+      "id": "src_screens_taskdetail",
+      "label": "TaskDetail.jsx",
+      "_origin": "ast",
+      "community": 62,
+      "community_name": "Avatar",
+      "file_type": "code",
+      "norm_label": "taskdetail.jsx",
+      "source_file": "src/screens/TaskDetail.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_screens_taskdetail_accepted_types",
+      "label": "ACCEPTED_TYPES",
+      "_origin": "ast",
+      "community": 62,
+      "community_name": "Avatar",
+      "file_type": "code",
+      "norm_label": "accepted_types",
+      "source_file": "src/screens/TaskDetail.jsx",
+      "source_location": "L28"
     },
     {
       "id": "ref_react_router_dom",
@@ -13130,48 +13031,147 @@
       "source_location": "L39"
     },
     {
-      "id": "server_scripts_e2e_audit",
-      "label": "e2e-audit.js",
+      "id": "server_scripts_db_backup",
+      "label": "db-backup.js",
       "_origin": "ast",
       "community": 63,
-      "community_name": "e2e-audit.js",
+      "community_name": "db-backup.js",
       "file_type": "code",
-      "norm_label": "e2e-audit.js",
-      "source_file": "server/scripts/e2e-audit.js",
+      "norm_label": "db-backup.js",
+      "source_file": "server/scripts/db-backup.js",
       "source_location": "L1"
     },
     {
-      "id": "server_scripts_e2e_audit_client",
-      "label": "client",
+      "id": "server_scripts_db_backup_args",
+      "label": "args",
       "_origin": "ast",
       "community": 63,
-      "community_name": "e2e-audit.js",
+      "community_name": "db-backup.js",
       "file_type": "code",
-      "norm_label": "client",
-      "source_file": "server/scripts/e2e-audit.js",
-      "source_location": "L7"
+      "norm_label": "args",
+      "source_file": "server/scripts/db-backup.js",
+      "source_location": "L32"
     },
     {
-      "id": "server_scripts_e2e_concurrency",
-      "label": "e2e-concurrency.js",
+      "id": "server_scripts_db_backup_dir",
+      "label": "dir",
+      "_origin": "ast",
+      "community": 63,
+      "community_name": "db-backup.js",
+      "file_type": "code",
+      "norm_label": "dir",
+      "source_file": "server/scripts/db-backup.js",
+      "source_location": "L27"
+    },
+    {
+      "id": "server_scripts_db_backup_local",
+      "label": "local",
+      "_origin": "ast",
+      "community": 63,
+      "community_name": "db-backup.js",
+      "file_type": "code",
+      "norm_label": "local",
+      "source_file": "server/scripts/db-backup.js",
+      "source_location": "L24"
+    },
+    {
+      "id": "server_scripts_db_backup_password",
+      "label": "password",
+      "_origin": "ast",
+      "community": 63,
+      "community_name": "db-backup.js",
+      "file_type": "code",
+      "norm_label": "password",
+      "source_file": "server/scripts/db-backup.js",
+      "source_location": "L23"
+    },
+    {
+      "id": "server_scripts_db_backup_result",
+      "label": "result",
+      "_origin": "ast",
+      "community": 63,
+      "community_name": "db-backup.js",
+      "file_type": "code",
+      "norm_label": "result",
+      "source_file": "server/scripts/db-backup.js",
+      "source_location": "L44"
+    },
+    {
+      "id": "server_scripts_db_backup_stamp",
+      "label": "stamp",
+      "_origin": "ast",
+      "community": 63,
+      "community_name": "db-backup.js",
+      "file_type": "code",
+      "norm_label": "stamp",
+      "source_file": "server/scripts/db-backup.js",
+      "source_location": "L26"
+    },
+    {
+      "id": "server_scripts_db_backup_target",
+      "label": "target",
+      "_origin": "ast",
+      "community": 63,
+      "community_name": "db-backup.js",
+      "file_type": "code",
+      "norm_label": "target",
+      "source_file": "server/scripts/db-backup.js",
+      "source_location": "L29"
+    },
+    {
+      "id": "server_scripts_db_backup_url",
+      "label": "url",
+      "_origin": "ast",
+      "community": 63,
+      "community_name": "db-backup.js",
+      "file_type": "code",
+      "norm_label": "url",
+      "source_file": "server/scripts/db-backup.js",
+      "source_location": "L18"
+    },
+    {
+      "id": "server_scripts_db_backup_user",
+      "label": "user",
+      "_origin": "ast",
+      "community": 63,
+      "community_name": "db-backup.js",
+      "file_type": "code",
+      "norm_label": "user",
+      "source_file": "server/scripts/db-backup.js",
+      "source_location": "L22"
+    },
+    {
+      "id": "server_scripts_db_reset",
+      "label": "db-reset.js",
       "_origin": "ast",
       "community": 64,
-      "community_name": "e2e-concurrency.js",
+      "community_name": "db-reset.js",
       "file_type": "code",
-      "norm_label": "e2e-concurrency.js",
-      "source_file": "server/scripts/e2e-concurrency.js",
+      "norm_label": "db-reset.js",
+      "source_file": "server/scripts/db-reset.js",
       "source_location": "L1"
     },
     {
-      "id": "server_scripts_e2e_concurrency_client",
-      "label": "client",
+      "id": "server_scripts_db_reset_dbdir",
+      "label": "dbDir",
       "_origin": "ast",
       "community": 64,
-      "community_name": "e2e-concurrency.js",
+      "community_name": "db-reset.js",
       "file_type": "code",
-      "norm_label": "client",
-      "source_file": "server/scripts/e2e-concurrency.js",
-      "source_location": "L9"
+      "norm_label": "dbdir",
+      "source_file": "server/scripts/db-reset.js",
+      "source_location": "L24"
+    },
+    {
+      "id": "server_scripts_db_reset_here",
+      "label": "here",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "db-reset.js",
+      "file_type": "code",
+      "norm_label": "here",
+      "source_file": "server/scripts/db-reset.js",
+      "source_location": "L23"
     },
     {
       "id": "package_scripts",
@@ -13784,28 +13784,6 @@
       "source_location": "L2"
     },
     {
-      "id": "ref_node_assert",
-      "label": "ref_node_assert",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "ref_node_assert",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "ref_node_fs",
-      "label": "ref_node_fs",
-      "community": 13,
-      "community_name": "task-storage.js",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "ref_node_fs",
-      "source_file": "",
-      "type": "external"
-    },
-    {
       "id": "ref_node_os",
       "label": "ref_node_os",
       "community": 13,
@@ -13817,10 +13795,21 @@
       "type": "external"
     },
     {
+      "id": "ref_node_fs",
+      "label": "ref_node_fs",
+      "community": 17,
+      "community_name": "ref_node_path",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ref_node_fs",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "ref_node_path",
       "label": "ref_node_path",
-      "community": 13,
-      "community_name": "task-storage.js",
+      "community": 17,
+      "community_name": "ref_node_path",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_node_path",
@@ -13830,8 +13819,8 @@
     {
       "id": "ref_node_zlib",
       "label": "ref_node_zlib",
-      "community": 13,
-      "community_name": "task-storage.js",
+      "community": 17,
+      "community_name": "ref_node_path",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_node_zlib",
@@ -14029,7 +14018,7 @@
       "id": "ref_node_test",
       "label": "ref_node_test",
       "community": 404,
-      "community_name": "application-files.js",
+      "community_name": "accreditation.js",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_node_test",
@@ -14040,7 +14029,7 @@
       "id": "ref_framer_motion",
       "label": "ref_framer_motion",
       "community": 43,
-      "community_name": "Button",
+      "community_name": "SuperadminApprovals.jsx",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_framer_motion",
@@ -14081,21 +14070,10 @@
       "type": "external"
     },
     {
-      "id": "ref_node_net",
-      "label": "ref_node_net",
-      "community": 53,
-      "community_name": "pg-embed.js",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "ref_node_net",
-      "source_file": "",
-      "type": "external"
-    },
-    {
       "id": "ref_node_http",
       "label": "ref_node_http",
-      "community": 57,
-      "community_name": "realtime.js",
+      "community": 52,
+      "community_name": "app.js",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_node_http",
@@ -14105,11 +14083,22 @@
     {
       "id": "ref_ws",
       "label": "ref_ws",
-      "community": 57,
-      "community_name": "realtime.js",
+      "community": 52,
+      "community_name": "app.js",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_ws",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "ref_node_net",
+      "label": "ref_node_net",
+      "community": 53,
+      "community_name": "pg-embed.js",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ref_node_net",
       "source_file": "",
       "type": "external"
     },
@@ -14132,6 +14121,17 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_node_url",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "ref_node_assert",
+      "label": "ref_node_assert",
+      "community": 60,
+      "community_name": "ref_node_assert",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ref_node_assert",
       "source_file": "",
       "type": "external"
     }
@@ -16251,6 +16251,18 @@
     },
     {
       "source": "src_app_app",
+      "target": "src_authtoken_loadsession",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/App.jsx",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_app",
       "target": "src_lib_ux_usepagetitle",
       "relation": "calls",
       "_origin": "ast",
@@ -16258,7 +16270,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L148",
+      "source_location": "L149",
       "weight": 1.0
     },
     {
@@ -16270,7 +16282,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L176",
+      "source_location": "L177",
       "weight": 1.0
     },
     {
@@ -16282,7 +16294,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L179",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -16294,31 +16306,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L214",
+      "source_location": "L215",
       "weight": 1.0
     },
     {
       "source": "src_app_app",
-      "target": "src_components_ui_button_button",
+      "target": "src_components_logo2d_logo2d",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L399",
-      "weight": 1.0
-    },
-    {
-      "source": "src_app_app",
-      "target": "src_app_tutorprofile",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/App.jsx",
-      "source_location": "L405",
+      "source_location": "L373",
       "weight": 1.0
     },
     {
@@ -16330,7 +16330,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L438",
+      "source_location": "L374",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_app",
+      "target": "src_components_ui_button_button",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/App.jsx",
+      "source_location": "L404",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_app",
+      "target": "src_app_tutorprofile",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/App.jsx",
+      "source_location": "L410",
       "weight": 1.0
     },
     {
@@ -16342,7 +16366,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L472",
+      "source_location": "L477",
       "weight": 1.0
     },
     {
@@ -16354,7 +16378,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L485",
+      "source_location": "L490",
       "weight": 1.0
     },
     {
@@ -16366,7 +16390,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L584",
+      "source_location": "L589",
       "weight": 1.0
     },
     {
@@ -16378,7 +16402,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L652",
+      "source_location": "L657",
       "weight": 1.0
     },
     {
@@ -16390,7 +16414,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L653",
+      "source_location": "L658",
       "weight": 1.0
     },
     {
@@ -16402,7 +16426,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L654",
+      "source_location": "L659",
       "weight": 1.0
     },
     {
@@ -16414,7 +16438,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L655",
+      "source_location": "L660",
       "weight": 1.0
     },
     {
@@ -16426,7 +16450,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L656",
+      "source_location": "L661",
       "weight": 1.0
     },
     {
@@ -16438,7 +16462,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L657",
+      "source_location": "L662",
       "weight": 1.0
     },
     {
@@ -16450,7 +16474,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L658",
+      "source_location": "L663",
       "weight": 1.0
     },
     {
@@ -16462,7 +16486,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L659",
+      "source_location": "L664",
       "weight": 1.0
     },
     {
@@ -16474,7 +16498,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L660",
+      "source_location": "L665",
       "weight": 1.0
     },
     {
@@ -16486,7 +16510,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L661",
+      "source_location": "L666",
       "weight": 1.0
     },
     {
@@ -16498,7 +16522,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L662",
+      "source_location": "L667",
       "weight": 1.0
     },
     {
@@ -16510,7 +16534,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L663",
+      "source_location": "L668",
       "weight": 1.0
     },
     {
@@ -16522,7 +16546,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L898",
+      "source_location": "L903",
       "weight": 1.0
     },
     {
@@ -16534,19 +16558,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L913",
-      "weight": 1.0
-    },
-    {
-      "source": "src_app_app",
-      "target": "src_authtoken_loadsession",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/App.jsx",
-      "source_location": "L99",
+      "source_location": "L918",
       "weight": 1.0
     },
     {
@@ -16558,7 +16570,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.jsx",
-      "source_location": "L91",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -20688,7 +20700,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/App.jsx",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -20701,7 +20713,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/App.jsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -20714,7 +20726,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/App.jsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -20727,7 +20739,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/App.jsx",
-      "source_location": "L32",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -20740,7 +20752,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/App.jsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -20753,7 +20765,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/App.jsx",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -20766,7 +20778,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/App.jsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -20779,7 +20791,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/App.jsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -20792,7 +20804,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/App.jsx",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -20805,7 +20817,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/App.jsx",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -20818,7 +20830,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/App.jsx",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -20831,7 +20843,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/App.jsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -20844,7 +20856,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/App.jsx",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -24906,7 +24918,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_components_splashscreen_splashscreen",
+      "target": "src_components_logo2d_logo2d",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -24914,6 +24926,18 @@
       "context": "import",
       "source_file": "src/App.jsx",
       "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app",
+      "target": "src_components_splashscreen_splashscreen",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/App.jsx",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -31170,7 +31194,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_components_splashscreen",
+      "target": "src_components_logo2d",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -31178,6 +31202,18 @@
       "context": "import",
       "source_file": "src/App.jsx",
       "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app",
+      "target": "src_components_splashscreen",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/App.jsx",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -40777,7 +40813,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -40788,7 +40824,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -40799,7 +40835,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -40810,7 +40846,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -40821,7 +40857,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -40832,7 +40868,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -40843,7 +40879,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -40854,7 +40890,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -40865,7 +40901,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L32",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -40876,7 +40912,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -40887,7 +40923,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -40898,7 +40934,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -40909,7 +40945,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -40920,7 +40956,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L43",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -40931,7 +40967,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -40942,7 +40978,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L59",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -40953,7 +40989,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L73",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -40964,7 +41000,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L96",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -40975,7 +41011,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.jsx",
-      "source_location": "L98",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -44880,5 +44916,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "bda60a3a2b729bbdc4629907bd9e3d4b5f2a7772"
+  "built_at_commit": "53c619723784c8d9f4e0d8b1492c791945baa2b5"
 }

@@ -222,8 +222,26 @@
   }
 
   .nav-item {
-    @apply flex min-h-[44px] items-center gap-2.5 border-2 border-transparent px-2.5 py-2 text-[14px] font-medium text-ink/80 transition-[background-color,border-color,box-shadow,transform] duration-150 hover:border-ink/20 hover:bg-surface-highlight hover:text-ink;
+    @apply flex min-h-[44px] items-center gap-2.5 border-2 border-transparent px-2.5 py-2 text-[14px] font-medium text-ink/80 transition-[background-color,border-color,box-shadow,transform] duration-150 hover:border-ink/20 hover:bg-surface-highlight hover:text-ink lg:min-h-[40px] lg:py-1.5;
     border-radius: 0;
+  }
+
+  .sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-ink) transparent;
+  }
+
+  .sidebar-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+    background: var(--color-ink);
+    border: none;
   }
 
   .nav-item.active {

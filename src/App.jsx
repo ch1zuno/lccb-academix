@@ -17,6 +17,7 @@ import { supabase } from './lib/supabase';
 import Login from './screens/Login';
 import AccountDialog from './components/AccountDialog';
 import Avatar from './components/ui/Avatar';
+import Logo2D from './components/Logo2D';
 import SplashScreen from './components/SplashScreen';
 
 /* Route-level code splitting keeps the landing bundle small; each role only
@@ -368,14 +369,18 @@ export default function App() {
   const navItems = getNavItems();
 
   const Wordmark = ({ compact = false }) => (
-    <div className="flex items-center gap-2.5">
-      <span className="grid h-10 w-10 shrink-0 place-items-center border-2 border-ink bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]">
-        <BookOpen className="h-[18px] w-[18px]" strokeWidth={2.2} />
-      </span>
-      <div className="min-w-0">
-        <p className="truncate font-display text-[18px] font-extrabold uppercase leading-none tracking-[-0.035em] text-ink">LCCB Academix</p>
-        {!compact && <p className="mt-1 text-[12px] font-semibold uppercase leading-tight tracking-[0.04em] text-muted-foreground">Incentive ledger</p>}
-      </div>
+    <div className="flex flex-col items-start">
+      <Logo2D
+        className={cn(
+          'block h-auto shrink-0',
+          compact ? 'w-[136px]' : 'w-[188px]'
+        )}
+      />
+      {!compact && (
+        <p className="mt-1 pl-0.5 text-[11px] font-semibold uppercase leading-tight tracking-[0.06em] text-muted-foreground">
+          Incentive ledger
+        </p>
+      )}
     </div>
   );
 
@@ -448,8 +453,8 @@ export default function App() {
           </button>
         ))}
       </div>
-      <div className="mx-2.5 my-5 h-0.5 bg-ink/15" />
-      <p className="group-label mb-2 px-2.5 uppercase tracking-[0.04em]">Account</p>
+      <div className="mx-2.5 my-3.5 h-0.5 bg-ink/15" />
+      <p className="group-label mb-1.5 px-2.5 uppercase tracking-[0.04em]">Account</p>
       <button
         onClick={() => { setAccountTab('profile'); setAccountOpen(true); onNavigate?.(); }}
         className="nav-item w-full"
@@ -519,19 +524,19 @@ export default function App() {
 
       <div className="flex">
         {/* Desktop sidebar */}
-        <aside className="sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r-2 border-ink bg-surface-sidebar px-3 py-5 lg:flex">
-          <div className="px-2 pb-6"><Wordmark /></div>
+        <aside className="sticky top-0 hidden h-[100vh] h-[100dvh] w-[264px] shrink-0 flex-col overflow-hidden border-r-2 border-ink bg-surface-sidebar px-3 py-4 lg:flex">
+          <div className="shrink-0 px-2 pb-4"><Wordmark /></div>
 
           {DEMO_MODE ? (
-            <div className="relative px-2 pb-6">
+            <div className="relative shrink-0 px-2 pb-4">
               <button
                 onClick={() => setShowRoleMenu(v => !v)}
-                className="flex w-full items-center justify-between border-2 border-ink bg-paper px-3 py-2.5 text-left shadow-[3px_3px_0_var(--color-ink)] transition-[transform,box-shadow] hover:-translate-y-px hover:shadow-[4px_4px_0_var(--color-ink)]"
+                className="flex w-full items-center justify-between border-2 border-ink bg-paper px-3 py-2 text-left shadow-[3px_3px_0_var(--color-ink)] transition-[transform,box-shadow] hover:-translate-y-px hover:shadow-[4px_4px_0_var(--color-ink)]"
                 aria-expanded={showRoleMenu}
               >
                 <div>
-                  <p className="text-[12px] font-semibold uppercase leading-tight tracking-[0.04em] text-muted-foreground">Demo workspace</p>
-                  <p className="mt-1 text-[13px] font-bold leading-tight">{ROLE_LABELS[role]}</p>
+                  <p className="text-[11px] font-semibold uppercase leading-tight tracking-[0.04em] text-muted-foreground">Demo workspace</p>
+                  <p className="mt-0.5 text-[13px] font-bold leading-tight">{ROLE_LABELS[role]}</p>
                 </div>
                 <ChevronDown className={cn('h-4 w-4 transition-transform', showRoleMenu && 'rotate-180')} strokeWidth={2.2} />
               </button>
@@ -562,15 +567,15 @@ export default function App() {
               </AnimatePresence>
             </div>
           ) : (
-            <div className="px-2 pb-6">
-              <p className="group-label uppercase tracking-[0.04em]">Workspace</p>
-              <p className="mt-1.5 text-[14px] font-bold leading-tight">{ROLE_LABELS[role]}</p>
+            <div className="shrink-0 px-2 pb-4">
+              <p className="group-label uppercase tracking-[0.04em]">Role</p>
+              <p className="mt-1 text-[14px] font-bold leading-tight">{ROLE_LABELS[role]}</p>
             </div>
           )}
 
-          <div className="flex-1"><NavList /></div>
+          <div className="sidebar-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pr-0.5"><NavList /></div>
 
-          <div className="mt-4 border-t-2 border-ink px-2 pt-4">
+          <div className="mt-3 shrink-0 border-t-2 border-ink px-2 pt-3">
             <div className="flex items-center justify-between gap-2">
               <div
                 role="button"
