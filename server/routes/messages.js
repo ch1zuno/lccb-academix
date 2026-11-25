@@ -21,13 +21,16 @@ function peerIdOf(req) {
 async function loadPeer(peerId) {
   const { rows } = await query(
     `SELECT u.id, u.custom_id, u.name, u.role, u.avatar, u.program,
-            EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id) AS has_avatar
-       FROM users u WHERE u.id = $1`, [peerId]);
+            ua.r2_url,
+            EXISTS(SELECT 1 FROM user_avatars ua2 WHERE ua2.user_id = u.id) AS has_avatar
+       FROM users u
+       LEFT JOIN user_avatars ua ON ua.user_id = u.id
+      WHERE u.id = $1`, [peerId]);
   if (!rows[0]) return null;
   const p = rows[0];
   return {
     ...p,
-    avatar: p.has_avatar ? `/api/users/${p.id}/avatar` : p.avatar,
+    avatar: p.r2_url || (p.has_avatar ? `/api/users/${p.id}/avatar` : p.avatar),
   };
 }
 
@@ -83,10 +86,13 @@ router.get('/conversations', requireAuth, async (req, res, next) => {
           WHERE m.sender_id = $1 OR m.recipient_id = $1
        )
        SELECT p.other_id, u.name, u.role, u.custom_id, u.program,
-              CASE WHEN EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id)
-                   THEN '/api/users/' || u.id || '/avatar'
-                   ELSE u.avatar
-              END AS avatar,
+              COALESCE(
+                (SELECT ua.r2_url FROM user_avatars ua WHERE ua.user_id = u.id AND ua.r2_url IS NOT NULL),
+                CASE WHEN EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id)
+                     THEN '/api/users/' || u.id || '/avatar'
+                     ELSE u.avatar
+                END
+              ) AS avatar,
               lm.body AS last_body, lm.created_at AS last_at,
               (lm.sender_id = $1) AS last_from_me,
               COALESCE(unread.count, 0)::int AS unread

@@ -18,9 +18,11 @@ export function toPublicProfile(user, subjects = [], stats = null) {
   const publicProfile = {
     name: user.name || 'Anonymous',
     bio: typeof user.bio === 'string' ? user.bio.slice(0, 280) : '',
-    avatar: user.has_avatar
-      ? `/api/users/${user.id}/avatar`
-      : user.avatar || null,
+    avatar: user.r2_url
+      ? user.r2_url
+      : (user.has_avatar
+        ? `/api/users/${user.id}/avatar`
+        : user.avatar || null),
     role: user.role || 'learner',
     title: typeof user.title === 'string' && user.title ? user.title : undefined,
     department: typeof user.department === 'string' && user.department ? user.department : undefined,

@@ -47,14 +47,20 @@ router.get('/sessions/mine', requireAuth, async (req, res, next) => {
                 s.started_at, s.ended_at, s.actual_duration_seconds,
                 s.tutor_id, s.learner_id, u1.custom_id AS tutor_custom_id, u2.custom_id AS learner_custom_id,
                 u1.name AS tutor_name, u2.name AS learner_name, sub.name AS subject, sub.code AS subject_code,
-                CASE WHEN EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u1.id)
-                     THEN '/api/users/' || u1.id || '/avatar'
-                     ELSE u1.avatar
-                END AS tutor_avatar,
-                CASE WHEN EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u2.id)
-                     THEN '/api/users/' || u2.id || '/avatar'
-                     ELSE u2.avatar
-                END AS learner_avatar,
+                COALESCE(
+                  (SELECT ua.r2_url FROM user_avatars ua WHERE ua.user_id = u1.id AND ua.r2_url IS NOT NULL),
+                  CASE WHEN EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u1.id)
+                       THEN '/api/users/' || u1.id || '/avatar'
+                       ELSE u1.avatar
+                  END
+                ) AS tutor_avatar,
+                COALESCE(
+                  (SELECT ua.r2_url FROM user_avatars ua WHERE ua.user_id = u2.id AND ua.r2_url IS NOT NULL),
+                  CASE WHEN EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u2.id)
+                       THEN '/api/users/' || u2.id || '/avatar'
+                       ELSE u2.avatar
+                  END
+                ) AS learner_avatar,
                 s.rating, s.notes,
                 (SELECT count(*) FROM session_check_ins c WHERE c.session_id = s.id) AS check_in_count,
                 count(*) OVER()::int AS total_count

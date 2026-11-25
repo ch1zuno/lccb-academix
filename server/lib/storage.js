@@ -27,9 +27,13 @@ export function getR2Client() {
     throw new Error('Cloudflare R2 is not configured in environment variables.');
   }
   if (!s3ClientInstance) {
+    let accountId = (process.env.R2_ACCOUNT_ID || '').trim();
+    const match = accountId.match(/([a-f0-9]{32})/i);
+    if (match) accountId = match[1];
+
     s3ClientInstance = new S3Client({
       region: 'auto',
-      endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
       credentials: {
         accessKeyId: process.env.R2_ACCESS_KEY_ID,
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,

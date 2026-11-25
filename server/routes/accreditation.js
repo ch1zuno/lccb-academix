@@ -308,20 +308,20 @@ router.post(
         if (count >= MAX_APPLICATION_FILES) {
           throw httpError(409, `Up to ${MAX_APPLICATION_FILES} files per application`);
         }
-        let r2Key = null;
-        let r2Url = null;
-        if (isR2Configured()) {
-          const ext = file.fileName.split('.').pop() || 'bin';
-          r2Key = `documents/${app.id}/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
-          const uploadResult = await uploadToR2({ key: r2Key, buffer: file.data, mimeType: file.mimeType });
-          r2Url = uploadResult.url;
+        if (!isR2Configured()) {
+          throw httpError(503, 'Document storage is temporarily unavailable. Cloudflare R2 is required.');
         }
+
+        const ext = file.fileName.split('.').pop() || 'bin';
+        const r2Key = `documents/${app.id}/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+        const uploadResult = await uploadToR2({ key: r2Key, buffer: file.data, mimeType: file.mimeType });
+        const r2Url = uploadResult.url;
 
         const { rows } = await client.query(
           `INSERT INTO application_documents (application_id, file_name, mime_type, size_bytes, data, r2_key, r2_url)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           VALUES ($1, $2, $3, $4, NULL, $5, $6)
            RETURNING id, application_id, file_name, mime_type, size_bytes, created_at, r2_url`,
-          [app.id, file.fileName, file.mimeType, file.sizeBytes, isR2Configured() ? null : file.data, r2Key, r2Url]);
+          [app.id, file.fileName, file.mimeType, file.sizeBytes, r2Key, r2Url]);
         await audit({
           actorId: req.user.id,
           actorRole: req.user.role,

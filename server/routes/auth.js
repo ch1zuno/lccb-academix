@@ -124,14 +124,17 @@ async function fetchFullUser(userId) {
   const { rows } = await query(
     `SELECT u.id, u.custom_id, u.name, u.email, u.role, u.avatar, u.bio, u.program, u.department, u.title,
             u.is_verified, u.is_available, u.certified_by_id,
+            ua.r2_url,
             EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id) AS has_avatar
-     FROM users u WHERE u.id = $1`,
+     FROM users u
+     LEFT JOIN user_avatars ua ON ua.user_id = u.id
+     WHERE u.id = $1`,
     [userId]
   );
   const user = rows[0];
   if (!user) return null;
 
-  user.avatar_url = user.has_avatar ? `/api/users/${user.id}/avatar` : null;
+  user.avatar_url = user.r2_url || (user.has_avatar ? `/api/users/${user.id}/avatar` : null);
 
   if (user.role === 'tutor' || user.role === 'faculty') {
     const subRows = await query(
@@ -362,31 +365,31 @@ router.patch('/profile', requireAuth, async (req, res, next) => {
         return res.status(400).json({ error: 'Invalid image format. Only JPEG, PNG, and WebP are allowed.' });
       }
 
-      let r2Key = null;
-      let r2Url = null;
-      if (isR2Configured()) {
-        const ext = mimeType === 'image/jpeg' ? 'jpg' : (mimeType === 'image/png' ? 'png' : 'webp');
-        r2Key = `avatars/${userId}-${Date.now()}.${ext}`;
-        const uploadResult = await uploadToR2({ key: r2Key, buffer, mimeType });
-        r2Url = uploadResult.url;
+      if (!isR2Configured()) {
+        return res.status(503).json({ error: 'Media storage is temporarily unavailable. Cloudflare R2 is required.' });
+      }
 
-        const { rows: prevRows } = await query(`SELECT r2_key FROM user_avatars WHERE user_id = $1`, [userId]);
-        if (prevRows[0]?.r2_key && prevRows[0].r2_key !== r2Key) {
-          try { await deleteFromR2(prevRows[0].r2_key); } catch (e) { console.error('R2 delete old avatar failed:', e); }
-        }
+      const ext = mimeType === 'image/jpeg' ? 'jpg' : (mimeType === 'image/png' ? 'png' : 'webp');
+      const r2Key = `avatars/${userId}-${Date.now()}.${ext}`;
+      const uploadResult = await uploadToR2({ key: r2Key, buffer, mimeType });
+      const r2Url = uploadResult.url;
+
+      const { rows: prevRows } = await query(`SELECT r2_key FROM user_avatars WHERE user_id = $1`, [userId]);
+      if (prevRows[0]?.r2_key && prevRows[0].r2_key !== r2Key) {
+        try { await deleteFromR2(prevRows[0].r2_key); } catch (e) { console.error('R2 delete old avatar failed:', e); }
       }
 
       await query(
         `INSERT INTO user_avatars (user_id, data, mime_type, size_bytes, updated_at, r2_key, r2_url)
-         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, $5, $6)
+         VALUES ($1, NULL, $2, $3, CURRENT_TIMESTAMP, $4, $5)
          ON CONFLICT (user_id) DO UPDATE
-           SET data = EXCLUDED.data,
+           SET data = NULL,
                mime_type = EXCLUDED.mime_type,
                size_bytes = EXCLUDED.size_bytes,
                updated_at = CURRENT_TIMESTAMP,
                r2_key = EXCLUDED.r2_key,
                r2_url = EXCLUDED.r2_url`,
-        [userId, isR2Configured() ? null : buffer, mimeType, buffer.length, r2Key, r2Url]
+        [userId, mimeType, buffer.length, r2Key, r2Url]
       );
     }
 

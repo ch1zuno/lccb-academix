@@ -88,8 +88,10 @@ router.get('/users/:id/public', async (req, res, next) => {
     const { rows } = await query(
       `SELECT u.id, u.custom_id, u.name, u.role, u.title, u.bio, u.avatar, u.program, u.department,
               u.is_available, u.is_verified,
-              EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id) AS has_avatar
+              ua.r2_url,
+              EXISTS(SELECT 1 FROM user_avatars ua2 WHERE ua2.user_id = u.id) AS has_avatar
        FROM users u
+       LEFT JOIN user_avatars ua ON ua.user_id = u.id
        WHERE ${isUuid ? 'u.id = $1' : 'u.custom_id = $1'}`,
       [id]
     );

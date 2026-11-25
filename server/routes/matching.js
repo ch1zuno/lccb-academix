@@ -145,10 +145,13 @@ router.get('/learners/my-tutors', requireAuth, requireRole('learner'), async (re
               u.program AS tutor_program,
               u.is_verified AS is_accredited,
               u.is_available,
-              CASE WHEN EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id)
-                   THEN '/api/users/' || u.id || '/avatar'
-                   ELSE u.avatar
-              END AS avatar,
+              COALESCE(
+                (SELECT ua.r2_url FROM user_avatars ua WHERE ua.user_id = u.id AND ua.r2_url IS NOT NULL),
+                CASE WHEN EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id)
+                     THEN '/api/users/' || u.id || '/avatar'
+                     ELSE u.avatar
+                END
+              ) AS avatar,
               ts.total_sessions,
               ts.last_session_date,
               ls.subject_name AS last_subject_name,
