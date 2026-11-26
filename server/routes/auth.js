@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import rateLimit from 'express-rate-limit';
 import { query, withTransaction } from '../db.js';
 import { requireAuth, signToken } from '../middleware/auth.js';
 import { config } from '../config.js';
@@ -11,6 +12,23 @@ import { isR2Configured, uploadToR2, deleteFromR2 } from '../lib/storage.js';
 const router = express.Router();
 const DEV = !config.isProd;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Shared bcrypt hash used by db/seed.sql (demo1234). Refused in production when DEMO_MODE is off.
+export const SEED_DEMO_HASH = '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu';
+// Constant-time comparison fallback so unknown loginIds take the same bcrypt latency as real accounts.
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync(crypto.randomBytes(16).toString('hex'), 10);
+
+export function isDemoPasswordBlocked(passwordHash, cfg = config) {
+  return Boolean(cfg.isProd && !cfg.demoMode && passwordHash === SEED_DEMO_HASH);
+}
+
+const passwordChangeLimiter = rateLimit({
+  windowMs: 15 * 60_000,
+  max: 5,
+  keyGenerator: (req) => String(req.user?.id || 'anon'),
+  standardHeaders: 'draft-7',
+  message: { error: 'Too many password change attempts. Try again in 15 minutes.' },
+});
 
 const PUBLIC_COLUMNS = `id, custom_id, name, email, role, avatar, program, department, title,
                         is_verified, is_available, certified_by_id, token_version`;
@@ -173,8 +191,17 @@ router.post('/login', async (req, res, next) => {
       [key, isEmail ? key : null, altEmail],
     );
     const user = rows[0];
-    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    const passwordMatches = bcrypt.compareSync(
+      String(password),
+      user?.password_hash || DUMMY_PASSWORD_HASH,
+    );
+    if (!user || !passwordMatches) {
       return res.status(401).json({ error: 'Invalid school ID / email or password' });
+    }
+    if (isDemoPasswordBlocked(user.password_hash)) {
+      return res.status(403).json({
+        error: 'Default demo password is disabled in production. Sign in with Google or contact the administrator.',
+      });
     }
     const token = signToken(user);
     delete user.password_hash;
@@ -439,7 +466,7 @@ router.patch('/profile', requireAuth, async (req, res, next) => {
  * Retires the shared demo password without a mail provider: the user proves
  * the old password, gets a fresh token, and every other JWT is revoked.
  */
-router.post('/change-password', requireAuth, async (req, res, next) => {
+router.post('/change-password', requireAuth, passwordChangeLimiter, async (req, res, next) => {
   try {
     const currentPassword = String(req.body?.currentPassword ?? '');
     const newPassword = String(req.body?.newPassword ?? '');

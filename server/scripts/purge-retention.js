@@ -17,6 +17,7 @@ import pg from 'pg';
 const apply = process.argv.includes('--apply');
 const days = Math.max(30, Number(process.env.RETENTION_DAYS) || 365);
 const notificationDays = Math.max(30, Number(process.env.NOTIFICATION_DAYS) || 365);
+const chatDays = Math.max(30, Number(process.env.CHAT_DAYS) || 365);
 const raw = process.env.DATABASE_URL;
 if (!raw) {
   console.error('DATABASE_URL is not set.');
@@ -44,10 +45,18 @@ try {
       WHERE created_at < now() - ($1 || ' days')::interval`,
     [notificationDays],
   );
+  const chats = await client.query(
+    `SELECT count(*)::int AS n
+       FROM session_messages m JOIN sessions s ON s.id = m.session_id
+      WHERE s.status IN ('completed', 'cancelled')
+        AND m.created_at < now() - ($1 || ' days')::interval`,
+    [chatDays],
+  );
   const bytes = docs.rows.reduce((sum, row) => sum + Number(row.size_bytes || 0), 0);
-  console.log(`Retention ${days} days; notifications ${notificationDays} days.`);
+  console.log(`Retention ${days} days; notifications ${notificationDays} days; session chats ${chatDays} days.`);
   console.log(`Documents: ${docs.rows.length} rows, ${(bytes / 1024 / 1024).toFixed(2)} MB`);
   console.log(`Notifications: ${notes.rows[0].n} rows`);
+  console.log(`Session chat messages: ${chats.rows[0].n} rows`);
 
   if (!apply) {
     console.log('Dry run only. Re-run with --apply to delete.');
@@ -66,8 +75,16 @@ try {
       `DELETE FROM notifications WHERE created_at < now() - ($1 || ' days')::interval`,
       [notificationDays],
     );
+    const deletedChats = await client.query(
+      `DELETE FROM session_messages m
+        USING sessions s
+        WHERE m.session_id = s.id
+          AND s.status IN ('completed', 'cancelled')
+          AND m.created_at < now() - ($1 || ' days')::interval`,
+      [chatDays],
+    );
     await client.query('COMMIT');
-    console.log(`Deleted ${deletedDocs.rowCount} documents and ${deletedNotes.rowCount} notifications.`);
+    console.log(`Deleted ${deletedDocs.rowCount} documents, ${deletedNotes.rowCount} notifications, and ${deletedChats.rowCount} session chat messages.`);
   }
 } catch (error) {
   await client.query('ROLLBACK').catch(() => {});

@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { requireAuth } from '../middleware/auth.js';
@@ -78,7 +79,14 @@ router.post('/proxy/subscribe', async (req, res, next) => {
       (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null);
 
     const configuredSecret = config.centrifugoProxySecret || config.centrifugoSecret;
-    if (configuredSecret && incomingSecret !== configuredSecret) {
+    if (!configuredSecret) {
+      return res.status(503).json({
+        error: { code: 103, message: 'Realtime proxy secret is not configured' },
+      });
+    }
+    const providedHash = crypto.createHash('sha256').update(String(incomingSecret || '')).digest();
+    const expectedHash = crypto.createHash('sha256').update(String(configuredSecret)).digest();
+    if (!incomingSecret || !crypto.timingSafeEqual(providedHash, expectedHash)) {
       return res.status(403).json({
         error: { code: 103, message: 'Invalid proxy secret' },
       });

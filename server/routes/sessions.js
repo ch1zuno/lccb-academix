@@ -11,6 +11,20 @@ const router = express.Router();
 
 const tokenLimiter = rateLimit({ windowMs: 60_000, max: 30, message: { error: 'Slow down on token requests' } });
 
+export function generateCheckInToken(method = 'otp') {
+  if (method === 'fingerprint') {
+    return `fp-${crypto.randomBytes(6).toString('hex')}`;
+  }
+  return `${crypto.randomInt(100000, 1000000)}-${crypto.randomInt(100000, 1000000)}`;
+}
+
+export function isValidDeviceKey(provided, expected) {
+  if (!provided || !expected) return false;
+  const a = crypto.createHash('sha256').update(String(provided)).digest();
+  const b = crypto.createHash('sha256').update(String(expected)).digest();
+  return crypto.timingSafeEqual(a, b);
+}
+
 /* ---------- GET /sessions/mine ---------- */
 router.get('/sessions/mine', requireAuth, async (req, res, next) => {
   try {
@@ -112,9 +126,7 @@ router.post('/sessions/:id/stage-token', requireAuth, requireRole('tutor'), toke
     await query(`UPDATE check_in_tokens SET used_at = CURRENT_TIMESTAMP
                  WHERE session_id = $1 AND used_at IS NULL`, [rows[0].id]);
 
-    const tokenStr = method === 'fingerprint'
-      ? `fp-${crypto.randomUUID().slice(0, 10)}`
-      : `${Math.floor(100000 + Math.random() * 900000)}-${Math.floor(100000 + Math.random() * 900000)}`;
+    const tokenStr = generateCheckInToken(method);
 
     await query(
       `INSERT INTO check_in_tokens (session_id, token, method, expires_at)
@@ -226,7 +238,10 @@ router.post('/sessions/:id/cancel', requireAuth, async (req, res, next) => {
 /* ================= Biometric device endpoints (X-Device-Key) ================= */
 
 function requireDeviceKey(req, res, next) {
-  if ((req.header('X-Device-Key') || '') !== config.deviceApiKey) {
+  if (!config.deviceApiKey) {
+    return next(httpError(503, 'Biometric device API is not configured'));
+  }
+  if (!isValidDeviceKey(req.header('X-Device-Key') || '', config.deviceApiKey)) {
     return next(httpError(401, 'Invalid device key'));
   }
   next();

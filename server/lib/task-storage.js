@@ -18,7 +18,7 @@ const defaultLocalRoot = path.resolve(here, '..', '..', 'uploads', 'task-attachm
 export function resolveTaskStorageDriver() {
   const explicit = String(process.env.TASK_STORAGE_DRIVER || '').trim().toLowerCase();
   if (explicit === 'local' || explicit === 'r2') return explicit;
-  if (process.env.VERCEL === '1' && isR2Configured()) return 'r2';
+  if ((process.env.VERCEL === '1' || process.env.NODE_ENV === 'production') && isR2Configured()) return 'r2';
   return 'local';
 }
 

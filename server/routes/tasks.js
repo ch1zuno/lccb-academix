@@ -146,7 +146,10 @@ router.get('/tasks/attachments/:attachmentId', requireAuth, async (req, res, nex
     res.set('Content-Type', att.mime_type);
     res.set('X-Content-Type-Options', 'nosniff');
     res.set('Cache-Control', 'private, max-age=300');
-    res.set('Content-Disposition', `inline; filename="${att.file_name.replace(/"/g, '')}"`);
+    const safeName = String(att.file_name || 'attachment')
+      .replace(/["\\\r\n]/g, '')
+      .replace(/[^\x20-\x7e]/g, '_');
+    res.set('Content-Disposition', `inline; filename="${safeName || 'attachment'}"`);
     if (buffer) {
       res.set('Content-Length', String(buffer.length));
       return res.send(buffer);

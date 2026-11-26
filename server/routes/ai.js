@@ -1,16 +1,24 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { query } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { generateTutoringHint, generateWrapUpSynthesis } from '../lib/aiAssistant.js';
 
 const router = express.Router();
+const aiLimiter = rateLimit({
+  windowMs: 5 * 60_000,
+  max: 15,
+  keyGenerator: (req) => String(req.user?.id || 'anon'),
+  standardHeaders: 'draft-7',
+  message: { error: 'Too many AI assistant requests. Please wait a few minutes.' },
+});
 
 /**
  * POST /sessions/:id/ai/hint
  * Student or tutor prompts the Antigravity AI assistant for a real-time Socratic hint.
  */
-router.post('/sessions/:id/ai/hint', requireAuth, async (req, res, next) => {
+router.post('/sessions/:id/ai/hint', requireAuth, aiLimiter, async (req, res, next) => {
   try {
     const sessionId = req.params.id;
     const { queryText = '' } = req.body ?? {};
@@ -71,7 +79,7 @@ router.post('/sessions/:id/ai/hint', requireAuth, async (req, res, next) => {
  * POST /sessions/:id/ai/wrap-up-assist
  * Generates an end-of-session summary and custom quiz questions based on the chat transcript.
  */
-router.post('/sessions/:id/ai/wrap-up-assist', requireAuth, async (req, res, next) => {
+router.post('/sessions/:id/ai/wrap-up-assist', requireAuth, aiLimiter, async (req, res, next) => {
   try {
     const sessionId = req.params.id;
 

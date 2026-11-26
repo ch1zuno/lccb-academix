@@ -20,27 +20,33 @@ function unauthorized(res, msg = 'Unauthorized') {
   return res.status(401).json({ error: msg });
 }
 
-export const requireAuth = async (req, res, next) => {
+export async function authenticateRequest(req) {
   const token = requestToken(req);
-  if (!token) return unauthorized(res, 'Missing session');
+  if (!token) return { error: 'Missing session' };
   try {
     const payload = jwt.verify(token, config.jwtSecret);
     const { rows } = await pool.query(
       `SELECT id, custom_id, name, email, role, avatar, program, department, title, token_version
        FROM users WHERE id = $1`, [payload.sub],
     );
-    if (!rows[0]) return unauthorized(res, 'Account no longer exists');
+    if (!rows[0]) return { error: 'Account no longer exists' };
     // Sign-out-all and password changes bump token_version. Tokens minted
     // before the column existed carry no `tv`, which maps to version 0.
     if (Number(payload.tv ?? 0) !== Number(rows[0].token_version ?? 0)) {
-      return unauthorized(res, 'Session revoked — sign in again');
+      return { error: 'Session revoked — sign in again' };
     }
-    req.user = rows[0];
-    req.authExp = payload.exp ?? null;
-    next();
+    return { user: rows[0], authExp: payload.exp ?? null };
   } catch {
-    return unauthorized(res, 'Invalid or expired token');
+    return { error: 'Invalid or expired token' };
   }
+}
+
+export const requireAuth = async (req, res, next) => {
+  const result = await authenticateRequest(req);
+  if (result.error) return unauthorized(res, result.error);
+  req.user = result.user;
+  req.authExp = result.authExp;
+  next();
 };
 
 /** requireRole('tutor') or requireRole('tutor','faculty') */

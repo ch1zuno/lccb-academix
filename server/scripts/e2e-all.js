@@ -17,6 +17,7 @@ const scripts = [
   'e2e-analytics.js',
   'e2e-ledger-integrity.js',
   'e2e-auth.js',
+  'e2e-security.js',
   'e2e-audit.js',
   'e2e-concurrency.js',
 ];

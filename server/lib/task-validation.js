@@ -1,4 +1,5 @@
 /** Validation rules and upload middleware for Classroom-style task images and Google Form links. */
+import path from 'node:path';
 import multer from 'multer';
 import { httpError } from '../middleware/errors.js';
 
@@ -19,8 +20,11 @@ export function imageExtension(name = '') {
 }
 
 export function sanitizeImageName(name = '') {
-  const cleaned = String(name)
-    .replace(/[\u0000-\u001f\u007f\\/]+/g, '_')
+  const baseName = path.basename(String(name).replace(/\\/g, '/'));
+  const cleaned = baseName
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/["\\/]+/g, '_')
+    .replace(/^\.+/, '')
     .trim();
   return (cleaned || 'image.png').slice(0, 140);
 }

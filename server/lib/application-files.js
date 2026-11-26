@@ -6,6 +6,7 @@
  * Vercel caps request bodies at 4.5 MB, so the client uploads one file per
  * request and each file is capped at 4 MB; an application may hold 5 files.
  */
+import path from 'node:path';
 import multer from 'multer';
 import { httpError } from '../middleware/errors.js';
 
@@ -95,10 +96,13 @@ export function validateApplicationFile(file) {
   if (!contentMatchesExtension(ext, file.buffer)) {
     throw httpError(400, `The file content does not match a ${ext.toUpperCase()} file.`);
   }
-  const cleaned = String(file.originalname)
+  const baseName = path.basename(String(file.originalname).replace(/\\/g, '/'));
+  const cleaned = baseName
     .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/["\\/]+/g, '_')
+    .replace(/^\.+/, '')
     .trim()
-    .slice(0, 180);
+    .slice(0, 140);
   return {
     fileName: cleaned || `document.${ext}`,
     mimeType: EXTENSION_MIME[ext],
