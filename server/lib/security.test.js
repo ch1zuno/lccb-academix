@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateProductionSecrets } from '../config.js';
 import { SEED_DEMO_HASH, isDemoPasswordBlocked } from '../routes/auth.js';
-import { generateCheckInToken, isValidDeviceKey } from '../routes/sessions.js';
+import { generateCheckInToken, normalizeCheckInToken, isValidDeviceKey } from '../routes/sessions.js';
 import { formatErrorMessage } from '../middleware/errors.js';
 import { validateApplicationFile } from './application-files.js';
 import { sanitizeImageName } from './task-validation.js';
@@ -71,6 +71,11 @@ test('F3: generateCheckInToken uses CSPRNG format with high uniqueness', () => {
 
   const fp = generateCheckInToken('fingerprint');
   assert.match(fp, /^fp-[0-9a-f]{12}$/);
+
+  assert.equal(normalizeCheckInToken('123456-789012'), '123456-789012');
+  assert.equal(normalizeCheckInToken(' 123456 789012 '), '123456-789012');
+  assert.equal(normalizeCheckInToken('123456789012'), '123456-789012');
+  assert.equal(normalizeCheckInToken('fp-abcdef012345'), 'fp-abcdef012345');
 });
 
 test('F7: formatErrorMessage hides 500 SQL/internal details in production only', () => {

@@ -47,7 +47,7 @@ export default function Messages({ user, showToast, onRead }) {
   const showToastRef = useRef(showToast);
   useEffect(() => { onReadRef.current = onRead; showToastRef.current = showToast; });
 
-  const withId = params.get('with');
+  const withId = params.get('with') || params.get('peer');
 
   const loadConversations = useCallback(() => api.get('/conversations')
     .then(({ conversations: rows }) => setConversations(rows ?? []))

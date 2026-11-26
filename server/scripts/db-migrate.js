@@ -44,7 +44,22 @@ try {
     }
     process.stdout.write(`• ${file} ... `);
     try {
-      await pool.query(fs.readFileSync(path.join(dbDir, 'migrations', file), 'utf8'));
+      const sql = fs.readFileSync(path.join(dbDir, 'migrations', file), 'utf8');
+      // PostgreSQL forbids referencing a newly added enum value in the same
+      // implicit multi-statement transaction; execute leading ALTER TYPE
+      // statements individually so they commit before the migration body runs.
+      const beginIdx = sql.search(/^\s*BEGIN\s*;/im);
+      if (beginIdx > 0 && /ALTER\s+TYPE\b[\s\S]*?\bADD\s+VALUE\b/i.test(sql.slice(0, beginIdx))) {
+        const preamble = sql.slice(0, beginIdx);
+        const body = sql.slice(beginIdx);
+        for (const stmt of preamble.split(';')) {
+          const clean = stmt.replace(/--[^\r\n]*/g, '').trim();
+          if (clean) await pool.query(clean);
+        }
+        await pool.query(body);
+      } else {
+        await pool.query(sql);
+      }
       await pool.query(
         'INSERT INTO schema_migrations (filename) VALUES ($1) ON CONFLICT DO NOTHING',
         [file],

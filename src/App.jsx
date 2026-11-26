@@ -67,7 +67,7 @@ const ROLE_ROUTES = {
   '/exam': ['learner', 'tutor'],
   '/tutor-pending': ['learner'],
   '/referral': ['faculty'],
-  '/checkin': ['learner', 'tutor'],
+  '/checkin': ['learner', 'tutor', 'faculty'],
   '/rewards': ['learner', 'tutor'],
   '/messages': ['learner', 'tutor'],
   '/tasks': ['learner', 'tutor'],
@@ -641,19 +641,9 @@ export default function App() {
         <main
           id="main-content"
           tabIndex={-1}
-          className={cn(
-            'min-w-0 flex-1 focus:outline-none',
-            location.pathname === '/checkin' && 'lg:h-dvh lg:overflow-hidden'
-          )}
+          className="min-w-0 flex-1 focus:outline-none"
         >
-          <div
-            className={cn(
-              'mx-auto w-full min-w-0',
-              location.pathname === '/checkin'
-                ? 'max-w-[1400px] h-full flex flex-col p-2.5 sm:p-3 lg:p-3'
-                : 'max-w-[1360px] px-[max(var(--page-pad),env(safe-area-inset-left))] pb-[calc(3rem+env(safe-area-inset-bottom))] pt-4 sm:px-8 sm:pt-6 lg:px-10 lg:pt-8'
-            )}
-          >
+          <div className="mx-auto w-full min-w-0 max-w-[1360px] px-[max(var(--page-pad),env(safe-area-inset-left))] pb-[calc(3rem+env(safe-area-inset-bottom))] pt-4 sm:px-8 sm:pt-6 lg:px-10 lg:pt-8">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab + role}
@@ -661,11 +651,7 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.16 }}
-                className={cn(
-                  location.pathname === '/checkin'
-                    ? 'flex-1 min-h-0 flex flex-col'
-                    : 'min-h-[calc(100dvh-7rem)]'
-                )}
+                className="min-h-[calc(100dvh-7rem)]"
               >
                 <React.Suspense fallback={<div className="panel panel-pad space-y-3"><div className="skeleton h-6 w-40" /><div className="skeleton h-4 w-56" /><div className="skeleton h-32 w-full" /></div>}>
                   <Routes location={location} key={location.pathname}>

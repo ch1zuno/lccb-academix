@@ -4,6 +4,7 @@ import { config } from '../config.js';
 import { requireAuth } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { audit, requestIp } from '../lib/audit.js';
+import { UUID_RE } from '../lib/booking.js';
 import { ensureFreshLifecycle } from '../lib/sessionLifecycle.js';
 import { settleSessionRow } from '../lib/sessionSettlement.js';
 import {
@@ -29,7 +30,8 @@ export const MIN_PRODUCTION_SESSION_SECONDS = 300; // Kept as named export; runt
 router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
   try {
     await ensureFreshLifecycle();
-    const sessionId = req.params.id;
+    const sessionId = String(req.params.id ?? '').trim();
+    if (!UUID_RE.test(sessionId)) throw httpError(400, 'Invalid session id');
     const isTutorRole = req.user.role === 'tutor' || req.user.role === 'faculty';
     const notesProvided = req.body?.notes !== undefined;
     const notes = isTutorRole && notesProvided ? (String(req.body?.notes ?? '').slice(0, 500) || null) : undefined;

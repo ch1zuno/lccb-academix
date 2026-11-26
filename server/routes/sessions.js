@@ -41,6 +41,12 @@ export function generateCheckInToken(method = 'otp') {
   return `${crypto.randomInt(100000, 1000000)}-${crypto.randomInt(100000, 1000000)}`;
 }
 
+export function normalizeCheckInToken(raw) {
+  const trimmed = String(raw ?? '').trim();
+  const digitsMatch = /^(\d{6})[\s-]?(\d{6})$/.exec(trimmed);
+  return digitsMatch ? `${digitsMatch[1]}-${digitsMatch[2]}` : trimmed;
+}
+
 export function isValidDeviceKey(provided, expected) {
   if (!provided || !expected) return false;
   const a = crypto.createHash('sha256').update(String(provided)).digest();
@@ -117,9 +123,10 @@ router.get('/sessions/mine', requireAuth, async (req, res, next) => {
     params.push(offset);
     const offsetIdx = params.length;
 
-    const [sessionsResult, subjectsResult] = await Promise.all([
+    const [sessionsResult, subjectsResult, nextUpcomingResult] = await Promise.all([
       query(
         `SELECT ${SESSION_SELECT_COLUMNS},
+                EXISTS(SELECT 1 FROM session_check_ins c WHERE c.session_id = s.id AND c.user_id = $1) AS my_checked_in,
                 count(*) OVER()::int AS total_count
            FROM sessions s
            JOIN users u1 ON u1.id = s.tutor_id
@@ -139,6 +146,19 @@ router.get('/sessions/mine', requireAuth, async (req, res, next) => {
           ORDER BY sub.code`,
         [req.user.id],
       ),
+      scope === 'checkin'
+        ? query(
+          `SELECT s.id, s.session_code, s.date, s.time, s.mode, sub.name AS subject, sub.code AS subject_code
+             FROM sessions s
+             JOIN subjects sub ON sub.id = s.subject_id
+            WHERE (s.tutor_id = $1 OR s.learner_id = $1)
+              AND s.status = 'upcoming'
+              AND s.date > $2::date
+            ORDER BY s.date ASC, s.created_at ASC
+            LIMIT 1`,
+          [req.user.id, manilaTodayYmd()],
+        )
+        : Promise.resolve({ rows: [] }),
     ]);
 
     const rows = sessionsResult.rows;
@@ -150,6 +170,7 @@ router.get('/sessions/mine', requireAuth, async (req, res, next) => {
       total,
       hasMore,
       subjects: subjectsResult.rows,
+      ...(scope === 'checkin' ? { nextUpcoming: nextUpcomingResult.rows[0] ?? null } : {}),
     });
   } catch (e) { next(e); }
 });
@@ -270,9 +291,11 @@ router.post('/sessions/:id/end', requireAuth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-/* ---------- POST /sessions/:id/stage-token (verified tutor, 10 min TTL, one active token) ---------- */
-router.post('/sessions/:id/stage-token', requireAuth, requireVerifiedTutor(), tokenLimiter, async (req, res, next) => {
+/* ---------- POST /sessions/:id/stage-token (verified tutor/faculty, 10 min TTL, one active token) ---------- */
+router.post('/sessions/:id/stage-token', requireAuth, requireVerifiedTutor({ allowFaculty: true }), tokenLimiter, async (req, res, next) => {
   try {
+    const sessionId = String(req.params.id ?? '').trim();
+    if (!UUID_RE.test(sessionId)) throw httpError(400, 'Invalid session id');
     await ensureFreshLifecycle({ force: true });
     const method = req.body?.method ?? 'otp';
     if (typeof method !== 'string' || !['qr', 'otp', 'fingerprint'].includes(method)) {
@@ -280,7 +303,7 @@ router.post('/sessions/:id/stage-token', requireAuth, requireVerifiedTutor(), to
     }
     const { rows } = await query(
       `SELECT id FROM sessions WHERE id = $1 AND tutor_id = $2 AND status = 'upcoming' LIMIT 1`,
-      [req.params.id, req.user.id],
+      [sessionId, req.user.id],
     );
     if (!rows[0]) throw httpError(404, 'No upcoming session found for this tutor');
 
@@ -293,70 +316,90 @@ router.post('/sessions/:id/stage-token', requireAuth, requireVerifiedTutor(), to
     const tokenStr = generateCheckInToken(method);
 
     await query(
-      `INSERT INTO check_in_tokens (session_id, token, method, expires_at)
-       VALUES ($1, $2, $3, now() + interval '10 minutes')`,
-      [rows[0].id, tokenStr, method],
+      `INSERT INTO check_in_tokens (session_id, token, method, expires_at, created_by)
+       VALUES ($1, $2, $3, now() + interval '10 minutes', $4)`,
+      [rows[0].id, tokenStr, method, req.user.id],
     );
     res.json({ session: rows[0].id, token: tokenStr, method, expiresIn: 600 });
   } catch (e) { next(e); }
 });
 
-/* ---------- POST /sessions/:id/check-in (learner or tutor presents token) ---------- */
+/* ---------- POST /sessions/:id/check-in (learner or tutor presents shared token) ---------- */
 router.post('/sessions/:id/check-in', requireAuth, tokenLimiter, async (req, res, next) => {
   try {
+    const sessionId = String(req.params.id ?? '').trim();
+    if (!UUID_RE.test(sessionId)) throw httpError(400, 'Invalid session id');
     await ensureFreshLifecycle({ force: true });
-    const tokenStr = String(req.body?.token ?? '').trim();
+    const tokenStr = normalizeCheckInToken(req.body?.token);
     const method = typeof req.body?.method === 'string' ? req.body.method : 'otp';
     if (!tokenStr) throw httpError(400, 'token is required');
-
-    const { rows } = await query(
-      `SELECT t.id AS token_id, s.id, s.session_code, s.learner_id, s.tutor_id, s.status, s.mode,
-              s.date, s.is_now, s.duration_hours
-       FROM check_in_tokens t
-       JOIN sessions s ON s.id = t.session_id
-       WHERE t.token = $1 AND t.session_id = $2 AND t.used_at IS NULL AND t.expires_at > now()`,
-      [tokenStr, req.params.id],
-    );
-    const row = rows[0];
-    if (!row) throw httpError(400, 'Invalid or expired token');
-    if (req.user.id !== row.learner_id && req.user.id !== row.tutor_id) throw httpError(403, 'Not your session');
-    if (row.status !== 'upcoming') throw httpError(409, 'This session is no longer open for check-in');
 
     const safeMethod = ['qr', 'otp', 'fingerprint'].includes(method) ? method : 'otp';
     const clientIp = requestIp(req);
     const clientUa = String(req.get('user-agent') || '').slice(0, 120);
 
     const counted = await withTransaction(async (client) => {
-      const locked = await client.query(
-        `SELECT status, date, is_now, duration_hours FROM sessions WHERE id = $1 FOR UPDATE`,
-        [row.id],
+      const { rows: sessRows } = await client.query(
+        `SELECT id, session_code, learner_id, tutor_id, status, mode, date, is_now, duration_hours
+           FROM sessions WHERE id = $1 FOR UPDATE`,
+        [sessionId],
       );
-      if (locked.rows[0]?.status !== 'upcoming') {
+      const session = sessRows[0];
+      if (!session) throw httpError(400, 'Invalid or expired token');
+      if (req.user.id !== session.learner_id && req.user.id !== session.tutor_id) {
+        throw httpError(403, 'Not your session');
+      }
+      if (session.status !== 'upcoming') {
         throw httpError(409, 'This session is no longer open for check-in');
       }
-      await client.query(`UPDATE check_in_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = $1`, [row.token_id]);
-      const ins = await client.query(
+
+      const { rows: tokRows } = await client.query(
+        `SELECT id AS token_id
+           FROM check_in_tokens
+          WHERE token = $1 AND session_id = $2 AND used_at IS NULL AND expires_at > now()
+          LIMIT 1`,
+        [tokenStr, session.id],
+      );
+      const tok = tokRows[0];
+      if (!tok) throw httpError(400, 'Invalid or expired token');
+
+      const { rows: already } = await client.query(
+        `SELECT 1 FROM session_check_ins WHERE session_id = $1 AND user_id = $2 LIMIT 1`,
+        [session.id, req.user.id],
+      );
+      if (already[0]) {
+        throw httpError(409, 'You have already checked in — waiting for your partner');
+      }
+
+      await client.query(
         `INSERT INTO session_check_ins (session_id, user_id, method)
-         SELECT $1, $2, $3
-         WHERE NOT EXISTS (SELECT 1 FROM session_check_ins WHERE session_id = $1 AND user_id = $2)
-         RETURNING id`,
-        [row.id, req.user.id, safeMethod],
+         VALUES ($1, $2, $3)`,
+        [session.id, req.user.id, safeMethod],
       );
+
       const { rows: c } = await client.query(
-        `SELECT count(*)::int AS confirmations FROM session_check_ins c
-         JOIN users u ON u.id = c.user_id
-         WHERE c.session_id = $1`,
-        [row.id],
+        `SELECT count(DISTINCT c.user_id)::int AS confirmations
+           FROM session_check_ins c
+          WHERE c.session_id = $1`,
+        [session.id],
       );
+      const confirmations = c[0].confirmations;
+
       let startedAtIso = null;
-      if (c[0].confirmations >= 2) {
+      if (confirmations >= 2) {
+        // Retire the shared code once both devices have verified.
+        await client.query(
+          `UPDATE check_in_tokens SET used_at = CURRENT_TIMESTAMP
+            WHERE session_id = $1 AND used_at IS NULL`,
+          [session.id],
+        );
         const startedNow = new Date();
         startedAtIso = startedNow.toISOString();
         const cutoff = computeSessionCutoff({
-          date: locked.rows[0].date,
-          isNow: Boolean(locked.rows[0].is_now),
+          date: session.date,
+          isNow: Boolean(session.is_now),
           startedAt: startedNow,
-          durationHours: locked.rows[0].duration_hours,
+          durationHours: session.duration_hours,
         });
         await client.query(
           `UPDATE sessions
@@ -364,14 +407,15 @@ router.post('/sessions/:id/check-in', requireAuth, tokenLimiter, async (req, res
                   started_at = COALESCE(started_at, $2::timestamptz),
                   cutoff_at = $3::timestamptz
             WHERE id = $1 AND status = 'upcoming'`,
-          [row.id, startedAtIso, cutoff.toISOString()],
+          [session.id, startedAtIso, cutoff.toISOString()],
         );
       }
+
       const { rows: prior } = await client.query(
         `SELECT ip, detail->>'ua' AS ua FROM audit_log
           WHERE action = 'session.check_in' AND entity_id = $1 AND actor_id <> $2
           ORDER BY created_at DESC LIMIT 1`,
-        [row.id, req.user.id],
+        [session.id, req.user.id],
       );
       const sameClientHint = Boolean(prior[0] && prior[0].ip === clientIp && prior[0].ua && prior[0].ua === clientUa);
       await audit({
@@ -379,24 +423,29 @@ router.post('/sessions/:id/check-in', requireAuth, tokenLimiter, async (req, res
         actorRole: req.user.role,
         action: 'session.check_in',
         entity: 'session',
-        entityId: row.id,
-        detail: { mode: row.mode || 'online', method: safeMethod, confirmations: c[0].confirmations, ua: clientUa, sameClientHint },
+        entityId: session.id,
+        detail: { mode: session.mode || 'online', method: safeMethod, confirmations, ua: clientUa, sameClientHint },
         ip: clientIp,
       }, client);
-      return { insertTwice: ins.rows.length === 0, confirmations: c[0].confirmations, startedAtIso };
+
+      return {
+        session,
+        confirmations,
+        startedAtIso,
+      };
     });
 
     if (counted.confirmations >= 2) {
-      await publishRoomEvent([row.id, row.session_code], {
+      await publishRoomEvent([counted.session.id, counted.session.session_code], {
         type: 'session.started',
-        sessionId: row.id,
-        mode: row.mode || 'online',
+        sessionId: counted.session.id,
+        mode: counted.session.mode || 'online',
         startedAt: counted.startedAtIso,
       });
     }
 
     res.json({
-      checkedIn: !counted.insertTwice,
+      checkedIn: true,
       confirmations: counted.confirmations,
       sessionStarted: counted.confirmations >= 2,
     });
@@ -406,6 +455,8 @@ router.post('/sessions/:id/check-in', requireAuth, tokenLimiter, async (req, res
 /* ---------- PATCH /sessions/:id/reschedule (participant, upcoming only) ---------- */
 router.patch('/sessions/:id/reschedule', requireAuth, async (req, res, next) => {
   try {
+    const sessionId = String(req.params.id ?? '').trim();
+    if (!UUID_RE.test(sessionId)) throw httpError(400, 'Invalid session id');
     await ensureFreshLifecycle({ force: true });
     const reason = String(req.body?.reason ?? '').trim().slice(0, 200) || null;
     const updated = await withTransaction(async (client) => {
@@ -415,7 +466,7 @@ router.patch('/sessions/:id/reschedule', requireAuth, async (req, res, next) => 
            FROM sessions s
            JOIN subjects sub ON sub.id = s.subject_id
           WHERE s.id = $1 FOR UPDATE`,
-        [req.params.id],
+        [sessionId],
       );
       const session = rows[0];
       if (!session) throw httpError(404, 'Session not found');
@@ -516,6 +567,8 @@ router.patch('/sessions/:id/reschedule', requireAuth, async (req, res, next) => 
 /* ---------- POST /sessions/:id/cancel (participant, upcoming only) ---------- */
 router.post('/sessions/:id/cancel', requireAuth, async (req, res, next) => {
   try {
+    const sessionId = String(req.params.id ?? '').trim();
+    if (!UUID_RE.test(sessionId)) throw httpError(400, 'Invalid session id');
     await ensureFreshLifecycle({ force: true });
     const reason = String(req.body?.reason ?? '').trim().slice(0, 240) || null;
     const result = await withTransaction(async (client) => {
@@ -523,7 +576,7 @@ router.post('/sessions/:id/cancel', requireAuth, async (req, res, next) => {
         `SELECT s.id, s.session_code, s.learner_id, s.tutor_id, s.status, s.mode, s.location, sub.name AS subject
            FROM sessions s JOIN subjects sub ON sub.id = s.subject_id
           WHERE s.id = $1 FOR UPDATE`,
-        [req.params.id],
+        [sessionId],
       );
       const session = rows[0];
       if (!session) throw httpError(404, 'Session not found');

@@ -12,8 +12,6 @@ import { buildQrMatrix } from '../lib/qrSvg';
 import { useDraftState } from '../lib/ux';
 import api from '../api';
 
-const LiveClassroom = React.lazy(() => import('../components/classroom/LiveClassroom'));
-
 const formatTime = (totalSeconds = 0) => {
   const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
   const h = Math.floor(s / 3600);
@@ -88,6 +86,12 @@ function InPersonQrCode({ value }) {
   );
 }
 
+const formatCheckInCodeInput = (raw = '') => {
+  const digits = String(raw).replace(/\D/g, '').slice(0, 12);
+  if (digits.length > 6) return `${digits.slice(0, 6)}-${digits.slice(6)}`;
+  return digits;
+};
+
 export default function SessionCheckIn({ role, user, showToast }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -97,14 +101,17 @@ export default function SessionCheckIn({ role, user, showToast }) {
   const [active, setActive] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [sessions, setSessions] = useState(null);
+  const [nextUpcoming, setNextUpcoming] = useState(null);
   const [sessionsError, setSessionsError] = useState(null);
   const [target, setTarget] = useState(null);
   const [stagedToken, setStagedToken] = useState(null);
   const [staging, setStaging] = useState(false);
-  const [otp, setOtp] = useState(deepCode);
+  const [otp, setOtp] = useState(() => formatCheckInCodeInput(deepCode));
   const [checkingIn, setCheckingIn] = useState(false);
   const [confirmations, setConfirmations] = useState(0);
+  const [myCheckedIn, setMyCheckedIn] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [endSummary, setEndSummary] = useState(null); // { endedBy, needsFacultyReview, pointsPosted, alreadySettled }
   const [confirmEndOpen, setConfirmEndOpen] = useState(false);
   const [endingOnline, setEndingOnline] = useState(false);
   const [wrapRating, setWrapRating] = useState(0);
@@ -117,13 +124,16 @@ export default function SessionCheckIn({ role, user, showToast }) {
     setSessionsError(null);
     // Check-in tab strictly loads today's upcoming and in-progress sessions only (never stale/expired)
     api.get('/sessions/mine', { scope: 'checkin' })
-      .then(({ sessions: rows }) => {
+      .then(({ sessions: rows, nextUpcoming: upcomingFuture }) => {
         const list = (rows || []).filter((s) => s.status === 'upcoming' || s.status === 'in-progress');
         setSessions(list);
+        setNextUpcoming(upcomingFuture || null);
         const byParam = deepSessionId ? list.find((s) => s.id === deepSessionId) : null;
         const next = byParam || list.find((s) => s.status === 'in-progress') || list.find((s) => s.status === 'upcoming') || null;
         setTarget(next);
         setConfirmations(next ? (Number(next.check_in_count) || 0) : 0);
+        setMyCheckedIn(Boolean(next?.my_checked_in));
+        setActive(next?.status === 'in-progress');
       })
       .catch((e) => { setSessionsError(e.message || 'Failed to load sessions'); });
   };
@@ -140,8 +150,59 @@ export default function SessionCheckIn({ role, user, showToast }) {
         const startTs = new Date(target.started_at).getTime();
         setSeconds(Math.max(0, Math.floor((Date.now() - startTs) / 1000)));
       }
+    } else if (target?.status !== 'in-progress') {
+      setActive(false);
     }
   }, [target?.id, target?.status, target?.started_at, finished]);
+
+  // Live sync while waiting for partner check-in (upcoming) or tutor session end (in-progress)
+  useEffect(() => {
+    if (!target?.id || finished) return undefined;
+    if (target.status !== 'upcoming' && target.status !== 'in-progress') return undefined;
+
+    let cancelled = false;
+    const syncTarget = async () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      try {
+        const { session: fresh } = await api.get(`/sessions/${encodeURIComponent(target.id)}`);
+        if (cancelled || !fresh) return;
+        setTarget(fresh);
+        setConfirmations(Number(fresh.check_in_count) || 0);
+        setMyCheckedIn(Boolean(fresh.my_checked_in));
+
+        if (target.status === 'upcoming' && fresh.status === 'in-progress') {
+          setActive(true);
+          refreshLiveSession?.({ announceNew: false });
+          showToast('Both devices verified. The session timer has started.', 'success');
+        } else if (fresh.status === 'completed' || fresh.status === 'auto-closed') {
+          if (typeof fresh.actual_duration_seconds === 'number') setSeconds(fresh.actual_duration_seconds);
+          setEndSummary({
+            endedBy: fresh.ended_by || 'tutor',
+            needsFacultyReview: Boolean(fresh.needs_faculty_review),
+            pointsPosted: Boolean(fresh.points_posted),
+            alreadySettled: true,
+          });
+          setActive(false);
+          setFinished(true);
+          refreshLiveSession?.({ announceNew: false });
+        }
+      } catch {
+        // transient network hiccup — next poll will retry
+      }
+    };
+
+    const poll = setInterval(syncTarget, 3000);
+    let bc = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      bc = new BroadcastChannel('academix-session-sync');
+      bc.onmessage = () => syncTarget();
+    }
+    return () => {
+      cancelled = true;
+      clearInterval(poll);
+      bc?.close();
+    };
+  }, [target?.id, target?.status, finished, refreshLiveSession, showToast]);
 
   useEffect(() => {
     let interval = null;
@@ -153,6 +214,9 @@ export default function SessionCheckIn({ role, user, showToast }) {
 
   const isFaceToFace = target?.mode === 'face_to_face';
   const checkInMethod = isFaceToFace ? 'qr' : 'otp';
+  const isTutorDevice = user?.id && target?.tutor_id
+    ? String(user.id) === String(target.tutor_id)
+    : (role === 'tutor' || role === 'faculty');
 
   const handleStage = async () => {
     if (!target) return;
@@ -173,36 +237,18 @@ export default function SessionCheckIn({ role, user, showToast }) {
     }
   };
 
-  const handleCheckIn = async (explicitToken, { refreshAfterTutor = false } = {}) => {
-    let tokenValue = typeof explicitToken === 'string' ? explicitToken.trim() : otp.trim();
+  const handleCheckIn = async (explicitToken) => {
+    const tokenValue = typeof explicitToken === 'string' ? explicitToken.trim() : otp.trim();
     if (!target || !tokenValue) return;
     setCheckingIn(true);
     try {
-      let res;
-      try {
-        res = await api.post(`/sessions/${target.id}/check-in`, { token: tokenValue, method: checkInMethod });
-      } catch (firstErr) {
-        // If the learner already consumed the displayed one-time code, mint a fresh
-        // tutor confirmation token automatically so strict single-use tokens stay smooth.
-        if (role === 'tutor' && firstErr?.status === 400) {
-          const fresh = await api.post(`/sessions/${target.id}/stage-token`, { method: checkInMethod });
-          tokenValue = fresh.token;
-          res = await api.post(`/sessions/${target.id}/check-in`, { token: tokenValue, method: checkInMethod });
-        } else {
-          throw firstErr;
-        }
-      }
+      const res = await api.post(`/sessions/${target.id}/check-in`, { token: tokenValue, method: checkInMethod });
       setConfirmations(res.confirmations);
+      setMyCheckedIn(true);
       if (res.sessionStarted) {
         setActive(true);
         showToast('Both devices verified. The session timer has started.', 'success');
       } else {
-        // Tutor confirmed first: mint a fresh one-time code for the learner so the
-        // displayed code/QR is always unused and ready.
-        if (role === 'tutor' && refreshAfterTutor) {
-          const next = await api.post(`/sessions/${target.id}/stage-token`, { method: checkInMethod }).catch(() => null);
-          if (next?.token) setStagedToken(next.token);
-        }
         showToast(`Verified. Waiting for the other device (${res.confirmations}/2).`, 'info');
       }
     } catch (e) {
@@ -216,6 +262,7 @@ export default function SessionCheckIn({ role, user, showToast }) {
         if (fresh) {
           setTarget(fresh);
           setConfirmations(Number(fresh.check_in_count) || 0);
+          setMyCheckedIn(Boolean(fresh.my_checked_in));
         }
         refreshLiveSession?.({ announceNew: false });
       }).catch(() => {});
@@ -231,12 +278,14 @@ export default function SessionCheckIn({ role, user, showToast }) {
   };
 
   const handleSubmitWrap = async () => {
-    if (!target || wrapRating < 1) return;
+    const onlineAlreadySettled = Boolean(endSummary?.alreadySettled && target?.mode === 'online');
+    const needsRating = !(onlineAlreadySettled && isTutorDevice);
+    if (!target || (needsRating && wrapRating < 1)) return;
     setSubmitting(true);
     try {
       const res = await api.post(`/sessions/${target.id}/wrap-up`, {
-        notes: role === 'tutor' ? wrapNotes : undefined,
-        rating: wrapRating,
+        notes: isTutorDevice ? wrapNotes : undefined,
+        rating: wrapRating >= 1 ? wrapRating : undefined,
         durationSeconds: seconds,
       });
       clearWrapNotes();
@@ -250,16 +299,21 @@ export default function SessionCheckIn({ role, user, showToast }) {
   };
 
   if (finished) {
+    const onlineAlreadySettled = Boolean(endSummary?.alreadySettled && target?.mode === 'online');
+    const showRatingPicker = !(onlineAlreadySettled && isTutorDevice);
+    const isFlaggedShort = Boolean(endSummary?.needsFacultyReview || wrapResult?.needsFacultyReview);
     return (
       <div className="mx-auto w-full max-w-[820px]">
         {/* Section Header */}
         <div className="section-head mb-6">
           <div>
-            <h1 className="section-title">Session Call Report</h1>
-            <p className="section-subtitle">Official tutoring session summary & ledger record.</p>
+            <h1 className="section-title">
+              {onlineAlreadySettled && !isTutorDevice ? 'Your tutor ended this session' : 'Session Call Report'}
+            </h1>
+            <p className="section-subtitle">Official tutoring session summary &amp; ledger record.</p>
           </div>
           <span className="status-pill">
-            <span className="status-dot bg-emerald" /> {wrapResult ? 'Recorded on Ledger' : 'Call Completed'}
+            <span className="status-dot bg-emerald" /> {wrapResult || onlineAlreadySettled ? 'Recorded on Ledger' : 'Call Completed'}
           </span>
         </div>
 
@@ -317,9 +371,15 @@ export default function SessionCheckIn({ role, user, showToast }) {
             <div className="flex items-center gap-2">
               <Award className="h-5 w-5 text-gold-ink shrink-0" />
               <div>
-                <p className="font-bold text-ink">Ledger Credit & Attribution</p>
+                <p className="font-bold text-ink">
+                  {isFlaggedShort ? 'Flagged for Faculty Review' : 'Ledger Credit & Attribution'}
+                </p>
                 <p className="text-muted-foreground">
-                  Tutor earns <strong className="text-ink">+50 community points</strong> · Learner earns <strong className="text-ink">+25 attendance points</strong>
+                  {isFlaggedShort ? (
+                    'Session duration was below the minimum threshold — 0 points were posted.'
+                  ) : (
+                    <>Tutor earns <strong className="text-ink">+50 community points</strong> · Learner earns <strong className="text-ink">+25 attendance points</strong></>
+                  )}
                 </p>
               </div>
             </div>
@@ -328,7 +388,8 @@ export default function SessionCheckIn({ role, user, showToast }) {
             </span>
           </div>
 
-          {/* Star Rating Section (Replaces AI Review Survey) */}
+          {/* Star Rating Section (hidden for tutors on already-settled Online sessions) */}
+          {showRatingPicker && (
           <div className="border-t-2 border-ink pt-6">
             <div className="mb-3">
               <p className="font-display text-[16px] font-bold leading-tight text-ink flex items-center gap-1.5">
@@ -395,11 +456,12 @@ export default function SessionCheckIn({ role, user, showToast }) {
               </div>
             )}
           </div>
+          )}
 
           {/* Tutor Notes */}
-          {role === 'tutor' && !wrapResult && (
+          {isTutorDevice && !wrapResult && (
             <div className="mt-6 border-t border-ink/20 pt-5">
-              <label className="field-label" htmlFor="wrap-notes">Session Notes & Next Steps (Optional)</label>
+              <label className="field-label" htmlFor="wrap-notes">Session Notes &amp; Next Steps (Optional)</label>
               <textarea
                 id="wrap-notes"
                 className="textarea-field"
@@ -434,7 +496,7 @@ export default function SessionCheckIn({ role, user, showToast }) {
                 <div className="flex items-center gap-2 text-[14px] font-bold text-emerald">
                   <Check className="h-5 w-5 border border-emerald rounded-full p-0.5" strokeWidth={3} />
                   Session report saved to ledger{wrapResult.referralResolved ? ' — referral resolved!' : '.'}
-                  {role === 'tutor' && wrapResult.tutorBalance != null ? (
+                  {isTutorDevice && wrapResult.tutorBalance != null ? (
                     <span className="num text-muted-foreground font-normal ml-1">New Balance: {wrapResult.tutorBalance} pts</span>
                   ) : null}
                 </div>
@@ -447,15 +509,28 @@ export default function SessionCheckIn({ role, user, showToast }) {
                 </Button>
               </div>
             ) : (
-              <Button
-                size="lg"
-                className="w-full font-bold shadow-[4px_4px_0_var(--color-ink)]"
-                disabled={submitting || wrapRating < 1}
-                onClick={handleSubmitWrap}
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : null}
-                {submitting ? 'Recording to ledger…' : 'Confirm & Save Session Report'}
-              </Button>
+              <div className="flex flex-col gap-2.5 sm:flex-row">
+                <Button
+                  size="lg"
+                  className="w-full font-bold shadow-[4px_4px_0_var(--color-ink)]"
+                  disabled={submitting || (showRatingPicker && wrapRating < 1)}
+                  onClick={handleSubmitWrap}
+                >
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : null}
+                  {submitting ? 'Saving…' : showRatingPicker ? 'Confirm & Save Session Report' : 'Save Notes'}
+                </Button>
+                {onlineAlreadySettled && isTutorDevice && (
+                  <Button
+                    type="button"
+                    size="lg"
+                    variant="outline"
+                    className="w-full bg-paper font-bold sm:w-auto"
+                    onClick={() => navigate('/dashboard')}
+                  >
+                    Return to Dashboard
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -478,6 +553,12 @@ export default function SessionCheckIn({ role, user, showToast }) {
       try {
         const res = await api.post(`/sessions/${target.id}/end`, {});
         if (typeof res.actualDurationSeconds === 'number') setSeconds(res.actualDurationSeconds);
+        setEndSummary({
+          endedBy: 'tutor',
+          needsFacultyReview: Boolean(res.needsFacultyReview),
+          pointsPosted: Boolean(res.pointsPosted),
+          alreadySettled: true,
+        });
         setConfirmEndOpen(false);
         setFinished(true);
         setActive(false);
@@ -623,8 +704,18 @@ export default function SessionCheckIn({ role, user, showToast }) {
       )}
       {sessions === null && !sessionsError && <div className="panel empty">Reading your sessions…</div>}
       {sessions !== null && !target && (
-        <div className="panel empty">
-          No upcoming sessions. {role === 'learner' ? 'Book one from Find a tutor.' : 'Confirmed bookings will appear here.'}
+        <div className="panel empty space-y-2">
+          <p className="font-bold text-ink">No sessions scheduled for today.</p>
+          {nextUpcoming ? (
+            <p className="text-[13px] text-muted-foreground">
+              Your next upcoming session is <strong>{nextUpcoming.subject_code || nextUpcoming.subject}</strong> on{' '}
+              <strong>{fmtDate(nextUpcoming.date)}</strong> at <strong>{nextUpcoming.time}</strong>. Check-in opens on the scheduled date.
+            </p>
+          ) : (
+            <p className="text-[13px] text-muted-foreground">
+              {role === 'learner' ? 'Book one from Find a tutor.' : 'Confirmed bookings for today will appear here.'}
+            </p>
+          )}
         </div>
       )}
 
@@ -654,8 +745,9 @@ export default function SessionCheckIn({ role, user, showToast }) {
                         setTarget(next);
                         setStagedToken(null);
                         setOtp('');
-                        setConfirmations(0);
-                        setActive(false);
+                        setConfirmations(Number(next.check_in_count) || 0);
+                        setMyCheckedIn(Boolean(next.my_checked_in));
+                        setActive(next.status === 'in-progress');
                         setSeconds(0);
                       }
                     }}
@@ -692,26 +784,17 @@ export default function SessionCheckIn({ role, user, showToast }) {
 
           <div className="grid gap-4 md:grid-cols-2">
             {/* Tutor device */}
-            <div className={cn('panel p-5', role !== 'tutor' && 'bg-surface-quiet/60')}>
+            <div className={cn('panel p-5', !isTutorDevice && 'bg-surface-quiet/60')}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="font-display text-[18px] font-extrabold tracking-[-0.03em]">Tutor device</h2>
                   <p className="mt-0.5 text-[13px] text-muted-foreground">Generate the shared code.</p>
                 </div>
-                <span className="status-pill">{role === 'tutor' ? 'This device' : 'Other device'}</span>
+                <span className="status-pill">{isTutorDevice ? 'This device' : 'Other device'}</span>
               </div>
 
               <div className="mt-6">
-                {active ? (
-                  <div className="py-4 text-center">
-                    <p className="text-[13px] font-semibold text-muted-foreground">Elapsed</p>
-                    <p className="num mt-2 text-[52px] leading-none text-ink">{formatTime(seconds)}</p>
-                    <p className="mt-3 flex items-center justify-center gap-2 text-[13px] font-semibold text-muted-foreground">
-                      <span className="h-2 w-2 border border-ink bg-emerald" /> Session in progress
-                    </p>
-                    <Button variant="outline" className="mt-6 w-full" onClick={handleEnd}>End session</Button>
-                  </div>
-                ) : role !== 'tutor' ? (
+                {!isTutorDevice ? (
                   <div className="flex min-h-[200px] flex-col items-center justify-center text-center">
                     <p className="max-w-[30ch] text-[14px] text-muted-foreground">
                       The tutor opens this screen and generates a one-time code. It expires after ten minutes.
@@ -730,7 +813,7 @@ export default function SessionCheckIn({ role, user, showToast }) {
                       </div>
                     )}
                     <p className="text-[13px] font-semibold text-muted-foreground">
-                      {isFaceToFace ? 'Or enter this one-time code' : 'Learner code'}
+                      {isFaceToFace ? 'Or enter this one-time code' : 'Shared check-in code'}
                     </p>
                     <div className="mt-2 flex items-center justify-center gap-2">
                       <p className="num border-2 border-ink bg-gold px-4 py-2.5 text-[22px] sm:text-[26px] tracking-[0.12em] text-ink shadow-[3px_3px_0_var(--color-ink)]">{stagedToken}</p>
@@ -744,11 +827,21 @@ export default function SessionCheckIn({ role, user, showToast }) {
                       </Button>
                     </div>
                     <p className="mt-3 text-[13px] text-muted-foreground" aria-live="polite">
-                      {confirmations}/2 confirmed · both devices must verify
+                      {myCheckedIn
+                        ? `You confirmed (${confirmations}/2) · waiting for learner to enter this code`
+                        : `${confirmations}/2 confirmed · both devices must verify`}
                     </p>
-                    <Button className="mt-4 w-full" onClick={() => handleCheckIn(stagedToken, { refreshAfterTutor: true })} disabled={checkingIn || active}>
+                    <Button
+                      className="mt-4 w-full"
+                      onClick={() => handleCheckIn(stagedToken)}
+                      disabled={checkingIn || active || myCheckedIn}
+                    >
                       {checkingIn ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : <Check className="h-4 w-4" strokeWidth={2} />}
-                      {checkingIn ? 'Verifying…' : isFaceToFace ? 'Confirm in-person presence' : 'Confirm on tutor device'}
+                      {myCheckedIn
+                        ? 'Confirmed on tutor device'
+                        : checkingIn
+                          ? 'Verifying…'
+                          : isFaceToFace ? 'Confirm in-person presence' : 'Confirm on tutor device'}
                     </Button>
                     <Button className="mt-2.5 w-full" variant="outline" onClick={handleStage} disabled={staging}>
                       {staging ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : null}
@@ -760,7 +853,7 @@ export default function SessionCheckIn({ role, user, showToast }) {
                     <p className="max-w-[30ch] text-center text-[14px] text-muted-foreground">
                       {isFaceToFace
                         ? 'Generate an in-person QR code and one-time code to show the student across the table.'
-                        : 'Issue a one-time code, show it to the learner, and both devices confirm before the clock starts.'}
+                        : 'Issue a one-time code, share it with the learner, and both devices confirm before the clock starts.'}
                     </p>
                     <Button className="mt-5 w-full" onClick={handleStage} disabled={staging}>
                       {staging ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : null}
@@ -772,29 +865,28 @@ export default function SessionCheckIn({ role, user, showToast }) {
             </div>
 
             {/* Learner device */}
-            <div className={cn('panel p-5', role !== 'learner' && 'bg-surface-quiet/60')}>
+            <div className={cn('panel p-5', isTutorDevice && 'bg-surface-quiet/60')}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="font-display text-[18px] font-extrabold tracking-[-0.03em]">Learner device</h2>
                   <p className="mt-0.5 text-[13px] text-muted-foreground">Enter the code from the tutor.</p>
                 </div>
-                <span className="status-pill">{role === 'learner' ? 'This device' : 'Other device'}</span>
+                <span className="status-pill">{!isTutorDevice ? 'This device' : 'Other device'}</span>
               </div>
 
               <div className="mt-6">
-                {active ? (
-                  <div className="py-4 text-center">
-                    <p className="text-[13px] font-semibold text-muted-foreground">Elapsed</p>
-                    <p className="num mt-2 text-[52px] leading-none text-ink">{formatTime(seconds)}</p>
-                    <p className="mt-3 flex items-center justify-center gap-2 text-[13px] font-semibold text-muted-foreground">
-                      <span className="h-2 w-2 border border-ink bg-emerald" /> Learning in progress
-                    </p>
-                    <Button variant="outline" className="mt-6 w-full" onClick={handleEnd}>End session</Button>
-                  </div>
-                ) : role !== 'learner' ? (
+                {isTutorDevice ? (
                   <div className="flex min-h-[200px] flex-col items-center justify-center text-center">
                     <p className="max-w-[30ch] text-[14px] text-muted-foreground">
-                      The learner enters the six-digit code on their own device. Both confirmations must land.
+                      The learner enters the one-time code on their own device. Both confirmations must land.
+                    </p>
+                  </div>
+                ) : myCheckedIn ? (
+                  <div className="flex min-h-[200px] flex-col items-center justify-center text-center space-y-2">
+                    <CheckCircle2 className="h-8 w-8 text-emerald" />
+                    <p className="font-display text-[16px] font-extrabold text-ink">Your device is verified</p>
+                    <p className="max-w-[30ch] text-[13px] text-muted-foreground" aria-live="polite">
+                      {confirmations}/2 confirmed · waiting for your tutor to confirm so the session starts automatically.
                     </p>
                   </div>
                 ) : (
@@ -804,12 +896,12 @@ export default function SessionCheckIn({ role, user, showToast }) {
                       id="otp"
                       type="text"
                       inputMode="numeric"
-                      placeholder="000 000"
-                      className="num h-14 text-center text-[24px] tracking-[0.22em]"
+                      placeholder="000000-000000"
+                      className="num h-14 text-center text-[20px] sm:text-[22px] tracking-[0.12em]"
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/[^0-9-]/g, '').slice(0, 13))}
+                      onChange={(e) => setOtp(formatCheckInCodeInput(e.target.value))}
                     />
-                    <p className="mt-2 text-[13px] text-muted-foreground">Ask your tutor for the code. It expires after ten minutes.</p>
+                    <p className="mt-2 text-[13px] text-muted-foreground">Enter the 12-digit code shown on your tutor’s screen. It expires after ten minutes.</p>
                     <Button className="mt-5 w-full" disabled={checkingIn || !otp.trim()} onClick={() => handleCheckIn()}>
                       {checkingIn ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : <Check className="h-4 w-4" strokeWidth={2} />}
                       {checkingIn ? 'Verifying…' : 'Verify check-in'}
@@ -824,7 +916,9 @@ export default function SessionCheckIn({ role, user, showToast }) {
           </div>
 
           <p className="mt-4 text-[13px] text-muted-foreground">
-            The timer is shared. Either participant can end the session; the wrap-up posts the points.
+            {isFaceToFace
+              ? 'The timer is shared. Either participant can end the Face to Face session and submit wrap-up.'
+              : 'The timer is shared. Only the tutor can end an Online session; students can leave and rejoin anytime.'}
           </p>
         </>
       )}

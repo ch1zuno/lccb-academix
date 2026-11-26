@@ -151,10 +151,14 @@ export default function LearnerWizard({ user, showToast }) {
         setSubjectsError(friendlyError(err, "We couldn't load the live subject list. Try again."));
       });
 
-    api
-      .get('/tutors')
-      .then(({ tutors }) => setLiveTutors(tutors || []))
-      .catch(() => {});
+    Promise.allSettled([
+      api.get('/tutors'),
+      api.get('/tutors', { role: 'faculty' }),
+    ]).then(([peerRes, facRes]) => {
+      const peers = peerRes.status === 'fulfilled' ? (peerRes.value?.tutors || []) : [];
+      const faculty = facRes.status === 'fulfilled' ? (facRes.value?.tutors || []) : [];
+      setLiveTutors([...peers, ...faculty]);
+    });
   };
 
   // Sync live subject & tutor UUIDs from backend while keeping src/data.js for instant search
@@ -387,28 +391,23 @@ export default function LearnerWizard({ user, showToast }) {
     const resolvedSubjectId = matchedSubjectObj?.id;
 
     try {
-      let created = null;
-      if (
-        resolvedSubjectId &&
-        !String(resolvedSubjectId).startsWith('sub-') &&
-        !String(resolvedTutorId).startsWith('TU-') &&
-        !String(resolvedTutorId).startsWith('FA-')
-      ) {
-        const res = await api.post('/session-requests', {
-          tutorId: resolvedTutorId,
-          subjectId: resolvedSubjectId,
-          mode: answers.mode,
-          venueId: answers.mode === 'face_to_face' ? answers.venueId : undefined,
-          topic: answers.topic || 'Concept Walkthrough',
-          language: answers.language || 'English',
-          isNow: Boolean(answers.isNow),
-          preferredDate: answers.isNow ? undefined : (answers.preferredDate || addDaysYmd(1)),
-          preferredTime: answers.isNow ? undefined : (answers.preferredTime || '3:00 PM'),
-          durationHours: answers.durationHours || 1,
-          note: answers.note || null,
-        });
-        created = res?.request ?? null;
+      if (!resolvedSubjectId || String(resolvedSubjectId).startsWith('sub-')) {
+        throw new Error('Could not resolve the course record yet. Reload the page and try again.');
       }
+      const res = await api.post('/session-requests', {
+        tutorId: resolvedTutorId,
+        subjectId: resolvedSubjectId,
+        mode: answers.mode,
+        venueId: answers.mode === 'face_to_face' ? answers.venueId : undefined,
+        topic: answers.topic || 'Concept Walkthrough',
+        language: answers.language || 'English',
+        isNow: Boolean(answers.isNow),
+        preferredDate: answers.isNow ? undefined : (answers.preferredDate || addDaysYmd(1)),
+        preferredTime: answers.isNow ? undefined : (answers.preferredTime || '3:00 PM'),
+        durationHours: answers.durationHours || 1,
+        note: answers.note || null,
+      });
+      const created = res?.request ?? null;
       showToast?.(
         `Session request sent to ${selectedTutor.name} (${chosenCourseCode || 'selected course'}).`,
         'success',

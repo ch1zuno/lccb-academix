@@ -141,8 +141,12 @@ router.get('/referrals/export.csv', requireAuth, requireRole('faculty', 'superad
 
 // GET /referrals/next-code — unique code preview for the create form
 router.get('/referrals/next-code', requireAuth, requireRole('faculty'), async (_req, res, next) => {
-  try { const n = await nextReferralNumber(); res.json({ code: `REF-${String(n).padStart(3, '0')}` }); }
-  catch (e) { next(e); }
+  try {
+    const { rows } = await query(
+      `SELECT COALESCE(max(NULLIF(regexp_replace(referral_code, '[^0-9]', '', 'g'), '')::int), 0) + 1 AS n FROM referrals`,
+    );
+    res.json({ code: `REF-${String(rows[0].n).padStart(3, '0')}` });
+  } catch (e) { next(e); }
 });
 
 // GET /referrals/search-students?q= — learners matching name or custom_id for the form

@@ -187,6 +187,40 @@ export default function SessionRoom({
     return () => clearInterval(timer);
   }, [session?.status, endedNotice, f2fWrapMode]);
 
+  // Fallback status sync every 4s while upcoming (F2F check-in) or in-progress (in case WS/Centrifugo is offline)
+  useEffect(() => {
+    if (!session?.id || endedNotice || f2fWrapMode) return undefined;
+    if (session.status !== 'upcoming' && session.status !== 'in-progress') return undefined;
+    let alive = true;
+    const poll = setInterval(async () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      try {
+        const { session: fresh } = await api.get(`/sessions/${encodeURIComponent(session.id)}`);
+        if (!alive || !fresh) return;
+        setSession(fresh);
+        if (fresh.status === 'completed' || fresh.status === 'auto-closed') {
+          if (typeof fresh.actual_duration_seconds === 'number') setSeconds(fresh.actual_duration_seconds);
+          const isTutor = user?.id && String(user.id) === String(fresh.tutor_id);
+          setEndedNotice({
+            title: fresh.status === 'auto-closed'
+              ? 'Session auto-closed at day cutoff'
+              : (isTutor ? 'Session ended' : 'Your tutor ended this session'),
+            detail: fresh.needs_faculty_review
+              ? 'Session duration was below the minimum threshold, so no points were posted and it was flagged for faculty review.'
+              : 'Complete the wrap-up below to save your rating or session notes.',
+            endedBy: fresh.ended_by || 'tutor',
+            pointsPosted: Boolean(fresh.points_posted),
+            needsFacultyReview: Boolean(fresh.needs_faculty_review),
+          });
+          onSessionEnded?.(fresh);
+        }
+      } catch {
+        // ignore transient poll errors
+      }
+    }, 4000);
+    return () => { alive = false; clearInterval(poll); };
+  }, [session?.id, session?.status, endedNotice, f2fWrapMode, user?.id, onSessionEnded]);
+
   const isSessionTutor = Boolean(user?.id && session?.tutor_id && String(user.id) === String(session.tutor_id));
 
   // Tutor ends Online session on the server (single transaction + Centrifugo/WS broadcast)
@@ -593,8 +627,13 @@ export default function SessionRoom({
                             <Copy className="h-4 w-4" />
                           </Button>
                         </div>
-                        <Button type="button" className="mt-3 min-h-[44px]" disabled={checkingIn} onClick={() => handleF2fCheckIn(stagedToken)}>
-                          Confirm tutor presence
+                        <Button
+                          type="button"
+                          className="mt-3 min-h-[44px]"
+                          disabled={checkingIn || Boolean(session.my_checked_in)}
+                          onClick={() => handleF2fCheckIn(stagedToken)}
+                        >
+                          {session.my_checked_in ? 'Confirmed — waiting for student' : 'Confirm tutor presence'}
                         </Button>
                       </>
                     ) : (

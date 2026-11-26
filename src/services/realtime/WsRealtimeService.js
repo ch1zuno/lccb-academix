@@ -317,6 +317,10 @@ export class WsRealtimeService {
     return presence.some((p) => String(p.id) === String(userId));
   }
 
+  isUserOnline(roomId, userId) {
+    return this.isOnline(roomId, userId);
+  }
+
   isRoleOnline(roomId, role) {
     const presence = this.getPresence(roomId);
     return presence.some((p) => p.role === role);
