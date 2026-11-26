@@ -11,6 +11,7 @@ import {
   UUID_RE,
   formatDurationLabel,
   formatModeLabel,
+  minutesToTimeLabel,
   pgDateToYmd,
   parseDurationHours,
   validateDateAndTime,
@@ -21,6 +22,7 @@ import {
 import {
   ensureFreshLifecycle,
   manilaTodayYmd,
+  manilaNowMinutes,
   computeSessionCutoff,
 } from '../lib/sessionLifecycle.js';
 import {
@@ -79,6 +81,245 @@ const SESSION_SELECT_COLUMNS = `
   s.rating, s.notes,
   (SELECT count(*)::int FROM session_check_ins c WHERE c.session_id = s.id) AS check_in_count
 `;
+
+/* ---------- GET /sessions/demo-participants ---------- */
+router.get('/sessions/demo-participants', requireAuth, async (req, res, next) => {
+  try {
+    if (config.isProd && !config.demoMode) {
+      throw httpError(403, 'Demo participant search is disabled in production without DEMO_MODE');
+    }
+
+    const q = String(req.query.q || '').trim();
+    const roleFilter = String(req.query.role || '').trim().toLowerCase();
+
+    const conditions = ['u.suspended_at IS NULL'];
+    const params = [];
+
+    if (roleFilter === 'learner') {
+      conditions.push(`u.role = 'learner'`);
+    } else if (roleFilter === 'tutor') {
+      conditions.push(`(u.role = 'tutor' OR (u.role = 'faculty' AND u.is_verified = true))`);
+    } else {
+      conditions.push(`(u.role = 'learner' OR u.role = 'tutor' OR (u.role = 'faculty' AND u.is_verified = true))`);
+    }
+
+    if (q) {
+      params.push(`%${q}%`);
+      const idx = params.length;
+      conditions.push(`(u.name ILIKE $${idx} OR u.custom_id ILIKE $${idx} OR COALESCE(u.program, u.department, '') ILIKE $${idx})`);
+    }
+
+    const { rows } = await query(
+      `SELECT u.id, u.custom_id, u.name, u.role, u.program, u.department, u.avatar,
+              COALESCE(
+                (SELECT json_agg(json_build_object('id', s.id, 'code', s.code, 'name', s.name))
+                   FROM user_subjects us
+                   JOIN subjects s ON s.id = us.subject_id
+                  WHERE us.user_id = u.id),
+                '[]'
+              ) AS subjects
+         FROM users u
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY u.name ASC
+        LIMIT 20`,
+      params,
+    );
+
+    res.json({ participants: rows });
+  } catch (e) { next(e); }
+});
+
+/* ---------- POST /sessions/demo-boot ---------- */
+router.post('/sessions/demo-boot', requireAuth, async (req, res, next) => {
+  try {
+    if (config.isProd && !config.demoMode) {
+      throw httpError(403, 'Demo session booting is disabled in production without DEMO_MODE');
+    }
+
+    const {
+      learnerId: rawLearnerId,
+      tutorId: rawTutorId,
+      mode: rawMode = 'online',
+      venueId: rawVenueId = null,
+      status: rawStatus = 'in-progress',
+      topic: rawTopic,
+    } = req.body ?? {};
+
+    const learnerId = String(rawLearnerId ?? '').trim();
+    const tutorId = String(rawTutorId ?? '').trim();
+
+    if (!UUID_RE.test(learnerId) || !UUID_RE.test(tutorId)) {
+      throw httpError(400, 'Student ID and Tutor ID must be valid UUIDs');
+    }
+    if (learnerId === tutorId) {
+      throw httpError(400, 'Student and Tutor must be different users');
+    }
+
+    // Role enforcement: strictly 1 student and 1 tutor
+    const { rows: users } = await query(
+      `SELECT id, custom_id, name, role, is_verified FROM users WHERE id IN ($1, $2)`,
+      [learnerId, tutorId],
+    );
+    const learner = users.find((u) => u.id === learnerId);
+    const tutor = users.find((u) => u.id === tutorId);
+
+    if (!learner || learner.role !== 'learner') {
+      throw httpError(400, 'Selected student must have the student (learner) role');
+    }
+    if (!tutor || (tutor.role !== 'tutor' && !(tutor.role === 'faculty' && tutor.is_verified))) {
+      throw httpError(400, 'Selected tutor must be an accredited tutor or verified faculty specialist');
+    }
+
+    const mode = rawMode === 'face_to_face' ? 'face_to_face' : 'online';
+    const status = rawStatus === 'upcoming' ? 'upcoming' : 'in-progress';
+
+    const dateStr = manilaTodayYmd();
+    const now = new Date();
+    let candidateMinutes = manilaNowMinutes(now);
+
+    const { rows: existingTimes } = await query(
+      `SELECT time FROM sessions WHERE tutor_id = $1 AND date = $2::date AND status IN ('upcoming', 'in-progress')`,
+      [tutor.id, dateStr],
+    );
+    const takenTimes = new Set(existingTimes.map((r) => r.time));
+
+    let timeFormatted = minutesToTimeLabel(candidateMinutes);
+    while (takenTimes.has(timeFormatted)) {
+      candidateMinutes = (candidateMinutes + 1) % 1440;
+      timeFormatted = minutesToTimeLabel(candidateMinutes);
+    }
+    const durationHours = 1;
+
+    const result = await withTransaction(async (client) => {
+      // 1. Resolve venue if face-to-face
+      let venueId = null;
+      let location = ONLINE_LOCATION;
+      if (mode === 'face_to_face') {
+        if (rawVenueId && UUID_RE.test(String(rawVenueId))) {
+          const v = await resolveApprovedVenue(client, rawVenueId);
+          venueId = v.id;
+          location = v.name;
+        } else {
+          const { rows: venues } = await client.query(
+            `SELECT id, name FROM campus_venues WHERE is_active = true ORDER BY name ASC LIMIT 1`,
+          );
+          if (venues.length) {
+            venueId = venues[0].id;
+            location = venues[0].name;
+          } else {
+            location = 'Library Study Room A';
+          }
+        }
+      }
+
+      // 2. Resolve subject
+      const { rows: tutorSubjects } = await client.query(
+        `SELECT s.id, s.name, s.code
+           FROM user_subjects us
+           JOIN subjects s ON s.id = us.subject_id
+          WHERE us.user_id = $1
+          LIMIT 1`,
+        [tutor.id],
+      );
+      let subjectId;
+      let topic = String(rawTopic || '').trim();
+      if (tutorSubjects.length) {
+        subjectId = tutorSubjects[0].id;
+        if (!topic) topic = `Demo ${mode === 'face_to_face' ? 'In-Person' : 'Online'} · ${tutorSubjects[0].code}`;
+      } else {
+        const { rows: defaultSub } = await client.query(`SELECT id, code FROM subjects ORDER BY code ASC LIMIT 1`);
+        if (!defaultSub.length) throw httpError(500, 'No subjects found in database');
+        subjectId = defaultSub[0].id;
+        if (!topic) topic = `Demo ${mode === 'face_to_face' ? 'In-Person' : 'Online'} Session`;
+      }
+
+      // 3. Cutoff & session code
+      const cutoff = computeSessionCutoff({
+        date: dateStr,
+        isNow: true,
+        durationHours,
+        startedAt: status === 'in-progress' ? now : undefined,
+      });
+      const sessionCode = `SES-${String(Date.now()).slice(-6)}`;
+      const startedAt = status === 'in-progress' ? now.toISOString() : null;
+
+      const { rows: sessionRows } = await client.query(
+        `INSERT INTO sessions
+           (session_code, tutor_id, learner_id, subject_id, topic, date, time, duration, duration_hours,
+            status, mode, venue_id, location, language, is_now, started_at, cutoff_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, true, $15::timestamptz, $16::timestamptz)
+         RETURNING *`,
+        [
+          sessionCode,
+          tutor.id,
+          learner.id,
+          subjectId,
+          topic,
+          dateStr,
+          timeFormatted,
+          formatDurationLabel(durationHours),
+          durationHours,
+          status,
+          mode,
+          venueId,
+          location,
+          'English',
+          startedAt,
+          cutoff.toISOString(),
+        ],
+      );
+
+      const session = sessionRows[0];
+
+      // If in-progress, insert check-ins for both users and stage a paired token
+      if (status === 'in-progress') {
+        const token = generateCheckInToken('otp');
+        await client.query(
+          `INSERT INTO check_in_tokens (session_id, token, method, expires_at, created_by, used_at)
+           VALUES ($1, $2, 'otp', CURRENT_TIMESTAMP + interval '1 hour', $3, CURRENT_TIMESTAMP)`,
+          [session.id, token, tutor.id],
+        );
+        await client.query(
+          `INSERT INTO session_check_ins (session_id, user_id, method, check_in_time)
+           VALUES ($1, $2, 'otp', CURRENT_TIMESTAMP), ($1, $3, 'otp', CURRENT_TIMESTAMP)`,
+          [session.id, tutor.id, learner.id],
+        );
+      }
+
+      // Stage notification for both participants
+      const notifTitle = `Demo Session ${status === 'in-progress' ? 'Started' : 'Scheduled'}`;
+      const notifMsg = `Demo ${mode === 'face_to_face' ? 'In-Person' : 'Online'} session between ${learner.name} and ${tutor.name} is ready.`;
+      await client.query(
+        `INSERT INTO notifications (user_id, title, message, type)
+         VALUES ($1, $3, $4, 'info'), ($2, $3, $4, 'info')`,
+        [tutor.id, learner.id, notifTitle, notifMsg],
+      );
+
+      await audit({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        action: 'session.demo_boot',
+        entity: 'session',
+        entityId: session.id,
+        detail: { mode, status, learnerId, tutorId },
+        ip: requestIp(req),
+      }, client);
+
+      return session;
+    });
+
+    await publishRoomEvent([result.id, result.session_code], {
+      type: result.status === 'in-progress' ? 'session.started' : 'session.created',
+      session: result,
+    });
+
+    res.status(201).json({
+      ok: true,
+      session: result,
+      message: `Demo session ${result.session_code} booted successfully`,
+    });
+  } catch (e) { next(e); }
+});
 
 /* ---------- GET /sessions/mine ---------- */
 router.get('/sessions/mine', requireAuth, async (req, res, next) => {

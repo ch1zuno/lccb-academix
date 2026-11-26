@@ -8,9 +8,13 @@ import ErrorBanner from '../components/ui/ErrorBanner';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { SessionModeBadge } from '../components/SessionModeArtwork';
 import { useActiveSession } from '../context/ActiveSessionContext';
+import DemoSessionModal from '../components/DemoSessionModal';
 import { buildQrMatrix } from '../lib/qrSvg';
 import { useDraftState } from '../lib/ux';
 import api from '../api';
+
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === '1'
+  || (import.meta.env.DEV && import.meta.env.VITE_DEMO_MODE !== '0');
 
 const formatTime = (totalSeconds = 0) => {
   const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
@@ -104,6 +108,7 @@ export default function SessionCheckIn({ role, user, showToast }) {
   const [nextUpcoming, setNextUpcoming] = useState(null);
   const [sessionsError, setSessionsError] = useState(null);
   const [target, setTarget] = useState(null);
+  const [showDemoModal, setShowDemoModal] = useState(false);
   const [stagedToken, setStagedToken] = useState(null);
   const [staging, setStaging] = useState(false);
   const [otp, setOtp] = useState(() => formatCheckInCodeInput(deepCode));
@@ -692,7 +697,19 @@ export default function SessionCheckIn({ role, user, showToast }) {
           <h1 className="section-title">Session check-in</h1>
           <p className="section-subtitle">Two devices, one code. The hour starts only when both match.</p>
         </div>
-        {target && <SessionStatus status={target.status} active={active} />}
+        <div className="flex items-center gap-2">
+          {DEMO_MODE && (
+            <button
+              type="button"
+              onClick={() => setShowDemoModal(true)}
+              className="flex items-center gap-1.5 border-2 border-ink bg-gold px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-ink shadow-[2px_2px_0_var(--color-ink)] transition-transform hover:-translate-y-px hover:shadow-[3px_3px_0_var(--color-ink)] active:translate-y-0"
+            >
+              <span>⚡</span>
+              <span>Quick Demo</span>
+            </button>
+          )}
+          {target && <SessionStatus status={target.status} active={active} />}
+        </div>
       </div>
 
       {sessionsError && (
@@ -715,6 +732,17 @@ export default function SessionCheckIn({ role, user, showToast }) {
             <p className="text-[13px] text-muted-foreground">
               {role === 'learner' ? 'Book one from Find a tutor.' : 'Confirmed bookings for today will appear here.'}
             </p>
+          )}
+          {DEMO_MODE && (
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowDemoModal(true)}
+                className="inline-flex items-center gap-1.5 border-2 border-ink bg-gold px-3 py-1.5 text-[12px] font-bold text-ink shadow-[2px_2px_0_var(--color-ink)] transition-transform hover:-translate-y-px hover:shadow-[3px_3px_0_var(--color-ink)]"
+              >
+                <span>⚡ Boot Quick Demo Session</span>
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -921,6 +949,19 @@ export default function SessionCheckIn({ role, user, showToast }) {
               : 'The timer is shared. Only the tutor can end an Online session; students can leave and rejoin anytime.'}
           </p>
         </>
+      )}
+
+      {showDemoModal && (
+        <DemoSessionModal
+          isOpen={showDemoModal}
+          onClose={() => {
+            setShowDemoModal(false);
+            loadSessions();
+          }}
+          user={user}
+          role={role}
+          showToast={showToast}
+        />
       )}
     </div>
   );

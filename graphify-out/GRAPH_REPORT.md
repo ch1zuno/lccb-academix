@@ -1,17 +1,17 @@
-# Graph Report - lccb-academix  (2026-11-26)
+# Graph Report - lccb-academix  (2026-11-27)
 
 ## Corpus Check
-- 246 files · ~433,555 words
+- 248 files · ~437,124 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 11 file(s) not represented in the graph (top: .bat 3, .css 3, (none) 2)
 
 ## Summary
-- 1428 nodes · 3315 edges · 92 communities (73 shown, 19 thin omitted)
+- 1435 nodes · 3354 edges · 94 communities (76 shown, 18 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 57 edges (avg confidence: 0.87)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `dae7d594`
+- Built from commit: `f4762864`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -20,7 +20,7 @@
 - 2. Full Status Table (16 Categories)
 - next-app-archived/package.json
 - cn
-- booking.js
+- sessions.js
 - CentrifugoService
 - dependencies
 - Chapter 3
@@ -28,16 +28,16 @@
 - next.config.mjs
 - dependencies
 - data.js
-- Button
+- ref_lucide_react
 - Run The Demo — LCCB Academix
 - 2. Detailed Audit Tables by Category
-- routes/index.js
+- ApplicationDocumentPicker.jsx
 - cn
 - devDependencies
-- db-migrate.js
-- httpError
+- ref_node_path
+- query
 - vite.config.js
-- App.jsx
+- Login.jsx
 - e2e-cancel.js
 - e2e-messages.js
 - jitsi.d.ts
@@ -54,11 +54,11 @@
 - bugs
 - engines
 - optionalDependencies
-- routes/auth.js
-- SessionRoom.jsx
+- totp.test.js
+- Button
 - TutorApplicant.jsx
-- src/screens/Dashboard.jsx
-- task-validation.js
+- GoogleClassroomSessions.jsx
+- api.js
 - application-files.js
 - src/lib/publicProfile.js
 - MockJitsiMeetExternalAPI
@@ -73,21 +73,23 @@
 - pdfNotes.js
 - pooler-probe.js
 - ref_node_url
-- sessions.js
+- sessionLifecycle.js
 - e2e-tasks.js
-- api.js
+- App.jsx
 - e2e-lifecycle-booking.js
 - e2e-ui-booking-room.js
-- ref_node_assert
+- test-video-room.js
 - Avatar
 - qrSvg.js
 - e2e-concurrency.js
-- server/lib/publicProfile.js
+- routes/auth.js
 - e2e-accreditation.js
 - purge-retention.js
 - pg
 - e2e-session-modes.js
+- db-reset.js
 - e2e-audit.js
+- db-migrate.js
 - e2e-db.js
 - Chapter 3: Methodology
 - build_docx.py
@@ -106,41 +108,41 @@
 - e2e-rewards.js
 
 ## God Nodes (most connected - your core abstractions)
-1. `cn()` - 93 edges
-2. `Button` - 63 edges
-3. `httpError()` - 44 edges
-4. `query()` - 42 edges
-5. `App()` - 31 edges
+1. `cn()` - 95 edges
+2. `Button` - 65 edges
+3. `query()` - 44 edges
+4. `httpError()` - 44 edges
+5. `App()` - 32 edges
 6. `CentrifugoService` - 31 edges
-7. `Avatar()` - 27 edges
+7. `Avatar()` - 29 edges
 8. `WsRealtimeService` - 27 edges
 9. `express` - 24 edges
 10. `MockRealtimeService` - 23 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Batch 2: Safe Actions, Draft Recovery & Form Validation [COMPLETED]` --references--> `useDraftState()`  [INFERRED]
-  docs/ux-plan.md → src/lib/ux.js
 - `Category 5: Accounts and Auth` --references--> `RoleGate()`  [INFERRED]
   docs/ux-audit.md → src/App.jsx
 - `Category 5: Auth` --references--> `RoleGate()`  [INFERRED]
   docs/ux-plan.md → src/App.jsx
+- `Batch 2: Safe Actions, Draft Recovery & Form Validation [COMPLETED]` --references--> `useDraftState()`  [INFERRED]
+  docs/ux-plan.md → src/lib/ux.js
+- `Batch 1: Cross-Cutting UX Foundations & Shell [COMPLETED — Commit e64da0f]` --references--> `RoleGate()`  [INFERRED]
+  docs/ux-plan.md → src/App.jsx
 - `Category 2: Feedback and Status` --references--> `SkeletonCard()`  [INFERRED]
   docs/ux-audit.md → src/components/classroom/GoogleClassroomSessions.jsx
-- `Category 10: Visual Consistency` --references--> `Avatar()`  [INFERRED]
-  docs/ux-audit.md → src/components/ui/Avatar.jsx
 
 ## Import Cycles
 - None detected.
 
-## Communities (92 total, 19 thin omitted)
+## Communities (94 total, 18 thin omitted)
 
 ### Community 0 - "package.json"
 Cohesion: 0.06
-Nodes (35): author, description, homepage, canvas-confetti, clsx, framer-motion, lucide-react, @radix-ui/react-avatar (+27 more)
+Nodes (34): author, description, homepage, canvas-confetti, clsx, framer-motion, lucide-react, @radix-ui/react-avatar (+26 more)
 
 ### Community 1 - "2. Full Status Table (16 Categories)"
-Cohesion: 0.09
-Nodes (22): 1. Summary Counts, 2. Full Status Table (16 Categories), 3. Build Order & Batches, Batch 2: Safe Actions, Draft Recovery & Form Validation [COMPLETED], Batch 3: Booking Slot Picker, OTP Countdown & Edge-Case Recovery (Depends on: Batch 1), Batch 4: Points History, Active Vouchers, Calendar Export & Reminders (Depends on: Batch 1 & 2), Batch 5: Trust/Privacy Notice (Draft), Help/FAQ, Audit Viewer & Public Metadata (Depends on: Batch 1), Category 11: Performance (+14 more)
+Cohesion: 0.08
+Nodes (23): 1. Summary Counts, 2. Full Status Table (16 Categories), 3. Build Order & Batches, Batch 2: Safe Actions, Draft Recovery & Form Validation [COMPLETED], Batch 3: Booking Slot Picker, OTP Countdown & Edge-Case Recovery (Depends on: Batch 1), Batch 4: Points History, Active Vouchers, Calendar Export & Reminders (Depends on: Batch 1 & 2), Batch 5: Trust/Privacy Notice (Draft), Help/FAQ, Audit Viewer & Public Metadata (Depends on: Batch 1), Category 11: Performance (+15 more)
 
 ### Community 2 - "next-app-archived/package.json"
 Cohesion: 0.09
@@ -150,8 +152,8 @@ Nodes (22): canvas-confetti, clsx, framer-motion, lucide-react, @radix-ui/react-
 Cohesion: 0.11
 Nodes (35): Page(), Page(), Page(), geistMono, geistSans, metadata, RootLayout(), Page() (+27 more)
 
-### Community 4 - "booking.js"
-Cohesion: 0.11
+### Community 4 - "sessions.js"
+Cohesion: 0.12
 Nodes (37): ALLOWED_DURATIONS, ALLOWED_LANGUAGES, ALLOWED_MODES, assertNoSlotConflicts(), CAMPUS_CLOSE_MIN, CAMPUS_OPEN_MIN, checkTutorAvailabilityWindow(), checkTutorAvailableNow() (+29 more)
 
 ### Community 5 - "CentrifugoService"
@@ -174,45 +176,45 @@ Nodes (19): dependencies, canvas-confetti, clsx, framer-motion, lucide-react, ne
 Cohesion: 0.12
 Nodes (16): BADGES, CALENDAR_SLOTS, CHART_DATA_HOURS, CHART_DATA_SESSIONS, EXAM_QUESTIONS, NOTIFICATIONS, REFERRALS, REWARDS (+8 more)
 
-### Community 13 - "Button"
-Cohesion: 0.22
-Nodes (16): CampusVenuesManager(), DualPurposeChat(), JitsiMeetingRoom, LiveClassroom(), NativeVideoRoom(), RTC_CONFIG, SessionQuizModal(), Button (+8 more)
+### Community 13 - "ref_lucide_react"
+Cohesion: 0.17
+Nodes (20): CampusVenuesManager(), ConfirmDialog(), ErrorBanner(), Dashboard(), fmtDate(), fmtLongDate(), fmtPoints(), initialsOf() (+12 more)
 
 ### Community 14 - "Run The Demo — LCCB Academix"
 Cohesion: 0.17
 Nodes (11): 1. Reset the demo database (fresh demo data), 2. Start the API, 3. Stage the demo data (API must already be running), 4. Start the frontend, 5. Open it, 6. Log in, 7. Run the gates (optional but recommended), Prerequisites (+3 more)
 
 ### Community 15 - "2. Detailed Audit Tables by Category"
-Cohesion: 0.07
-Nodes (29): 1. Executive Summary & Scorecard, 2. Detailed Audit Tables by Category, 3. Quick Wins (Essential or Recommended · Effort: S), 4. Proposed Build Batches, 5. Unverified Items & Verification Methodology, Batch 1: Trust, Privacy & Action Safety (Essential Compliance), Batch 2: Ledger Transparency & Voucher Recovery, Batch 3: Student Mobile Resilience & Booking Scheduling (+21 more)
+Cohesion: 0.06
+Nodes (30): 1. Executive Summary & Scorecard, 2. Detailed Audit Tables by Category, 3. Quick Wins (Essential or Recommended · Effort: S), 4. Proposed Build Batches, 5. Unverified Items & Verification Methodology, Batch 1: Trust, Privacy & Action Safety (Essential Compliance), Batch 2: Ledger Transparency & Voucher Recovery, Batch 3: Student Mobile Resilience & Booking Scheduling (+22 more)
 
-### Community 16 - "routes/index.js"
-Cohesion: 0.09
-Nodes (20): router, router, router, router, router, router, router, router (+12 more)
+### Community 16 - "ApplicationDocumentPicker.jsx"
+Cohesion: 0.32
+Nodes (12): ApplicationDocumentPicker(), ApplicationFileList(), DocumentThumb(), ALLOWED_EXTENSIONS, APPLICATION_FILE_ACCEPT, canPreviewFile(), fileExtension(), formatFileSize() (+4 more)
 
 ### Community 17 - "cn"
-Cohesion: 0.16
-Nodes (21): ROLE_BADGES, Badge(), BadgeDisplay(), BadgeList(), Card, CardContent, CardDescription, CardFooter (+13 more)
+Cohesion: 0.20
+Nodes (14): Badge(), BadgeDisplay(), BadgeList(), Card, CardContent, CardDescription, CardFooter, CardHeader (+6 more)
 
 ### Community 18 - "devDependencies"
 Cohesion: 0.20
 Nodes (10): devDependencies, autoprefixer, embedded-postgres, playwright, postcss, tailwindcss, @tailwindcss/vite, typescript (+2 more)
 
-### Community 19 - "db-migrate.js"
-Cohesion: 0.12
-Nodes (11): s, dir, main, sizes, totalGzip, dbDir, here, local (+3 more)
+### Community 19 - "ref_node_path"
+Cohesion: 0.18
+Nodes (6): s, dir, main, sizes, totalGzip, client
 
-### Community 20 - "httpError"
-Cohesion: 0.12
-Nodes (38): express, missingUrlError(), pool, query(), withTransaction(), uploadApplicationDocument(), audit(), requestIp() (+30 more)
+### Community 20 - "query"
+Cohesion: 0.09
+Nodes (50): express, missingUrlError(), pool, query(), withTransaction(), audit(), requestIp(), hasValidStepUpHeader() (+42 more)
 
 ### Community 21 - "vite.config.js"
 Cohesion: 0.33
 Nodes (4): @tailwindcss/vite, vite, @vitejs/plugin-basic-ssl, @vitejs/plugin-react
 
-### Community 22 - "App.jsx"
-Cohesion: 0.05
-Nodes (61): Category 5: Accounts and Auth, Batch 1: Cross-Cutting UX Foundations & Shell [COMPLETED — Commit e64da0f], Category 5: Auth, animejs, @supabase/supabase-js, App(), Dashboard, DEMO_ROLES (+53 more)
+### Community 22 - "Login.jsx"
+Cohesion: 0.09
+Nodes (30): animejs, @supabase/supabase-js, clearSession(), clearSupabaseStorage(), loadSession(), readStoredExpiry(), saveSession(), SESSION_TTL_MS (+22 more)
 
 ### Community 23 - "e2e-cancel.js"
 Cohesion: 0.40
@@ -250,61 +252,61 @@ Nodes (3): BASE, login(), request()
 Cohesion: 0.67
 Nodes (3): repository, type, url
 
-### Community 41 - "routes/auth.js"
-Cohesion: 0.07
-Nodes (45): jsonwebtoken, MIN_CENTRIFUGO_SECRET_LENGTH, signConnectionToken(), clearSessionCookie(), readCookie(), requestToken(), ROLE_SESSION_TTL_SECONDS, SESSION_COOKIE (+37 more)
+### Community 41 - "totp.test.js"
+Cohesion: 0.12
+Nodes (24): jsonwebtoken, MIN_CENTRIFUGO_SECRET_LENGTH, signConnectionToken(), ROLE_SESSION_TTL_SECONDS, base32Decode(), base32Encode(), buildOtpAuthUri(), consumeRecoveryCode() (+16 more)
 
-### Community 42 - "SessionRoom.jsx"
-Cohesion: 0.29
-Nodes (10): ActiveSessionContext, ActiveSessionProvider(), formatTimer(), isMobileOrPwa(), SessionRoom, formatTime(), InPersonQr(), LiveClassroom (+2 more)
+### Community 42 - "Button"
+Cohesion: 0.17
+Nodes (18): DualPurposeChat(), ROLE_BADGES, JitsiMeetingRoom, LiveClassroom(), NativeVideoRoom(), RTC_CONFIG, SessionQuizModal(), Button (+10 more)
 
 ### Community 43 - "TutorApplicant.jsx"
-Cohesion: 0.16
-Nodes (26): ApplicationDocumentPicker(), ApplicationFileList(), DocumentThumb(), LoadState(), ALLOWED_EXTENSIONS, APPLICATION_FILE_ACCEPT, canPreviewFile(), downloadApplicationDocument() (+18 more)
-
-### Community 44 - "src/screens/Dashboard.jsx"
-Cohesion: 0.21
-Nodes (14): Category 10: Visual Consistency, Category 10: Consistency, Pagination(), Dashboard(), fmtDate(), fmtLongDate(), fmtPoints(), initialsOf() (+6 more)
-
-### Community 45 - "task-validation.js"
 Cohesion: 0.22
-Nodes (11): IMAGE_EXTENSION_MIME, imageExtension(), imageMatchesMagicBytes(), MAX_TASK_IMAGE_BYTES, MAX_TASK_IMAGES, sanitizeImageName(), TASK_IMAGE_ACCEPT, upload (+3 more)
+Nodes (16): Batch 1: Cross-Cutting UX Foundations & Shell [COMPLETED — Commit e64da0f], LoadState(), downloadApplicationDocument(), openApplicationDocument(), downloadSessionIcs(), fmtManilaDate(), friendlyError(), manilaTodayYmd() (+8 more)
+
+### Community 44 - "GoogleClassroomSessions.jsx"
+Cohesion: 0.33
+Nodes (11): fmtShortDate(), formatDurationShort(), GoogleClassroomSessions(), SkeletonCard(), STATUS_FILTERS, StatusBadge(), fmtDate(), formatDurationVerbose() (+3 more)
+
+### Community 45 - "api.js"
+Cohesion: 0.24
+Nodes (9): ApiError, request(), requestBlob(), SKIP_UNAUTH_PATHS, FacultyReferral(), initials(), STEP_LABELS, StudentRow() (+1 more)
 
 ### Community 46 - "application-files.js"
-Cohesion: 0.15
-Nodes (15): multer, APPLICATION_FILE_ACCEPT, contentMatchesExtension(), EXTENSION_MIME, fileExtension(), MAX_APPLICATION_FILE_BYTES, MAX_APPLICATION_FILES, doc (+7 more)
+Cohesion: 0.14
+Nodes (16): multer, APPLICATION_FILE_ACCEPT, contentMatchesExtension(), EXTENSION_MIME, fileExtension(), MAX_APPLICATION_FILE_BYTES, MAX_APPLICATION_FILES, doc (+8 more)
 
 ### Community 48 - "MockJitsiMeetExternalAPI"
 Cohesion: 0.33
 Nodes (4): MockJitsiMeetExternalAPI, runTests(), loadJitsiScript(), _resetScriptLoader()
 
 ### Community 49 - "realtime.js"
-Cohesion: 0.17
-Nodes (11): dotenv, recordRoomPresence(), registerWsBroadcaster(), verifyRoomMembership(), setupWebSocketServer(), broadcastPresence(), authenticateRequest(), DEFAULT_TTL_SECONDS (+3 more)
+Cohesion: 0.14
+Nodes (11): dotenv, express-rate-limit, @google/genai, generateTutoringHint(), generateWrapUpSynthesis(), aiLimiter, router, DEFAULT_TTL_SECONDS (+3 more)
 
 ### Community 50 - "task-storage.js"
-Cohesion: 0.24
-Nodes (16): deleteFromR2(), getFromR2(), getR2Client(), isR2Configured(), _resetClientForTesting(), uploadToR2(), defaultLocalRoot, deleteTaskImage() (+8 more)
+Cohesion: 0.12
+Nodes (29): @aws-sdk/client-s3, deleteFromR2(), getFromR2(), getR2Client(), isR2Configured(), _resetClientForTesting(), uploadToR2(), defaultLocalRoot (+21 more)
 
 ### Community 51 - "LearnerWizard.jsx"
-Cohesion: 0.09
-Nodes (38): ALL_LANGUAGES, BOOKING_STEPS, BookingQuestionsForm(), DEFAULT_SLOTS, DURATIONS, formatPrettyDate(), mapWizardGoalToTopic(), NOTE_EXAMPLES (+30 more)
+Cohesion: 0.08
+Nodes (42): ALL_LANGUAGES, BOOKING_STEPS, BookingQuestionsForm(), DEFAULT_SLOTS, DURATIONS, formatPrettyDate(), mapWizardGoalToTopic(), NOTE_EXAMPLES (+34 more)
 
 ### Community 52 - "app.js"
-Cohesion: 0.11
-Nodes (19): handler(), cors, express-rate-limit, @google/genai, helmet, morgan, app, __dirname (+11 more)
+Cohesion: 0.13
+Nodes (16): handler(), cors, helmet, morgan, app, __dirname, distPath, loginLimiter (+8 more)
 
 ### Community 53 - "pg-embed.js"
-Cohesion: 0.17
-Nodes (14): embedded-postgres, DATA_DIR, ensurePostgres(), portIsOpen(), postgisReachable(), root, stopEmbeddedPostgres(), urlParts() (+6 more)
+Cohesion: 0.24
+Nodes (9): embedded-postgres, DATA_DIR, ensurePostgres(), portIsOpen(), postgisReachable(), root, stopEmbeddedPostgres(), urlParts() (+1 more)
 
 ### Community 54 - "db-backup.js"
 Cohesion: 0.20
 Nodes (9): args, dir, local, password, result, stamp, target, url (+1 more)
 
 ### Community 55 - "src/screens/SessionCheckIn.jsx"
-Cohesion: 0.36
-Nodes (9): useActiveSession(), fmtDate(), formatCheckInCodeInput(), formatDurationVerbose(), formatTime(), InPersonQrCode(), RATING_DESCRIPTIONS, SessionCheckIn() (+1 more)
+Cohesion: 0.29
+Nodes (12): DemoSessionModal(), notifySessionSync(), Input, useActiveSession(), fmtDate(), formatCheckInCodeInput(), formatDurationVerbose(), formatTime() (+4 more)
 
 ### Community 56 - "ui-overflow.js"
 Cohesion: 0.20
@@ -322,17 +324,17 @@ Nodes (6): CLUSTERS, hits, PASSWORD, REF, REGIONS, src
 Cohesion: 0.29
 Nodes (3): here, scripts, processes
 
-### Community 60 - "sessions.js"
-Cohesion: 0.13
-Nodes (27): allowedOrigins, config, DEFAULT_DEVICE_KEYS, DEFAULT_JWT_SECRETS, validateProductionSecrets(), awardWithinCap(), SESSION_POINTS_EARNED_SQL, WEEKLY_LEARNER_SESSION_CAP (+19 more)
+### Community 60 - "sessionLifecycle.js"
+Cohesion: 0.11
+Nodes (29): warnPendingMigrations(), allowedOrigins, config, DEFAULT_DEVICE_KEYS, DEFAULT_JWT_SECRETS, awardWithinCap(), SESSION_POINTS_EARNED_SQL, WEEKLY_LEARNER_SESSION_CAP (+21 more)
 
 ### Community 61 - "e2e-tasks.js"
 Cohesion: 0.40
 Nodes (3): login(), request(), TINY_PNG
 
-### Community 62 - "api.js"
-Cohesion: 0.19
-Nodes (12): ApiError, request(), requestBlob(), SKIP_UNAUTH_PATHS, fmtManilaDateTime(), ACCEPTED_TYPES, statusPill(), TaskDetail() (+4 more)
+### Community 62 - "App.jsx"
+Cohesion: 0.12
+Nodes (28): App(), Dashboard, DEMO_ROLES, FacultyReferral, initialsOf(), LearnerWizard, Messages, MyTutors (+20 more)
 
 ### Community 63 - "e2e-lifecycle-booking.js"
 Cohesion: 0.39
@@ -342,13 +344,13 @@ Nodes (7): assert(), createInProgressOnlineSession(), futureYmd(), login(), pad(
 Cohesion: 0.40
 Nodes (4): playwright, assert(), BASE, createAuthedContext()
 
-### Community 65 - "ref_node_assert"
-Cohesion: 0.60
+### Community 65 - "test-video-room.js"
+Cohesion: 0.83
 Nodes (3): deriveJitsiRoomName(), loginUser(), runTests()
 
 ### Community 66 - "Avatar"
 Cohesion: 0.15
-Nodes (23): react-router-dom, fmtShortDate(), formatDurationShort(), GoogleClassroomSessions(), SkeletonCard(), STATUS_FILTERS, StatusBadge(), fmtDate() (+15 more)
+Nodes (18): Category 10: Visual Consistency, Category 10: Consistency, react-router-dom, AccountDialog(), SecurityDialog(), Avatar(), getInitials(), SIZE_MAP (+10 more)
 
 ### Community 67 - "qrSvg.js"
 Cohesion: 0.33
@@ -357,6 +359,10 @@ Nodes (9): buildQrMatrix(), encodeDataCodewords(), GF_EXP, GF_LOG, gfMul(), pick
 ### Community 68 - "e2e-concurrency.js"
 Cohesion: 0.50
 Nodes (3): client, login(), request()
+
+### Community 69 - "routes/auth.js"
+Cohesion: 0.07
+Nodes (32): validateProductionSecrets(), toPublicProfile(), pdf, clearSessionCookie(), readCookie(), requestToken(), SESSION_COOKIE, SESSION_TTL_MS (+24 more)
 
 ### Community 70 - "e2e-accreditation.js"
 Cohesion: 0.25
@@ -374,9 +380,17 @@ Nodes (5): pg, login(), request(), c, t0
 Cohesion: 0.38
 Nodes (5): futureYmd(), login(), pad(), psql, request()
 
+### Community 74 - "db-reset.js"
+Cohesion: 0.38
+Nodes (5): dbDir, here, main(), quoteIdent(), read()
+
 ### Community 75 - "e2e-audit.js"
 Cohesion: 0.50
 Nodes (3): client, login(), request()
+
+### Community 76 - "db-migrate.js"
+Cohesion: 0.33
+Nodes (5): dbDir, here, local, parsed, pool
 
 ### Community 111 - "e2e-db.js"
 Cohesion: 0.24
@@ -429,22 +443,22 @@ Nodes (3): eslintConfig, eslint, eslint-config-next
 ## Knowledge Gaps
 - **485 isolated node(s):** `eslintConfig`, `paths`, `nextConfig`, `name`, `version` (+480 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 582 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **19 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react-router-dom` connect `Avatar` to `package.json`, `CentrifugoService`, `SessionRoom.jsx`, `TutorApplicant.jsx`, `src/screens/Dashboard.jsx`, `Button`, `cn`, `LearnerWizard.jsx`, `App.jsx`, `src/screens/SessionCheckIn.jsx`, `api.js`?**
-  _High betweenness centrality (0.219) - this node is a cross-community bridge._
+- **Why does `react-router-dom` connect `Avatar` to `package.json`, `CentrifugoService`, `Button`, `TutorApplicant.jsx`, `GoogleClassroomSessions.jsx`, `ref_lucide_react`, `LearnerWizard.jsx`, `src/screens/SessionCheckIn.jsx`, `App.jsx`?**
+  _High betweenness centrality (0.215) - this node is a cross-community bridge._
 - **What connects `eslintConfig`, `paths`, `nextConfig` to the rest of the system?**
   _485 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `package.json` be split into smaller, more focused modules?**
-  _Cohesion score 0.05555555555555555 - nodes in this community are weakly interconnected._
-- **Why does `express` connect `httpError` to `package.json`, `booking.js`, `routes/auth.js`, `routes/index.js`, `realtime.js`, `task-storage.js`, `app.js`, `sessions.js`?**
-  _High betweenness centrality (0.089) - this node is a cross-community bridge._
+  _Cohesion score 0.05714285714285714 - nodes in this community are weakly interconnected._
+- **Why does `express` connect `query` to `package.json`, `sessions.js`, `routes/auth.js`, `realtime.js`, `app.js`, `sessionLifecycle.js`?**
+  _High betweenness centrality (0.086) - this node is a cross-community bridge._
 - **Should `2. Full Status Table (16 Categories)` be split into smaller, more focused modules?**
-  _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08333333333333333 - nodes in this community are weakly interconnected._
 - **Why does `next` connect `cn` to `next-app-archived/package.json`?**
-  _High betweenness centrality (0.078) - this node is a cross-community bridge._
+  _High betweenness centrality (0.077) - this node is a cross-community bridge._
 - **Should `next-app-archived/package.json` be split into smaller, more focused modules?**
   _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._

@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "src/App.jsx": {
-    "mtime": 1795704636.98113,
-    "seen": 1795705198.5130749,
-    "ast_hash": "1562781361ffbe581a5ab21022607629",
+    "mtime": 1795709058.943445,
+    "seen": 1795716048.127781,
+    "ast_hash": "c867b82345c55f5861f2f85782c22081",
     "semantic_hash": ""
   },
   "src/components/ui/badge.jsx": {
@@ -78,8 +78,8 @@
     "semantic_hash": ""
   },
   "src/screens/LearnerWizard.jsx": {
-    "mtime": 1795704781.7729766,
-    "seen": 1795705198.5341268,
+    "mtime": 1795706021.3850808,
+    "seen": 1795716048.14382,
     "ast_hash": "b1402ac097dbee99107cc6fb3b207f07",
     "semantic_hash": ""
   },
@@ -96,9 +96,9 @@
     "semantic_hash": ""
   },
   "src/screens/SessionCheckIn.jsx": {
-    "mtime": 1795704774.9523773,
-    "seen": 1795705198.53619,
-    "ast_hash": "58247e4ab7e2f8bcb2b12ebf94b25844",
+    "mtime": 1795709152.8187933,
+    "seen": 1795716048.1458342,
+    "ast_hash": "00560b458a57cea9ed4140e716415bd3",
     "semantic_hash": ""
   },
   "src/screens/SuperadminApprovals.jsx": {
@@ -270,8 +270,8 @@
     "semantic_hash": ""
   },
   "server/routes/referrals.js": {
-    "mtime": 1795704566.735503,
-    "seen": 1795705198.4921024,
+    "mtime": 1795706020.531829,
+    "seen": 1795716048.1137064,
     "ast_hash": "c9a1cbc60dd49583dd4623e6dee43d63",
     "semantic_hash": ""
   },
@@ -282,14 +282,14 @@
     "semantic_hash": ""
   },
   "server/routes/sessions.js": {
-    "mtime": 1795704633.3274498,
-    "seen": 1795705198.4921024,
-    "ast_hash": "af72947cd9e94ed30d4fe0b4422f0168",
+    "mtime": 1795715935.5704682,
+    "seen": 1795716048.1137064,
+    "ast_hash": "e34b1781818472f3743896a654c6e4aa",
     "semantic_hash": ""
   },
   "server/routes/wrapup.js": {
-    "mtime": 1795704569.312445,
-    "seen": 1795705198.495724,
+    "mtime": 1795706020.8150315,
+    "seen": 1795716048.115728,
     "ast_hash": "d5a5051aa59e25430ad94fcc318d526e",
     "semantic_hash": ""
   },
@@ -306,8 +306,8 @@
     "semantic_hash": ""
   },
   "server/scripts/db-migrate.js": {
-    "mtime": 1795704565.5440629,
-    "seen": 1795705198.4962676,
+    "mtime": 1795706020.9124477,
+    "seen": 1795716048.115728,
     "ast_hash": "e99ac6b2d5d1762f6bdefeed220ebc10",
     "semantic_hash": ""
   },
@@ -366,8 +366,8 @@
     "semantic_hash": ""
   },
   "server/scripts/e2e-checkin.js": {
-    "mtime": 1795704831.6524985,
-    "seen": 1795705198.501805,
+    "mtime": 1795706021.0235822,
+    "seen": 1795716048.1187282,
     "ast_hash": "e91a98113cb2c955c8fac4eb352a8d76",
     "semantic_hash": ""
   },
@@ -972,8 +972,8 @@
     "semantic_hash": ""
   },
   "src/screens/Messages.jsx": {
-    "mtime": 1795704571.9080985,
-    "seen": 1795705198.5341268,
+    "mtime": 1795706021.5125053,
+    "seen": 1795716048.1448345,
     "ast_hash": "eed1c47af758f9a37347b030d42d0f7b",
     "semantic_hash": ""
   },
@@ -1428,8 +1428,8 @@
     "semantic_hash": ""
   },
   "server/lib/security.test.js": {
-    "mtime": 1795704796.574624,
-    "seen": 1795705198.4805741,
+    "mtime": 1795706020.3020754,
+    "seen": 1795716048.1037214,
     "ast_hash": "364a85d9ff289499bb388fc7808a0403",
     "semantic_hash": ""
   },
@@ -1566,9 +1566,21 @@
     "semantic_hash": ""
   },
   "src/screens/SessionRoom.jsx": {
-    "mtime": 1795704778.3620765,
-    "seen": 1795705198.53619,
+    "mtime": 1795706021.8420641,
+    "seen": 1795716048.1458342,
     "ast_hash": "c045f3d7fd080c527f018bf29a269255",
+    "semantic_hash": ""
+  },
+  "server/scripts/test-demo-boot.mjs": {
+    "mtime": 1795709628.7235465,
+    "seen": 1795716048.126711,
+    "ast_hash": "cc7c50d00873ca905ddc984d1cab24bf",
+    "semantic_hash": ""
+  },
+  "src/components/DemoSessionModal.jsx": {
+    "mtime": 1795708929.9909377,
+    "seen": 1795716048.1298172,
+    "ast_hash": "93252c392b08e13b358aeb0a060fde00",
     "semantic_hash": ""
   }
 }

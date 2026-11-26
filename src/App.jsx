@@ -16,6 +16,7 @@ import { supabase } from './lib/supabase';
 
 import Login from './screens/Login';
 import AccountDialog from './components/AccountDialog';
+import DemoSessionModal from './components/DemoSessionModal';
 import Avatar from './components/ui/Avatar';
 import Logo2D from './components/Logo2D';
 import SplashScreen from './components/SplashScreen';
@@ -110,6 +111,7 @@ export default function App() {
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountTab, setAccountTab] = useState('profile');
+  const [showDemoModal, setShowDemoModal] = useState(false);
   const [role, setRole] = useState(user?.role ?? 'learner');
   const [showSplash, setShowSplash] = useState(true);
   const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
@@ -581,6 +583,14 @@ export default function App() {
                   </motion.div>
                 )}
               </AnimatePresence>
+              <button
+                type="button"
+                onClick={() => setShowDemoModal(true)}
+                className="mt-2 flex w-full items-center justify-center gap-1.5 border-2 border-ink bg-gold px-2.5 py-1.5 text-[11px] font-black uppercase tracking-wider text-ink shadow-[2px_2px_0_var(--color-ink)] transition-[transform,box-shadow] hover:-translate-y-px hover:shadow-[3px_3px_0_var(--color-ink)] active:translate-y-0"
+              >
+                <span className="text-[12px]">⚡</span>
+                <span>Quick Demo Session</span>
+              </button>
             </div>
           ) : (
             <div className="shrink-0 px-2 pb-4">
@@ -787,6 +797,17 @@ export default function App() {
                       ))}
                     </div>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDemoModal(true);
+                      setMobileOpen(false);
+                    }}
+                    className="mb-5 flex min-h-[44px] w-full items-center justify-center gap-2 border-2 border-ink bg-gold px-3 py-2.5 text-[13px] font-black uppercase tracking-wider text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-px active:translate-y-0"
+                  >
+                    <span className="text-[14px]">⚡</span>
+                    <span>Quick Demo Session</span>
+                  </button>
                 </>
               ) : (
                 <div className="mb-5">
@@ -927,6 +948,16 @@ export default function App() {
             setUser(fresh);
             setRole(fresh.role);
           }}
+        />
+      )}
+
+      {showDemoModal && (
+        <DemoSessionModal
+          isOpen={showDemoModal}
+          onClose={() => setShowDemoModal(false)}
+          user={user}
+          role={role}
+          showToast={showToast}
         />
       )}
 
