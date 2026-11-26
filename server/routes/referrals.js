@@ -1,6 +1,6 @@
 import express from 'express';
 import { query, withTransaction } from '../db.js';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireRole, requireStepUp } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { audit, requestIp } from '../lib/audit.js';
 
@@ -38,7 +38,7 @@ const reorder = (row) => ({ ...row, hoursRequired: row.hours_required, hoursRema
 /** DELETE /referrals/:id — superadmin only, and ONLY rejected referrals.
  * Sessions linked through referral_id lose the link but stay (ON DELETE SET NULL);
  * everything else about the ledger is untouched. */
-router.delete('/referrals/:id', requireAuth, requireRole('superadmin'), async (req, res, next) => {
+router.delete('/referrals/:id', requireAuth, requireRole('superadmin'), requireStepUp, async (req, res, next) => {
   try {
     const { rows } = await query(
       `DELETE FROM referrals WHERE id = $1 AND status = 'rejected' RETURNING id, referral_code`,
@@ -71,7 +71,7 @@ router.get('/referrals', requireAuth, async (req, res, next) => {
 });
 
 // GET /referrals/export.csv — faculty get their board, superadmin gets all.
-router.get('/referrals/export.csv', requireAuth, requireRole('faculty', 'superadmin'), async (req, res, next) => {
+router.get('/referrals/export.csv', requireAuth, requireRole('faculty', 'superadmin'), requireStepUp, async (req, res, next) => {
   try {
     const { sql, params } = whereFor(req.user);
     const { rows } = await query(`${SELECT_SQL} ${sql} ORDER BY r.created_at DESC`, params);

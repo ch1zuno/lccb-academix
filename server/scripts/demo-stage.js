@@ -22,7 +22,7 @@ const LEARNER = 'TE-128';
 const TUTOR = 'TU-042';
 const SUPERADMIN = 'l.betita.admin@lccbacolod.edu.ph';
 const COHORT_APPLICANTS = [
-  '24-0870-118', '24-0870-131', '25-0870-142', '25-0870-155',
+  '24-0870-131', '25-0870-142', '25-0870-155',
   '25-0870-168', '25-0871-071', '25-0871-086', '26-0870-093', '26-0871-114',
 ];
 /* 8x8 gold PNG — the demo attachment that satisfies the approve gate. */

@@ -232,6 +232,7 @@ export default function App() {
   const finishSignOut = (expiredMessage = null) => {
     // Clearing the HttpOnly cookie requires a round trip; drop all local and
     // OAuth tokens immediately so no session persists on this device.
+    api.clearStepUpToken();
     api.post('/auth/logout').catch(() => {});
     supabase.auth.signOut({ scope: 'local' }).catch(() => {});
     window.google?.accounts?.id?.disableAutoSelect?.();
@@ -249,19 +250,19 @@ export default function App() {
   // Token expiry / revoke: api.js emits this on any 401 outside the login call.
   useEffect(() => {
     const onExpired = () => {
-      finishSignOut('Session expired after 48 hours — please sign in again to verify your account.');
+      finishSignOut('Session expired — please sign in again to verify your account.');
     };
     window.addEventListener('academix:unauthorized', onExpired);
     return () => window.removeEventListener('academix:unauthorized', onExpired);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
-  // Enforce the 48-hour session ceiling even if a tab sits idle or wakes from sleep.
+  // Enforce the role-scoped session ceiling even if a tab sits idle or wakes from sleep.
   useEffect(() => {
     if (!user || !sessionExpiresAt) return undefined;
     const checkExpiry = () => {
       if (Date.now() >= sessionExpiresAt) {
-        finishSignOut('Session expired after 48 hours — please sign in again to verify your account.');
+        finishSignOut('Session expired — please sign in again to verify your account.');
       }
     };
     checkExpiry();

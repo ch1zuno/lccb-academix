@@ -1,6 +1,7 @@
 import { WebSocketServer } from 'ws';
 import { authenticateRequest } from '../middleware/auth.js';
 import { verifyRoomMembership } from './room-membership.js';
+import { audit } from './audit.js';
 
 /**
  * Lightweight native WebSocket realtime server for peer tutoring rooms.
@@ -88,6 +89,18 @@ export function setupWebSocketServer(httpServer) {
         if (!check.authorized) {
           ws.send(JSON.stringify({ type: 'error', roomId, message: check.message || 'Forbidden' }));
           return;
+        }
+
+        if (check.isSupervisor) {
+          audit({
+            actorId: user.id,
+            actorRole: user.role,
+            action: 'session.supervisor_join',
+            entity: 'session',
+            entityId: check.session?.id || roomId,
+            detail: { channel: 'websocket', sessionCode: check.session?.session_code },
+            ip: req.socket?.remoteAddress || null,
+          }).catch(() => {});
         }
 
         ws.rooms.add(roomId);

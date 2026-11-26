@@ -2,6 +2,7 @@ import express from 'express';
 import { query } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
+import { audit, requestIp } from '../lib/audit.js';
 
 const router = express.Router();
 
@@ -33,6 +34,17 @@ router.get('/sessions/:id/messages', requireAuth, async (req, res, next) => {
         ORDER BY m.created_at ASC`,
       [sessionId],
     );
+
+    if (isAdmin && !isLearner && !isTutor) {
+      audit({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        action: 'session.supervisor_read_chat',
+        entity: 'session',
+        entityId: sessionId,
+        ip: requestIp(req),
+      }).catch(() => {});
+    }
 
     res.json({ messages });
   } catch (err) {

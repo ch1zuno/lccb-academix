@@ -17,6 +17,7 @@ import videoRoutes from './video.js';
 import messageRoutes from './messages.js';
 import usersRoutes from './users.js';
 import tasksRoutes from './tasks.js';
+import adminRoutes from './admin.js';
 
 const router = Router();
 
@@ -54,5 +55,7 @@ router.use(messageRoutes);
 router.use(tasksRoutes);
 // append-only audit trail (superadmin read-only)
 router.use(auditRoutes);
+// superadmin governance & containment (suspend/reinstate tutors, revoke sessions)
+router.use(adminRoutes);
 
 export default router;

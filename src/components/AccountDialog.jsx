@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   KeyRound,
   Loader2,
+  ShieldCheck,
   ShieldOff,
+  Copy,
   User,
   X,
   Upload,
@@ -63,6 +65,16 @@ export default function AccountDialog({
   const [securityBusy, setSecurityBusy] = useState(false);
   const [securityError, setSecurityError] = useState('');
   const [securityDone, setSecurityDone] = useState('');
+
+  // TOTP 2FA state (for superadmin, tutor, faculty)
+  const canUseTotp = ['superadmin', 'tutor', 'faculty'].includes(user?.role);
+  const [totpSetup, setTotpSetup] = useState(null); // { secret, otpauthUri }
+  const [totpVerifyCode, setTotpVerifyCode] = useState('');
+  const [totpRecoveryCodes, setTotpRecoveryCodes] = useState(null);
+  const [totpDisablePassword, setTotpDisablePassword] = useState('');
+  const [totpDisableCode, setTotpDisableCode] = useState('');
+  const [totpBusy, setTotpBusy] = useState(false);
+  const [totpError, setTotpError] = useState('');
 
   useEffect(() => {
     restoreRef.current = document.activeElement;
@@ -252,6 +264,72 @@ export default function AccountDialog({
     } catch (e) {
       setSecurityError(e.message || 'Could not sign out everywhere.');
       setSecurityBusy(false);
+    }
+  };
+
+  const startTotpSetup = async () => {
+    setTotpError('');
+    setTotpRecoveryCodes(null);
+    setTotpBusy(true);
+    try {
+      const res = await api.post('/auth/totp/setup');
+      setTotpSetup(res);
+      setTotpVerifyCode('');
+    } catch (e) {
+      setTotpError(e.message || 'Could not start 2FA setup.');
+    } finally {
+      setTotpBusy(false);
+    }
+  };
+
+  const confirmTotpEnable = async () => {
+    setTotpError('');
+    if (!totpVerifyCode.trim()) {
+      setTotpError('Enter the 6-digit code from your authenticator app.');
+      return;
+    }
+    setTotpBusy(true);
+    try {
+      const res = await api.post('/auth/totp/enable', { code: totpVerifyCode.trim() });
+      if (res.user) {
+        saveSession(res.user, res.sessionExpiresAt);
+        onUserUpdated?.(res.user);
+      }
+      setTotpRecoveryCodes(res.recoveryCodes || []);
+      setTotpSetup(null);
+      setTotpVerifyCode('');
+      showToast?.('Two-factor authentication enabled.', 'success');
+    } catch (e) {
+      setTotpError(e.message || 'Could not verify code.');
+    } finally {
+      setTotpBusy(false);
+    }
+  };
+
+  const confirmTotpDisable = async () => {
+    setTotpError('');
+    if (!totpDisablePassword || !totpDisableCode.trim()) {
+      setTotpError('Enter your current password and a 6-digit or recovery code.');
+      return;
+    }
+    setTotpBusy(true);
+    try {
+      const res = await api.post('/auth/totp/disable', {
+        currentPassword: totpDisablePassword,
+        code: totpDisableCode.trim(),
+      });
+      if (res.user) {
+        saveSession(res.user, res.sessionExpiresAt);
+        onUserUpdated?.(res.user);
+      }
+      setTotpDisablePassword('');
+      setTotpDisableCode('');
+      setTotpRecoveryCodes(null);
+      showToast?.('Two-factor authentication disabled.', 'info');
+    } catch (e) {
+      setTotpError(e.message || 'Could not disable 2FA.');
+    } finally {
+      setTotpBusy(false);
     }
   };
 
@@ -704,6 +782,140 @@ export default function AccountDialog({
                   Cancel
                 </Button>
               </div>
+
+              {canUseTotp && (
+                <div className="mt-5 border-t-2 border-ink pt-5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-[12px] font-bold uppercase tracking-[0.05em] text-muted-foreground">
+                        Two-Factor Authentication (TOTP)
+                      </p>
+                      <p className="mt-0.5 text-[12px] text-muted-foreground">
+                        {user?.role === 'superadmin'
+                          ? 'Recommended for Dean/Superadmin approvals, audit access, and tutor governance.'
+                          : 'Protect your account with Google Authenticator or Authy.'}
+                      </p>
+                    </div>
+                    <span className={cn(
+                      'shrink-0 border-2 border-ink px-2 py-0.5 text-[11px] font-bold uppercase',
+                      user?.totp_enabled ? 'bg-emerald/15 text-ink' : 'bg-surface-quiet text-muted-foreground'
+                    )}>
+                      {user?.totp_enabled ? '2FA Active' : 'Off'}
+                    </span>
+                  </div>
+
+                  {totpError && (
+                    <p role="alert" className="mt-3 border-2 border-crimson bg-surface-alert px-3 py-2 text-[12px] font-semibold text-crimson">
+                      {totpError}
+                    </p>
+                  )}
+
+                  {totpRecoveryCodes && totpRecoveryCodes.length > 0 && (
+                    <div className="mt-3 border-2 border-ink bg-surface-highlight p-3">
+                      <p className="text-[12px] font-bold text-ink">
+                        Save these single-use recovery codes now — they will not be shown again:
+                      </p>
+                      <div className="mt-2 grid grid-cols-2 gap-1.5 font-mono text-[12px] font-bold text-ink">
+                        {totpRecoveryCodes.map((c) => (
+                          <span key={c} className="border border-ink/30 bg-paper px-2 py-1 text-center">{c}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {!user?.totp_enabled && !totpSetup && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={startTotpSetup}
+                      disabled={totpBusy}
+                      className="mt-3 min-h-[40px]"
+                    >
+                      <ShieldCheck className="h-4 w-4" strokeWidth={2} />
+                      {totpBusy ? 'Generating…' : 'Set up authenticator 2FA'}
+                    </Button>
+                  )}
+
+                  {!user?.totp_enabled && totpSetup && (
+                    <div className="mt-3 space-y-3 border-2 border-ink bg-surface-quiet p-3">
+                      <p className="text-[12px] font-medium text-ink">
+                        1. Add this key in Google Authenticator, Authy, or 1Password (Time-based, 6 digits):
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 overflow-x-auto border-2 border-ink bg-paper px-2.5 py-1.5 font-mono text-[12px] font-bold text-ink">
+                          {totpSetup.secret}
+                        </code>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard?.writeText(totpSetup.secret);
+                            showToast?.('2FA secret copied.', 'info');
+                          }}
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <p className="text-[12px] font-medium text-ink">
+                        2. Enter the 6-digit code to activate:
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="123456"
+                          maxLength={6}
+                          value={totpVerifyCode}
+                          onChange={(e) => setTotpVerifyCode(e.target.value)}
+                          className="min-h-[40px] max-w-[160px] font-mono"
+                        />
+                        <Button type="button" size="sm" onClick={confirmTotpEnable} disabled={totpBusy} className="min-h-[40px]">
+                          {totpBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify & enable'}
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setTotpSetup(null)} disabled={totpBusy}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {user?.totp_enabled && (
+                    <div className="mt-3 space-y-2 border-2 border-ink/20 bg-surface-quiet p-3">
+                      <p className="text-[12px] font-semibold text-muted-foreground">
+                        Disable 2FA (requires current password + authenticator or recovery code):
+                      </p>
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <Input
+                          type="password"
+                          placeholder="Current password"
+                          value={totpDisablePassword}
+                          onChange={(e) => setTotpDisablePassword(e.target.value)}
+                          className="min-h-[40px]"
+                        />
+                        <Input
+                          type="text"
+                          placeholder="6-digit or recovery code"
+                          value={totpDisableCode}
+                          onChange={(e) => setTotpDisableCode(e.target.value)}
+                          className="min-h-[40px] font-mono"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={confirmTotpDisable}
+                        disabled={totpBusy}
+                        className="min-h-[38px]"
+                      >
+                        Disable 2FA
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </form>
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink bg-surface-quiet px-5 py-3.5">

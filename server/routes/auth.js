@@ -1,13 +1,28 @@
 import crypto from 'node:crypto';
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import rateLimit from 'express-rate-limit';
+import jwt from 'jsonwebtoken';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { query, withTransaction } from '../db.js';
-import { requireAuth, signToken } from '../middleware/auth.js';
+import { requireAuth, requireRole, signToken, signStepUpToken } from '../middleware/auth.js';
 import { config } from '../config.js';
 import { audit, requestIp } from '../lib/audit.js';
-import { clearSessionCookie, setSessionCookie, SESSION_TTL_MS } from '../lib/sessionCookie.js';
+import {
+  clearSessionCookie,
+  setSessionCookie,
+  sessionTtlMsForRole,
+  STEP_UP_TTL_SECONDS,
+} from '../lib/sessionCookie.js';
 import { isR2Configured, uploadToR2, deleteFromR2 } from '../lib/storage.js';
+import {
+  generateTotpSecret,
+  buildOtpAuthUri,
+  verifyTotpCode,
+  encryptTotpSecret,
+  decryptTotpSecret,
+  generateRecoveryCodes,
+  consumeRecoveryCode,
+} from '../lib/totp.js';
 
 const router = express.Router();
 const DEV = !config.isProd;
@@ -30,8 +45,41 @@ const passwordChangeLimiter = rateLimit({
   message: { error: 'Too many password change attempts. Try again in 15 minutes.' },
 });
 
+const mfaLimiter = rateLimit({
+  windowMs: 15 * 60_000,
+  max: 8,
+  keyGenerator: (req) => (req.user?.id ? String(req.user.id) : ipKeyGenerator(req.ip || '127.0.0.1')),
+  standardHeaders: 'draft-7',
+  message: { error: 'Too many verification attempts. Try again in 15 minutes.' },
+});
+
+function signTotpChallenge(user) {
+  return jwt.sign(
+    { sub: user.id, tv: Number(user.token_version) || 0, purpose: 'totp_challenge' },
+    config.jwtSecret,
+    { expiresIn: 300 },
+  );
+}
+
+async function verifyUserTotpOrRecovery(userRow, code) {
+  const secret = decryptTotpSecret(userRow.totp_secret_enc);
+  if (secret && verifyTotpCode(secret, code)) {
+    return { ok: true, usedRecovery: false };
+  }
+  const { matched, remainingHashes } = consumeRecoveryCode(code, userRow.totp_recovery_hashes);
+  if (matched) {
+    await query(
+      `UPDATE users SET totp_recovery_hashes = $1::jsonb WHERE id = $2`,
+      [JSON.stringify(remainingHashes), userRow.id],
+    );
+    return { ok: true, usedRecovery: true, remainingRecoveryCount: remainingHashes.length };
+  }
+  return { ok: false };
+}
+
 const PUBLIC_COLUMNS = `id, custom_id, name, email, role, avatar, program, department, title,
-                        is_verified, is_available, certified_by_id, token_version`;
+                        is_verified, is_available, certified_by_id, token_version, totp_enabled,
+                        suspended_at, suspended_reason`;
 
 export function isAllowedLccbEmail(email, allowedDomains = config.allowedEmailDomains) {
   const norm = String(email || '').trim().toLowerCase();
@@ -141,7 +189,7 @@ async function generateStudentCustomId(client) {
 async function fetchFullUser(userId) {
   const { rows } = await query(
     `SELECT u.id, u.custom_id, u.name, u.email, u.role, u.avatar, u.bio, u.program, u.department, u.title,
-            u.is_verified, u.is_available, u.certified_by_id,
+            u.is_verified, u.is_available, u.certified_by_id, u.totp_enabled, u.suspended_at, u.suspended_reason,
             ua.r2_url,
             EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id) AS has_avatar
      FROM users u
@@ -183,7 +231,8 @@ router.post('/login', async (req, res, next) => {
     const altEmail = isEmail ? alternateLccbEmail(key) : null;
     const { rows } = await query(
       `SELECT id, custom_id, name, email, role, avatar, program, department, title,
-              is_verified, is_available, certified_by_id, token_version, password_hash
+              is_verified, is_available, certified_by_id, token_version, password_hash,
+              totp_enabled, totp_secret_enc, totp_recovery_hashes, suspended_at, suspended_reason
        FROM users
        WHERE custom_id ILIKE $1
           OR ($2::text IS NOT NULL AND LOWER(email) = LOWER($2))
@@ -196,6 +245,17 @@ router.post('/login', async (req, res, next) => {
       user?.password_hash || DUMMY_PASSWORD_HASH,
     );
     if (!user || !passwordMatches) {
+      if (user && ['superadmin', 'tutor', 'faculty'].includes(user.role)) {
+        await audit({
+          actorId: user.id,
+          actorRole: user.role,
+          action: 'auth.login_failed',
+          entity: 'user',
+          entityId: user.id,
+          detail: { reason: 'bad_password' },
+          ip: requestIp(req),
+        }).catch(() => {});
+      }
       return res.status(401).json({ error: 'Invalid school ID / email or password' });
     }
     if (isDemoPasswordBlocked(user.password_hash)) {
@@ -203,22 +263,47 @@ router.post('/login', async (req, res, next) => {
         error: 'Default demo password is disabled in production. Sign in with Google or contact the administrator.',
       });
     }
-    const token = signToken(user);
+    if (user.totp_enabled) {
+      const inlineCode = String(req.body?.totpCode ?? '').trim();
+      if (!inlineCode) {
+        return res.json({
+          requiresTotp: true,
+          challengeToken: signTotpChallenge(user),
+          role: user.role,
+        });
+      }
+      const check = await verifyUserTotpOrRecovery(user, inlineCode);
+      if (!check.ok) {
+        await audit({
+          actorId: user.id,
+          actorRole: user.role,
+          action: 'auth.totp_failed',
+          entity: 'user',
+          entityId: user.id,
+          ip: requestIp(req),
+        }).catch(() => {});
+        return res.status(401).json({ error: 'Invalid authenticator or recovery code' });
+      }
+    }
+    await query(`UPDATE users SET last_active_at = CURRENT_TIMESTAMP WHERE id = $1`, [user.id]);
+    const token = signToken(user, { mfa: Boolean(user.totp_enabled) });
     delete user.password_hash;
     delete user.token_version;
+    delete user.totp_secret_enc;
+    delete user.totp_recovery_hashes;
     const fullUser = (await fetchFullUser(user.id)) || user;
     delete fullUser.token_version;
     await audit({
       actorId: user.id,
       actorRole: user.role,
-      action: 'auth.login',
+      action: user.totp_enabled ? 'auth.totp_login' : 'auth.login',
       entity: 'user',
       entityId: user.id,
       ip: requestIp(req),
     });
     res.set('Cache-Control', 'no-store');
-    setSessionCookie(res, token);
-    res.json({ token, user: fullUser, sessionExpiresAt: Date.now() + SESSION_TTL_MS });
+    setSessionCookie(res, token, user.role);
+    res.json({ token, user: fullUser, sessionExpiresAt: Date.now() + sessionTtlMsForRole(user.role) });
   } catch (e) { next(e); }
 });
 
@@ -251,7 +336,7 @@ router.post('/google', async (req, res, next) => {
 
     const altEmail = alternateLccbEmail(identity.email);
     const existing = await query(
-      `SELECT ${PUBLIC_COLUMNS}
+      `SELECT ${PUBLIC_COLUMNS}, totp_secret_enc, totp_recovery_hashes
        FROM users
        WHERE LOWER(email) = $1 OR ($2::text IS NOT NULL AND LOWER(email) = $2)
        ORDER BY (LOWER(email) = $1) DESC
@@ -260,6 +345,21 @@ router.post('/google', async (req, res, next) => {
     );
 
     let userRecord = existing.rows[0];
+    // Strict exact-email pinning for superadmin: refuse cross-domain alias matching.
+    if (userRecord?.role === 'superadmin' && userRecord.email.toLowerCase() !== identity.email) {
+      await audit({
+        actorId: userRecord.id,
+        actorRole: 'superadmin',
+        action: 'auth.superadmin_domain_mismatch',
+        entity: 'user',
+        entityId: userRecord.id,
+        detail: { providedEmail: identity.email },
+        ip: requestIp(req),
+      }).catch(() => {});
+      return res.status(403).json({
+        error: 'Superadmin Google sign-in requires the exact registered institutional email.',
+      });
+    }
     let provisioned = false;
 
     if (!userRecord) {
@@ -292,9 +392,20 @@ router.post('/google', async (req, res, next) => {
       });
     }
 
+    if (userRecord.totp_enabled) {
+      return res.json({
+        requiresTotp: true,
+        challengeToken: signTotpChallenge(userRecord),
+        role: userRecord.role,
+      });
+    }
+
+    await query(`UPDATE users SET last_active_at = CURRENT_TIMESTAMP WHERE id = $1`, [userRecord.id]);
     const token = signToken(userRecord);
     const fullUser = (await fetchFullUser(userRecord.id)) || { ...userRecord };
     delete fullUser.token_version;
+    delete fullUser.totp_secret_enc;
+    delete fullUser.totp_recovery_hashes;
 
     await audit({
       actorId: fullUser.id,
@@ -307,8 +418,8 @@ router.post('/google', async (req, res, next) => {
     });
 
     res.set('Cache-Control', 'no-store');
-    setSessionCookie(res, token);
-    res.json({ token, user: fullUser, sessionExpiresAt: Date.now() + SESSION_TTL_MS });
+    setSessionCookie(res, token, userRecord.role);
+    res.json({ token, user: fullUser, sessionExpiresAt: Date.now() + sessionTtlMsForRole(userRecord.role) });
   } catch (e) { next(e); }
 });
 
@@ -420,9 +531,28 @@ router.patch('/profile', requireAuth, async (req, res, next) => {
       );
     }
 
-    // 4. Update tutor or faculty subjects
-    if ((req.user.role === 'tutor' || req.user.role === 'faculty') && Array.isArray(subjectIds)) {
-      const validUuids = subjectIds.filter((id) => UUID_RE.test(String(id)));
+    // 4. Update accredited tutor or faculty subjects (audited)
+    const canEditSubjects = req.user.role === 'faculty'
+      || (req.user.role === 'tutor' && req.user.is_verified && !req.user.suspended_at);
+    if (canEditSubjects && Array.isArray(subjectIds)) {
+      let validUuids = [...new Set(subjectIds.filter((id) => UUID_RE.test(String(id))))];
+      if (req.user.role === 'tutor' && process.env.STRICT_SUBJECT_LOCK === '1') {
+        const approved = await query(
+          `SELECT DISTINCT asx.subject_id
+             FROM application_subjects asx
+             JOIN tutor_applications a ON a.id = asx.application_id
+            WHERE a.user_id = $1 AND a.status = 'approved'`,
+          [userId],
+        );
+        if (approved.rows.length > 0) {
+          const allowed = new Set(approved.rows.map((r) => r.subject_id));
+          if (validUuids.some((id) => !allowed.has(id))) {
+            return res.status(403).json({
+              error: 'Accredited tutors can only teach subjects approved on their accreditation application.',
+            });
+          }
+        }
+      }
       await withTransaction(async (client) => {
         await client.query(`DELETE FROM user_subjects WHERE user_id = $1`, [userId]);
         if (validUuids.length > 0) {
@@ -432,6 +562,15 @@ router.patch('/profile', requireAuth, async (req, res, next) => {
             [userId, validUuids]
           );
         }
+        await audit({
+          actorId: userId,
+          actorRole: req.user.role,
+          action: 'tutor.update_subjects',
+          entity: 'user',
+          entityId: userId,
+          detail: { subjectCount: validUuids.length },
+          ip: requestIp(req),
+        }, client);
       });
     }
 
@@ -496,7 +635,7 @@ router.post('/change-password', requireAuth, passwordChangeLimiter, async (req, 
       [hash, req.user.id],
     );
     const fresh = updated.rows[0];
-    const token = signToken(fresh);
+    const token = signToken(fresh, { mfa: Boolean(fresh.totp_enabled) });
     delete fresh.token_version;
     await audit({
       actorId: fresh.id,
@@ -507,8 +646,229 @@ router.post('/change-password', requireAuth, passwordChangeLimiter, async (req, 
       ip: requestIp(req),
     });
     res.set('Cache-Control', 'no-store');
-    setSessionCookie(res, token);
-    res.json({ token, user: fresh, sessionExpiresAt: Date.now() + SESSION_TTL_MS });
+    setSessionCookie(res, token, fresh.role);
+    res.json({ token, user: fresh, sessionExpiresAt: Date.now() + sessionTtlMsForRole(fresh.role) });
+  } catch (e) { next(e); }
+});
+
+/** POST /api/auth/totp/verify-login { challengeToken, code } — finish MFA login */
+router.post('/totp/verify-login', mfaLimiter, async (req, res, next) => {
+  try {
+    const challengeToken = String(req.body?.challengeToken ?? '').trim();
+    const code = String(req.body?.code ?? '').trim();
+    if (!challengeToken || !code) {
+      return res.status(400).json({ error: 'challengeToken and authenticator code are required' });
+    }
+    let payload;
+    try {
+      payload = jwt.verify(challengeToken, config.jwtSecret);
+    } catch {
+      return res.status(401).json({ error: 'Verification challenge expired — sign in again' });
+    }
+    if (payload.purpose !== 'totp_challenge') {
+      return res.status(401).json({ error: 'Invalid verification challenge' });
+    }
+    const { rows } = await query(
+      `SELECT ${PUBLIC_COLUMNS}, totp_secret_enc, totp_recovery_hashes
+         FROM users WHERE id = $1`,
+      [payload.sub],
+    );
+    const user = rows[0];
+    if (!user || !user.totp_enabled || Number(payload.tv ?? 0) !== Number(user.token_version ?? 0)) {
+      return res.status(401).json({ error: 'Session challenge no longer valid' });
+    }
+    const check = await verifyUserTotpOrRecovery(user, code);
+    if (!check.ok) {
+      await audit({
+        actorId: user.id,
+        actorRole: user.role,
+        action: 'auth.totp_failed',
+        entity: 'user',
+        entityId: user.id,
+        ip: requestIp(req),
+      }).catch(() => {});
+      return res.status(401).json({ error: 'Invalid authenticator or recovery code' });
+    }
+    await query(`UPDATE users SET last_active_at = CURRENT_TIMESTAMP WHERE id = $1`, [user.id]);
+    const token = signToken(user, { mfa: true });
+    const fullUser = (await fetchFullUser(user.id)) || user;
+    delete fullUser.token_version;
+    delete fullUser.totp_secret_enc;
+    delete fullUser.totp_recovery_hashes;
+    await audit({
+      actorId: user.id,
+      actorRole: user.role,
+      action: check.usedRecovery ? 'auth.totp_recovery_login' : 'auth.totp_login',
+      entity: 'user',
+      entityId: user.id,
+      ip: requestIp(req),
+    });
+    res.set('Cache-Control', 'no-store');
+    setSessionCookie(res, token, user.role);
+    res.json({
+      token,
+      user: fullUser,
+      sessionExpiresAt: Date.now() + sessionTtlMsForRole(user.role),
+      usedRecovery: check.usedRecovery,
+    });
+  } catch (e) { next(e); }
+});
+
+/** POST /api/auth/totp/setup — generate TOTP secret & otpauth URI for elevated roles */
+router.post('/totp/setup', requireAuth, requireRole('superadmin', 'tutor', 'faculty'), async (req, res, next) => {
+  try {
+    const secret = generateTotpSecret();
+    const encrypted = encryptTotpSecret(secret);
+    await query(
+      `UPDATE users SET totp_secret_enc = $1 WHERE id = $2`,
+      [encrypted, req.user.id],
+    );
+    const otpauthUri = buildOtpAuthUri({ secret, accountName: req.user.email });
+    res.set('Cache-Control', 'no-store');
+    res.json({ secret, otpauthUri });
+  } catch (e) { next(e); }
+});
+
+/** POST /api/auth/totp/enable { code } — verify 6-digit code, activate 2FA & return recovery codes */
+router.post('/totp/enable', requireAuth, requireRole('superadmin', 'tutor', 'faculty'), mfaLimiter, async (req, res, next) => {
+  try {
+    const code = String(req.body?.code ?? '').trim();
+    if (!code) return res.status(400).json({ error: '6-digit authenticator code is required' });
+    const { rows } = await query(
+      `SELECT id, role, name, totp_secret_enc, token_version FROM users WHERE id = $1`,
+      [req.user.id],
+    );
+    const secret = decryptTotpSecret(rows[0]?.totp_secret_enc);
+    if (!secret) {
+      return res.status(400).json({ error: 'Start 2FA setup first before verifying a code' });
+    }
+    if (!verifyTotpCode(secret, code)) {
+      return res.status(401).json({ error: 'Invalid 6-digit authenticator code' });
+    }
+    const { codes, hashes } = generateRecoveryCodes(8);
+    const { rows: [updated] } = await query(
+      `UPDATE users
+          SET totp_enabled = true,
+              totp_recovery_hashes = $1::jsonb,
+              token_version = token_version + 1,
+              last_active_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING ${PUBLIC_COLUMNS}`,
+      [JSON.stringify(hashes), req.user.id],
+    );
+    const token = signToken(updated, { mfa: true });
+    await audit({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: 'auth.totp_enable',
+      entity: 'user',
+      entityId: req.user.id,
+      ip: requestIp(req),
+    });
+    res.set('Cache-Control', 'no-store');
+    setSessionCookie(res, token, updated.role);
+    res.json({
+      enabled: true,
+      recoveryCodes: codes,
+      token,
+      user: await fetchFullUser(req.user.id),
+      sessionExpiresAt: Date.now() + sessionTtlMsForRole(updated.role),
+    });
+  } catch (e) { next(e); }
+});
+
+/** POST /api/auth/totp/disable { currentPassword, code } — disable 2FA after double verification */
+router.post('/totp/disable', requireAuth, requireRole('superadmin', 'tutor', 'faculty'), mfaLimiter, async (req, res, next) => {
+  try {
+    const currentPassword = String(req.body?.currentPassword ?? '');
+    const code = String(req.body?.code ?? '').trim();
+    if (!currentPassword || !code) {
+      return res.status(400).json({ error: 'currentPassword and authenticator/recovery code are required' });
+    }
+    const { rows } = await query(
+      `SELECT id, role, name, password_hash, totp_enabled, totp_secret_enc, totp_recovery_hashes
+         FROM users WHERE id = $1`,
+      [req.user.id],
+    );
+    const row = rows[0];
+    if (!row || !bcrypt.compareSync(currentPassword, row.password_hash)) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+    if (!row.totp_enabled) {
+      return res.status(409).json({ error: '2FA is not currently enabled' });
+    }
+    const check = await verifyUserTotpOrRecovery(row, code);
+    if (!check.ok) {
+      return res.status(401).json({ error: 'Invalid authenticator or recovery code' });
+    }
+    const { rows: [updated] } = await query(
+      `UPDATE users
+          SET totp_enabled = false,
+              totp_secret_enc = NULL,
+              totp_recovery_hashes = NULL,
+              token_version = token_version + 1
+        WHERE id = $1
+        RETURNING ${PUBLIC_COLUMNS}`,
+      [req.user.id],
+    );
+    const token = signToken(updated, { mfa: false });
+    await audit({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: 'auth.totp_disable',
+      entity: 'user',
+      entityId: req.user.id,
+      ip: requestIp(req),
+    });
+    res.set('Cache-Control', 'no-store');
+    setSessionCookie(res, token, updated.role);
+    res.json({
+      disabled: true,
+      token,
+      user: await fetchFullUser(req.user.id),
+      sessionExpiresAt: Date.now() + sessionTtlMsForRole(updated.role),
+    });
+  } catch (e) { next(e); }
+});
+
+/** POST /api/auth/step-up { code?, password? } — mint short-lived 10m step-up token */
+router.post('/step-up', requireAuth, mfaLimiter, async (req, res, next) => {
+  try {
+    const { rows } = await query(
+      `SELECT id, role, password_hash, token_version, totp_enabled, totp_secret_enc, totp_recovery_hashes
+         FROM users WHERE id = $1`,
+      [req.user.id],
+    );
+    const row = rows[0];
+    if (!row) return res.status(404).json({ error: 'User not found' });
+
+    if (row.totp_enabled) {
+      const code = String(req.body?.code ?? '').trim();
+      if (!code) return res.status(400).json({ error: 'Authenticator or recovery code is required' });
+      const check = await verifyUserTotpOrRecovery(row, code);
+      if (!check.ok) {
+        return res.status(401).json({ error: 'Invalid authenticator or recovery code' });
+      }
+    } else {
+      const password = String(req.body?.password ?? '');
+      if (!password) return res.status(400).json({ error: 'Password is required for step-up verification' });
+      if (!bcrypt.compareSync(password, row.password_hash)) {
+        return res.status(401).json({ error: 'Password is incorrect' });
+      }
+    }
+
+    const stepUpToken = signStepUpToken(row);
+    await audit({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: 'auth.step_up',
+      entity: 'user',
+      entityId: req.user.id,
+      detail: { method: row.totp_enabled ? 'totp' : 'password' },
+      ip: requestIp(req),
+    });
+    res.set('Cache-Control', 'no-store');
+    res.json({ stepUpToken, expiresIn: STEP_UP_TTL_SECONDS });
   } catch (e) { next(e); }
 });
 

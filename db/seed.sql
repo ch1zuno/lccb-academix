@@ -239,8 +239,6 @@ UPDATE referrals SET hours_remaining = hours_required;
 -- Spring cohort: student accounts in the official 9-digit ID format (XX-XXXX-XXX).
 -- Emails use the student domain @lccbonline.edu.ph; password stays demo1234.
 INSERT INTO users (custom_id, name, email, role, program, password_hash) VALUES
-('24-0870-103', 'Cemer Daniel L. Miranda', 'cemerdaniel.miranda@lccbonline.edu.ph', 'learner', 'BSIT 2-B',  '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
-('24-0870-118', 'Jose Ady Tornea',         'joseady.tornea@lccbonline.edu.ph',      'learner', 'BSIT 2-B',  '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
 ('24-0870-131', 'Jan Arnold Benabon',      'janarnold.benabon@lccbonline.edu.ph',   'learner', 'BSIT 1-A',  '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
 ('25-0870-142', 'John Louis Cana',         'johnlouis.cana@lccbonline.edu.ph',      'learner', 'BSA 1-A',   '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
 ('25-0870-155', 'Matthew Geriane',         'matthew.geriane@lccbonline.edu.ph',     'learner', 'BSBA 1-A',  '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),

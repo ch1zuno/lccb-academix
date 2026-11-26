@@ -5,7 +5,7 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { query, withTransaction } from '../db.js';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireRole, requireStepUp } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { audit, requestIp } from '../lib/audit.js';
 import {
@@ -425,9 +425,10 @@ router.delete('/accreditation/documents/:id', requireAuth, requireRole('learner'
   } catch (e) { next(e); }
 });
 
-/** POST /accreditation/:id/approve — sets tutor status + certified_by_id */
-router.post('/accreditation/:id/approve', requireAuth, requireRole('superadmin'), async (req, res, next) => {
+/** POST /accreditation/:id/approve — sets tutor status + certified_by_id (requires step-up & passing exam score) */
+router.post('/accreditation/:id/approve', requireAuth, requireRole('superadmin'), requireStepUp, async (req, res, next) => {
   try {
+    const overrideReason = String(req.body?.overrideReason ?? '').trim().slice(0, 300);
     const approved = await withTransaction(async (client) => {
       const app = (await client.query(
         `SELECT id, user_id, exam_score, status FROM tutor_applications WHERE id = $1 FOR UPDATE`,
@@ -436,6 +437,12 @@ router.post('/accreditation/:id/approve', requireAuth, requireRole('superadmin')
       if (!app) throw httpError(404, 'Application not found');
       if (app.status !== 'pending') throw httpError(409, `Application already ${app.status}`);
       if (app.exam_score == null) throw httpError(409, 'Applicant has not completed the exam yet');
+      if (app.exam_score < Math.round(PASS_MARK * 100) && overrideReason.length < 15) {
+        throw httpError(
+          409,
+          `Applicant scored ${app.exam_score}% (below 70% passing mark). Provide an overrideReason (15+ chars) to approve.`,
+        );
+      }
       const documentCount = (await client.query(
         `SELECT count(*)::int AS n FROM application_documents WHERE application_id = $1`, [req.params.id])).rows[0].n;
       if (documentCount === 0) {
@@ -446,8 +453,21 @@ router.post('/accreditation/:id/approve', requireAuth, requireRole('superadmin')
       // Grant tutor role + verified status + certifier so the applicant appears
       // in /tutors, can accept session requests, and can stage check-in tokens.
       await client.query(
-        `UPDATE users SET role = 'tutor', is_verified = true, certified_by_id = $1 WHERE id = $2`,
+        `UPDATE users
+            SET role = 'tutor',
+                is_verified = true,
+                certified_by_id = $1,
+                suspended_at = NULL,
+                suspended_reason = NULL
+          WHERE id = $2`,
         [req.user.id, app.user_id]);
+      // Copy approved application subjects onto user_subjects
+      await client.query(
+        `INSERT INTO user_subjects (user_id, subject_id)
+         SELECT $1, subject_id FROM application_subjects WHERE application_id = $2
+         ON CONFLICT DO NOTHING`,
+        [app.user_id, req.params.id],
+      );
       await client.query(
         `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, 'Application approved', $2, 'success')`,
         [app.user_id, 'Your tutor accreditation was approved and verified.']);
@@ -457,7 +477,12 @@ router.post('/accreditation/:id/approve', requireAuth, requireRole('superadmin')
         action: 'accreditation.approve',
         entity: 'tutor_application',
         entityId: req.params.id,
-        detail: { applicantId: app.user_id, examScore: app.exam_score, documents: documentCount },
+        detail: {
+          applicantId: app.user_id,
+          examScore: app.exam_score,
+          documents: documentCount,
+          ...(overrideReason ? { overrideReason } : {}),
+        },
         ip: requestIp(req),
       }, client);
       return app;
@@ -466,7 +491,7 @@ router.post('/accreditation/:id/approve', requireAuth, requireRole('superadmin')
   } catch (e) { next(e); }
 });
 
-router.post('/accreditation/:id/reject', requireAuth, requireRole('superadmin'), async (req, res, next) => {
+router.post('/accreditation/:id/reject', requireAuth, requireRole('superadmin'), requireStepUp, async (req, res, next) => {
   try {
     const reason = String(req.body?.reason ?? '').slice(0, 300) || 'Application rejected.';
     const rejected = await withTransaction(async (client) => {

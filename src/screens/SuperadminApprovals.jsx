@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { ApplicationFileList } from '../components/ApplicationDocumentPicker';
-import { Loader2, Check, X, ExternalLink, FileText } from 'lucide-react';
+import { Loader2, Check, X, ExternalLink, FileText, ShieldAlert, ShieldCheck, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Input } from '../components/ui/input';
 import { downloadApplicationDocument, openApplicationDocument, MAX_APPLICATION_FILES } from '../lib/applicationFiles';
 import { cn } from '../lib/utils';
 import { trapTabKey } from '../lib/focusTrap';
@@ -30,6 +31,13 @@ export default function SuperadminApprovals({ showToast }) {
   const [selectedDocs, setSelectedDocs] = useState(null);
   const [busy, setBusy] = useState(null);
   const [auditEntries, setAuditEntries] = useState(null);
+  const [tutorsRoster, setTutorsRoster] = useState(null);
+  const [suspendTarget, setSuspendTarget] = useState(null);
+  const [suspendReason, setSuspendReason] = useState('');
+  const [stepUpPrompt, setStepUpPrompt] = useState(null); // { totpEnabled, retryFn }
+  const [stepUpInput, setStepUpInput] = useState('');
+  const [stepUpBusy, setStepUpBusy] = useState(false);
+  const [stepUpError, setStepUpError] = useState('');
   const [page, setPage] = useState(1);
   const [appsError, setAppsError] = useState(null);
   const [confirmRejectApp, setConfirmRejectApp] = useState(null);
@@ -48,8 +56,15 @@ export default function SuperadminApprovals({ showToast }) {
       });
   };
 
+  const loadTutorsRoster = () => {
+    api.get('/admin/tutors')
+      .then(({ tutors }) => setTutorsRoster(tutors ?? []))
+      .catch(() => setTutorsRoster([]));
+  };
+
   useEffect(() => {
     loadApplications();
+    loadTutorsRoster();
   }, []);
 
   useEffect(() => {
@@ -96,13 +111,50 @@ export default function SuperadminApprovals({ showToast }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [selectedApp, busy]);
 
+  const runWithStepUp = async (actionFn) => {
+    try {
+      await actionFn();
+    } catch (e) {
+      if (e?.status === 403 && e?.body?.code === 'STEP_UP_REQUIRED') {
+        setStepUpError('');
+        setStepUpInput('');
+        setStepUpPrompt({ totpEnabled: Boolean(e.body.totpEnabled), retryFn: actionFn });
+        return;
+      }
+      throw e;
+    }
+  };
+
+  const submitStepUp = async (e) => {
+    e.preventDefault();
+    if (!stepUpPrompt) return;
+    setStepUpError('');
+    setStepUpBusy(true);
+    try {
+      const body = stepUpPrompt.totpEnabled ? { code: stepUpInput.trim() } : { password: stepUpInput };
+      const res = await api.post('/auth/step-up', body);
+      api.setStepUpToken(res.stepUpToken, res.expiresIn || 600);
+      const retry = stepUpPrompt.retryFn;
+      setStepUpPrompt(null);
+      setStepUpInput('');
+      await retry();
+    } catch (err) {
+      setStepUpError(err.message || 'Verification failed.');
+    } finally {
+      setStepUpBusy(false);
+    }
+  };
+
   const handleApprove = async (app) => {
     setBusy(app.id);
     try {
-      await api.post(`/accreditation/${app.id}/approve`);
-      setApplications(rows => rows.filter(row => row.id !== app.id));
-      setSelectedApp(null);
-      showToast(`Approved ${app.name} as a verified tutor.`, 'success');
+      await runWithStepUp(async () => {
+        await api.post(`/accreditation/${app.id}/approve`);
+        setApplications(rows => rows.filter(row => row.id !== app.id));
+        setSelectedApp(null);
+        loadTutorsRoster();
+        showToast(`Approved ${app.name} as a verified tutor.`, 'success');
+      });
     } catch (e) {
       showToast(e.message || 'Approval failed', 'error');
     } finally {
@@ -114,12 +166,67 @@ export default function SuperadminApprovals({ showToast }) {
     setBusy(app.id);
     setConfirmRejectApp(null);
     try {
-      await api.post(`/accreditation/${app.id}/reject`, {});
-      setApplications(rows => rows.filter(row => row.id !== app.id));
-      setSelectedApp(null);
-      showToast(`Rejected ${app.name}'s application.`, 'info');
+      await runWithStepUp(async () => {
+        await api.post(`/accreditation/${app.id}/reject`, {});
+        setApplications(rows => rows.filter(row => row.id !== app.id));
+        setSelectedApp(null);
+        showToast(`Rejected ${app.name}'s application.`, 'info');
+      });
     } catch (e) {
       showToast(e.message || 'Rejection failed', 'error');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const executeSuspendTutor = async (e) => {
+    e.preventDefault();
+    if (!suspendTarget) return;
+    const reason = suspendReason.trim();
+    if (reason.length < 5) {
+      showToast('Enter a suspension reason (at least 5 characters).', 'error');
+      return;
+    }
+    setBusy(suspendTarget.id);
+    try {
+      await runWithStepUp(async () => {
+        await api.post(`/admin/tutors/${suspendTarget.id}/suspend`, { reason });
+        setSuspendTarget(null);
+        setSuspendReason('');
+        loadTutorsRoster();
+        showToast(`Suspended ${suspendTarget.name} and revoked all sessions.`, 'info');
+      });
+    } catch (err) {
+      showToast(err.message || 'Suspension failed', 'error');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleReinstateTutor = async (tutor) => {
+    setBusy(tutor.id);
+    try {
+      await runWithStepUp(async () => {
+        await api.post(`/admin/tutors/${tutor.id}/reinstate`);
+        loadTutorsRoster();
+        showToast(`Reinstated ${tutor.name} as a verified tutor.`, 'success');
+      });
+    } catch (err) {
+      showToast(err.message || 'Reinstate failed', 'error');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleRevokeSessions = async (tutor) => {
+    setBusy(tutor.id);
+    try {
+      await runWithStepUp(async () => {
+        await api.post(`/admin/users/${tutor.id}/revoke-sessions`, { reason: 'Superadmin emergency session kill-switch' });
+        showToast(`Revoked all active sessions for ${tutor.name}.`, 'info');
+      });
+    } catch (err) {
+      showToast(err.message || 'Could not revoke sessions', 'error');
     } finally {
       setBusy(null);
     }
@@ -263,6 +370,86 @@ export default function SuperadminApprovals({ showToast }) {
           </div>
         );
       })()}
+
+      {tutorsRoster && tutorsRoster.length > 0 && (
+        <section className="mt-8">
+          <div className="section-head">
+            <div>
+              <h2 className="section-title">Tutor governance</h2>
+              <p className="section-subtitle">Suspend misbehaving accounts or force-revoke active sessions across all devices.</p>
+            </div>
+            <span className="border-2 border-ink bg-paper px-2 py-1 text-[12px] font-bold uppercase tracking-[0.04em] text-muted-foreground">
+              {tutorsRoster.filter((t) => t.is_verified && !t.suspended_at).length} verified / {tutorsRoster.length} total
+            </span>
+          </div>
+          <div className="panel divide-y-2 divide-ink/10">
+            {tutorsRoster.map((tutor) => {
+              const isSuspended = Boolean(tutor.suspended_at);
+              return (
+                <div key={tutor.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-bold text-ink">{tutor.name}</p>
+                      <span className="font-mono text-[12px] text-muted-foreground">{tutor.custom_id}</span>
+                      {isSuspended ? (
+                        <span className="border-2 border-crimson bg-surface-alert px-1.5 py-0.5 text-[11px] font-bold uppercase text-crimson">
+                          Suspended
+                        </span>
+                      ) : tutor.is_verified ? (
+                        <span className="border-2 border-ink bg-emerald/15 px-1.5 py-0.5 text-[11px] font-bold uppercase text-ink">
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="border-2 border-ink/40 bg-surface-quiet px-1.5 py-0.5 text-[11px] font-bold uppercase text-muted-foreground">
+                          Unverified
+                        </span>
+                      )}
+                      {tutor.totp_enabled && (
+                        <span className="inline-flex items-center gap-1 border-2 border-ink bg-gold/40 px-1.5 py-0.5 text-[11px] font-bold uppercase text-ink">
+                          <ShieldCheck className="h-3 w-3" /> 2FA
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">
+                      {tutor.program || '—'} · {tutor.completed_sessions} completed · {tutor.active_sessions} active
+                      {tutor.suspended_reason ? ` · Reason: ${tutor.suspended_reason}` : ''}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy === tutor.id}
+                      onClick={() => handleRevokeSessions(tutor)}
+                      title="Force sign-out everywhere"
+                    >
+                      <LogOut className="h-3.5 w-3.5" /> Revoke sessions
+                    </Button>
+                    {isSuspended || !tutor.is_verified ? (
+                      <Button
+                        size="sm"
+                        disabled={busy === tutor.id}
+                        onClick={() => handleReinstateTutor(tutor)}
+                      >
+                        <ShieldCheck className="h-3.5 w-3.5" /> {isSuspended ? 'Reinstate' : 'Verify'}
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={busy === tutor.id}
+                        onClick={() => { setSuspendTarget(tutor); setSuspendReason(''); }}
+                      >
+                        <ShieldAlert className="h-3.5 w-3.5" /> Suspend
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {auditEntries && auditEntries.length > 0 && (
         <section className="mt-8">
@@ -491,6 +678,65 @@ export default function SuperadminApprovals({ showToast }) {
         onCancel={() => setConfirmRejectApp(null)}
         onConfirm={() => executeReject(confirmRejectApp)}
       />
+
+      {suspendTarget && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-ink/60 p-4" role="dialog" aria-modal="true">
+          <form onSubmit={executeSuspendTutor} className="w-full max-w-[440px] border-2 border-ink bg-paper p-5 shadow-[6px_6px_0_var(--color-ink)]">
+            <h3 className="font-display text-[20px] font-extrabold text-ink">Suspend {suspendTarget.name}?</h3>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              This immediately revokes verification, hides them from bookings, and signs them out on all devices.
+            </p>
+            <label htmlFor="suspend-reason" className="field-label mt-4">Reason (logged to audit trail)</label>
+            <Input
+              id="suspend-reason"
+              value={suspendReason}
+              onChange={(e) => setSuspendReason(e.target.value)}
+              placeholder="e.g. Policy violation or pending dean review"
+              minLength={5}
+              maxLength={300}
+              required
+              autoFocus
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setSuspendTarget(null)}>Cancel</Button>
+              <Button type="submit" variant="destructive" disabled={busy === suspendTarget.id}>Suspend tutor</Button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {stepUpPrompt && (
+        <div className="fixed inset-0 z-[90] grid place-items-center bg-ink/70 p-4" role="dialog" aria-modal="true">
+          <form onSubmit={submitStepUp} className="w-full max-w-[420px] border-2 border-ink bg-paper p-5 shadow-[6px_6px_0_var(--color-gold)]">
+            <h3 className="font-display text-[20px] font-extrabold text-ink">Step-up verification required</h3>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              {stepUpPrompt.totpEnabled
+                ? 'Enter your 6-digit authenticator code (or a recovery code) to confirm this administrative action.'
+                : 'Re-enter your Superadmin password to confirm this administrative action.'}
+            </p>
+            <Input
+              type={stepUpPrompt.totpEnabled ? 'text' : 'password'}
+              value={stepUpInput}
+              onChange={(e) => setStepUpInput(e.target.value)}
+              placeholder={stepUpPrompt.totpEnabled ? '123456 or XXXX-XXXX' : 'Superadmin password'}
+              className="mt-4 min-h-[44px]"
+              required
+              autoFocus
+            />
+            {stepUpError && (
+              <p role="alert" className="mt-2 border-2 border-crimson bg-surface-alert px-3 py-1.5 text-[12px] font-semibold text-crimson">
+                {stepUpError}
+              </p>
+            )}
+            <div className="mt-4 flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setStepUpPrompt(null)} disabled={stepUpBusy}>Cancel</Button>
+              <Button type="submit" disabled={stepUpBusy}>
+                {stepUpBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify & continue'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

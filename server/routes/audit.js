@@ -2,8 +2,10 @@ import express from 'express';
 import { query } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
+import { audit, requestIp } from '../lib/audit.js';
 
 const router = express.Router();
+const lastAuditRead = new Map();
 
 /**
  * GET /audit?limit=50&before=<id>
@@ -25,6 +27,18 @@ router.get('/audit', requireAuth, requireRole('superadmin'), async (req, res, ne
         LIMIT $2`,
       [before, limit],
     );
+    const now = Date.now();
+    if (now - (lastAuditRead.get(req.user.id) || 0) > 60_000) {
+      lastAuditRead.set(req.user.id, now);
+      audit({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        action: 'audit.read',
+        entity: 'audit_log',
+        detail: { limit, before },
+        ip: requestIp(req),
+      }).catch(() => {});
+    }
     res.json({
       entries: rows,
       nextBefore: rows.length === limit ? rows[rows.length - 1].id : null,

@@ -3,8 +3,10 @@ import express from 'express';
 import { query } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
+import { audit, requestIp } from '../lib/audit.js';
 
 const router = express.Router();
+const lastAnalyticsRead = new Map();
 
 /**
  * GET /analytics
@@ -80,6 +82,18 @@ router.get('/analytics', requireAuth, requireRole('superadmin'), async (_req, re
               WHERE s.status='completed'
                 AND s.updated_at >= w.wk AND s.updated_at < w.wk + interval '7 days')::int AS sessions
       FROM weeks w ORDER BY w.wk`);
+
+    const now = Date.now();
+    if (now - (lastAnalyticsRead.get(_req.user.id) || 0) > 60_000) {
+      lastAnalyticsRead.set(_req.user.id, now);
+      audit({
+        actorId: _req.user.id,
+        actorRole: _req.user.role,
+        action: 'analytics.read',
+        entity: 'analytics',
+        ip: requestIp(_req),
+      }).catch(() => {});
+    }
 
     res.json({
       activeTutors: o.active_tutors,

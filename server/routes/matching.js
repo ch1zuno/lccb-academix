@@ -1,6 +1,6 @@
 import express from 'express';
 import { query, withTransaction } from '../db.js';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireRole, requireVerifiedTutor } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { audit, requestIp } from '../lib/audit.js';
 import { toPublicProfile } from '../lib/publicProfile.js';
@@ -176,8 +176,8 @@ router.get('/learners/my-tutors', requireAuth, requireRole('learner'), async (re
   }
 });
 
-/** PATCH /tutors/me/availability — tutor pauses or resumes new requests. */
-router.patch('/tutors/me/availability', requireAuth, requireRole('tutor'), async (req, res, next) => {
+/** PATCH /tutors/me/availability — verified tutor pauses or resumes new requests. */
+router.patch('/tutors/me/availability', requireAuth, requireVerifiedTutor(), async (req, res, next) => {
   try {
     const { available } = req.body ?? {};
     if (typeof available !== 'boolean') throw httpError(400, 'available must be true or false');
@@ -284,7 +284,7 @@ router.get('/session-requests', requireAuth, async (req, res, next) => {
 });
 
 /** POST /session-requests/:id/accept — creates a real session from the request. */
-router.post('/session-requests/:id/accept', requireAuth, requireRole('tutor', 'faculty'), async (req, res, next) => {
+router.post('/session-requests/:id/accept', requireAuth, requireVerifiedTutor({ allowFaculty: true }), async (req, res, next) => {
   try {
     const created = await withTransaction(async (client) => {
       const { rows: reqRows } = await client.query(
@@ -358,7 +358,7 @@ router.post('/session-requests/:id/accept', requireAuth, requireRole('tutor', 'f
 });
 
 /** POST /session-requests/:id/decline */
-router.post('/session-requests/:id/decline', requireAuth, requireRole('tutor', 'faculty'), async (req, res, next) => {
+router.post('/session-requests/:id/decline', requireAuth, requireVerifiedTutor({ allowFaculty: true }), async (req, res, next) => {
   try {
     const { rows } = await query(
       `UPDATE session_requests SET status = 'declined' WHERE id = $1 AND tutor_id = $2 AND status = 'pending' RETURNING id, status`,

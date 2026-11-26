@@ -4,6 +4,8 @@
 import 'dotenv/config';
 import pg from 'pg';
 import WebSocket from 'ws';
+import jwt from 'jsonwebtoken';
+import { generateTotpCode } from '../lib/totp.js';
 
 const ORIGIN = (process.env.E2E_API_BASE || 'http://localhost:4000').replace(/\/+$/, '');
 const BASE = `${ORIGIN}/api`;
@@ -133,7 +135,98 @@ const assert = (ok, message) => { if (!ok) throw new Error(message); };
   });
   assert(memberMsg.type === 'subscribed', `authorized tutor WS subscribe should succeed, got ${JSON.stringify(memberMsg)}`);
 
-  // 7. Database RLS verification on local Postgres
+  // 7. Role-scoped JWT TTLs + unverified tutor enforcement + Superadmin 2FA & containment
+  const saLogin = await request('/auth/login', {
+    method: 'POST',
+    body: { loginId: 'l.betita.admin@lccbacolod.edu.ph', password: 'demo1234' },
+  });
+  assert(saLogin.status === 200 && saLogin.data.token, `superadmin login failed: ${saLogin.status}`);
+  const saJwt = jwt.decode(saLogin.data.token);
+  const tutorJwt = jwt.decode(tutorLogin.data.token);
+  const learnerJwt = jwt.decode(token);
+  assert(saJwt.exp - saJwt.iat === 2 * 60 * 60, `expected 2h superadmin JWT, got ${saJwt.exp - saJwt.iat}`);
+  assert(tutorJwt.exp - tutorJwt.iat === 12 * 60 * 60, `expected 12h tutor JWT, got ${tutorJwt.exp - tutorJwt.iat}`);
+  assert(learnerJwt.exp - learnerJwt.iat === 48 * 60 * 60, `expected 48h learner JWT, got ${learnerJwt.exp - learnerJwt.iat}`);
+
+  // Unverified tutor TU-038 must be blocked from availability toggle and tasks
+  const unverifiedTutor = await request('/auth/login', {
+    method: 'POST',
+    body: { loginId: 'TU-038', password: 'demo1234' },
+  });
+  assert(unverifiedTutor.status === 200 && unverifiedTutor.data.token, `TU-038 login failed: ${unverifiedTutor.status}`);
+  const blockedAvail = await request('/tutors/me/availability', {
+    method: 'PATCH',
+    token: unverifiedTutor.data.token,
+    body: { available: false },
+  });
+  assert(blockedAvail.status === 403, `unverified tutor availability should be 403, got ${blockedAvail.status}`);
+  const blockedTasks = await request('/tasks', { token: unverifiedTutor.data.token });
+  assert(blockedTasks.status === 403, `unverified tutor tasks should be 403, got ${blockedTasks.status}`);
+
+  // Superadmin 2FA setup -> enable -> challenge login -> verify-login -> step-up -> disable
+  const setup = await request('/auth/totp/setup', { method: 'POST', token: saLogin.data.token });
+  assert(setup.status === 200 && setup.data.secret, `totp setup failed: ${setup.status}`);
+  const enabled = await request('/auth/totp/enable', {
+    method: 'POST',
+    token: saLogin.data.token,
+    body: { code: generateTotpCode(setup.data.secret) },
+  });
+  assert(enabled.status === 200 && enabled.data.enabled === true && enabled.data.recoveryCodes?.length === 8, `totp enable failed: ${enabled.status}`);
+
+  const mfaPrompt = await request('/auth/login', {
+    method: 'POST',
+    body: { loginId: 'l.betita.admin@lccbacolod.edu.ph', password: 'demo1234' },
+  });
+  assert(mfaPrompt.status === 200 && mfaPrompt.data.requiresTotp === true && mfaPrompt.data.challengeToken, `expected TOTP challenge on login`);
+
+  const mfaDone = await request('/auth/totp/verify-login', {
+    method: 'POST',
+    body: { challengeToken: mfaPrompt.data.challengeToken, code: generateTotpCode(setup.data.secret) },
+  });
+  assert(mfaDone.status === 200 && mfaDone.data.token, `totp verify-login failed: ${mfaDone.status}`);
+  const saMfaToken = mfaDone.data.token;
+
+  const stepUp = await request('/auth/step-up', {
+    method: 'POST',
+    token: saMfaToken,
+    body: { code: generateTotpCode(setup.data.secret) },
+  });
+  assert(stepUp.status === 200 && stepUp.data.stepUpToken, `step-up failed: ${stepUp.status}`);
+
+  // Superadmin tutor governance: suspend TU-015 -> kills TU-015 session -> reinstate TU-015
+  const targetTutor = await request('/auth/login', {
+    method: 'POST',
+    body: { loginId: 'TU-015', password: 'demo1234' },
+  });
+  assert(targetTutor.status === 200 && targetTutor.data.token, 'TU-015 login failed');
+
+  const suspended = await request(`/admin/tutors/${targetTutor.data.user.id}/suspend`, {
+    method: 'POST',
+    token: saMfaToken,
+    headers: { 'X-Step-Up-Token': stepUp.data.stepUpToken },
+    body: { reason: 'E2E security test suspension' },
+  });
+  assert(suspended.status === 200 && suspended.data.suspended === true, `suspend failed: ${suspended.status}`);
+
+  const deadSession = await request('/auth/me', { token: targetTutor.data.token });
+  assert(deadSession.status === 401, `suspended tutor old JWT must be 401, got ${deadSession.status}`);
+
+  const reinstated = await request(`/admin/tutors/${targetTutor.data.user.id}/reinstate`, {
+    method: 'POST',
+    token: saMfaToken,
+    headers: { 'X-Step-Up-Token': stepUp.data.stepUpToken },
+  });
+  assert(reinstated.status === 200 && reinstated.data.reinstated === true, `reinstate failed: ${reinstated.status}`);
+
+  // Cleanly disable 2FA on SA-001 so subsequent demo/e2e scripts can log in with password
+  const disabled = await request('/auth/totp/disable', {
+    method: 'POST',
+    token: saMfaToken,
+    body: { currentPassword: 'demo1234', code: enabled.data.recoveryCodes[0] },
+  });
+  assert(disabled.status === 200 && disabled.data.disabled === true, `totp disable failed: ${disabled.status}`);
+
+  // 8. Database RLS verification on local Postgres
   if (process.env.DATABASE_URL) {
     const parsed = new URL(process.env.DATABASE_URL);
     const local = /^(localhost|127\.0\.0\.1|::1)$/.test(parsed.hostname);

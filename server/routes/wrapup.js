@@ -1,5 +1,6 @@
 import express from 'express';
 import { withTransaction } from '../db.js';
+import { config } from '../config.js';
 import { requireAuth } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { audit, requestIp } from '../lib/audit.js';
@@ -11,6 +12,7 @@ import {
 } from '../lib/points.js';
 
 const router = express.Router();
+export const MIN_PRODUCTION_SESSION_SECONDS = 15 * 60; // 15m minimum in non-demo production before awarding points
 
 /**
  * POST /sessions/:id/wrap-up  (session participant)
@@ -29,12 +31,15 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
     const sessionId = req.params.id;
     const isTutor = req.user.role === 'tutor';
     const notes = isTutor ? (String(req.body?.notes ?? '').slice(0, 500) || null) : null;
-    const rating = Number(req.body?.rating);
-    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    const rawRating = req.body?.rating;
+    // In production (DEMO_MODE off), tutors cannot self-assign their own star rating.
+    const tutorSelfRatingBlocked = isTutor && !config.demoMode;
+    const rating = tutorSelfRatingBlocked
+      ? null
+      : Number(rawRating);
+    if (!tutorSelfRatingBlocked && (!Number.isInteger(rating) || rating < 1 || rating > 5)) {
       throw httpError(400, 'rating (integer 1-5) is required');
     }
-
-    const durationSecondsParam = Number(req.body?.durationSeconds);
 
     const wrap = await withTransaction(async (client) => {
       // lock row for safe transitions
@@ -60,9 +65,11 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
         throw httpError(409, 'Both the tutor and the learner must check in before wrap-up');
       }
 
-      const actualDuration = Number.isInteger(durationSecondsParam) && durationSecondsParam > 0
-        ? durationSecondsParam
-        : (session.started_at ? Math.max(1, Math.round((Date.now() - new Date(session.started_at).getTime()) / 1000)) : 0);
+      // Always compute elapsed duration server-side (ignore client durationSeconds).
+      const actualDuration = session.started_at
+        ? Math.max(1, Math.round((Date.now() - new Date(session.started_at).getTime()) / 1000))
+        : 0;
+      const meetsMinDuration = config.demoMode || actualDuration >= MIN_PRODUCTION_SESSION_SECONDS;
 
       const { rows: updatedRows } = await client.query(
         `UPDATE sessions
@@ -101,12 +108,13 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
       // record: the session still completes, only the ledger credit is capped.
       const tutorEarned = (await client.query(SESSION_POINTS_EARNED_SQL, [session.tutor_id])).rows[0].earned;
       const learnerEarned = (await client.query(SESSION_POINTS_EARNED_SQL, [session.learner_id])).rows[0].earned;
-      const pointsToAward = awardWithinCap(50, tutorEarned, WEEKLY_TUTOR_SESSION_CAP);
-      const learnerPoints = awardWithinCap(25, learnerEarned, WEEKLY_LEARNER_SESSION_CAP);
+      const pointsToAward = meetsMinDuration ? awardWithinCap(50, tutorEarned, WEEKLY_TUTOR_SESSION_CAP) : 0;
+      const learnerPoints = meetsMinDuration ? awardWithinCap(25, learnerEarned, WEEKLY_LEARNER_SESSION_CAP) : 0;
 
+      const ratingText = rating != null ? `rated ${rating}/5` : 'completed';
       await client.query(
         `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, 'Session wrapped up', $2, 'success')`,
-        [session.learner_id, `Your session was rated ${rating}/5${learnerPoints ? ` and earned ${learnerPoints} attendance points` : ''}.`]);
+        [session.learner_id, `Your session was ${ratingText}${learnerPoints ? ` and earned ${learnerPoints} attendance points` : ''}.`]);
       await client.query(
         `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, 'Session wrapped up', $2, 'success')`,
         [session.tutor_id, `${pointsToAward} points posted for session ${session.id.slice(0, 8)}.`]);
@@ -115,7 +123,7 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
         await client.query(
           `INSERT INTO points_ledger (user_id, amount, description)
            VALUES ($1, $2, $3)`,
-          [session.tutor_id, pointsToAward, `Session wrap-up — ${session.id.slice(0, 8)} (${rating}★)`]);
+          [session.tutor_id, pointsToAward, `Session wrap-up — ${session.id.slice(0, 8)}${rating != null ? ` (${rating}★)` : ''}`]);
       }
 
       // learner attendance credit (same transaction)

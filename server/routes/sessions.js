@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { query, withTransaction } from '../db.js';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireRole, requireVerifiedTutor } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { config } from '../config.js';
 import { audit } from '../lib/audit.js';
@@ -110,8 +110,8 @@ router.get('/sessions/mine', requireAuth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-/* ---------- POST /sessions/:id/stage-token (tutor, 10 min TTL, one active token) ---------- */
-router.post('/sessions/:id/stage-token', requireAuth, requireRole('tutor'), tokenLimiter, async (req, res, next) => {
+/* ---------- POST /sessions/:id/stage-token (verified tutor, 10 min TTL, one active token) ---------- */
+router.post('/sessions/:id/stage-token', requireAuth, requireVerifiedTutor(), tokenLimiter, async (req, res, next) => {
   try {
     const method = req.body?.method ?? 'otp';
     if (typeof method !== 'string' || !['qr', 'otp', 'fingerprint'].includes(method)) {

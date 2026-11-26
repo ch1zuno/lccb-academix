@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import { requireAuth } from '../middleware/auth.js';
 import { config } from '../config.js';
 import { verifyRoomMembership } from '../lib/room-membership.js';
+import { audit, requestIp } from '../lib/audit.js';
 
 const router = express.Router();
 
@@ -47,6 +48,18 @@ router.get('/room', requireAuth, async (req, res, next) => {
     // Always use canonical session.id to ensure tutor and learner get identical room names
     // regardless of whether they joined via UUID or human-readable session_code
     const roomName = deriveJitsiRoomName(check.session.id);
+
+    if (check.isSupervisor) {
+      await audit({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        action: 'session.supervisor_join',
+        entity: 'session',
+        entityId: check.session.id,
+        detail: { channel: 'video', sessionCode: check.session.session_code },
+        ip: requestIp(req),
+      }).catch(() => {});
+    }
 
     res.set('Cache-Control', 'no-store');
     return res.json({

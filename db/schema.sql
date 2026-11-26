@@ -33,6 +33,12 @@ CREATE TABLE users (
   hourly_rate numeric,
   certified_by_id uuid REFERENCES users(id) ON DELETE SET NULL,
   token_version int NOT NULL DEFAULT 0,
+  totp_secret_enc text,
+  totp_enabled boolean NOT NULL DEFAULT false,
+  totp_recovery_hashes jsonb,
+  suspended_at timestamptz,
+  suspended_reason text,
+  last_active_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

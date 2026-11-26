@@ -48,12 +48,13 @@ function parseDescription(raw) {
 }
 
 async function assertAccreditedTutor(req) {
-  if (req.user.role !== 'tutor') {
-    throw httpError(403, 'Only accredited tutors can manage tasks');
-  }
-  const { rows } = await query(`SELECT is_verified FROM users WHERE id = $1`, [req.user.id]);
-  if (!rows[0]?.is_verified) {
-    throw httpError(403, 'Only accredited tutors can manage tasks');
+  if (req.user.role !== 'tutor' || !req.user.is_verified || req.user.suspended_at) {
+    throw httpError(
+      403,
+      req.user.suspended_at
+        ? 'Your tutor accreditation is currently suspended'
+        : 'Only accredited tutors can manage tasks',
+    );
   }
 }
 

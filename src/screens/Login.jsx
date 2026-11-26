@@ -254,6 +254,8 @@ export default function LandingPage({ onLogin }) {
   const [customGoogleEmail, setCustomGoogleEmail] = useState('');
   const [schoolId, setSchoolId] = useState('');
   const [password, setPassword] = useState('');
+  const [totpChallenge, setTotpChallenge] = useState(null);
+  const [totpCode, setTotpCode] = useState('');
   const [error, setError] = useState('');
   const [overview, setOverview] = useState(null);
   const [overviewFailed, setOverviewFailed] = useState(false);
@@ -378,6 +380,8 @@ export default function LandingPage({ onLogin }) {
     setShowGoogleChooser(false);
     setCustomGoogleEmail('');
     setGoogleLoading(false);
+    setTotpChallenge(null);
+    setTotpCode('');
     setError('');
     setPassword('');
   };
@@ -387,6 +391,8 @@ export default function LandingPage({ onLogin }) {
     setShowGoogleChooser(false);
     setCustomGoogleEmail('');
     setGoogleLoading(false);
+    setTotpChallenge(null);
+    setTotpCode('');
     setError('');
     setPassword('');
   };
@@ -395,9 +401,15 @@ export default function LandingPage({ onLogin }) {
     setError('');
     setGoogleLoading(true);
     try {
-      const { user, sessionExpiresAt } = await api.post('/auth/google', payload);
-      saveSession(user, sessionExpiresAt);
-      onLogin(user, sessionExpiresAt);
+      const res = await api.post('/auth/google', payload);
+      if (res.requiresTotp && res.challengeToken) {
+        setTotpChallenge(res.challengeToken);
+        setTotpCode('');
+        setShowLogin(true);
+        return;
+      }
+      saveSession(res.user, res.sessionExpiresAt);
+      onLogin(res.user, res.sessionExpiresAt);
       setShowGoogleChooser(false);
       setCustomGoogleEmail('');
       setShowLogin(false);
@@ -504,12 +516,42 @@ export default function LandingPage({ onLogin }) {
     }
     setLoading(true);
     try {
-      const { user, sessionExpiresAt } = await api.post('/auth/login', { loginId: schoolId.trim(), password });
-      saveSession(user, sessionExpiresAt);
-      onLogin(user, sessionExpiresAt);
+      const res = await api.post('/auth/login', { loginId: schoolId.trim(), password });
+      if (res.requiresTotp && res.challengeToken) {
+        setTotpChallenge(res.challengeToken);
+        setTotpCode('');
+        return;
+      }
+      saveSession(res.user, res.sessionExpiresAt);
+      onLogin(res.user, res.sessionExpiresAt);
       setShowLogin(false);
     } catch (err) {
       setError(err.message || 'Sign in failed. Check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTotpVerify = async (event) => {
+    event.preventDefault();
+    setError('');
+    if (!totpCode.trim()) {
+      setError('Enter your 6-digit authenticator code or recovery code.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/totp/verify-login', {
+        challengeToken: totpChallenge,
+        code: totpCode.trim(),
+      });
+      saveSession(res.user, res.sessionExpiresAt);
+      onLogin(res.user, res.sessionExpiresAt);
+      setTotpChallenge(null);
+      setTotpCode('');
+      setShowLogin(false);
+    } catch (err) {
+      setError(err.message || 'Verification failed.');
     } finally {
       setLoading(false);
     }
@@ -1431,6 +1473,36 @@ export default function LandingPage({ onLogin }) {
                   <span>or use school ID &amp; password</span>
                 </div>
 
+                {totpChallenge ? (
+                  <form className="login-form" onSubmit={handleTotpVerify}>
+                    <p style={{ fontSize: 13, color: '#5b5a52', marginBottom: 8 }}>
+                      Two-factor authentication is enabled on this account. Enter the 6-digit code from your authenticator app or an 8-character recovery code.
+                    </p>
+                    <div className="login-field">
+                      <label htmlFor="totp-code">Authenticator or recovery code</label>
+                      <input
+                        id="totp-code"
+                        className="login-input"
+                        placeholder="123456 or XXXX-XXXX"
+                        autoComplete="one-time-code"
+                        value={totpCode}
+                        onChange={(event) => setTotpCode(event.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                    <button className="login-submit" type="submit" disabled={loading}>
+                      {loading ? <Loader2 size={18} className="animate-spin" /> : null}
+                      {loading ? 'Verifying…' : 'Verify & sign in'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setTotpChallenge(null); setTotpCode(''); setError(''); }}
+                      style={{ marginTop: 8, background: 'none', border: 'none', textDecoration: 'underline', fontSize: 12, cursor: 'pointer', color: '#0f2942' }}
+                    >
+                      Back to sign in
+                    </button>
+                  </form>
+                ) : (
                 <form className="login-form" onSubmit={handleLogin}>
                   <div className="login-field">
                     <label htmlFor="school-id">School ID or email</label>
@@ -1465,6 +1537,7 @@ export default function LandingPage({ onLogin }) {
                     {loading ? 'Signing in…' : 'Sign in'}
                   </button>
                 </form>
+                )}
 
                 <p className="login-consent">
                   By signing in, you agree that session, referral, and accreditation records are
