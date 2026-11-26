@@ -72,11 +72,19 @@ async function launchBrowser() {
 async function loginContext(browser, rolePlan) {
   const candidates = rolePlan.loginIds ?? [rolePlan.loginId];
   for (const loginId of candidates) {
-    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      reducedMotion: 'reduce',
+    });
     const res = await context.request.post(`${BASE}/api/auth/login`, {
       data: { loginId, password: PASSWORD },
     });
     if (res.status() !== 200) {
+      await context.close();
+      continue;
+    }
+    const loginBody = await res.json().catch(() => ({}));
+    if (!loginBody.user) {
       await context.close();
       continue;
     }
@@ -88,6 +96,13 @@ async function loginContext(browser, rolePlan) {
         continue;
       }
     }
+    const sessionPayload = JSON.stringify({
+      user: loginBody.user,
+      expiresAt: loginBody.sessionExpiresAt ?? (Date.now() + 48 * 60 * 60 * 1000),
+    });
+    await context.addInitScript((val) => {
+      localStorage.setItem('academix-user', val);
+    }, sessionPayload);
     return { context, loginId };
   }
   return null;
@@ -143,7 +158,9 @@ try {
   await pubPage.addInitScript(() => sessionStorage.setItem('academix-splash-seen', '1'));
   for (const vp of VIEWPORTS) {
     await pubPage.setViewportSize({ width: vp.width, height: vp.height });
-    await pubPage.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+    const nav = await pubPage.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+    if (!nav || nav.status() !== 200) throw new Error(`public / returned HTTP ${nav?.status()}`);
+    await pubPage.waitForSelector('#root > *', { timeout: 10000 });
     await pubPage.waitForTimeout(250);
     const res = await checkOverflow(pubPage);
     checks += 1;
@@ -172,8 +189,10 @@ try {
 
       for (const vp of VIEWPORTS) {
         await page.setViewportSize({ width: vp.width, height: vp.height });
-        await page.goto(`${BASE}${route}`, { waitUntil: 'networkidle' });
-        await page.waitForTimeout(300);
+        const nav = await page.goto(`${BASE}${route}`, { waitUntil: 'networkidle' });
+        if (!nav || nav.status() !== 200) throw new Error(`${routeId} returned HTTP ${nav?.status()}`);
+        await page.waitForSelector('#main-content', { state: 'visible', timeout: 10000 });
+        await page.waitForTimeout(350);
 
         const res = await checkOverflow(page);
         checks += 1;
