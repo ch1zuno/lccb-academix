@@ -57,9 +57,9 @@ function DocumentThumb({ item }) {
 export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty = null }) {
   if (!items.length) return empty;
   return (
-    <ul className="space-y-2">
+    <ul className="divide-y border-y border-line">
       {items.map((item) => (
-        <li key={item.id} className="flex items-center gap-3 border-2 border-ink bg-paper p-2.5">
+        <li key={item.id} className="flex items-center gap-3 py-2.5">
           <DocumentThumb item={item} />
           <div className="min-w-0 flex-1">
             <p className="line-clamp-2 text-[13px] font-bold leading-tight [overflow-wrap:anywhere] sm:truncate sm:leading-normal" title={item.name}>{item.name}</p>
@@ -73,9 +73,9 @@ export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty
             <button
               type="button"
               onClick={() => onOpen(item)}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1 border-2 border-ink bg-gold px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-gold/90"
+              className="inline-flex min-h-11 shrink-0 items-center gap-1 border-2 border-ink bg-gold px-3 py-1 text-[12px] font-bold uppercase tracking-[0.04em] hover:bg-accent lg:min-h-9"
             >
-              <ExternalLink className="h-3 w-3" /> Open
+              <ExternalLink className="h-3.5 w-3.5" /> Open
             </button>
           ) : null}
           {!item.busy && onDownload && item.doc && canPreviewFile(item.mime) ? (
@@ -83,7 +83,7 @@ export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty
               type="button"
               onClick={() => onDownload(item)}
               aria-label={`Download ${item.name}`}
-              className="hidden h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-surface-highlight sm:grid"
+              className="hidden min-h-11 min-w-11 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-surface-highlight sm:grid lg:h-9 lg:w-9 lg:min-h-0 lg:min-w-0"
             >
               <Download className="h-4 w-4" />
             </button>
@@ -92,9 +92,9 @@ export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty
             <button
               type="button"
               onClick={() => onDownload(item)}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1 border-2 border-ink bg-gold px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-gold/90"
+              className="inline-flex min-h-11 shrink-0 items-center gap-1 border-2 border-ink bg-gold px-3 py-1 text-[12px] font-bold uppercase tracking-[0.04em] hover:bg-accent lg:min-h-9"
             >
-              <Download className="h-3 w-3" /> Download
+              <Download className="h-3.5 w-3.5" /> Download
             </button>
           ) : null}
           {!item.busy && onRemove ? (
@@ -102,7 +102,7 @@ export function ApplicationFileList({ items, onRemove, onOpen, onDownload, empty
               type="button"
               onClick={() => onRemove(item.id)}
               aria-label={`Remove ${item.name}`}
-              className="grid h-9 w-9 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-surface-alert"
+              className="grid min-h-11 min-w-11 shrink-0 place-items-center border-2 border-ink bg-paper hover:bg-surface-alert lg:h-9 lg:w-9 lg:min-h-0 lg:min-w-0"
             >
               <X className="h-4 w-4" />
             </button>

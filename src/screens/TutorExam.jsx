@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import ApplicationDocumentPicker from '../components/ApplicationDocumentPicker';
+import LoadState from '../components/ui/LoadState';
 import { Check, Loader2, Trash2, Plus } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { useDraftState } from '../lib/ux';
+import { useDraftState, friendlyError } from '../lib/ux';
 import api from '../api';
 
 const nextFileId = () => (
@@ -108,13 +109,13 @@ export default function TutorExam({ showToast, user }) {
   if (status === 'verified') {
     return (
       <div className="mx-auto w-full max-w-[720px]">
-        <div className="panel border-t-8 border-t-gold p-6">
+        <div className="panel panel-pad border-t-4 border-t-gold">
           <span className="status-pill"><span className="status-dot bg-emerald" /> Verified</span>
-          <h1 className="mt-4 font-display text-[28px] font-extrabold leading-tight tracking-[-0.04em]">You are an accredited tutor.</h1>
+          <h1 className="mt-4 font-display text-[clamp(22px,6vw+2px,28px)] font-extrabold leading-tight tracking-[-0.03em]">You are an accredited tutor.</h1>
           <p className="mt-2 max-w-[56ch] text-[14px] text-muted-foreground">
             {user?.name} is verified{user?.certified_by_id ? ' — certification is on record.' : '.'} Your subjects are bookable and sessions can be checked in.
           </p>
-          <Button className="mt-5" onClick={() => nav('/dashboard')}>Go to overview</Button>
+          <Button className="mt-5 w-full sm:w-auto" onClick={() => nav('/dashboard')}>Go to overview</Button>
         </div>
       </div>
     );
@@ -123,8 +124,8 @@ export default function TutorExam({ showToast, user }) {
   if (status === 'not-learner') {
     return (
       <div className="mx-auto w-full max-w-[720px]">
-        <div className="panel border-t-8 border-t-gold p-6">
-          <h1 className="font-display text-[28px] font-extrabold leading-tight tracking-[-0.04em]">Students only</h1>
+        <div className="panel panel-pad border-t-4 border-t-gold">
+          <h1 className="font-display text-[clamp(22px,6vw+2px,28px)] font-extrabold leading-tight tracking-[-0.03em]">Students only</h1>
           <p className="mt-2 max-w-[56ch] text-[14px] text-muted-foreground">
             Only currently enrolled students can apply for tutor accreditation. Faculty and staff can manage approvals from the admin workspace.
           </p>
@@ -134,7 +135,11 @@ export default function TutorExam({ showToast, user }) {
   }
 
   if (status === 'loading') {
-    return <div className="panel empty">Reading your accreditation file…</div>;
+    return (
+      <div className="mx-auto w-full max-w-[860px]">
+        <LoadState loading />
+      </div>
+    );
   }
 
   return (
@@ -142,62 +147,72 @@ export default function TutorExam({ showToast, user }) {
       <div className="section-head">
         <div>
           <h1 className="section-title">Become a tutor</h1>
-          <p className="section-subtitle">Pick the subjects you can teach, attach proof files, and add academic notes. The exam opens next.</p>
+          <p className="section-subtitle">Pick subjects, attach proof, and apply. The exam opens next.</p>
         </div>
         <span className="border-2 border-ink bg-paper px-2 py-1 text-[13px] font-semibold text-ink">Application</span>
       </div>
 
-      {error && <div className="panel mb-4 px-5 py-4 text-[14px] text-crimson">{error}</div>}
+      {error && <div className="callout callout-alert mb-4 text-[14px] text-crimson">{friendlyError(error, "We couldn't check your application status. Try again.")}</div>}
 
-      <div className="panel p-6">
+      <div className="panel panel-pad sm:p-6">
         <h2 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Subjects you can tutor</h2>
         <p className="mt-1 text-[13px] text-muted-foreground">Choose at least one. You can add more after accreditation.</p>
 
-        {subjects === null && <p className="mt-4 text-[13px] text-muted-foreground">Reading the subject list…</p>}
-        {subjects !== null && subjects.length === 0 && <p className="mt-4 text-[13px] text-muted-foreground">No subjects are available right now.</p>}
-
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          {(subjects ?? []).map(subject => {
-            const selected = pickedSubjects.includes(subject.id);
-            return (
-              <label
-                key={subject.id}
-                className={cn(
-                  'flex cursor-pointer items-start gap-2.5 border-2 border-ink p-3 transition-[background-color,box-shadow]',
-                  selected ? 'bg-gold shadow-[3px_3px_0_var(--color-ink)]' : 'bg-paper hover:bg-surface-highlight',
-                )}
-              >
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={selected}
-                  onChange={(event) => setPickedSubjects(current => (
-                    event.target.checked ? [...current, subject.id] : current.filter(id => id !== subject.id)
-                  ))}
-                />
-                <span className={cn(
-                  'mt-0.5 grid h-5 w-5 shrink-0 place-items-center border-2 border-ink',
-                  selected ? 'bg-ink text-paper' : 'bg-paper',
-                )}>
-                  {selected && <Check className="h-2.5 w-2.5" strokeWidth={2.4} />}
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-[13px] font-bold text-ink">{subject.code}</span>
-                  <span className="mt-0.5 block truncate text-[13px] text-muted-foreground">{subject.name}</span>
-                </span>
-              </label>
-            );
-          })}
+        <div className="mt-4">
+          <LoadState
+            inline
+            loading={subjects === null}
+            empty={subjects !== null && subjects.length === 0}
+            emptyText="No subjects are available right now."
+            skeleton={(
+              <div className="grid gap-2 sm:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton h-16 w-full" />)}
+              </div>
+            )}
+          >
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(subjects ?? []).map(subject => {
+                const selected = pickedSubjects.includes(subject.id);
+                return (
+                  <label
+                    key={subject.id}
+                    className={cn(
+                      'flex min-h-[56px] cursor-pointer items-start gap-2.5 border-2 border-ink p-3 transition-[background-color,box-shadow]',
+                      selected ? 'bg-gold shadow-[var(--nb-shadow-sm)_var(--nb-shadow-sm)_0_var(--color-ink)]' : 'bg-paper hover:bg-surface-highlight',
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={selected}
+                      onChange={(event) => setPickedSubjects(current => (
+                        event.target.checked ? [...current, subject.id] : current.filter(id => id !== subject.id)
+                      ))}
+                    />
+                    <span className={cn(
+                      'mt-0.5 grid h-6 w-6 shrink-0 place-items-center border-2 border-ink',
+                      selected ? 'bg-ink text-paper' : 'bg-paper',
+                    )}>
+                      {selected && <Check className="h-3.5 w-3.5" strokeWidth={2.4} />}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-bold text-ink">{subject.code}</span>
+                      <span className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-muted-foreground">{subject.name}</span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </LoadState>
         </div>
 
-        <div className="mt-8 border-t-2 border-ink pt-6">
+        <div className="mt-6 border-t-2 border-ink pt-5 sm:mt-8 sm:pt-6">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Supporting files</h2>
             <span className="border-2 border-ink bg-gold px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em]">Required</span>
           </div>
           <p className="mt-1 max-w-[62ch] text-[13px] text-muted-foreground">
-            Upload proof of the academic record you are claiming — grade slips, honors certificates, or your registration form.
-            At least one file is required; the superadmin cannot approve the application without one.
+            Upload a grade slip, honors certificate, or registration form. The Academix program administrator needs at least one file before approving your application.
           </p>
 
           <ApplicationDocumentPicker
@@ -214,23 +229,23 @@ export default function TutorExam({ showToast, user }) {
           )}
         </div>
 
-        <div className="mt-8 border-t-2 border-ink pt-6">
+        <div className="mt-6 border-t-2 border-ink pt-5 sm:mt-8 sm:pt-6">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-display text-[20px] font-extrabold tracking-[-0.03em]">Academic record notes</h2>
             <span className="border-2 border-ink bg-paper px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Optional</span>
           </div>
           <p className="mt-1 max-w-[62ch] text-[13px] text-muted-foreground">
-            Short honors, leadership roles, or links the reviewer should know about. These are text notes, separate from the files above.
+            Add honors or roles (for example: &ldquo;Dean&apos;s Lister&rdquo;, &ldquo;GWA 1.45&rdquo;, or a drive link).
           </p>
 
           <div className="mt-4 space-y-3">
             {docs.map((doc, index) => (
-              <div key={index} className="border-2 border-ink bg-surface-quiet p-3">
+              <div key={index} className="callout space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="num grid h-6 w-6 shrink-0 place-items-center border-2 border-ink bg-gold text-[13px] font-bold text-ink">{index + 1}</span>
                   <Input
                     aria-label={`Note ${index + 1} title`}
-                    placeholder="Note title — e.g. Dean's Lister, 1st Sem AY 2025–2026"
+                    placeholder="Note title"
                     value={doc.title}
                     onChange={(event) => setDoc(index, 'title', event.target.value)}
                   />
@@ -246,16 +261,16 @@ export default function TutorExam({ showToast, user }) {
                     </Button>
                   )}
                 </div>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <div className="grid gap-2 sm:grid-cols-2">
                   <Input
                     aria-label={`Note ${index + 1} details`}
-                    placeholder="Details — e.g. GWA 1.45, certified copy on file"
+                    placeholder="Details (optional)"
                     value={doc.detail}
                     onChange={(event) => setDoc(index, 'detail', event.target.value)}
                   />
                   <Input
                     aria-label={`Note ${index + 1} optional link`}
-                    placeholder="Optional link — https://…"
+                    placeholder="Link (optional, https://…)"
                     value={doc.link}
                     onChange={(event) => setDoc(index, 'link', event.target.value)}
                   />
@@ -276,13 +291,13 @@ export default function TutorExam({ showToast, user }) {
           )}
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink pt-5">
+        <div className="action-bar mt-6 flex-col items-stretch sm:flex-row sm:items-center">
           <p className="text-[13px] text-muted-foreground">
             {pickedSubjects.length === 0
               ? 'Choose at least one subject to continue.'
               : staged.length === 0
                 ? 'Attach at least one supporting file to submit.'
-                : `${pickedSubjects.length} subject${pickedSubjects.length === 1 ? '' : 's'} selected · ${staged.length} file${staged.length === 1 ? '' : 's'} staged · ${docs.filter(doc => doc.title.trim()).length} note${docs.filter(doc => doc.title.trim()).length === 1 ? '' : 's'}`}
+                : `${pickedSubjects.length} subject${pickedSubjects.length === 1 ? '' : 's'} · ${staged.length} file${staged.length === 1 ? '' : 's'} · ${docs.filter(doc => doc.title.trim()).length} note${docs.filter(doc => doc.title.trim()).length === 1 ? '' : 's'}`}
           </p>
           <Button
             className="w-full sm:w-auto"
