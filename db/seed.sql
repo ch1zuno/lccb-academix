@@ -22,6 +22,17 @@ INSERT INTO subjects (code, name, department) VALUES
 ('FIL 102', 'Filipino sa Iba''t Ibang Disiplina', 'General'),
 ('STS 101', 'Science, Technology & Society', 'General');
 
+INSERT INTO campus_venues (name, building, room, capacity) VALUES
+('Library Study Room A', 'Main Library', 'Rm 101', 6),
+('Library Study Room B', 'Main Library', 'Rm 102', 6),
+('Learning Commons', 'Main Library', 'Ground Floor', 12),
+('IT Building Rm 204', 'IT Building', 'Rm 204', 8),
+('CS Lab 1', 'IT Building', 'Lab 1', 10),
+('CS Lab 3', 'IT Building', 'Lab 3', 10),
+('Study Hall A', 'Academic Wing', 'Hall A', 12),
+('Study Hall B', 'Academic Wing', 'Hall B', 12)
+ON CONFLICT (name) DO NOTHING;
+
 INSERT INTO users (custom_id, name, email, role, avatar, title, department, program, is_available, is_verified, bio, hourly_rate, password_hash)
 VALUES
 ('SA-001', 'Sir Lenuel Betita', 'l.betita.admin@lccbacolod.edu.ph', 'superadmin', '👨‍🏫', 'IT Department Head', NULL, NULL, true, true, NULL, NULL, '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu');

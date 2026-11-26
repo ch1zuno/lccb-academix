@@ -80,6 +80,20 @@ CREATE TABLE referrals (
 );
 CREATE TRIGGER set_updated_at_referrals BEFORE UPDATE ON referrals FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+CREATE TABLE campus_venues (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text UNIQUE NOT NULL CHECK (char_length(trim(name)) BETWEEN 2 AND 80),
+  building text NOT NULL DEFAULT '',
+  room text NOT NULL DEFAULT '',
+  capacity int NOT NULL DEFAULT 6 CHECK (capacity > 0 AND capacity <= 200),
+  is_active boolean NOT NULL DEFAULT true,
+  created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TRIGGER set_updated_at_campus_venues BEFORE UPDATE ON campus_venues FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE INDEX idx_campus_venues_active ON campus_venues(is_active, name);
+
 CREATE TABLE sessions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   session_code text UNIQUE,
@@ -98,6 +112,8 @@ CREATE TABLE sessions (
   notes text,
   referral_id uuid REFERENCES referrals(id) ON DELETE SET NULL,
   status session_status NOT NULL DEFAULT 'upcoming',
+  mode text NOT NULL DEFAULT 'online' CHECK (mode IN ('face_to_face', 'online')),
+  venue_id uuid REFERENCES campus_venues(id) ON DELETE SET NULL,
   location text NOT NULL,
   rating numeric CHECK (rating >= 1 AND rating <= 5),
   cancel_reason text,
@@ -345,6 +361,11 @@ CREATE UNIQUE INDEX uq_tutor_applications_one_pending
 CREATE UNIQUE INDEX uq_sessions_active_slot
   ON sessions(tutor_id, date, time)
   WHERE status IN ('upcoming', 'in-progress');
+CREATE UNIQUE INDEX uq_sessions_active_venue_slot
+  ON sessions(venue_id, date, time)
+  WHERE venue_id IS NOT NULL AND mode = 'face_to_face' AND status IN ('upcoming', 'in-progress');
+CREATE INDEX idx_sessions_mode ON sessions(mode);
+CREATE INDEX idx_sessions_venue_date ON sessions(venue_id, date) WHERE venue_id IS NOT NULL;
 CREATE INDEX idx_sessions_date_desc ON sessions(date DESC);
 CREATE INDEX idx_check_in_tokens_session_id ON check_in_tokens(session_id);
 CREATE INDEX idx_check_in_tokens_expires_at ON check_in_tokens(expires_at);
@@ -363,10 +384,18 @@ CREATE TABLE session_requests (
   topic text NOT NULL,
   preferred_date date NOT NULL,
   preferred_time text NOT NULL,
+  duration_hours numeric NOT NULL DEFAULT 1 CHECK (duration_hours IN (0.5, 1, 1.5, 2)),
+  mode text NOT NULL DEFAULT 'online' CHECK (mode IN ('face_to_face', 'online')),
+  venue_id uuid REFERENCES campus_venues(id) ON DELETE SET NULL,
   note text,
   location text NOT NULL,
+  proposed_date date,
+  proposed_time text,
+  proposed_venue_id uuid REFERENCES campus_venues(id) ON DELETE SET NULL,
+  proposed_location text,
+  proposal_note text,
   status text NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending','accepted','declined','cancelled')),
+    CHECK (status IN ('pending','counter_proposed','accepted','declined','cancelled')),
   session_id uuid REFERENCES sessions(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

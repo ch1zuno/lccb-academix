@@ -18,6 +18,7 @@ import messageRoutes from './messages.js';
 import usersRoutes from './users.js';
 import tasksRoutes from './tasks.js';
 import adminRoutes from './admin.js';
+import venuesRoutes from './venues.js';
 
 const router = Router();
 
@@ -57,5 +58,7 @@ router.use(tasksRoutes);
 router.use(auditRoutes);
 // superadmin governance & containment (suspend/reinstate tutors, revoke sessions)
 router.use(adminRoutes);
+// approved campus venues for Face-to-Face booking
+router.use(venuesRoutes);
 
 export default router;

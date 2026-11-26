@@ -7,6 +7,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const scripts = [
   'e2e-referrals.js',
   'e2e-matching.js',
+  'e2e-session-modes.js',
   'e2e-cancel.js',
   'e2e-messages.js',
   'e2e-tasks.js',

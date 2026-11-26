@@ -655,7 +655,7 @@ export default function App() {
                 <React.Suspense fallback={<div className="panel empty">Opening workspace…</div>}>
                   <Routes location={location} key={location.pathname}>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/wizard" element={gate('/wizard', <LearnerWizard showToast={showToast} />)} />
+                  <Route path="/wizard" element={gate('/wizard', <LearnerWizard user={user} showToast={showToast} />)} />
                   <Route path="/my-tutors" element={gate('/my-tutors', <MyTutors showToast={showToast} />)} />
                   <Route path="/dashboard" element={gate('/dashboard', <Dashboard role={role} user={user} showToast={showToast} />)} />
                   <Route path="/exam" element={gate('/exam', <TutorExam showToast={showToast} user={user} />)} />

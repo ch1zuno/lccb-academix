@@ -14,7 +14,15 @@ const SELECT_SQL = `
     c.name AS learner, c.custom_id AS learner_code, c.id AS learner_id,
     f.name AS faculty, f.id AS faculty_id,
     t.name AS assigned_tutor, t.id AS tutor_id,
-    s.code AS subject_code, s.name AS subject, s.department
+    s.code AS subject_code, s.name AS subject, s.department,
+    COALESCE(
+      (SELECT sess.mode FROM sessions sess
+        WHERE sess.referral_id = r.id AND sess.status <> 'cancelled'
+        ORDER BY sess.date DESC, sess.created_at DESC LIMIT 1),
+      (SELECT sess.mode FROM sessions sess
+        WHERE sess.learner_id = r.learner_id AND sess.subject_id = r.subject_id AND sess.status <> 'cancelled'
+        ORDER BY sess.date DESC, sess.created_at DESC LIMIT 1)
+    ) AS session_mode
   FROM referrals r
   JOIN users c ON c.id = r.learner_id
   JOIN users f ON f.id = r.faculty_id
@@ -88,14 +96,15 @@ router.get('/referrals/export.csv', requireAuth, requireRole('faculty', 'superad
       if (/^[=+\-@]/.test(text)) text = `'${text}`;
       return `"${text.replace(/"/g, '""')}"`;
     };
-    const header = ['Referral', 'Learner', 'Learner ID', 'Subject', 'Topic', 'Urgency', 'Status',
+    const formatMode = (m) => (m === 'face_to_face' ? 'Face to Face' : m === 'online' ? 'Online' : 'Not scheduled');
+    const header = ['Referral', 'Learner', 'Learner ID', 'Subject', 'Topic', 'Mode', 'Urgency', 'Status',
       'Date', 'Hours required', 'Hours remaining', 'Assigned tutor', 'Faculty', 'Notes'];
     const lines = [header.map(cell).join(',')];
     for (const row of rows) {
       lines.push([
         row.referral_code, row.learner, row.learner_code, row.subject_code, row.topic,
-        row.urgency, row.status, ymd(row.date), row.hours_required, row.hours_remaining,
-        row.assigned_tutor, row.faculty, row.notes,
+        formatMode(row.session_mode), row.urgency, row.status, ymd(row.date), row.hours_required,
+        row.hours_remaining, row.assigned_tutor, row.faculty, row.notes,
       ].map(cell).join(','));
     }
     await audit({

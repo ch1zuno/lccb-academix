@@ -4,30 +4,29 @@ import { requireAuth, requireRole, requireVerifiedTutor } from '../middleware/au
 import { httpError } from '../middleware/errors.js';
 import { audit, requestIp } from '../lib/audit.js';
 import { toPublicProfile } from '../lib/publicProfile.js';
+import {
+  ONLINE_LOCATION,
+  UUID_RE,
+  YMD_RE,
+  formatDurationLabel,
+  formatModeLabel,
+  parseDurationHours,
+  parseMode,
+  validateDateAndTime,
+  resolveApprovedVenue,
+  checkTutorAvailabilityWindow,
+  assertNoSlotConflicts,
+  computeTutorSlots,
+  timeToMinutes,
+} from '../lib/booking.js';
 
 const router = express.Router();
-
-const YMD_RE = /^\d{4}-\d{2}-\d{2}$/;
-const TIME_RE = /^(0?[1-9]|1[0-2]):[0-5]\d\s?(AM|PM)$/i;
-
-function timeToMinutes(value) {
-  const match = TIME_RE.exec(String(value ?? '').trim());
-  if (!match) return null;
-  let hour = Number(match[1]) % 12;
-  if (/PM/i.test(match[2])) hour += 12;
-  return hour * 60 + Number(String(value).match(/:(\d{2})/)[1]);
-}
-const todayYmd = () => {
-  const d = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-};
 
 const TUTOR_SQL = (roleLiteral, orderClause) => `
   SELECT u.id, u.custom_id, u.name, u.role, u.title, u.department, u.program, u.avatar, u.bio, u.is_available,
          u.hourly_rate, u.certified_by_id,
          COALESCE(
-           (SELECT json_agg(json_build_object('code', s.code, 'name', s.name, 'department', s.department))
+           (SELECT json_agg(json_build_object('id', s.id, 'code', s.code, 'name', s.name, 'department', s.department))
             FROM user_subjects us JOIN subjects s ON s.id = us.subject_id
             WHERE us.user_id = u.id), '[]') AS subjects,
          COALESCE(
@@ -41,7 +40,7 @@ const TUTOR_SQL = (roleLiteral, orderClause) => `
            '{"sessions": 0, "rating": 5.0}') AS stats,
          (SELECT COALESCE(SUM(amount), 0) FROM points_ledger l WHERE l.user_id = u.id) AS points
   FROM users u
-  WHERE u.role = '${roleLiteral}' ${orderClause}`;
+  WHERE u.role = '${roleLiteral}' AND u.suspended_at IS NULL ${orderClause}`;
 
 /** GET /tutors?subject=PROG+201&available=1&role=tutor|faculty&q=mark — live tutor/faculty directory for the wizard */
 router.get('/tutors', requireAuth, async (req, res, next) => {
@@ -61,11 +60,40 @@ router.get('/tutors', requireAuth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+/** GET /tutors/:id/slots?date=YYYY-MM-DD&durationHours=1&mode=online|face_to_face&venueId=... */
+router.get('/tutors/:id/slots', requireAuth, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const isUuid = UUID_RE.test(String(id));
+    const { rows } = await query(
+      `SELECT id FROM users WHERE ${isUuid ? 'id = $1' : 'custom_id = $1'} AND role IN ('tutor', 'faculty') AND is_verified AND suspended_at IS NULL`,
+      [id],
+    );
+    if (!rows[0]) throw httpError(404, 'Tutor not found');
+
+    const dateYmd = String(req.query.date ?? '').trim();
+    if (!YMD_RE.test(dateYmd)) throw httpError(400, 'date query parameter must be YYYY-MM-DD');
+
+    const mode = req.query.mode ? parseMode(req.query.mode) : 'online';
+    const durationHours = parseDurationHours(req.query.durationHours, { defaultHours: 1 });
+    const venueId = req.query.venueId ? String(req.query.venueId).trim() : null;
+    const excludeSessionId = req.query.excludeSessionId && UUID_RE.test(String(req.query.excludeSessionId))
+      ? String(req.query.excludeSessionId)
+      : null;
+
+    const slots = await computeTutorSlots(
+      { query },
+      { tutorId: rows[0].id, dateYmd, durationHours, mode, venueId, excludeSessionId },
+    );
+    res.json({ date: dateYmd, durationHours, mode, slots });
+  } catch (e) { next(e); }
+});
+
 /** GET /tutors/:id — public-safe profile for an accredited tutor or faculty specialist */
 router.get('/tutors/:id', requireAuth, async (req, res, next) => {
   try {
     const { id } = req.params;
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id));
+    const isUuid = UUID_RE.test(String(id));
 
     const userResult = await query(
       `SELECT u.id, u.custom_id, u.name, u.role, u.title, u.bio, u.avatar, u.program, u.department,
@@ -73,31 +101,27 @@ router.get('/tutors/:id', requireAuth, async (req, res, next) => {
               EXISTS(SELECT 1 FROM user_avatars ua WHERE ua.user_id = u.id) AS has_avatar
        FROM users u
        WHERE ${isUuid ? 'u.id = $1' : 'u.custom_id = $1'} AND u.role IN ('tutor', 'faculty')`,
-      [id]
+      [id],
     );
 
     const user = userResult.rows[0];
-    if (!user) {
-      throw httpError(404, 'Tutor not found');
-    }
+    if (!user) throw httpError(404, 'Tutor not found');
 
-    // Real computed completed sessions count only
     const statsResult = await query(
       `SELECT count(*)::int AS completed_sessions
        FROM sessions
        WHERE (tutor_id = $1 OR faculty_id = $1) AND status = 'completed'`,
-      [user.id]
+      [user.id],
     );
     const stats = { completed_sessions: statsResult.rows[0]?.completed_sessions || 0 };
 
-    // Taught subjects
     const subjectsResult = await query(
       `SELECT s.id, s.code, s.name, s.department
        FROM user_subjects us
        JOIN subjects s ON s.id = us.subject_id
        WHERE us.user_id = $1
        ORDER BY s.code`,
-      [user.id]
+      [user.id],
     );
 
     const publicProfile = toPublicProfile(user, subjectsResult.rows, stats);
@@ -106,9 +130,7 @@ router.get('/tutors/:id', requireAuth, async (req, res, next) => {
       tutorId: user.id,
       customId: user.custom_id,
     });
-  } catch (e) {
-    next(e);
-  }
+  } catch (e) { next(e); }
 });
 
 /** GET /subjects — subject list for the wizard dropdowns */
@@ -168,12 +190,10 @@ router.get('/learners/my-tutors', requireAuth, requireRole('learner'), async (re
          JOIN learner_sessions ls ON ls.tutor_id = ts.tutor_id AND ls.rn = 1
          JOIN users u ON u.id = ts.tutor_id
         ORDER BY ts.last_session_date DESC, ts.total_sessions DESC`,
-      [req.user.id]
+      [req.user.id],
     );
     res.json({ tutors: rows });
-  } catch (e) {
-    next(e);
-  }
+  } catch (e) { next(e); }
 });
 
 /** PATCH /tutors/me/availability — verified tutor pauses or resumes new requests. */
@@ -184,7 +204,9 @@ router.patch('/tutors/me/availability', requireAuth, requireVerifiedTutor(), asy
     const { rows } = await query(
       `UPDATE users SET is_available = $2
         WHERE id = $1 AND role = 'tutor'
-        RETURNING id, is_available`, [req.user.id, available]);
+        RETURNING id, is_available`,
+      [req.user.id, available],
+    );
     if (!rows[0]) throw httpError(404, 'Tutor profile not found');
     await audit({
       actorId: req.user.id,
@@ -202,52 +224,111 @@ router.patch('/tutors/me/availability', requireAuth, requireVerifiedTutor(), asy
 /** POST /session-requests — learner books a session request; tutor is notified. */
 router.post('/session-requests', requireAuth, requireRole('learner'), async (req, res, next) => {
   try {
-    const { tutorId, subjectId, topic, preferredDate, preferredTime, note = null, location = 'Library Study Room A' } = req.body ?? {};
+    const {
+      tutorId,
+      subjectId,
+      topic,
+      preferredDate,
+      preferredTime,
+      durationHours: rawDuration,
+      mode: rawMode,
+      venueId,
+      note = null,
+    } = req.body ?? {};
+
     if (!tutorId || !subjectId || !topic || !preferredDate || !preferredTime) {
       throw httpError(400, 'tutorId, subjectId, topic, preferredDate and preferredTime are required');
     }
-    const date = String(preferredDate);
-    if (!YMD_RE.test(date)) throw httpError(400, 'preferredDate must be YYYY-MM-DD');
-    if (date < todayYmd()) throw httpError(400, 'preferredDate cannot be in the past');
-    if (!TIME_RE.test(String(preferredTime).trim())) {
-      throw httpError(400, 'preferredTime must look like 3:30 PM');
-    }
-    // tutor must actually teach that subject and still be verified/available
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(tutorId));
+
+    const mode = parseMode(rawMode, { defaultOnline: true });
+    const durationHours = parseDurationHours(rawDuration, { defaultHours: 1 });
+    const { date, time, startMinutes } = validateDateAndTime(preferredDate, preferredTime);
+
+    const isUuid = UUID_RE.test(String(tutorId));
     const { rows: ok } = await query(
-      `SELECT u.id FROM user_subjects us JOIN users u ON u.id = us.user_id
-        WHERE ${isUuid ? 'us.user_id = $1' : 'u.custom_id = $1'} AND us.subject_id = $2 AND u.is_verified AND u.is_available`, [tutorId, subjectId]);
+      `SELECT u.id, u.name FROM user_subjects us JOIN users u ON u.id = us.user_id
+        WHERE ${isUuid ? 'us.user_id = $1' : 'u.custom_id = $1'}
+          AND us.subject_id = $2
+          AND u.role IN ('tutor', 'faculty')
+          AND u.is_verified = true
+          AND u.is_available = true
+          AND u.suspended_at IS NULL`,
+      [tutorId, subjectId],
+    );
     if (!ok[0]) throw httpError(409, 'That tutor is not accredited or available for this subject');
     const resolvedTutorId = ok[0].id;
+    if (resolvedTutorId === req.user.id) {
+      throw httpError(400, 'You cannot book a tutoring session with yourself');
+    }
+
+    const avail = await checkTutorAvailabilityWindow({ query }, resolvedTutorId, date, startMinutes, durationHours);
+    if (!avail.ok) throw httpError(409, avail.reason);
+
+    let resolvedVenueId = null;
+    let canonicalLocation = ONLINE_LOCATION;
+    if (mode === 'face_to_face') {
+      const venue = await resolveApprovedVenue({ query }, venueId);
+      resolvedVenueId = venue.id;
+      canonicalLocation = venue.name;
+    }
+
+    const cleanTopic = String(topic).trim().slice(0, 120);
+    if (!cleanTopic) throw httpError(400, 'topic cannot be empty');
+    const cleanNote = note ? String(note).trim().slice(0, 300) : null;
 
     const { rows } = await query(
-      `INSERT INTO session_requests (learner_id, tutor_id, subject_id, topic, preferred_date, preferred_time, note, location)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, status`,
-      [req.user.id, resolvedTutorId, subjectId, String(topic).slice(0, 120), date, String(preferredTime).slice(0, 20),
-        note ? String(note).slice(0, 300) : null, String(location).slice(0, 80)],
+      `INSERT INTO session_requests
+         (learner_id, tutor_id, subject_id, topic, preferred_date, preferred_time, duration_hours, mode, venue_id, note, location)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+       RETURNING id, status, mode, venue_id, location, preferred_date, preferred_time, duration_hours`,
+      [
+        req.user.id,
+        resolvedTutorId,
+        subjectId,
+        cleanTopic,
+        date,
+        time,
+        durationHours,
+        mode,
+        resolvedVenueId,
+        cleanNote,
+        canonicalLocation,
+      ],
     );
+
+    const modeLabel = formatModeLabel(mode);
     await query(
       `INSERT INTO notifications (user_id, title, message, type)
-       SELECT $1, 'New session request', 'Request from ' || $2 || ' — subject ' || s.name, 'info'
-       FROM subjects s WHERE s.id = $3`,
-      [resolvedTutorId, req.user.name, subjectId]).catch(() => {});
+       SELECT $1, $2, $3 || s.name || ' on ' || $4 || ' at ' || $5 || ' (' || $6 || ')', 'info'
+       FROM subjects s WHERE s.id = $7`,
+      [
+        resolvedTutorId,
+        `New ${modeLabel} session request`,
+        `${req.user.name} requested a ${modeLabel} session for `,
+        date,
+        time,
+        canonicalLocation,
+        subjectId,
+      ],
+    ).catch(() => {});
+
     await audit({
       actorId: req.user.id,
       actorRole: req.user.role,
       action: 'session.request',
       entity: 'session_request',
       entityId: rows[0].id,
-      detail: { tutorId: resolvedTutorId, subjectId, date, time: preferredTime },
+      detail: { tutorId: resolvedTutorId, subjectId, mode, venueId: resolvedVenueId, date, time, durationHours },
       ip: requestIp(req),
     });
     res.status(201).json({ request: rows[0] });
   } catch (e) {
-    if (e.code === '23503') { e.status = 400; e.message = 'Unknown tutor or subject'; }
+    if (e.code === '23503') { e.status = 400; e.message = 'Unknown tutor, subject, or venue'; }
     next(e);
   }
 });
 
-/** GET /session-requests — tutor/faculty sees own pending; learner sees own history */
+/** GET /session-requests — tutor/faculty sees own; learner sees own history */
 router.get('/session-requests', requireAuth, async (req, res, next) => {
   try {
     const col = req.user.role === 'learner' ? 'sr.learner_id' : (req.user.role === 'tutor' || req.user.role === 'faculty') ? 'sr.tutor_id' : null;
@@ -258,11 +339,15 @@ router.get('/session-requests', requireAuth, async (req, res, next) => {
 
     let sql = `SELECT sr.*, u.custom_id AS tutor_custom_id, t.custom_id AS learner_custom_id,
                       u.name AS tutor_name, t.name AS learner_name, s.name AS subject, s.code AS subject_code,
+                      v.name AS venue_name, v.building AS venue_building, v.room AS venue_room,
+                      pv.name AS proposed_venue_name, pv.building AS proposed_venue_building, pv.room AS proposed_venue_room,
                       count(*) OVER()::int AS total_count
                FROM session_requests sr
                JOIN users u ON u.id = sr.tutor_id
                JOIN users t ON t.id = sr.learner_id
                JOIN subjects s ON s.id = sr.subject_id
+               LEFT JOIN campus_venues v ON v.id = sr.venue_id
+               LEFT JOIN campus_venues pv ON pv.id = sr.proposed_venue_id
                WHERE ${col} = $1
                ORDER BY sr.created_at DESC`;
     const params = [req.user.id];
@@ -283,66 +368,87 @@ router.get('/session-requests', requireAuth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-/** POST /session-requests/:id/accept — creates a real session from the request. */
+/** POST /session-requests/:id/accept — creates a real session from a pending request. */
 router.post('/session-requests/:id/accept', requireAuth, requireVerifiedTutor({ allowFaculty: true }), async (req, res, next) => {
   try {
     const created = await withTransaction(async (client) => {
       const { rows: reqRows } = await client.query(
-        `SELECT sr.*, s.name AS subject_name FROM session_requests sr JOIN subjects s ON s.id = sr.subject_id
-         WHERE sr.id = $1 AND sr.tutor_id = $2 FOR UPDATE`,
-        [req.params.id, req.user.id]);
+        `SELECT sr.*, s.name AS subject_name
+           FROM session_requests sr
+           JOIN subjects s ON s.id = sr.subject_id
+          WHERE sr.id = $1 AND sr.tutor_id = $2 FOR UPDATE`,
+        [req.params.id, req.user.id],
+      );
       const run = reqRows[0];
       if (!run) throw httpError(404, 'Request not found or not addressed to you');
       if (run.status !== 'pending') throw httpError(409, `Request already ${run.status}`);
 
-      // Serialize accepts per tutor/day so two overlapping (not just identical)
-      // slots cannot slip past the overlap check at the same time.
-      await client.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, [
-        `session-slot:${run.tutor_id}:${run.preferred_date}`,
-      ]);
+      const mode = run.mode || 'online';
+      const durationHours = Number(run.duration_hours) || 1;
+      const dateStr = run.preferred_date instanceof Date
+        ? run.preferred_date.toISOString().slice(0, 10)
+        : String(run.preferred_date).slice(0, 10);
+      const startMinutes = timeToMinutes(run.preferred_time);
 
-      // Friendly check first; uq_sessions_active_slot is the exact-slot guard.
-      const busy = await client.query(
-        `SELECT 1 FROM sessions
-          WHERE tutor_id = $1 AND date = $2 AND time = $3 AND status IN ('upcoming','in-progress')`,
-        [run.tutor_id, run.preferred_date, run.preferred_time]);
-      if (busy.rows[0]) throw httpError(409, 'That tutor already has a session at this date and time');
+      let venueId = null;
+      let location = ONLINE_LOCATION;
+      if (mode === 'face_to_face') {
+        const venue = await resolveApprovedVenue(client, run.venue_id);
+        venueId = venue.id;
+        location = venue.name;
+      }
 
-      const requestedStart = timeToMinutes(run.preferred_time);
-      if (requestedStart != null) {
-        const { rows: sameDay } = await client.query(
-          `SELECT time, COALESCE(duration_hours, 1) AS duration_hours FROM sessions
-            WHERE tutor_id = $1 AND date = $2 AND status IN ('upcoming','in-progress')`,
-          [run.tutor_id, run.preferred_date]);
-        const requestedEnd = requestedStart + 60;
-        const clash = sameDay.find((session) => {
-          const start = timeToMinutes(session.time);
-          if (start == null) return false;
-          const end = start + Math.max(0.5, Number(session.duration_hours) || 1) * 60;
-          return requestedStart < end && start < requestedEnd;
+      if (startMinutes != null) {
+        await assertNoSlotConflicts(client, {
+          tutorId: run.tutor_id,
+          venueId,
+          mode,
+          date: dateStr,
+          startMinutes,
+          durationHours,
         });
-        if (clash) throw httpError(409, 'That tutor already has a session overlapping this time');
       }
 
       const sessionCode = `SES-${String(Date.now()).slice(-6)}`;
       const { rows } = await client.query(
-        `INSERT INTO sessions (session_code, tutor_id, learner_id, subject_id, topic, date, time, duration, duration_hours, status, location)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,'1 hr',1,'upcoming',$8) RETURNING *`,
-        [sessionCode, run.tutor_id, run.learner_id, run.subject_id, run.topic, run.preferred_date, run.preferred_time, run.location],
+        `INSERT INTO sessions
+           (session_code, tutor_id, learner_id, subject_id, topic, date, time, duration, duration_hours, status, mode, venue_id, location)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'upcoming',$10,$11,$12) RETURNING *`,
+        [
+          sessionCode,
+          run.tutor_id,
+          run.learner_id,
+          run.subject_id,
+          run.topic,
+          dateStr,
+          run.preferred_time,
+          formatDurationLabel(durationHours),
+          durationHours,
+          mode,
+          venueId,
+          location,
+        ],
       );
       await client.query(
         `UPDATE session_requests SET status = 'accepted', session_id = $1 WHERE id = $2`,
-        [rows[0].id, req.params.id]);
+        [rows[0].id, req.params.id],
+      );
+      const modeLabel = formatModeLabel(mode);
       await client.query(
-        `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, 'Request accepted', $2, 'success')`,
-        [run.learner_id, `${req.user.name} accepted your session request — ${run.subject_name} on ${run.preferred_date}`]);
+        `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, $2, $3, 'success')`,
+        [
+          run.learner_id,
+          `${modeLabel} request accepted`,
+          `${req.user.name} accepted your ${modeLabel} session — ${run.subject_name} on ${dateStr} at ${run.preferred_time} (${location}).`,
+        ],
+      );
       await audit({
         actorId: req.user.id,
         actorRole: req.user.role,
         action: 'session.accept_request',
         entity: 'session',
         entityId: rows[0].id,
-        detail: { requestId: run.id, learnerId: run.learner_id, date: run.preferred_date, time: run.preferred_time },
+        detail: { requestId: run.id, learnerId: run.learner_id, mode, venueId, date: dateStr, time: run.preferred_time },
         ip: requestIp(req),
       }, client);
       return rows[0];
@@ -351,7 +457,214 @@ router.post('/session-requests/:id/accept', requireAuth, requireVerifiedTutor({ 
   } catch (e) {
     if (e.code === '23505') {
       e.status = 409;
-      e.message = 'That tutor already has a session at this date and time';
+      e.message = /venue/i.test(e.constraint || '')
+        ? 'That campus venue is already booked at this date and time'
+        : 'That tutor already has a session at this date and time';
+    }
+    next(e);
+  }
+});
+
+/**
+ * POST /session-requests/:id/propose — tutor proposes another approved venue (f2f)
+ * and/or another date/time on a pending request; learner gets notified to confirm.
+ */
+router.post('/session-requests/:id/propose', requireAuth, requireVerifiedTutor({ allowFaculty: true }), async (req, res, next) => {
+  try {
+    const updated = await withTransaction(async (client) => {
+      const { rows: reqRows } = await client.query(
+        `SELECT sr.*, s.name AS subject_name
+           FROM session_requests sr
+           JOIN subjects s ON s.id = sr.subject_id
+          WHERE sr.id = $1 AND sr.tutor_id = $2 FOR UPDATE`,
+        [req.params.id, req.user.id],
+      );
+      const run = reqRows[0];
+      if (!run) throw httpError(404, 'Request not found or not addressed to you');
+      if (!['pending', 'counter_proposed'].includes(run.status)) {
+        throw httpError(409, `Cannot propose changes on a ${run.status} request`);
+      }
+
+      const mode = run.mode || 'online';
+      const durationHours = Number(run.duration_hours) || 1;
+      const curDate = run.preferred_date instanceof Date
+        ? run.preferred_date.toISOString().slice(0, 10)
+        : String(run.preferred_date).slice(0, 10);
+
+      const { date: propDate, time: propTime, startMinutes } = validateDateAndTime(
+        req.body?.proposedDate ?? curDate,
+        req.body?.proposedTime ?? run.preferred_time,
+      );
+
+      let propVenueId = null;
+      let propLocation = ONLINE_LOCATION;
+      if (mode === 'face_to_face') {
+        const targetVenueId = req.body?.proposedVenueId ?? run.venue_id;
+        const venue = await resolveApprovedVenue(client, targetVenueId);
+        propVenueId = venue.id;
+        propLocation = venue.name;
+      }
+
+      const sameDate = propDate === curDate;
+      const sameTime = propTime === run.preferred_time;
+      const sameVenue = mode === 'online' || propVenueId === run.venue_id;
+      if (sameDate && sameTime && sameVenue) {
+        throw httpError(400, 'Propose a different date, time, or campus venue — or accept the original request');
+      }
+
+      const avail = await checkTutorAvailabilityWindow(client, run.tutor_id, propDate, startMinutes, durationHours);
+      if (!avail.ok) throw httpError(409, avail.reason);
+
+      await assertNoSlotConflicts(client, {
+        tutorId: run.tutor_id,
+        venueId: propVenueId,
+        mode,
+        date: propDate,
+        startMinutes,
+        durationHours,
+      });
+
+      const proposalNote = req.body?.note ? String(req.body.note).trim().slice(0, 240) : null;
+      const { rows } = await client.query(
+        `UPDATE session_requests
+            SET status = 'counter_proposed',
+                proposed_date = $1,
+                proposed_time = $2,
+                proposed_venue_id = $3,
+                proposed_location = $4,
+                proposal_note = $5
+          WHERE id = $6
+          RETURNING id, status, mode, proposed_date, proposed_time, proposed_venue_id, proposed_location, proposal_note`,
+        [propDate, propTime, propVenueId, propLocation, proposalNote, run.id],
+      );
+
+      const modeLabel = formatModeLabel(mode);
+      await client.query(
+        `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, $2, $3, 'info')`,
+        [
+          run.learner_id,
+          `New ${mode === 'face_to_face' ? 'venue or time' : 'time'} proposed`,
+          `${req.user.name} proposed ${propDate} at ${propTime} (${propLocation}) for your ${modeLabel} ${run.subject_name} session.${proposalNote ? ` Note: "${proposalNote}"` : ''}`,
+        ],
+      );
+      await audit({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        action: 'session.propose_change',
+        entity: 'session_request',
+        entityId: run.id,
+        detail: { mode, proposedDate: propDate, proposedTime: propTime, proposedVenueId: propVenueId },
+        ip: requestIp(req),
+      }, client);
+      return rows[0];
+    });
+    res.json({ request: updated });
+  } catch (e) { next(e); }
+});
+
+/**
+ * POST /session-requests/:id/accept-proposal — learner accepts tutor's proposed
+ * venue/time, atomically creating the confirmed session with the agreed details.
+ */
+router.post('/session-requests/:id/accept-proposal', requireAuth, requireRole('learner'), async (req, res, next) => {
+  try {
+    const created = await withTransaction(async (client) => {
+      const { rows: reqRows } = await client.query(
+        `SELECT sr.*, s.name AS subject_name
+           FROM session_requests sr
+           JOIN subjects s ON s.id = sr.subject_id
+          WHERE sr.id = $1 AND sr.learner_id = $2 FOR UPDATE`,
+        [req.params.id, req.user.id],
+      );
+      const run = reqRows[0];
+      if (!run) throw httpError(404, 'Request not found');
+      if (run.status !== 'counter_proposed') {
+        throw httpError(409, `No pending proposal to accept (currently ${run.status})`);
+      }
+
+      const mode = run.mode || 'online';
+      const durationHours = Number(run.duration_hours) || 1;
+      const rawDate = run.proposed_date || run.preferred_date;
+      const dateStr = rawDate instanceof Date ? rawDate.toISOString().slice(0, 10) : String(rawDate).slice(0, 10);
+      const finalTime = run.proposed_time || run.preferred_time;
+      const { date, time, startMinutes } = validateDateAndTime(dateStr, finalTime);
+
+      let venueId = null;
+      let location = ONLINE_LOCATION;
+      if (mode === 'face_to_face') {
+        const venue = await resolveApprovedVenue(client, run.proposed_venue_id || run.venue_id);
+        venueId = venue.id;
+        location = venue.name;
+      }
+
+      await assertNoSlotConflicts(client, {
+        tutorId: run.tutor_id,
+        venueId,
+        mode,
+        date,
+        startMinutes,
+        durationHours,
+      });
+
+      const sessionCode = `SES-${String(Date.now()).slice(-6)}`;
+      const { rows } = await client.query(
+        `INSERT INTO sessions
+           (session_code, tutor_id, learner_id, subject_id, topic, date, time, duration, duration_hours, status, mode, venue_id, location)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'upcoming',$10,$11,$12) RETURNING *`,
+        [
+          sessionCode,
+          run.tutor_id,
+          run.learner_id,
+          run.subject_id,
+          run.topic,
+          date,
+          time,
+          formatDurationLabel(durationHours),
+          durationHours,
+          mode,
+          venueId,
+          location,
+        ],
+      );
+      await client.query(
+        `UPDATE session_requests
+            SET status = 'accepted',
+                preferred_date = $1,
+                preferred_time = $2,
+                venue_id = $3,
+                location = $4,
+                session_id = $5
+          WHERE id = $6`,
+        [date, time, venueId, location, rows[0].id, run.id],
+      );
+
+      const modeLabel = formatModeLabel(mode);
+      await client.query(
+        `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, $2, $3, 'success')`,
+        [
+          run.tutor_id,
+          `${modeLabel} proposal confirmed`,
+          `${req.user.name} confirmed your proposed ${modeLabel} session — ${run.subject_name} on ${date} at ${time} (${location}).`,
+        ],
+      );
+      await audit({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        action: 'session.accept_proposal',
+        entity: 'session',
+        entityId: rows[0].id,
+        detail: { requestId: run.id, mode, venueId, date, time },
+        ip: requestIp(req),
+      }, client);
+      return rows[0];
+    });
+    res.status(201).json({ session: created });
+  } catch (e) {
+    if (e.code === '23505') {
+      e.status = 409;
+      e.message = /venue/i.test(e.constraint || '')
+        ? 'That campus venue was just booked by someone else. Please request another slot.'
+        : 'That tutor slot was just booked. Please request another time.';
     }
     next(e);
   }
@@ -361,49 +674,64 @@ router.post('/session-requests/:id/accept', requireAuth, requireVerifiedTutor({ 
 router.post('/session-requests/:id/decline', requireAuth, requireVerifiedTutor({ allowFaculty: true }), async (req, res, next) => {
   try {
     const { rows } = await query(
-      `UPDATE session_requests SET status = 'declined' WHERE id = $1 AND tutor_id = $2 AND status = 'pending' RETURNING id, status`,
-      [req.params.id, req.user.id]);
+      `UPDATE session_requests SET status = 'declined'
+        WHERE id = $1 AND tutor_id = $2 AND status IN ('pending', 'counter_proposed')
+        RETURNING id, status, learner_id, subject_id, mode, preferred_date, preferred_time`,
+      [req.params.id, req.user.id],
+    );
     if (!rows[0]) throw httpError(404, 'No pending request addressed to you');
+    const run = rows[0];
+    const modeLabel = formatModeLabel(run.mode);
+    await query(
+      `INSERT INTO notifications (user_id, title, message, type)
+       SELECT $1, 'Session request declined', $2 || ' declined your ' || $3 || ' request for ' || s.name || '.', 'warning'
+       FROM subjects s WHERE s.id = $4`,
+      [run.learner_id, req.user.name, modeLabel, run.subject_id],
+    ).catch(() => {});
     await audit({
       actorId: req.user.id,
       actorRole: req.user.role,
       action: 'session.decline_request',
       entity: 'session_request',
-      entityId: rows[0].id,
+      entityId: run.id,
       ip: requestIp(req),
     });
-    res.json({ request: rows[0] });
+    res.json({ request: { id: run.id, status: run.status } });
   } catch (e) { next(e); }
 });
 
-/** POST /session-requests/:id/cancel — learner withdraws their own pending request. */
+/** POST /session-requests/:id/cancel — learner withdraws their own pending or proposed request. */
 router.post('/session-requests/:id/cancel', requireAuth, requireRole('learner'), async (req, res, next) => {
   try {
     const { rows } = await query(
       `UPDATE session_requests SET status = 'cancelled'
-        WHERE id = $1 AND learner_id = $2 AND status = 'pending'
-        RETURNING id, tutor_id, subject_id, preferred_date, preferred_time`,
-      [req.params.id, req.user.id]);
+        WHERE id = $1 AND learner_id = $2 AND status IN ('pending', 'counter_proposed')
+        RETURNING id, tutor_id, subject_id, mode, preferred_date, preferred_time`,
+      [req.params.id, req.user.id],
+    );
     if (!rows[0]) {
       const { rows: existing } = await query(
         `SELECT status FROM session_requests WHERE id = $1 AND learner_id = $2`,
-        [req.params.id, req.user.id]);
+        [req.params.id, req.user.id],
+      );
       if (!existing[0]) throw httpError(404, 'Request not found');
       throw httpError(409, `Only a pending request can be cancelled (currently ${existing[0].status})`);
     }
     const run = rows[0];
+    const modeLabel = formatModeLabel(run.mode);
     await query(
       `INSERT INTO notifications (user_id, title, message, type)
-       SELECT $1, 'Session request withdrawn', $2 || ' withdrew a request for ' || s.name || ' on ' || $3, 'warning'
-       FROM subjects s WHERE s.id = $4`,
-      [run.tutor_id, req.user.name, run.preferred_date, run.subject_id]).catch(() => {});
+       SELECT $1, 'Session request withdrawn', $2 || ' withdrew a ' || $3 || ' request for ' || s.name || ' on ' || $4, 'warning'
+       FROM subjects s WHERE s.id = $5`,
+      [run.tutor_id, req.user.name, modeLabel, run.preferred_date, run.subject_id],
+    ).catch(() => {});
     await audit({
       actorId: req.user.id,
       actorRole: req.user.role,
       action: 'session.cancel_request',
       entity: 'session_request',
       entityId: run.id,
-      detail: { tutorId: run.tutor_id, date: run.preferred_date, time: run.preferred_time },
+      detail: { tutorId: run.tutor_id, mode: run.mode, date: run.preferred_date, time: run.preferred_time },
       ip: requestIp(req),
     });
     res.json({ request: { id: run.id, status: 'cancelled' } });

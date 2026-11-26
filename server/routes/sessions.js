@@ -5,7 +5,17 @@ import { query, withTransaction } from '../db.js';
 import { requireAuth, requireRole, requireVerifiedTutor } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { config } from '../config.js';
-import { audit } from '../lib/audit.js';
+import { audit, requestIp } from '../lib/audit.js';
+import {
+  ONLINE_LOCATION,
+  formatDurationLabel,
+  formatModeLabel,
+  parseDurationHours,
+  validateDateAndTime,
+  resolveApprovedVenue,
+  checkTutorAvailabilityWindow,
+  assertNoSlotConflicts,
+} from '../lib/booking.js';
 
 const router = express.Router();
 
@@ -57,7 +67,9 @@ router.get('/sessions/mine', requireAuth, async (req, res, next) => {
 
     const [sessionsResult, subjectsResult] = await Promise.all([
       query(
-        `SELECT s.id, s.session_code, s.topic, s.date, s.time, s.duration, s.duration_hours, s.status, s.location,
+        `SELECT s.id, s.session_code, s.topic, s.date, s.time, s.duration, s.duration_hours, s.status,
+                s.mode, s.venue_id, s.location,
+                v.name AS venue_name, v.building AS venue_building, v.room AS venue_room,
                 s.started_at, s.ended_at, s.actual_duration_seconds,
                 s.tutor_id, s.learner_id, u1.custom_id AS tutor_custom_id, u2.custom_id AS learner_custom_id,
                 u1.name AS tutor_name, u2.name AS learner_name, sub.name AS subject, sub.code AS subject_code,
@@ -82,6 +94,7 @@ router.get('/sessions/mine', requireAuth, async (req, res, next) => {
            JOIN users u1 ON u1.id = s.tutor_id
            JOIN users u2 ON u2.id = s.learner_id
            JOIN subjects sub ON sub.id = s.subject_id
+           LEFT JOIN campus_venues v ON v.id = s.venue_id
           WHERE ${whereClause}
           ORDER BY ${orderClause}
           LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
@@ -145,7 +158,7 @@ router.post('/sessions/:id/check-in', requireAuth, tokenLimiter, async (req, res
     if (!tokenStr) throw httpError(400, 'token is required');
 
     const { rows } = await query(
-      `SELECT t.id AS token_id, s.id, s.learner_id, s.tutor_id, s.status
+      `SELECT t.id AS token_id, s.id, s.learner_id, s.tutor_id, s.status, s.mode
        FROM check_in_tokens t
        JOIN sessions s ON s.id = t.session_id
        WHERE t.token = $1 AND t.session_id = $2 AND t.used_at IS NULL AND t.expires_at > now()`,
@@ -154,6 +167,10 @@ router.post('/sessions/:id/check-in', requireAuth, tokenLimiter, async (req, res
     if (!row) throw httpError(400, 'Invalid or expired token');
     if (req.user.id !== row.learner_id && req.user.id !== row.tutor_id) throw httpError(403, 'Not your session');
     if (row.status !== 'upcoming') throw httpError(409, 'This session is no longer open for check-in');
+
+    const safeMethod = ['qr', 'otp', 'fingerprint'].includes(method) ? method : 'otp';
+    const clientIp = requestIp(req);
+    const clientUa = String(req.get('user-agent') || '').slice(0, 120);
 
     const counted = await withTransaction(async (client) => {
       // Serialize against cancellation so a cancelled session can never take a
@@ -170,7 +187,7 @@ router.post('/sessions/:id/check-in', requireAuth, tokenLimiter, async (req, res
          SELECT $1, $2, $3
          WHERE NOT EXISTS (SELECT 1 FROM session_check_ins WHERE session_id = $1 AND user_id = $2)
          RETURNING id`,
-        [row.id, req.user.id, ['qr', 'otp', 'fingerprint'].includes(method) ? method : 'otp'],
+        [row.id, req.user.id, safeMethod],
       );
       const { rows: c } = await client.query(
         `SELECT count(*)::int AS confirmations FROM session_check_ins c
@@ -179,6 +196,23 @@ router.post('/sessions/:id/check-in', requireAuth, tokenLimiter, async (req, res
       if (c[0].confirmations >= 2) {
         await client.query(`UPDATE sessions SET status = 'in-progress', started_at = COALESCE(started_at, CURRENT_TIMESTAMP) WHERE id = $1 AND status = 'upcoming'`, [row.id]);
       }
+      // Flag identical IP+UA check-ins in audit_log for review without blocking campus Wi-Fi NAT peers.
+      const { rows: prior } = await client.query(
+        `SELECT ip, detail->>'ua' AS ua FROM audit_log
+          WHERE action = 'session.check_in' AND entity_id = $1 AND actor_id <> $2
+          ORDER BY created_at DESC LIMIT 1`,
+        [row.id, req.user.id],
+      );
+      const sameClientHint = Boolean(prior[0] && prior[0].ip === clientIp && prior[0].ua && prior[0].ua === clientUa);
+      await audit({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        action: 'session.check_in',
+        entity: 'session',
+        entityId: row.id,
+        detail: { mode: row.mode || 'online', method: safeMethod, confirmations: c[0].confirmations, ua: clientUa, sameClientHint },
+        ip: clientIp,
+      }, client);
       return { insertTwice: ins.rows.length === 0, confirmations: c[0].confirmations };
     });
     res.json({
@@ -189,13 +223,121 @@ router.post('/sessions/:id/check-in', requireAuth, tokenLimiter, async (req, res
   } catch (e) { next(e); }
 });
 
+/* ---------- PATCH /sessions/:id/reschedule (participant, upcoming only) ---------- */
+router.patch('/sessions/:id/reschedule', requireAuth, async (req, res, next) => {
+  try {
+    const reason = String(req.body?.reason ?? '').trim().slice(0, 200) || null;
+    const updated = await withTransaction(async (client) => {
+      const { rows } = await client.query(
+        `SELECT s.id, s.session_code, s.learner_id, s.tutor_id, s.status, s.mode,
+                s.venue_id, s.location, s.date, s.time, s.duration_hours, sub.name AS subject
+           FROM sessions s
+           JOIN subjects sub ON sub.id = s.subject_id
+          WHERE s.id = $1 FOR UPDATE`,
+        [req.params.id],
+      );
+      const session = rows[0];
+      if (!session) throw httpError(404, 'Session not found');
+      if (req.user.id !== session.learner_id && req.user.id !== session.tutor_id) {
+        throw httpError(403, 'Not your session');
+      }
+      if (session.status !== 'upcoming') {
+        throw httpError(409, 'Only an upcoming session can be rescheduled');
+      }
+
+      const curDate = session.date instanceof Date
+        ? session.date.toISOString().slice(0, 10)
+        : String(session.date).slice(0, 10);
+      const { date, time, startMinutes } = validateDateAndTime(
+        req.body?.date ?? curDate,
+        req.body?.time ?? session.time,
+      );
+      const durationHours = parseDurationHours(req.body?.durationHours, {
+        defaultHours: Number(session.duration_hours) || 1,
+      });
+
+      const mode = session.mode || 'online';
+      let venueId = null;
+      let location = ONLINE_LOCATION;
+      if (mode === 'face_to_face') {
+        const venue = await resolveApprovedVenue(client, req.body?.venueId ?? session.venue_id);
+        venueId = venue.id;
+        location = venue.name;
+      }
+
+      const avail = await checkTutorAvailabilityWindow(client, session.tutor_id, date, startMinutes, durationHours);
+      if (!avail.ok) throw httpError(409, avail.reason);
+
+      await assertNoSlotConflicts(client, {
+        tutorId: session.tutor_id,
+        venueId,
+        mode,
+        date,
+        startMinutes,
+        durationHours,
+        excludeSessionId: session.id,
+      });
+
+      const { rows: saved } = await client.query(
+        `UPDATE sessions
+            SET date = $1,
+                time = $2,
+                duration = $3,
+                duration_hours = $4,
+                venue_id = $5,
+                location = $6
+          WHERE id = $7
+          RETURNING *`,
+        [date, time, formatDurationLabel(durationHours), durationHours, venueId, location, session.id],
+      );
+
+      const otherId = req.user.id === session.learner_id ? session.tutor_id : session.learner_id;
+      const modeLabel = formatModeLabel(mode);
+      await client.query(
+        `INSERT INTO notifications (user_id, title, message, type)
+         VALUES ($1, $2, $3, 'info')`,
+        [
+          otherId,
+          `${modeLabel} session rescheduled`,
+          `${req.user.name} rescheduled ${session.session_code} (${session.subject} · ${modeLabel}) to ${date} at ${time} (${location})${reason ? ` — ${reason}` : ''}.`,
+        ],
+      );
+      await audit({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        action: 'session.reschedule',
+        entity: 'session',
+        entityId: session.id,
+        detail: {
+          code: session.session_code,
+          mode,
+          from: { date: curDate, time: session.time, venueId: session.venue_id },
+          to: { date, time, venueId, durationHours },
+          reason,
+        },
+        ip: requestIp(req),
+      }, client);
+      return saved[0];
+    });
+    res.json({ session: updated });
+  } catch (e) {
+    if (e.code === '23505') {
+      e.status = 409;
+      e.message = /venue/i.test(e.constraint || '')
+        ? 'That campus venue is already booked at this date and time'
+        : 'That tutor already has a session at this date and time';
+    }
+    next(e);
+  }
+});
+
 /* ---------- POST /sessions/:id/cancel (participant, upcoming only) ---------- */
 router.post('/sessions/:id/cancel', requireAuth, async (req, res, next) => {
   try {
     const reason = String(req.body?.reason ?? '').trim().slice(0, 240) || null;
     const result = await withTransaction(async (client) => {
       const { rows } = await client.query(
-        `SELECT s.id, s.session_code, s.learner_id, s.tutor_id, s.status, sub.name AS subject
+        `SELECT s.id, s.session_code, s.learner_id, s.tutor_id, s.status, s.mode, s.location, sub.name AS subject
            FROM sessions s JOIN subjects sub ON sub.id = s.subject_id
           WHERE s.id = $1 FOR UPDATE`,
         [req.params.id],
@@ -213,10 +355,15 @@ router.post('/sessions/:id/cancel', requireAuth, async (req, res, next) => {
         [session.id, reason],
       );
       const otherId = req.user.id === session.learner_id ? session.tutor_id : session.learner_id;
+      const modeLabel = formatModeLabel(session.mode);
       await client.query(
         `INSERT INTO notifications (user_id, title, message, type)
-         VALUES ($1, 'Session cancelled', $2, 'warning')`,
-        [otherId, `${req.user.name} cancelled ${session.session_code} (${session.subject})${reason ? ` — ${reason}` : ''}`],
+         VALUES ($1, $2, $3, 'warning')`,
+        [
+          otherId,
+          `${modeLabel} session cancelled`,
+          `${req.user.name} cancelled ${session.session_code} (${session.subject} · ${modeLabel} · ${session.location})${reason ? ` — ${reason}` : ''}`,
+        ],
       );
       return session;
     });
@@ -227,7 +374,8 @@ router.post('/sessions/:id/cancel', requireAuth, async (req, res, next) => {
       action: 'session.cancel',
       entity: 'session',
       entityId: result.id,
-      detail: { code: result.session_code, reason },
+      detail: { code: result.session_code, mode: result.mode, reason },
+      ip: requestIp(req),
     });
     res.json({ session: { id: result.id, status: 'cancelled' } });
   } catch (e) { next(e); }
@@ -288,14 +436,14 @@ router.post('/device/verify', requireDeviceKey, async (req, res, next) => {
     if (!fpr) throw httpError(400, 'fingerprint_id required');
     const { rows } = await query(
       `SELECT u.id AS user_id, u.name, u.role,
-              s.id AS session_id, s.session_code, s.topic, sub.name AS subject, s.status AS session_status
+              s.id AS session_id, s.session_code, s.topic, s.mode AS session_mode, sub.name AS subject, s.status AS session_status
        FROM device_fingerprints d
        JOIN users u ON u.id = d.user_id
        LEFT JOIN sessions s
          ON s.status IN ('upcoming','in-progress') AND (s.learner_id = u.id OR s.tutor_id = u.id)
        LEFT JOIN subjects sub ON sub.id = s.subject_id
        WHERE d.fingerprint_id = $1
-       ORDER BY s.date NULLS LAST
+       ORDER BY (s.mode = 'face_to_face') DESC NULLS LAST, s.date NULLS LAST
        LIMIT 1`, [fpr]);
     if (!rows[0]) throw httpError(404, 'Fingerprint not enrolled');
     const r = rows[0];

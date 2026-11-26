@@ -16,6 +16,7 @@ import {
 import { Button } from '../ui/button';
 import Avatar from '../ui/Avatar';
 import SessionDetailModal, { getSubjectBannerPalette } from './SessionDetailModal';
+import { SessionModeBadge } from '../SessionModeArtwork';
 import { cn } from '../../lib/utils';
 import api from '../../api';
 
@@ -93,7 +94,7 @@ function SkeletonCard() {
   );
 }
 
-export default function GoogleClassroomSessions({ role = 'learner' }) {
+export default function GoogleClassroomSessions({ role = 'learner', refreshTrigger = 0, onReschedule, onCancelSession }) {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -153,11 +154,11 @@ export default function GoogleClassroomSessions({ role = 'learner' }) {
     }
   }, [sessions.length, statusFilter, subjectFilter, sortDirection]);
 
-  // Refetch when filters or sort change
+  // Refetch when filters, sort, or parent mutations change
   useEffect(() => {
     fetchSessions(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, subjectFilter, sortDirection]);
+  }, [statusFilter, subjectFilter, sortDirection, refreshTrigger]);
 
   const handleLoadMore = () => {
     if (loadingMore || !hasMore) return;
@@ -344,7 +345,14 @@ export default function GoogleClassroomSessions({ role = 'learner' }) {
                         </div>
                         <div className="flex items-center gap-2">
                           <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={2} />
-                          <span className="truncate">{session.location || 'Library Study Room A'}</span>
+                          <span className="truncate">
+                            {session.mode === 'face_to_face'
+                              ? (session.venue_name || session.location || 'Campus venue')
+                              : (session.location || 'Online · LCCB Live Classroom')}
+                          </span>
+                        </div>
+                        <div className="pt-1">
+                          <SessionModeBadge mode={session.mode} compact />
                         </div>
                       </div>
                     </div>
@@ -403,6 +411,8 @@ export default function GoogleClassroomSessions({ role = 'learner' }) {
           session={selectedSession}
           role={role}
           onClose={() => setSelectedSession(null)}
+          onReschedule={onReschedule}
+          onCancelSession={onCancelSession}
         />
       )}
     </div>

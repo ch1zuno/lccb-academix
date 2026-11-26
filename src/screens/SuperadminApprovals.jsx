@@ -11,6 +11,7 @@ import { trapTabKey } from '../lib/focusTrap';
 import Pagination from '../components/ui/Pagination';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ErrorBanner from '../components/ui/ErrorBanner';
+import CampusVenuesManager from '../components/CampusVenuesManager';
 import api from '../api';
 
 const fmtDate = (value) => {
@@ -666,6 +667,8 @@ export default function SuperadminApprovals({ showToast }) {
           </>
         )}
       </AnimatePresence>
+
+      <CampusVenuesManager showToast={showToast} />
 
       <ConfirmDialog
         open={Boolean(confirmRejectApp)}

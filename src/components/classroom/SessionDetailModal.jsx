@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import Avatar from '../ui/Avatar';
+import { SessionModeBadge } from '../SessionModeArtwork';
 import { cn } from '../../lib/utils';
 
 export function getSubjectBannerPalette(subjectKey = '') {
@@ -64,6 +65,8 @@ export default function SessionDetailModal({
   session,
   role = 'learner',
   onClose,
+  onReschedule,
+  onCancelSession,
 }) {
   const navigate = useNavigate();
 
@@ -141,12 +144,13 @@ export default function SessionDetailModal({
 
         {/* Modal Content */}
         <div className="space-y-5 p-6 text-ink">
-          {/* Status & Session Code */}
-          <div className="flex items-center justify-between border-b border-ink/15 pb-4">
-            <div className="flex items-center gap-2">
+          {/* Status, Mode & Session Code */}
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink/15 pb-4">
+            <div className="flex flex-wrap items-center gap-2">
               <span className={cn('inline-flex items-center border px-2.5 py-1 text-[12px] font-bold uppercase tracking-wider', statusConfig.color)}>
                 {statusConfig.label}
               </span>
+              <SessionModeBadge mode={session.mode} compact />
               {session.rating && (
                 <span className="inline-flex items-center gap-1 border border-ink bg-surface-highlight px-2 py-0.5 text-[12px] font-bold">
                   <Star className="h-3.5 w-3.5 fill-gold text-gold-ink" />
@@ -227,8 +231,14 @@ export default function SessionDetailModal({
             <div className="col-span-2 flex items-start gap-2.5 border-t border-ink/10 pt-2.5">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
               <div>
-                <p className="font-semibold text-muted-foreground">Location</p>
-                <p className="font-bold text-ink">{session.location || 'Campus Library Study Room A'}</p>
+                <p className="font-semibold text-muted-foreground">
+                  {session.mode === 'face_to_face' ? 'Approved Campus Venue' : 'Online Platform'}
+                </p>
+                <p className="font-bold text-ink">
+                  {session.mode === 'face_to_face'
+                    ? [session.venue_name || session.location, session.venue_building, session.venue_room].filter(Boolean).join(' · ')
+                    : (session.location || 'Online · LCCB Live Classroom')}
+                </p>
               </div>
             </div>
 
@@ -270,7 +280,31 @@ export default function SessionDetailModal({
           </div>
 
           {/* Dialog Action Buttons */}
-          <div className="flex justify-end gap-2.5 pt-2">
+          <div className="flex flex-wrap items-center justify-end gap-2.5 pt-2">
+            {session.status === 'upcoming' && onReschedule && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  onClose();
+                  onReschedule(session);
+                }}
+                className="min-h-[44px]"
+              >
+                Reschedule
+              </Button>
+            )}
+            {session.status === 'upcoming' && onCancelSession && (
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  onClose();
+                  onCancelSession(session.id);
+                }}
+                className="min-h-[44px]"
+              >
+                Cancel session
+              </Button>
+            )}
             <Button
               onClick={onClose}
               className="min-h-[44px] min-w-[100px]"

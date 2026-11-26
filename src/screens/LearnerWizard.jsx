@@ -102,7 +102,7 @@ function OptionRow({ label, desc, selected, onClick }) {
   );
 }
 
-export default function LearnerWizard({ showToast }) {
+export default function LearnerWizard({ user, showToast }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -329,21 +329,20 @@ export default function LearnerWizard({ showToast }) {
     setSearchFlowMode('booking-form');
   };
 
-  // Submit handler for Shared Booking Questions Form
+  // Submit handler for unified 5-step Booking Form
   const handleBookingQuestionsSubmit = async (answers) => {
-    if (!selectedTutor) return;
+    if (!selectedTutor) return null;
     setSubmittingBooking(true);
 
-    const chosenCourseCode = skipCourse
-      ? selectedSubject?.code || answers.course || selectedTutor.subjects?.[0]?.code
-      : answers.course || selectedTutor.subjects?.[0]?.code;
+    const chosenCourseCode =
+      answers.course || selectedSubject?.code || selectedTutor.subjects?.[0]?.code;
 
     const matchedSubjectObj =
       allSubjects.find(
-        (s) => String(s.code).toUpperCase() === String(chosenCourseCode || '').toUpperCase()
+        (s) => String(s.code).toUpperCase() === String(chosenCourseCode || '').toUpperCase(),
       ) ||
       selectedTutor.subjects?.find(
-        (s) => String(s.code).toUpperCase() === String(chosenCourseCode || '').toUpperCase()
+        (s) => String(s.code).toUpperCase() === String(chosenCourseCode || '').toUpperCase(),
       ) ||
       selectedSubject ||
       selectedTutor.subjects?.[0];
@@ -354,37 +353,41 @@ export default function LearnerWizard({ showToast }) {
         (lt.custom_id &&
           String(lt.custom_id).toUpperCase() ===
             String(selectedTutor.custom_id || selectedTutor.id).toUpperCase()) ||
-        (lt.name && lt.name.toLowerCase() === String(selectedTutor.name || '').toLowerCase())
+        (lt.name && lt.name.toLowerCase() === String(selectedTutor.name || '').toLowerCase()),
     );
 
     const resolvedTutorId = liveTutorMatch?.id || selectedTutor.id;
     const resolvedSubjectId = matchedSubjectObj?.id;
 
     try {
+      let created = null;
       if (
         resolvedSubjectId &&
         !String(resolvedSubjectId).startsWith('sub-') &&
         !String(resolvedTutorId).startsWith('TU-') &&
         !String(resolvedTutorId).startsWith('FA-')
       ) {
-        await api.post('/session-requests', {
+        const res = await api.post('/session-requests', {
           tutorId: resolvedTutorId,
           subjectId: resolvedSubjectId,
-          topic: answers.goal || 'General review',
-          preferredDate: answers.preferredDate || addDaysYmd(3),
-          preferredTime: answers.preferredTime || '3:30 PM',
-          note: `Timeline: ${answers.timeline} • Advanced Review: ${answers.advancedReview} • Language: ${answers.language} • Window: ${answers.schedule}`,
+          mode: answers.mode,
+          venueId: answers.mode === 'face_to_face' ? answers.venueId : undefined,
+          topic: answers.topic || 'Concept Walkthrough',
+          preferredDate: answers.preferredDate || addDaysYmd(1),
+          preferredTime: answers.preferredTime || '3:00 PM',
+          durationHours: answers.durationHours || 1,
+          note: answers.note || null,
         });
+        created = res?.request ?? null;
       }
       showToast?.(
-        `Session booked with ${selectedTutor.name} for ${chosenCourseCode || 'selected course'}.`,
-        'success'
+        `Session request sent to ${selectedTutor.name} (${chosenCourseCode || 'selected course'}).`,
+        'success',
       );
-      setSearchFlowMode(null);
-      setSelectedTutor(null);
-      setSelectedSubject(null);
+      return created;
     } catch (err) {
       showToast?.(err.message || 'Booking request failed', 'error');
+      throw err;
     } finally {
       setSubmittingBooking(false);
     }
@@ -527,21 +530,28 @@ export default function LearnerWizard({ showToast }) {
         </div>
       )}
 
-      {/* ─── SEARCH-TRIGGERED VIEW 2: SHARED BOOKING QUESTIONS FORM ─── */}
+      {/* ─── SEARCH-TRIGGERED VIEW 2: UNIFIED 5-STEP BOOKING FORM ─── */}
       {searchFlowMode === 'booking-form' && selectedTutor && (
         <BookingQuestionsForm
+          user={user}
           tutor={selectedTutor}
           skipCourse={skipCourse}
-          selectedCourse={selectedSubject?.code || ''}
+          selectedCourse={selectedSubject?.code || data.course || ''}
           subjects={selectedTutor.subjects || []}
           submitting={submittingBooking}
-          onBack={() => {
+          onCancel={() => {
             if (skipCourse && selectedSubject) {
               setSearchFlowMode('subject-matchmaking');
             } else {
               setSearchFlowMode(null);
               setSelectedTutor(null);
             }
+          }}
+          onDone={() => navigate('/dashboard')}
+          onBookAnother={() => {
+            setSearchFlowMode(null);
+            setSelectedTutor(null);
+            setSelectedSubject(null);
           }}
           onSubmit={handleBookingQuestionsSubmit}
         />
@@ -900,29 +910,10 @@ export default function LearnerWizard({ showToast }) {
                     availability={data.availability}
                     goal={data.goal}
                     onCancel={() => setCurrentStep(steps.length - 2)}
-                    onRequestSession={async (tutor) => {
-                      setRequesting(tutor.id);
-                      const fallbackDate = addDaysYmd(3);
-                      const targetSubjectId =
-                        (subjectOptions.find((s) => s.code === data.course) || {}).id ||
-                        (tutor.subjects?.[0] || {}).id;
-                      try {
-                        await api.post('/session-requests', {
-                          tutorId: tutor.id,
-                          subjectId: targetSubjectId,
-                          topic: data.goal || 'General review',
-                          preferredDate: fallbackDate,
-                          preferredTime: '3:30 PM',
-                          note: data.level
-                            ? `Level: ${data.level} • Language: ${data.language || 'English'} • Preview: ${data.availability || ''}`
-                            : null,
-                        });
-                        showToast(`Session requested with ${tutor.name}.`, 'success');
-                      } catch (err) {
-                        showToast(err.message || 'Request failed', 'error');
-                      } finally {
-                        setRequesting(null);
-                      }
+                    onRequestSession={(tutor) => {
+                      const chosenSub = subjectOptions.find((s) => s.code === data.course) || null;
+                      setSelectedSubject(chosenSub);
+                      handleBookFromSubjectMatchmaking(tutor);
                     }}
                     requestingId={requesting}
                     navigate={navigate}

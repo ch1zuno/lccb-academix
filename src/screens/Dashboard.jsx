@@ -9,6 +9,8 @@ import GoogleClassroomSessions from '../components/classroom/GoogleClassroomSess
 import Pagination from '../components/ui/Pagination';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ErrorBanner from '../components/ui/ErrorBanner';
+import CampusVenuesManager from '../components/CampusVenuesManager';
+import { SessionModeBadge } from '../components/SessionModeArtwork';
 import api from '../api';
 
 /**
@@ -130,6 +132,14 @@ export default function Dashboard({ role, user, showToast }) {
   const [tutorRequestsPage, setTutorRequestsPage] = useState(1);
   const [upcomingPage, setUpcomingPage] = useState(1);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [sessionsRefreshKey, setSessionsRefreshKey] = useState(0);
+  const [venuesList, setVenuesList] = useState([]);
+  const [proposeTarget, setProposeTarget] = useState(null);
+  const [proposeForm, setProposeForm] = useState({ date: '', time: '', venueId: '', note: '' });
+  const [proposeSaving, setProposeSaving] = useState(false);
+  const [rescheduleTarget, setRescheduleTarget] = useState(null);
+  const [rescheduleForm, setRescheduleForm] = useState({ date: '', time: '', venueId: '', reason: '' });
+  const [rescheduleSaving, setRescheduleSaving] = useState(false);
 
   const reloadAnalytics = () => {
     setAnalyticsError(null);
@@ -140,14 +150,21 @@ export default function Dashboard({ role, user, showToast }) {
     api.get('/sessions/mine')
       .then(({ sessions }) => setSessionsMine(sessions))
       .catch(() => setSessionsMine([]));
+    setSessionsRefreshKey((k) => k + 1);
   };
 
   const reloadRequests = () => {
     if (role === 'tutor' || role === 'learner') {
       api.get('/session-requests')
-        .then(({ requests }) => setSessionRequests(requests.filter(r => r.status === 'pending')))
+        .then(({ requests }) => setSessionRequests(requests.filter(r => r.status === 'pending' || r.status === 'counter_proposed')))
         .catch(() => setSessionRequests([]));
     }
+  };
+
+  const ensureVenuesLoaded = () => {
+    api.get('/venues')
+      .then(({ venues }) => setVenuesList(venues ?? []))
+      .catch(() => setVenuesList([]));
   };
 
   useEffect(() => {
@@ -168,7 +185,7 @@ export default function Dashboard({ role, user, showToast }) {
     }
     if (role === 'tutor' || role === 'learner') {
       api.get('/session-requests')
-        .then(({ requests }) => { if (!cancelled) setSessionRequests(requests.filter(r => r.status === 'pending')); })
+        .then(({ requests }) => { if (!cancelled) setSessionRequests(requests.filter(r => r.status === 'pending' || r.status === 'counter_proposed')); })
         .catch(() => { if (!cancelled) setSessionRequests([]); });
     }
     return () => { cancelled = true; };
@@ -269,18 +286,278 @@ export default function Dashboard({ role, user, showToast }) {
     });
   };
 
+  const openProposeModal = (req) => {
+    ensureVenuesLoaded();
+    const d = req.proposed_date || req.preferred_date || localYmd();
+    const dateVal = typeof d === 'string' ? d.slice(0, 10) : localYmd(d);
+    setProposeForm({
+      date: dateVal,
+      time: req.proposed_time || req.preferred_time || '3:00 PM',
+      venueId: req.proposed_venue_id || req.venue_id || '',
+      note: req.proposal_note || '',
+    });
+    setProposeTarget(req);
+  };
+
+  const submitProposal = async (e) => {
+    e.preventDefault();
+    if (!proposeTarget) return;
+    setProposeSaving(true);
+    try {
+      await api.post(`/session-requests/${proposeTarget.id}/propose`, {
+        proposedDate: proposeForm.date,
+        proposedTime: proposeForm.time,
+        ...(proposeTarget.mode === 'face_to_face' ? { proposedVenueId: proposeForm.venueId } : {}),
+        note: proposeForm.note.trim() || undefined,
+      });
+      showToast('Proposed new details sent to the student.', 'success');
+      setProposeTarget(null);
+      reloadRequests();
+    } catch (err) {
+      showToast(err.message || 'Could not send proposal', 'error');
+    } finally {
+      setProposeSaving(false);
+    }
+  };
+
+  const handleAcceptProposal = async (requestId, tutorName) => {
+    setActingRequestId(requestId);
+    try {
+      await api.post(`/session-requests/${requestId}/accept-proposal`);
+      showToast(`Confirmed session with ${tutorName}.`, 'success');
+      reloadRequests();
+      reloadSessions();
+    } catch (err) {
+      showToast(err.message || 'Could not confirm proposal', 'error');
+    } finally {
+      setActingRequestId(null);
+    }
+  };
+
+  const openRescheduleModal = (session) => {
+    if (session.mode === 'face_to_face') ensureVenuesLoaded();
+    const d = session.date || localYmd();
+    const dateVal = typeof d === 'string' ? d.slice(0, 10) : localYmd(d);
+    setRescheduleForm({
+      date: dateVal,
+      time: session.time || '3:00 PM',
+      venueId: session.venue_id || '',
+      reason: '',
+    });
+    setRescheduleTarget(session);
+  };
+
+  const submitReschedule = async (e) => {
+    e.preventDefault();
+    if (!rescheduleTarget) return;
+    setRescheduleSaving(true);
+    try {
+      await api.patch(`/sessions/${rescheduleTarget.id}/reschedule`, {
+        date: rescheduleForm.date,
+        time: rescheduleForm.time,
+        ...(rescheduleTarget.mode === 'face_to_face' ? { venueId: rescheduleForm.venueId } : {}),
+        reason: rescheduleForm.reason.trim() || undefined,
+      });
+      showToast('Session rescheduled. The other participant has been notified.', 'success');
+      setRescheduleTarget(null);
+      reloadSessions();
+    } catch (err) {
+      showToast(err.message || 'Could not reschedule session', 'error');
+    } finally {
+      setRescheduleSaving(false);
+    }
+  };
+
+  const RESCHEDULE_SLOTS = ['9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM'];
+
   const renderConfirmDialog = () => (
-    <ConfirmDialog
-      open={Boolean(confirmAction)}
-      title={confirmAction?.title}
-      description={confirmAction?.description}
-      warning={confirmAction?.warning}
-      confirmLabel={confirmAction?.confirmLabel}
-      variant={confirmAction?.variant}
-      busy={confirmAction?.busy}
-      onCancel={() => setConfirmAction(null)}
-      onConfirm={confirmAction?.onConfirm}
-    />
+    <>
+      <ConfirmDialog
+        open={Boolean(confirmAction)}
+        title={confirmAction?.title}
+        description={confirmAction?.description}
+        warning={confirmAction?.warning}
+        confirmLabel={confirmAction?.confirmLabel}
+        variant={confirmAction?.variant}
+        busy={confirmAction?.busy}
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={confirmAction?.onConfirm}
+      />
+
+      {proposeTarget && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-ink/70 p-4" role="dialog" aria-modal="true" aria-label="Propose new venue or time">
+          <form onSubmit={submitProposal} className="w-full max-w-[460px] border-2 border-ink bg-paper p-5 shadow-[6px_6px_0_var(--color-ink)] space-y-4">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="font-display text-[20px] font-extrabold text-ink">
+                  Propose {proposeTarget.mode === 'face_to_face' ? 'another venue or time' : 'another time'}
+                </h3>
+                <p className="mt-0.5 text-[13px] text-muted-foreground">
+                  For {proposeTarget.learner_name} · {proposeTarget.subject_code}
+                </p>
+              </div>
+              <SessionModeBadge mode={proposeTarget.mode} compact />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="propose-date" className="field-label">Proposed date</label>
+                <input
+                  id="propose-date"
+                  type="date"
+                  min={localYmd()}
+                  required
+                  value={proposeForm.date}
+                  onChange={(e) => setProposeForm((p) => ({ ...p, date: e.target.value }))}
+                  className="input-field mt-1 min-h-[42px]"
+                />
+              </div>
+              <div>
+                <label htmlFor="propose-time" className="field-label">Proposed time</label>
+                <select
+                  id="propose-time"
+                  value={proposeForm.time}
+                  onChange={(e) => setProposeForm((p) => ({ ...p, time: e.target.value }))}
+                  className="select-field mt-1 min-h-[42px]"
+                >
+                  {Array.from(new Set([proposeForm.time, ...RESCHEDULE_SLOTS].filter(Boolean))).map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {proposeTarget.mode === 'face_to_face' && (
+              <div>
+                <label htmlFor="propose-venue" className="field-label">Approved campus venue</label>
+                <select
+                  id="propose-venue"
+                  required
+                  value={proposeForm.venueId}
+                  onChange={(e) => setProposeForm((p) => ({ ...p, venueId: e.target.value }))}
+                  className="select-field mt-1 min-h-[42px]"
+                >
+                  <option value="">Choose an approved venue…</option>
+                  {venuesList.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}{v.building ? ` (${v.building}${v.room ? `, ${v.room}` : ''})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="propose-note" className="field-label">Short note (optional)</label>
+              <input
+                id="propose-note"
+                type="text"
+                maxLength={240}
+                value={proposeForm.note}
+                onChange={(e) => setProposeForm((p) => ({ ...p, note: e.target.value }))}
+                placeholder="e.g., Library Room A is full; let’s meet in Learning Commons."
+                className="input-field mt-1 min-h-[42px]"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-1">
+              <Button type="button" variant="outline" onClick={() => setProposeTarget(null)} disabled={proposeSaving}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={proposeSaving}>
+                {proposeSaving ? 'Sending…' : 'Send proposal'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {rescheduleTarget && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-ink/70 p-4" role="dialog" aria-modal="true" aria-label="Reschedule session">
+          <form onSubmit={submitReschedule} className="w-full max-w-[460px] border-2 border-ink bg-paper p-5 shadow-[6px_6px_0_var(--color-ink)] space-y-4">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="font-display text-[20px] font-extrabold text-ink">Reschedule session</h3>
+                <p className="mt-0.5 text-[13px] text-muted-foreground">
+                  {rescheduleTarget.session_code} · {rescheduleTarget.subject}
+                </p>
+              </div>
+              <SessionModeBadge mode={rescheduleTarget.mode} compact />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="resched-date" className="field-label">New date</label>
+                <input
+                  id="resched-date"
+                  type="date"
+                  min={localYmd()}
+                  required
+                  value={rescheduleForm.date}
+                  onChange={(e) => setRescheduleForm((p) => ({ ...p, date: e.target.value }))}
+                  className="input-field mt-1 min-h-[42px]"
+                />
+              </div>
+              <div>
+                <label htmlFor="resched-time" className="field-label">New time</label>
+                <select
+                  id="resched-time"
+                  value={rescheduleForm.time}
+                  onChange={(e) => setRescheduleForm((p) => ({ ...p, time: e.target.value }))}
+                  className="select-field mt-1 min-h-[42px]"
+                >
+                  {Array.from(new Set([rescheduleForm.time, ...RESCHEDULE_SLOTS].filter(Boolean))).map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {rescheduleTarget.mode === 'face_to_face' && (
+              <div>
+                <label htmlFor="resched-venue" className="field-label">Approved campus venue</label>
+                <select
+                  id="resched-venue"
+                  required
+                  value={rescheduleForm.venueId}
+                  onChange={(e) => setRescheduleForm((p) => ({ ...p, venueId: e.target.value }))}
+                  className="select-field mt-1 min-h-[42px]"
+                >
+                  <option value="">Choose an approved venue…</option>
+                  {venuesList.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}{v.building ? ` (${v.building}${v.room ? `, ${v.room}` : ''})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="resched-reason" className="field-label">Reason (optional)</label>
+              <input
+                id="resched-reason"
+                type="text"
+                maxLength={200}
+                value={rescheduleForm.reason}
+                onChange={(e) => setRescheduleForm((p) => ({ ...p, reason: e.target.value }))}
+                placeholder="e.g., Lab schedule moved by an hour"
+                className="input-field mt-1 min-h-[42px]"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-1">
+              <Button type="button" variant="outline" onClick={() => setRescheduleTarget(null)} disabled={rescheduleSaving}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={rescheduleSaving}>
+                {rescheduleSaving ? 'Saving…' : 'Confirm reschedule'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+    </>
   );
 
   // ── Superadmin ───────────────────────────────────────────────────────────
@@ -705,6 +982,8 @@ export default function Dashboard({ role, user, showToast }) {
             <Button variant="outline" size="sm" onClick={() => navigate('/referral')}>Write the first referral</Button>
           </div>
         )}
+
+        <CampusVenuesManager showToast={showToast} />
         {renderConfirmDialog()}
       </div>
     );
@@ -808,7 +1087,10 @@ export default function Dashboard({ role, user, showToast }) {
               <p className="text-[13px] text-muted-foreground">Next session</p>
               {next ? (
                 <>
-                  <p className="mt-1 text-[14px] font-medium text-ink">{fmtLongDate(next.date)} · {next.time}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <p className="text-[14px] font-medium text-ink">{fmtLongDate(next.date)} · {next.time}</p>
+                    <SessionModeBadge mode={next.mode} compact />
+                  </div>
                   <p className="mt-0.5 text-[13px] text-muted-foreground">
                     <button
                       type="button"
@@ -819,7 +1101,7 @@ export default function Dashboard({ role, user, showToast }) {
                     </button>{' '}
                     · {next.subject}
                   </p>
-                  <p className="mt-0.5 text-[13px] text-muted-foreground">{next.location}</p>
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">{next.venue_name || next.location}</p>
                 </>
               ) : (
                 <p className="mt-1 text-[14px] text-muted-foreground">No session booked.</p>
@@ -854,28 +1136,52 @@ export default function Dashboard({ role, user, showToast }) {
                 {pagedRequests.map((req) => (
                   <div key={req.id} className="flex flex-col gap-3 border-b border-line/60 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/profile/${req.learner_custom_id || req.learner_id}`)}
-                        className="font-display text-left text-[14px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
-                      >
-                        {req.learner_name}
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/profile/${req.learner_custom_id || req.learner_id}`)}
+                          className="font-display text-left text-[14px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                        >
+                          {req.learner_name}
+                        </button>
+                        <SessionModeBadge mode={req.mode} compact />
+                        {req.status === 'counter_proposed' && (
+                          <span className="border border-ink bg-surface-highlight px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-ink">
+                            Proposal sent
+                          </span>
+                        )}
+                      </div>
                       <p className="mt-0.5 text-[13px] text-muted-foreground">
                         {req.subject} ({req.subject_code}) · {req.topic}
                       </p>
                       <p className="mt-0.5 text-[12px] text-muted-foreground">
-                        📅 {fmtLongDate(req.preferred_date)} at {req.preferred_time} · {req.location}
+                        {fmtLongDate(req.preferred_date)} at {req.preferred_time} · {req.venue_name || req.location}
                       </p>
+                      {req.status === 'counter_proposed' && (
+                        <p className="mt-1 border-l-2 border-gold pl-2 text-[12px] font-semibold text-ink">
+                          Proposed: {fmtLongDate(req.proposed_date || req.preferred_date)} at {req.proposed_time || req.preferred_time} · {req.proposed_venue_name || req.proposed_location || req.location}
+                          {req.proposal_note ? ` (“${req.proposal_note}”)` : ''}
+                        </p>
+                      )}
                       {req.note && <p className="mt-1 text-[12px] italic text-ink/70">"{req.note}"</p>}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {req.status === 'pending' && (
+                        <Button
+                          size="sm"
+                          disabled={actingRequestId === req.id}
+                          onClick={() => handleAcceptRequest(req.id, req.learner_name)}
+                        >
+                          {actingRequestId === req.id ? 'Accepting…' : 'Accept session'}
+                        </Button>
+                      )}
                       <Button
+                        variant="outline"
                         size="sm"
                         disabled={actingRequestId === req.id}
-                        onClick={() => handleAcceptRequest(req.id, req.learner_name)}
+                        onClick={() => openProposeModal(req)}
                       >
-                        {actingRequestId === req.id ? 'Accepting…' : 'Accept session'}
+                        {req.mode === 'face_to_face' ? 'Propose venue/time' : 'Propose time'}
                       </Button>
                       <Button
                         variant="outline"
@@ -949,18 +1255,29 @@ export default function Dashboard({ role, user, showToast }) {
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className="num text-[13px] text-ink">{fmtLongDate(session.date)}</p>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <SessionModeBadge mode={session.mode} compact />
+                        </div>
+                        <p className="num mt-1 text-[13px] text-ink">{fmtLongDate(session.date)}</p>
                         <p className="mt-0.5 text-[13px] text-muted-foreground">{session.time} · {session.duration}</p>
-                        <p className="mt-0.5 text-[13px] text-muted-foreground">{session.location}</p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="mt-2"
-                          disabled={cancellingId === session.id}
-                          onClick={() => handleCancelSession(session.id)}
-                        >
-                          {cancellingId === session.id ? 'Cancelling…' : 'Cancel'}
-                        </Button>
+                        <p className="mt-0.5 text-[13px] text-muted-foreground">{session.venue_name || session.location}</p>
+                        <div className="mt-2 flex items-center justify-end gap-1.5">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openRescheduleModal(session)}
+                          >
+                            Reschedule
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={cancellingId === session.id}
+                            onClick={() => handleCancelSession(session.id)}
+                          >
+                            {cancellingId === session.id ? 'Cancelling…' : 'Cancel'}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -982,7 +1299,12 @@ export default function Dashboard({ role, user, showToast }) {
 
           <div className="space-y-3 min-w-0">
             <h2 className="font-display text-[18px] font-bold leading-tight tracking-[-0.02em]">Session records</h2>
-            <GoogleClassroomSessions role="tutor" />
+            <GoogleClassroomSessions
+              role="tutor"
+              refreshTrigger={sessionsRefreshKey}
+              onReschedule={openRescheduleModal}
+              onCancelSession={handleCancelSession}
+            />
           </div>
         </div>
         {renderConfirmDialog()}
@@ -1063,22 +1385,45 @@ export default function Dashboard({ role, user, showToast }) {
               {pagedRequests.map((req) => (
                 <div key={req.id} className="flex flex-col gap-3 border-b border-line/60 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/profile/${req.tutor_custom_id || req.tutor_id}`)}
-                      className="font-display text-left text-[14px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
-                    >
-                      {req.tutor_name}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/profile/${req.tutor_custom_id || req.tutor_id}`)}
+                        className="font-display text-left text-[14px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                      >
+                        {req.tutor_name}
+                      </button>
+                      <SessionModeBadge mode={req.mode} compact />
+                      {req.status === 'counter_proposed' && (
+                        <span className="border-2 border-ink bg-gold px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-ink">
+                          Tutor proposed change
+                        </span>
+                      )}
+                    </div>
                     <p className="mt-0.5 text-[13px] text-muted-foreground">
                       {req.subject} ({req.subject_code}) · {req.topic}
                     </p>
                     <p className="mt-0.5 text-[12px] text-muted-foreground">
-                      📅 {fmtLongDate(req.preferred_date)} at {req.preferred_time} · {req.location}
+                      {fmtLongDate(req.preferred_date)} at {req.preferred_time} · {req.venue_name || req.location}
                     </p>
+                    {req.status === 'counter_proposed' && (
+                      <p className="mt-1.5 border-2 border-ink bg-surface-highlight px-2.5 py-1.5 text-[12px] font-bold text-ink">
+                        Proposed by tutor: {fmtLongDate(req.proposed_date || req.preferred_date)} at {req.proposed_time || req.preferred_time} · {req.proposed_venue_name || req.proposed_location || req.location}
+                        {req.proposal_note ? ` — “${req.proposal_note}”` : ''}
+                      </p>
+                    )}
                     {req.note && <p className="mt-1 text-[12px] italic text-ink/70">"{req.note}"</p>}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {req.status === 'counter_proposed' && (
+                      <Button
+                        size="sm"
+                        disabled={actingRequestId === req.id}
+                        onClick={() => handleAcceptProposal(req.id, req.tutor_name)}
+                      >
+                        {actingRequestId === req.id ? 'Confirming…' : 'Accept proposal'}
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -1153,7 +1498,12 @@ export default function Dashboard({ role, user, showToast }) {
 
       <div className="space-y-3">
         <h2 className="font-display text-[18px] font-bold leading-tight tracking-[-0.02em]">Session records</h2>
-        <GoogleClassroomSessions role="learner" />
+        <GoogleClassroomSessions
+          role="learner"
+          refreshTrigger={sessionsRefreshKey}
+          onReschedule={openRescheduleModal}
+          onCancelSession={handleCancelSession}
+        />
       </div>
 
       {showToast && (
