@@ -9,8 +9,10 @@ import GoogleClassroomSessions from '../components/classroom/GoogleClassroomSess
 import Pagination from '../components/ui/Pagination';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ErrorBanner from '../components/ui/ErrorBanner';
+import LoadState from '../components/ui/LoadState';
 import CampusVenuesManager from '../components/CampusVenuesManager';
 import { SessionModeBadge } from '../components/SessionModeArtwork';
+import { friendlyError } from '../lib/ux';
 import api from '../api';
 
 /**
@@ -23,16 +25,26 @@ export function useReferrals(role) {
   const [refreshKey, setRefreshKey] = useState(0);
   useEffect(() => {
     let cancelled = false;
+    setError(null);
     api.get('/referrals')
-      .then(({ referrals: rows }) => { if (!cancelled) setReferrals(rows); })
-      .catch((e) => { if (!cancelled) setError(e.message); });
+      .then(({ referrals: rows }) => {
+        if (!cancelled) {
+          setError(null);
+          setReferrals(rows);
+        }
+      })
+      .catch((e) => { if (!cancelled) setError(e); });
     return () => { cancelled = true; };
   }, [role, refreshKey]);
   return {
     referrals,
-    error,
+    error: error ? friendlyError(error, "We couldn't load your referrals. Try again.", { forceGeneric: true }) : null,
     loading: referrals === null && !error,
-    reload: () => setRefreshKey((k) => k + 1),
+    reload: () => {
+      setError(null);
+      setReferrals(null);
+      setRefreshKey((k) => k + 1);
+    },
   };
 }
 
@@ -1326,38 +1338,12 @@ export default function Dashboard({ role, user, showToast }) {
   const mySessions = [...mine].sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 8);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <SectionHeading
         title="My progress"
         detail="Referral hours, sessions, and the record you are building."
         action={<Button onClick={() => navigate('/wizard')}>Find a tutor</Button>}
       />
-
-      {referralsError && (
-        <ErrorBanner
-          message={`Your referral could not be read: ${referralsError}`}
-          onRetry={reloadReferrals}
-        />
-      )}
-
-      {myReferral && (
-        <div className="panel overflow-hidden">
-          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex items-start gap-3">
-              <span className="mt-1.5 h-2.5 w-2.5 shrink-0 border-2 border-ink bg-amber" />
-              <div>
-                <p className="text-[13px] font-semibold text-muted-foreground">Active referral · {myReferral.faculty}</p>
-                <h2 className="mt-1 font-display text-[20px] font-bold leading-tight tracking-[-0.03em]">{myReferral.subject} — {myReferral.topic}</h2>
-                <p className="mt-1 text-[13px] text-muted-foreground">
-                  {remaining > 0 ? `${remaining} of ${required} hours remaining` : 'All required hours logged — awaiting resolution'}
-                </p>
-                {myReferral.notes && <p className="mt-2 max-w-[60ch] text-[13px] leading-snug text-muted-foreground">“{myReferral.notes}”</p>}
-              </div>
-            </div>
-            <Button variant="outline" onClick={() => navigate('/wizard')}>Book a session</Button>
-          </div>
-        </div>
-      )}
 
       {sessionRequests && sessionRequests.length > 0 && (() => {
         const pageSize = 3;
@@ -1367,9 +1353,9 @@ export default function Dashboard({ role, user, showToast }) {
         const pagedRequests = sessionRequests.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
         return (
-          <div className="panel border-2 border-gold bg-card p-5">
-            <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
-              <div>
+          <div className="panel panel-pad border-2 border-gold bg-card">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
+              <div className="min-w-0">
                 <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
                   Pending session requests
                 </h2>
@@ -1384,7 +1370,7 @@ export default function Dashboard({ role, user, showToast }) {
             <div className="mt-3 space-y-3">
               {pagedRequests.map((req) => (
                 <div key={req.id} className="flex flex-col gap-3 border-b border-line/60 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
@@ -1407,12 +1393,12 @@ export default function Dashboard({ role, user, showToast }) {
                       {fmtLongDate(req.preferred_date)} at {req.preferred_time} · {req.venue_name || req.location}
                     </p>
                     {req.status === 'counter_proposed' && (
-                      <p className="mt-1.5 border-2 border-ink bg-surface-highlight px-2.5 py-1.5 text-[12px] font-bold text-ink">
+                      <p className="callout callout-highlight mt-2 text-[12px] font-bold text-ink">
                         Proposed by tutor: {fmtLongDate(req.proposed_date || req.preferred_date)} at {req.proposed_time || req.preferred_time} · {req.proposed_venue_name || req.proposed_location || req.location}
                         {req.proposal_note ? ` — “${req.proposal_note}”` : ''}
                       </p>
                     )}
-                    {req.note && <p className="mt-1 text-[12px] italic text-ink/70">"{req.note}"</p>}
+                    {req.note && <p className="mt-1 text-[12px] italic text-ink/75">"{req.note}"</p>}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {req.status === 'counter_proposed' && (
@@ -1456,31 +1442,87 @@ export default function Dashboard({ role, user, showToast }) {
       })()}
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="panel p-5 lg:col-span-2">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">Mandatory hours</h2>
-              <p className="meta mt-0.5">{myReferral ? `${myReferral.subject} · ${myReferral.faculty}` : 'No active referral on file'}</p>
-            </div>
-            <span className="num text-[13px] text-muted-foreground">{Math.round(progress)}%</span>
+        <div className="panel panel-pad lg:col-span-2">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">Mandatory hours</h2>
+            {myReferral && !referralsError && !referralsLoading && (
+              <span className="inline-flex items-center gap-1.5 border-2 border-ink bg-surface-highlight px-2 py-0.5 text-[11px] font-bold text-ink">
+                <span className="h-2 w-2 bg-amber" aria-hidden="true" />
+                Active referral
+              </span>
+            )}
           </div>
 
-          <div className="mt-6 flex items-end gap-2">
-            <p className="num text-[48px] leading-none text-ink">{completedHours}</p>
-            <p className="mb-1 text-[16px] text-muted-foreground">/ {required || '—'} hrs</p>
-          </div>
-          <div className="mt-4 h-3 w-full border-2 border-ink bg-paper">
-            <div className="h-full bg-gold transition-[width] duration-500" style={{ width: `${progress}%` }} />
-          </div>
-          <div className="mt-2 flex items-baseline justify-between gap-3">
-            <span className="text-[13px] text-muted-foreground">{myReferral ? `${remaining} hours remaining` : referralsLoading ? 'Reading referral…' : 'Ask your faculty adviser for a referral.'}</span>
-            <span className="text-[13px] text-muted-foreground">Hours post after wrap-up</span>
+          <div className="mt-3">
+            <LoadState
+              inline
+              loading={referralsLoading}
+              error={referralsError}
+              empty={!myReferral}
+              onRetry={reloadReferrals}
+              errorText="We couldn't load your referral. Try again."
+              emptyText="No required hours right now. If your adviser refers you, they'll show up here."
+              skeleton={(
+                <div className="space-y-3">
+                  <div className="flex items-baseline justify-between">
+                    <div className="skeleton h-10 w-28" />
+                    <div className="skeleton h-5 w-10" />
+                  </div>
+                  <div className="skeleton h-3 w-full" />
+                  <div className="skeleton h-4 w-3/4" />
+                  <div className="skeleton h-4 w-1/2" />
+                </div>
+              )}
+            >
+              {myReferral && (
+                <div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="flex items-end gap-2">
+                      <p className="num text-[44px] leading-none text-ink sm:text-[48px]">{completedHours}</p>
+                      <p className="mb-1 text-[15px] text-muted-foreground">/ {required} hrs</p>
+                    </div>
+                    <span className="num text-[14px] text-ink">{Math.round(progress)}%</span>
+                  </div>
+
+                  <div className="mt-3 h-3 w-full border-2 border-ink bg-paper">
+                    <div className="h-full bg-gold transition-[width] duration-500" style={{ width: `${progress}%` }} />
+                  </div>
+
+                  <div className="mt-3 space-y-1 text-[13px]">
+                    <p className="font-bold text-ink">
+                      {myReferral.subject} — {myReferral.topic}
+                    </p>
+                    <p className="text-muted-foreground">
+                      Referred by {myReferral.faculty}
+                    </p>
+                    {myReferral.notes && (
+                      <p className="callout mt-2 text-[13px] leading-snug text-muted-foreground">
+                        “{myReferral.notes}”
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-3 flex flex-col gap-1 border-t border-line pt-2.5 text-[13px] text-muted-foreground">
+                    <span>
+                      {remaining > 0 ? `${remaining} hours remaining` : 'All required hours logged — awaiting resolution'}
+                    </span>
+                    <span>Hours post after each verified session wrap-up.</span>
+                  </div>
+
+                  <div className="mt-3.5">
+                    <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/wizard')}>
+                      Book a session
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </LoadState>
           </div>
         </div>
 
-        <div className="panel p-5">
+        <div className="panel panel-pad">
           <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em]">This term</h2>
-          <div className="mt-4 space-y-3">
+          <div className="mt-3.5 space-y-2.5">
             {[
               { label: 'Sessions logged', value: mine.length },
               { label: 'Upcoming', value: myUpcoming.length },

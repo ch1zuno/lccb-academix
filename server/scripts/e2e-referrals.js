@@ -102,5 +102,21 @@ const login = (loginId) => request('/auth/login', { method: 'POST', body: { logi
   const gone = await request(`/referrals/${staged.id}`, { method: 'DELETE', token: superadmin.token });
   expect('delete again (404)', gone.status, 404, gone.data.error);
 
+  // empty-state check: a learner with zero referrals gets 200 { referrals: [] }
+  const pg3 = new pg.Client({ connectionString: E2E_DATABASE_URL });
+  await pg3.connect();
+  const cleanLearnerRow = (await pg3.query(`
+    SELECT u.custom_id FROM users u
+    WHERE u.role = 'learner' AND NOT EXISTS (SELECT 1 FROM referrals r WHERE r.learner_id = u.id)
+    ORDER BY u.custom_id LIMIT 1
+  `)).rows[0];
+  await pg3.end();
+  if (cleanLearnerRow) {
+    const cleanAuth = (await login(cleanLearnerRow.custom_id)).data;
+    const emptyRes = await request('/referrals', { token: cleanAuth.token });
+    const isEmpty = emptyRes.status === 200 && Array.isArray(emptyRes.data.referrals) && emptyRes.data.referrals.length === 0;
+    expect('learner with no referral gets 200 []', isEmpty ? 200 : emptyRes.status, 200, `${cleanLearnerRow.custom_id} -> ${JSON.stringify(emptyRes.data)}`);
+  }
+
   if (bad) process.exit(1);
 })();
