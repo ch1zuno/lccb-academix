@@ -32,12 +32,25 @@ async function request(path, { method = 'GET', body, params, headers: extraHeade
   if (cachedStepUpToken && Date.now() < cachedStepUpExpiresAt && !headers['X-Step-Up-Token']) {
     headers['X-Step-Up-Token'] = cachedStepUpToken;
   }
-  const res = await fetch(`${BASE}${path}${qs}`, {
-    method,
-    headers,
-    credentials: 'include',
-    body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
-  });
+  const isGet = method.toUpperCase() === 'GET';
+  const signal = isGet && typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+    ? AbortSignal.timeout(30000)
+    : undefined;
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}${qs}`, {
+      method,
+      headers,
+      credentials: 'include',
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
+      ...(signal ? { signal } : {}),
+    });
+  } catch (err) {
+    if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+      throw new ApiError(0, 'timeout');
+    }
+    throw new ApiError(0, err?.message || 'network');
+  }
   const type = res.headers.get('content-type') || '';
   const payload = type.includes('json') ? await res.json().catch(() => ({})) : await res.text();
   if (!res.ok) {

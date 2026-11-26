@@ -391,21 +391,21 @@ export default function App() {
 
     if (isPublicProfileRoute || !isKnownRoute) {
       return (
-        <div className="min-h-screen bg-stone text-ink">
+        <div className="min-h-dvh bg-stone text-ink">
           <a
             href="#main-content"
             className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[90] focus:border-2 focus:border-ink focus:bg-gold focus:px-4 focus:py-2.5 focus:text-[13px] focus:font-bold focus:text-ink focus:shadow-[4px_4px_0_var(--color-ink)]"
           >
             Skip to main content
           </a>
-          <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between border-b-2 border-ink bg-surface-sidebar px-5 pt-[env(safe-area-inset-top)]">
+          <header className="sticky top-0 z-30 flex min-h-14 [@media(max-height:500px)]:min-h-12 items-center justify-between border-b-2 border-ink bg-surface-sidebar px-[max(var(--page-pad),env(safe-area-inset-left))] pt-[env(safe-area-inset-top)]">
             <button type="button" onClick={() => navigate('/')} className="text-left">
               <Wordmark compact />
             </button>
             <Button size="sm" onClick={() => navigate('/')}>Sign in</Button>
           </header>
-          <main id="main-content" className="mx-auto w-full max-w-[1040px] px-5 py-8">
-            <React.Suspense fallback={<div className="panel empty">Reading the ledger…</div>}>
+          <main id="main-content" className="mx-auto w-full max-w-[1040px] px-[max(var(--page-pad),env(safe-area-inset-left))] py-6 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+            <React.Suspense fallback={<div className="panel panel-pad space-y-3"><div className="skeleton h-6 w-40" /><div className="skeleton h-4 w-64" /><div className="skeleton h-28 w-full" /></div>}>
               {isPublicProfileRoute ? (
                 <Routes location={location}>
                   <Route path="/profile/:id" element={<TutorProfile currentUser={null} showToast={showToast} />} />
@@ -491,7 +491,7 @@ export default function App() {
           <SplashScreen onComplete={() => setShowSplash(false)} duration={2000} />
         )}
       </AnimatePresence>
-      <div className={cn("min-h-screen bg-stone text-ink", showSplash && 'hidden')}>
+      <div className={cn("min-h-dvh bg-stone text-ink", showSplash && 'hidden')}>
         {!isOnline && (
           <div role="status" aria-live="polite" className="flex items-center justify-center gap-2 border-b-2 border-ink bg-surface-alert px-4 py-2 text-center text-[13px] font-bold text-destructive">
             <WifiOff className="h-4 w-4 shrink-0" strokeWidth={2} />
@@ -499,9 +499,9 @@ export default function App() {
           </div>
         )}
         {/* Mobile bar */}
-      <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between border-b-2 border-ink bg-surface-sidebar px-4 pt-[env(safe-area-inset-top)] lg:hidden">
+      <header className="sticky top-0 z-30 flex min-h-14 [@media(max-height:500px)]:min-h-12 items-center justify-between border-b-2 border-ink bg-surface-sidebar px-[max(var(--page-pad),env(safe-area-inset-left))] pt-[env(safe-area-inset-top)] lg:hidden">
         <Wordmark compact />
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <button
             className="relative grid h-11 w-11 min-h-[44px] min-w-[44px] place-items-center border-2 border-transparent text-ink transition-colors hover:border-ink hover:bg-gold"
             aria-label="Notifications"
@@ -628,7 +628,7 @@ export default function App() {
           tabIndex={-1}
           className={cn(
             'min-w-0 flex-1 focus:outline-none',
-            location.pathname === '/checkin' && 'lg:h-screen lg:overflow-hidden'
+            location.pathname === '/checkin' && 'lg:h-dvh lg:overflow-hidden'
           )}
         >
           <div
@@ -636,7 +636,7 @@ export default function App() {
               'mx-auto w-full min-w-0',
               location.pathname === '/checkin'
                 ? 'max-w-[1400px] h-full flex flex-col p-2.5 sm:p-3 lg:p-3'
-                : 'max-w-[1360px] px-5 pb-12 pt-6 sm:px-8 lg:px-10 lg:pt-8'
+                : 'max-w-[1360px] px-[max(var(--page-pad),env(safe-area-inset-left))] pb-[calc(3rem+env(safe-area-inset-bottom))] pt-4 sm:px-8 sm:pt-6 lg:px-10 lg:pt-8'
             )}
           >
             <AnimatePresence mode="wait">
@@ -649,10 +649,10 @@ export default function App() {
                 className={cn(
                   location.pathname === '/checkin'
                     ? 'flex-1 min-h-0 flex flex-col'
-                    : 'min-h-[calc(100vh-7rem)]'
+                    : 'min-h-[calc(100dvh-7rem)]'
                 )}
               >
-                <React.Suspense fallback={<div className="panel empty">Opening workspace…</div>}>
+                <React.Suspense fallback={<div className="panel panel-pad space-y-3"><div className="skeleton h-6 w-40" /><div className="skeleton h-4 w-56" /><div className="skeleton h-32 w-full" /></div>}>
                   <Routes location={location} key={location.pathname}>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/wizard" element={gate('/wizard', <LearnerWizard user={user} showToast={showToast} />)} />

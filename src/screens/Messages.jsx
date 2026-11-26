@@ -259,7 +259,7 @@ export default function Messages({ user, showToast, onRead }) {
                         mine ? 'bg-gold text-ink' : 'bg-paper text-ink',
                       )}>
                         <p className="whitespace-pre-wrap break-words text-[14px] leading-snug">{message.body}</p>
-                        <p className="mt-1 text-right text-[11px] text-ink/60">{fmtTime(message.created_at)}</p>
+                        <p className="mt-1 text-right text-[11px] text-ink/75">{fmtTime(message.created_at)}</p>
                       </div>
                     </div>
                   );

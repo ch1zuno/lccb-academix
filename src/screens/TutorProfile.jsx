@@ -378,7 +378,7 @@ export default function TutorProfile({ currentUser, onEditProfile, showToast }) 
                 {profile.bio ? (
                   <p className="whitespace-pre-wrap">{profile.bio}</p>
                 ) : (
-                  <p className="italic text-ink/60">No bio provided by this user yet.</p>
+                  <p className="italic text-ink/75">No bio provided by this user yet.</p>
                 )}
               </div>
             </section>
@@ -423,7 +423,7 @@ export default function TutorProfile({ currentUser, onEditProfile, showToast }) 
                     ))}
                   </div>
                 ) : (
-                  <p className="mt-3 text-[14px] italic text-ink/60">No subjects currently assigned.</p>
+                  <p className="mt-3 text-[14px] italic text-ink/75">No subjects currently assigned.</p>
                 )}
               </section>
             )}

@@ -11,6 +11,31 @@ export function usePageTitle(title) {
   }, [title]);
 }
 
+/** Becomes true when `active` stays true past `delayMs` (surfaces cold-start hints). */
+export function useSlowFlag(active, delayMs = 4000) {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!active) { setSlow(false); return undefined; }
+    const id = setTimeout(() => setSlow(true), delayMs);
+    return () => clearTimeout(id);
+  }, [active, delayMs]);
+  return slow;
+}
+
+/** Never show raw 500/SQL/network jargon to students. */
+export function friendlyError(err, fallback = 'Something went wrong. Try again.', { forceGeneric = false } = {}) {
+  if (!err) return fallback;
+  const status = typeof err === 'object' ? err.status : null;
+  const msg = typeof err === 'string' ? err : err.message || '';
+  if (status === 0 || /timeout|aborted|failed to fetch|networkerror/i.test(msg)) {
+    return 'The server is taking longer than usual to wake up. Try again.';
+  }
+  if (forceGeneric || (typeof status === 'number' && status >= 500) || /internal server error|postgres|sql|http 5\d\d/i.test(msg)) {
+    return fallback;
+  }
+  return msg || fallback;
+}
+
 /**
  * Persists form draft state in localStorage under `academix-draft:${key}`.
  * Returns [value, setValue, clearDraft, hasRestored].

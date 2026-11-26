@@ -470,7 +470,7 @@ export default function DualPurposeChat({
                   </span>
                 )
               ) : (
-                <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-ink/50">
+                <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-ink/75">
                   {subjectName}
                 </span>
               )}
@@ -484,7 +484,7 @@ export default function DualPurposeChat({
               onChange={(e) => setNoteContent(e.target.value)}
               placeholder={`Take notes during your ${subjectName} session…\n\n• Type key concepts, steps, or examples here.\n• Click "Save as PDF" below to name and download your notes.\n• If you forget to save, your notes automatically download as "${autoSaveDefaultName}" when the session ends.`}
               aria-label="Session notepad content"
-              className="w-full flex-1 resize-none bg-transparent font-sans text-[13px] leading-relaxed text-ink placeholder:text-ink/45 focus:outline-none"
+              className="w-full flex-1 resize-none bg-transparent font-sans text-[13px] leading-relaxed text-ink placeholder:text-muted-foreground focus:outline-none"
             />
           </div>
 
@@ -502,7 +502,7 @@ export default function DualPurposeChat({
                 <button
                   type="button"
                   onClick={() => setIsNamingPdf(false)}
-                  className="text-ink/60 hover:text-ink"
+                  className="text-ink/75 hover:text-ink"
                   aria-label="Cancel save as PDF"
                 >
                   <X className="h-3.5 w-3.5" />

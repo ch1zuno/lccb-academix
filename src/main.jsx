@@ -24,7 +24,7 @@ class ErrorBoundary extends React.Component {
   render() {
     if (!this.state.failed) return this.props.children;
     return (
-      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f4ecdc', color: '#0f2942', padding: 24, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', background: 'var(--color-background, #f2ede1)', color: 'var(--color-ink, #0f2942)', padding: 24, fontFamily: 'system-ui, sans-serif' }}>
         <div style={{ maxWidth: 520, width: '100%', border: '2px solid #0f2942', background: '#fff9ee', padding: 28, boxShadow: '6px 6px 0 #0f2942' }}>
           <p style={{ margin: 0, fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 700 }}>Something tore</p>
           <h1 style={{ margin: '10px 0 6px', fontSize: 26, lineHeight: 1.1 }}>The ledger hit a snag.</h1>

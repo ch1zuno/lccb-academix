@@ -64,11 +64,11 @@ export default function CampusVenuesManager({ showToast }) {
   const activeCount = (venues ?? []).filter((v) => v.is_active).length;
 
   return (
-    <div className="panel p-5">
+    <div className="panel panel-pad">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-ink pb-3">
-        <div>
+        <div className="min-w-0">
           <h2 className="font-display text-[17px] font-bold leading-tight tracking-[-0.02em] flex items-center gap-2 text-ink">
-            <MapPin className="h-4 w-4 text-ink" strokeWidth={2.2} aria-hidden="true" />
+            <MapPin className="h-4 w-4 shrink-0 text-ink" strokeWidth={2.2} aria-hidden="true" />
             Approved campus venues
           </h2>
           <p className="mt-0.5 text-[13px] text-muted-foreground">
@@ -80,7 +80,6 @@ export default function CampusVenuesManager({ showToast }) {
           size="sm"
           variant={adding ? 'outline' : 'default'}
           onClick={() => setAdding((v) => !v)}
-          className="min-h-[38px]"
         >
           <Plus className="mr-1 h-4 w-4" strokeWidth={2.2} />
           {adding ? 'Close form' : 'Add venue'}
@@ -161,11 +160,11 @@ export default function CampusVenuesManager({ showToast }) {
               <div
                 key={v.id}
                 className={cn(
-                  'flex items-start justify-between gap-2 border-2 border-ink p-3',
-                  v.is_active ? 'bg-paper' : 'bg-surface-quiet opacity-75',
+                  'flex min-w-0 items-start justify-between gap-2 border-b border-line pb-3 last:border-b-0 sm:border-2 sm:border-ink sm:p-3',
+                  v.is_active ? 'sm:bg-paper' : 'sm:bg-surface-quiet opacity-75',
                 )}
               >
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="font-display text-[14px] font-bold leading-tight text-ink truncate">{v.name}</p>
                   <p className="mt-0.5 text-[12px] text-muted-foreground truncate">
                     {[v.building, v.room, `Cap ${v.capacity}`].filter(Boolean).join(' · ')}
@@ -184,7 +183,7 @@ export default function CampusVenuesManager({ showToast }) {
                   variant="outline"
                   disabled={togglingId === v.id}
                   onClick={() => handleToggle(v)}
-                  className="min-h-[34px] shrink-0 text-[11px]"
+                  className="shrink-0 text-[12px]"
                 >
                   {togglingId === v.id ? '…' : v.is_active ? 'Disable' : 'Enable'}
                 </Button>
