@@ -184,6 +184,8 @@ CREATE TABLE tutor_applications (
   exam_score int,
   exam_started_at timestamptz,
   exam_submitted_at timestamptz,
+  exam_draft jsonb,
+  exam_draft_saved_at timestamptz,
   grades jsonb,
   achievements jsonb,
   status application_status NOT NULL DEFAULT 'pending',

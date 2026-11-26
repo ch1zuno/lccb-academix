@@ -22,16 +22,81 @@ const uploadLimiter = rateLimit({
   message: { error: 'Slow down on file uploads' },
 });
 const EXAM_WINDOW_MINUTES = 30;
+const EXAM_GRACE_MS = 30_000;
+const PASS_MARK = 0.7;
 
 const APP_SQL = `
   SELECT a.id, a.application_code, a.exam_score, a.exam_started_at, a.exam_submitted_at,
-         a.status, a.date_applied, a.achievements,
+         a.exam_draft_saved_at, a.status, a.date_applied, a.achievements,
          u.name, u.custom_id, u.email, u.program, u.department,
          COALESCE((SELECT json_agg(json_build_object('code', s.code, 'name', s.name))
                    FROM application_subjects asx JOIN subjects s ON s.id = asx.subject_id
                    WHERE asx.application_id = a.id), '[]') AS subjects,
          (SELECT count(*)::int FROM application_documents d WHERE d.application_id = a.id) AS document_count
   FROM tutor_applications a JOIN users u ON u.id = a.user_id`;
+
+/** Server-side grading helper — single source of truth for manual and expiry-based grading. */
+async function gradeAnswers(client, answersRaw) {
+  const { rows: qs } = await client.query(
+    `SELECT question_number, answer FROM exam_questions ORDER BY question_number`,
+  );
+  if (qs.length === 0) throw httpError(500, 'Exam question bank is empty');
+  const grades = {};
+  let correct = 0;
+  for (const q of qs) {
+    const picked = Number(answersRaw?.[String(q.question_number)] ?? answersRaw?.[q.question_number] ?? -1);
+    const ok = picked === q.answer;
+    grades[q.question_number] = ok;
+    if (ok) correct += 1;
+  }
+  const score = Math.round((correct / qs.length) * 100);
+  return { grades, correct, total: qs.length, score, passed: score >= PASS_MARK * 100 };
+}
+
+/**
+ * If a pending attempt ran past the 30-minute window (+30s latency grace)
+ * without a manual submit, grade the autosaved draft so work is not lost.
+ */
+async function finalizeExpiredExamIfNeeded(user, ip) {
+  const candidate = (await query(
+    `SELECT id, exam_started_at FROM tutor_applications
+      WHERE user_id = $1 AND status = 'pending' AND exam_score IS NULL AND exam_started_at IS NOT NULL
+      ORDER BY created_at DESC LIMIT 1`,
+    [user.id],
+  )).rows[0];
+  if (!candidate) return;
+  const elapsed = Date.now() - new Date(candidate.exam_started_at).getTime();
+  if (elapsed <= EXAM_WINDOW_MINUTES * 60_000 + EXAM_GRACE_MS) return;
+
+  await withTransaction(async (client) => {
+    const locked = (await client.query(
+      `SELECT id, status, exam_score, exam_started_at, exam_draft
+         FROM tutor_applications WHERE id = $1 FOR UPDATE`,
+      [candidate.id],
+    )).rows[0];
+    if (!locked || locked.status !== 'pending' || locked.exam_score != null || !locked.exam_started_at) return;
+    const lockedElapsed = Date.now() - new Date(locked.exam_started_at).getTime();
+    if (lockedElapsed <= EXAM_WINDOW_MINUTES * 60_000 + EXAM_GRACE_MS) return;
+
+    const { grades, correct, total, score } = await gradeAnswers(client, locked.exam_draft ?? {});
+    const closedAt = new Date(new Date(locked.exam_started_at).getTime() + EXAM_WINDOW_MINUTES * 60_000);
+    await client.query(
+      `UPDATE tutor_applications
+          SET exam_score = $1, grades = $2::jsonb, exam_submitted_at = $3
+        WHERE id = $4`,
+      [score, JSON.stringify(grades), closedAt, locked.id],
+    );
+    await audit({
+      actorId: user.id,
+      actorRole: user.role,
+      action: 'accreditation.exam_auto_submit',
+      entity: 'tutor_application',
+      entityId: locked.id,
+      detail: { score, correct, total, reason: 'window_expired' },
+      ip,
+    }, client);
+  });
+}
 
 const DOCUMENT_META_SQL = `
   SELECT id, application_id, file_name, mime_type, size_bytes, created_at
@@ -54,6 +119,7 @@ async function readableApplication(req, id) {
 
 router.get('/accreditation/mine', requireAuth, async (req, res, next) => {
   try {
+    await finalizeExpiredExamIfNeeded(req.user, requestIp(req));
     const { rows } = await query(`${APP_SQL} WHERE a.user_id = $1 ORDER BY a.created_at DESC`, [req.user.id]);
     res.json({ application: rows[0] ?? null });
   } catch (e) { next(e); }
@@ -134,11 +200,12 @@ router.post('/accreditation/apply', requireAuth, requireRole('learner'), async (
   }
 });
 
-/** GET /accreditation/exam — questions WITHOUT answers; starts the 30-minute clock. */
+/** GET /accreditation/exam — questions WITHOUT answers; starts or resumes the 30-minute clock. */
 router.get('/accreditation/exam', requireAuth, async (req, res, next) => {
   try {
+    await finalizeExpiredExamIfNeeded(req.user, requestIp(req));
     const app = (await query(
-      `SELECT id, status, exam_score, exam_started_at
+      `SELECT id, status, exam_score, exam_started_at, exam_draft, exam_draft_saved_at
          FROM tutor_applications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1`,
       [req.user.id])).rows[0];
     if (!app) throw httpError(404, 'No application — submit one first');
@@ -146,7 +213,7 @@ router.get('/accreditation/exam', requireAuth, async (req, res, next) => {
     if (app.exam_score != null) throw httpError(409, 'Exam already submitted for this application');
     if (app.exam_started_at) {
       const elapsed = Date.now() - new Date(app.exam_started_at).getTime();
-      if (elapsed > EXAM_WINDOW_MINUTES * 60_000) {
+      if (elapsed > EXAM_WINDOW_MINUTES * 60_000 + EXAM_GRACE_MS) {
         throw httpError(409, 'The 30-minute exam window has closed. Ask the superadmin to reset the attempt.');
       }
     }
@@ -164,27 +231,48 @@ router.get('/accreditation/exam', requireAuth, async (req, res, next) => {
       applicationId: app.id,
       startedAt,
       expiresAt: new Date(new Date(startedAt).getTime() + EXAM_WINDOW_MINUTES * 60_000).toISOString(),
+      serverNow: new Date().toISOString(),
       windowMinutes: EXAM_WINDOW_MINUTES,
+      draft: app.exam_draft ?? {},
+      draftSavedAt: app.exam_draft_saved_at ?? null,
       questions: rows,
     });
   } catch (e) { next(e); }
 });
 
 /**
- * POST /accreditation/exam { answers: {"question_number": selectedIndex} }
- * Grades server-side; stores score + per-question grade map. Status stays pending
- * until the superadmin approves/rejects.
+ * PUT /accreditation/exam/answers { answers: {"question_number": selectedIndex} }
+ * Autosaves chosen answers while the 30-minute window is open. Never returns grades or answers.
  */
-const PASS_MARK = 0.7;
-
-router.post('/accreditation/exam', requireAuth, async (req, res, next) => {
+router.put('/accreditation/exam/answers', requireAuth, async (req, res, next) => {
   try {
-    const answersRaw = req.body?.answers ?? {};
-    if (typeof answersRaw !== 'object' || Array.isArray(answersRaw) || Object.keys(answersRaw).length === 0) {
-      throw httpError(400, 'answers object required, e.g. {"1": 2}');
+    const raw = req.body?.answers;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      throw httpError(400, 'answers object required');
+    }
+    const entries = Object.entries(raw);
+    if (entries.length === 0) throw httpError(400, 'At least one answer is required');
+
+    const { rows: qs } = await query(`SELECT question_number, options FROM exam_questions`);
+    const optionCountByNum = new Map(
+      qs.map((q) => {
+        const opts = Array.isArray(q.options) ? q.options : Object.values(q.options ?? {});
+        return [String(q.question_number), opts.length];
+      }),
+    );
+
+    const sanitized = {};
+    for (const [k, v] of entries) {
+      const maxOpts = optionCountByNum.get(String(k));
+      if (maxOpts == null) throw httpError(400, `Unknown question number: ${k}`);
+      const idx = Number(v);
+      if (!Number.isInteger(idx) || idx < 0 || idx >= maxOpts) {
+        throw httpError(400, `Invalid option index for question ${k}`);
+      }
+      sanitized[String(k)] = idx;
     }
 
-    const result = await withTransaction(async (client) => {
+    const saved = await withTransaction(async (client) => {
       const app = (await client.query(
         `SELECT id, status, exam_score, exam_started_at
            FROM tutor_applications
@@ -197,22 +285,58 @@ router.post('/accreditation/exam', requireAuth, async (req, res, next) => {
       if (app.exam_score != null) throw httpError(409, 'Exam already submitted for this application');
       if (!app.exam_started_at) throw httpError(400, 'Open the exam first to start the 30-minute timer');
       const elapsed = Date.now() - new Date(app.exam_started_at).getTime();
-      if (elapsed > EXAM_WINDOW_MINUTES * 60_000) {
+      if (elapsed > EXAM_WINDOW_MINUTES * 60_000 + EXAM_GRACE_MS) {
+        throw httpError(409, 'Exam time limit exceeded — the attempt is closed');
+      }
+      const { rows } = await client.query(
+        `UPDATE tutor_applications
+            SET exam_draft = COALESCE(exam_draft, '{}'::jsonb) || $1::jsonb,
+                exam_draft_saved_at = now()
+          WHERE id = $2
+          RETURNING exam_draft_saved_at`,
+        [JSON.stringify(sanitized), app.id],
+      );
+      return rows[0];
+    });
+
+    res.json({ savedAt: saved.exam_draft_saved_at });
+  } catch (e) { next(e); }
+});
+
+/**
+ * POST /accreditation/exam { answers: {"question_number": selectedIndex} }
+ * Grades server-side; stores score + per-question grade map. Status stays pending
+ * until the superadmin approves/rejects.
+ */
+router.post('/accreditation/exam', requireAuth, async (req, res, next) => {
+  try {
+    const answersRaw = req.body?.answers ?? {};
+    if (typeof answersRaw !== 'object' || Array.isArray(answersRaw)) {
+      throw httpError(400, 'answers object required, e.g. {"1": 2}');
+    }
+
+    const result = await withTransaction(async (client) => {
+      const app = (await client.query(
+        `SELECT id, status, exam_score, exam_started_at, exam_draft
+           FROM tutor_applications
+          WHERE user_id = $1 AND status = 'pending'
+          ORDER BY created_at DESC LIMIT 1
+          FOR UPDATE`,
+        [req.user.id],
+      )).rows[0];
+      if (!app) throw httpError(404, 'No pending application found');
+      if (app.exam_score != null) throw httpError(409, 'Exam already submitted for this application');
+      if (!app.exam_started_at) throw httpError(400, 'Open the exam first to start the 30-minute timer');
+      const mergedAnswers = { ...(app.exam_draft ?? {}), ...answersRaw };
+      if (Object.keys(mergedAnswers).length === 0) {
+        throw httpError(400, 'answers object required, e.g. {"1": 2}');
+      }
+      const elapsed = Date.now() - new Date(app.exam_started_at).getTime();
+      if (elapsed > EXAM_WINDOW_MINUTES * 60_000 + EXAM_GRACE_MS) {
         throw httpError(409, 'Exam time limit exceeded — the attempt is closed');
       }
 
-      const { rows: qs } = await client.query(
-        `SELECT question_number, answer FROM exam_questions ORDER BY question_number`);
-      if (qs.length === 0) throw httpError(500, 'Exam question bank is empty');
-      const grades = {};
-      let correct = 0;
-      for (const q of qs) {
-        const picked = Number(answersRaw[String(q.question_number)] ?? answersRaw[q.question_number] ?? -1);
-        const ok = picked === q.answer;
-        grades[q.question_number] = ok;
-        if (ok) correct += 1;
-      }
-      const score = Math.round((correct / qs.length) * 100);
+      const { grades, correct, total, score, passed } = await gradeAnswers(client, mergedAnswers);
 
       const { rows } = await client.query(
         `UPDATE tutor_applications
@@ -226,10 +350,10 @@ router.post('/accreditation/exam', requireAuth, async (req, res, next) => {
         action: 'accreditation.exam_submit',
         entity: 'tutor_application',
         entityId: app.id,
-        detail: { score, correct, total: qs.length },
+        detail: { score, correct, total },
         ip: requestIp(req),
       }, client);
-      return { ...rows[0], passed: score >= PASS_MARK * 100, correct, total: qs.length };
+      return { ...rows[0], passed, correct, total };
     });
 
     res.json(result);
@@ -261,7 +385,8 @@ router.post('/accreditation/:id/reset-exam', requireAuth, requireRole('superadmi
       if (app.status !== 'pending') throw httpError(409, `Application already ${app.status}`);
       await client.query(
         `UPDATE tutor_applications
-            SET exam_score = NULL, grades = NULL, exam_started_at = NULL, exam_submitted_at = NULL
+            SET exam_score = NULL, grades = NULL, exam_started_at = NULL, exam_submitted_at = NULL,
+                exam_draft = NULL, exam_draft_saved_at = NULL
           WHERE id = $1`,
         [app.id],
       );

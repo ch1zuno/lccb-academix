@@ -121,8 +121,27 @@ const CORRECT = {};
   const exam = (await request('/accreditation/exam', { token: learner.token })).data;
   check('exam has 15 questions', exam.questions?.length === 15, `got ${exam.questions?.length}`);
   check('exam never leaks answers', !JSON.stringify(exam.questions?.[0] ?? {}).includes('"answer"'));
-  check('server starts a 30-minute exam clock', Boolean(exam.startedAt && exam.expiresAt) && exam.windowMinutes === 30,
+  check('server starts a 30-minute exam clock', Boolean(exam.startedAt && exam.expiresAt && exam.serverNow) && exam.windowMinutes === 30,
     `${exam.startedAt} -> ${exam.expiresAt}`);
+
+  // Autosave draft checks: valid save, invalid option rejected, resume returns same clock + draft, no leakage
+  const q1 = exam.questions[0].question_number;
+  const q2 = exam.questions[1].question_number;
+  const badDraft = await request('/accreditation/exam/answers', {
+    method: 'PUT', token: learner.token, body: { answers: { [q1]: 99 } },
+  });
+  check('out-of-range draft option rejected (400)', badDraft.status === 400, `${badDraft.status}`);
+
+  const savedDraft = await request('/accreditation/exam/answers', {
+    method: 'PUT', token: learner.token, body: { answers: { [q1]: CORRECT[q1], [q2]: CORRECT[q2] } },
+  });
+  check('autosave draft succeeds with savedAt only', savedDraft.status === 200 && Boolean(savedDraft.data.savedAt) && !('grades' in savedDraft.data) && !('answer' in savedDraft.data), JSON.stringify(savedDraft.data));
+
+  const resumed = (await request('/accreditation/exam', { token: learner.token })).data;
+  check('resume keeps server startedAt and restores draft',
+    resumed.startedAt === exam.startedAt && resumed.draft?.[String(q1)] === CORRECT[q1] && resumed.draft?.[String(q2)] === CORRECT[q2],
+    JSON.stringify({ startedMatch: resumed.startedAt === exam.startedAt, draft: resumed.draft }));
+  check('resumed exam never leaks answers', !JSON.stringify(resumed).includes('"answer"'));
 
   const answers = {};
   exam.questions.forEach(q => { answers[q.question_number] = CORRECT[q.question_number]; });
@@ -131,6 +150,11 @@ const CORRECT = {};
 
   const rescore = await request('/accreditation/exam', { method: 'POST', token: learner.token, body: { answers: { '1': 99 } } });
   check('exam is one-shot', rescore.status === 409, `${rescore.status}`);
+
+  const draftAfterSubmit = await request('/accreditation/exam/answers', {
+    method: 'PUT', token: learner.token, body: { answers: { [q1]: 0 } },
+  });
+  check('autosave after submit rejected (409)', draftAfterSubmit.status === 409, `${draftAfterSubmit.status}`);
 
   const list = (await request('/accreditation/applications', { token: sa.token })).data.applications;
   const staged = list.find(a => a.application_code === mine0.application_code);
