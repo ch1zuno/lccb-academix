@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 import { config } from './config.js';
 import { query } from './db.js';
 // Pre-load error middleware so unhandled API errors stay JSON.
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { notFound, errorHandler } from './middleware/errors.js';
@@ -15,6 +16,25 @@ import routes from './routes/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distPath = path.resolve(__dirname, '../dist');
+const migrationsDir = path.resolve(__dirname, '../db/migrations');
+
+let migrationCheckRan = false;
+/** One-shot non-blocking check so a stale hosted schema surfaces in server logs. */
+export async function warnPendingMigrations() {
+  if (migrationCheckRan) return;
+  migrationCheckRan = true;
+  try {
+    const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith('.sql')).sort();
+    const { rows } = await query('SELECT filename FROM schema_migrations');
+    const applied = new Set(rows.map((r) => r.filename));
+    const pending = files.filter((f) => !applied.has(f));
+    if (pending.length) {
+      console.error(`[db] Pending migrations not applied: ${pending.join(', ')}. Run: npm run db:migrate`);
+    }
+  } catch (e) {
+    console.error('[db] Could not verify schema_migrations:', e.message);
+  }
+}
 
 /* The assembled Express app — shared by `node server/index.js` (long-running
  * local/dev server) and the Vercel serverless entry (`api/index.js`). The pg
@@ -99,6 +119,10 @@ const loginLimiter = rateLimit({
 
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth/google', loginLimiter);
+app.use('/api', (_req, _res, next) => {
+  if (!migrationCheckRan) warnPendingMigrations().catch(() => {});
+  next();
+});
 app.use('/api', routes);
 
 /* Real health: proves the API *and* its database are reachable. Returns 503

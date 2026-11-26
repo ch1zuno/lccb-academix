@@ -5,13 +5,16 @@ import 'dotenv/config';
 import http from 'node:http';
 import { ensurePostgres } from './pg-embed.js';
 import { config } from './config.js';
-import { app } from './app.js';
+import { app, warnPendingMigrations } from './app.js';
 import { setupWebSocketServer } from './lib/ws-realtime.js';
 
 ensurePostgres()
   .then(() => {
     const server = http.createServer(app);
     setupWebSocketServer(server);
-    server.listen(config.port, () => console.log('API and Realtime WebSocket ready on port', config.port));
+    server.listen(config.port, () => {
+      console.log('API and Realtime WebSocket ready on port', config.port);
+      warnPendingMigrations().catch(() => {});
+    });
   })
   .catch(e => { console.error('Failed to start database:', e.message); process.exit(1); });
