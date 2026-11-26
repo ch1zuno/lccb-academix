@@ -50,6 +50,7 @@ graphify-out/*.sig
 .taste-skill/
 .agents/
 scratch/
+ui-shots/
 .vercel/
 disktree/
 *.tmp
