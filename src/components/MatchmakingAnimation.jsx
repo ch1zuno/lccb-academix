@@ -233,7 +233,7 @@ export default function MatchmakingAnimation({
   const subjectLabel = course && course !== 'Any' ? course : 'your selected subject';
 
   return (
-    <div className="mx-auto w-full max-w-[760px] min-h-[440px] flex flex-col justify-between">
+    <div className="mx-auto w-full max-w-[760px] min-h-0 sm:min-h-[440px] flex flex-col justify-between">
       {/* Screen reader live region for accessibility */}
       <div role="status" aria-live="polite" className="sr-only">
         {state === 'searching' && currentStatusText}
@@ -249,7 +249,7 @@ export default function MatchmakingAnimation({
       <div className="flex-1 flex flex-col justify-center">
         {/* ─── State 1: Searching Peer Tutors ─────────────────────── */}
         {state === 'searching' && (
-          <div className="panel border-2 border-ink bg-paper p-8 text-center shadow-[4px_4px_0_var(--color-ink)]" aria-busy="true">
+          <div className="panel panel-pad sm:p-8 text-center" aria-busy="true">
             <div className="relative mx-auto my-6 flex h-44 w-44 items-center justify-center">
               <div className="absolute inset-0 rounded-full border-2 border-gold mm-ripple pointer-events-none" />
               <div className="absolute inset-3 rounded-full border-2 border-dashed border-ink/40 mm-orbit">

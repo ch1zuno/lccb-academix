@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar } from './ui/Avatar';
+import StepProgress from './ui/StepProgress';
 import {
   FaceToFaceIllustration,
   OnlineIllustration,
@@ -419,14 +420,14 @@ export default function BookingQuestionsForm({
   const isLastStep = stepIndex === BOOKING_STEPS.length - 1;
 
   return (
-    <div className="panel border-2 border-ink bg-card p-4 sm:p-7 shadow-[4px_4px_0_var(--color-ink)]">
-      {/* Prefilled context strip (student + tutor) */}
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-2 border-ink bg-surface-quiet p-3.5">
-        <div className="flex items-center gap-3 min-w-0">
+    <div className="panel panel-pad sm:p-7">
+      {/* Prefilled context strip (flattened callout — no nested bordered card on mobile) */}
+      <div className="callout mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <Avatar name={tutor?.name || 'Tutor'} avatarUrl={tutor?.avatar_url || tutor?.avatar} size="md" />
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-display text-[16px] font-extrabold text-ink truncate">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="font-display text-[16px] font-extrabold text-ink">
                 {tutor?.name || 'Tutor'}
               </span>
               {tutor?.role === 'faculty' ? (
@@ -440,7 +441,7 @@ export default function BookingQuestionsForm({
               )}
               {form.mode && <SessionModeBadge mode={form.mode} compact />}
             </div>
-            <p className="mt-0.5 text-[12px] text-muted-foreground truncate">
+            <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
               Booking as <strong className="text-ink">{user?.name || 'Student'}</strong>
               {user?.program ? ` · ${user.program}` : ''}
               {form.course ? ` · ${form.course}` : ''}
@@ -453,40 +454,14 @@ export default function BookingQuestionsForm({
         </span>
       </div>
 
-      {/* Visible 5-step progress indicator (wraps cleanly on mobile, zero horizontal scroll) */}
-      <nav aria-label="Booking progress" className="mb-6">
-        <ol className="grid grid-cols-5 gap-1.5">
-          {BOOKING_STEPS.map((s, idx) => {
-            const done = idx < stepIndex;
-            const current = idx === stepIndex;
-            return (
-              <li key={s.id}>
-                <button
-                  type="button"
-                  disabled={!done}
-                  onClick={() => done && goToStep(idx)}
-                  aria-current={current ? 'step' : undefined}
-                  className={cn(
-                    'flex min-h-[44px] w-full flex-col items-center justify-center border-2 px-1 py-1.5 text-center transition-colors',
-                    current
-                      ? 'border-ink bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]'
-                      : done
-                        ? 'cursor-pointer border-ink bg-ink text-paper hover:opacity-90'
-                        : 'cursor-default border-ink/25 bg-paper text-muted-foreground',
-                  )}
-                >
-                  <span className="num text-[11px] font-extrabold leading-none">
-                    {done ? '✓' : s.num}
-                  </span>
-                  <span className="mt-1 hidden text-[11px] font-bold leading-none sm:block">
-                    {s.short}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ol>
-      </nav>
+      {/* Visible 5-step progress indicator */}
+      <StepProgress
+        interactive
+        steps={BOOKING_STEPS}
+        currentIndex={stepIndex}
+        onStepClick={goToStep}
+        className="mb-5"
+      />
 
       {/* Step Content */}
       <AnimatePresence mode="wait">
@@ -528,7 +503,7 @@ export default function BookingQuestionsForm({
                   tabIndex={form.mode === 'online' ? -1 : 0}
                   onClick={() => updateField('mode', 'face_to_face')}
                   className={cn(
-                    'group flex min-h-[210px] w-full flex-col items-start justify-between border-2 border-ink p-5 text-left transition-[transform,box-shadow,background-color] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold',
+                    'group flex min-h-[168px] sm:min-h-[210px] w-full flex-col items-start justify-between border-2 border-ink p-4 sm:p-5 text-left transition-[transform,box-shadow,background-color] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold',
                     form.mode === 'face_to_face'
                       ? 'bg-gold text-ink shadow-[5px_5px_0_var(--color-ink)] -translate-y-0.5'
                       : 'bg-paper text-ink shadow-[3px_3px_0_var(--color-ink)] hover:-translate-y-0.5 hover:bg-surface-highlight hover:shadow-[5px_5px_0_var(--color-ink)]',
@@ -576,7 +551,7 @@ export default function BookingQuestionsForm({
                   tabIndex={form.mode === 'online' ? 0 : form.mode === '' ? 0 : -1}
                   onClick={() => updateField('mode', 'online')}
                   className={cn(
-                    'group flex min-h-[210px] w-full flex-col items-start justify-between border-2 border-ink p-5 text-left transition-[transform,box-shadow,background-color] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold',
+                    'group flex min-h-[168px] sm:min-h-[210px] w-full flex-col items-start justify-between border-2 border-ink p-4 sm:p-5 text-left transition-[transform,box-shadow,background-color] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold',
                     form.mode === 'online'
                       ? 'bg-gold text-ink shadow-[5px_5px_0_var(--color-ink)] -translate-y-0.5'
                       : 'bg-paper text-ink shadow-[3px_3px_0_var(--color-ink)] hover:-translate-y-0.5 hover:bg-surface-highlight hover:shadow-[5px_5px_0_var(--color-ink)]',
@@ -1154,16 +1129,16 @@ export default function BookingQuestionsForm({
         </div>
       )}
 
-      {/* Navigation Footer */}
-      <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink/15 pt-4">
+      {/* Navigation Footer (sticky above keyboard on mobile) */}
+      <div className="action-bar mt-6">
         <Button
           type="button"
           variant="outline"
           onClick={handleBack}
           disabled={submitting}
-          className="min-h-[44px] font-bold"
+          className="flex-1 bg-paper font-bold sm:flex-none"
         >
-          <ArrowLeft className="mr-1.5 h-4 w-4" strokeWidth={2} />
+          <ArrowLeft className="mr-1.5 h-4 w-4 shrink-0" strokeWidth={2} />
           {stepIndex === 0 ? 'Cancel' : 'Back'}
         </Button>
 
@@ -1171,19 +1146,19 @@ export default function BookingQuestionsForm({
           type="button"
           onClick={handleNext}
           disabled={submitting}
-          className="min-h-[44px] px-5 font-extrabold shadow-[3px_3px_0_var(--color-ink)]"
+          className="flex-1 whitespace-normal px-4 font-extrabold sm:flex-none sm:px-5"
         >
           {submitting ? (
             <>
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Sending request…
+              <Loader2 className="mr-1.5 h-4 w-4 shrink-0 animate-spin" /> Sending…
             </>
           ) : isLastStep ? (
             <>
-              <Clock className="mr-1.5 h-4 w-4" /> Confirm booking request
+              <Clock className="mr-1.5 h-4 w-4 shrink-0" /> Confirm booking
             </>
           ) : (
             <>
-              Continue <ArrowRight className="ml-1.5 h-4 w-4" strokeWidth={2} />
+              Continue <ArrowRight className="ml-1.5 h-4 w-4 shrink-0" strokeWidth={2} />
             </>
           )}
         </Button>

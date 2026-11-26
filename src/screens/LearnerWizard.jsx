@@ -16,8 +16,11 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Avatar } from '../components/ui/Avatar';
+import StepProgress from '../components/ui/StepProgress';
+import LoadState from '../components/ui/LoadState';
 import { cn } from '../lib/utils';
 import { addDaysYmd } from '../lib/dates';
+import { friendlyError } from '../lib/ux';
 import MatchmakingAnimation from '../components/MatchmakingAnimation';
 import BookingQuestionsForm from '../components/BookingQuestionsForm';
 import {
@@ -77,26 +80,28 @@ function OptionRow({ label, desc, selected, onClick }) {
   return (
     <button
       type="button"
+      role="radio"
+      aria-checked={selected}
       onClick={onClick}
-      aria-pressed={selected}
       className={cn(
-        'flex min-h-[96px] w-full items-start justify-between gap-4 border-2 border-ink p-4 text-left transition-[background-color,box-shadow,transform]',
+        'flex min-h-[64px] w-full items-start justify-between gap-3 border-2 border-ink p-3.5 text-left transition-[background-color,box-shadow,transform] sm:min-h-[84px] sm:p-4',
         selected
-          ? 'bg-gold shadow-[4px_4px_0_var(--color-ink)]'
-          : 'bg-paper hover:-translate-y-0.5 hover:bg-surface-highlight hover:shadow-[3px_3px_0_var(--color-ink)]',
+          ? 'bg-gold shadow-[var(--nb-shadow)_var(--nb-shadow)_0_var(--color-ink)]'
+          : 'bg-paper hover:-translate-y-0.5 hover:bg-surface-highlight hover:shadow-[var(--nb-shadow-sm)_var(--nb-shadow-sm)_0_var(--color-ink)]',
       )}
     >
-      <span>
+      <span className="min-w-0">
         <span className="font-display block text-[15px] font-bold leading-tight text-ink">{label}</span>
-        {desc && <span className="mt-1 block text-[13px] leading-snug text-ink/70">{desc}</span>}
+        {desc && <span className="mt-1 block text-[13px] leading-snug text-ink/75">{desc}</span>}
       </span>
       <span
+        aria-hidden="true"
         className={cn(
-          'mt-0.5 grid h-5 w-5 shrink-0 place-items-center border-2 border-ink',
+          'mt-0.5 grid h-6 w-6 shrink-0 place-items-center border-2 border-ink',
           selected ? 'bg-ink text-paper' : 'bg-paper',
         )}
       >
-        {selected && <Check className="h-3 w-3" strokeWidth={2.2} />}
+        {selected && <Check className="h-3.5 w-3.5" strokeWidth={2.4} />}
       </span>
     </button>
   );
@@ -113,11 +118,13 @@ export default function LearnerWizard({ user, showToast }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState({});
   const [liveSubjects, setLiveSubjects] = useState(null);
+  const [subjectsError, setSubjectsError] = useState(null);
   const [liveTutors, setLiveTutors] = useState([]);
   const [matches, setMatches] = useState(null);
   const [requesting, setRequesting] = useState(null);
 
-  // Top Dual Search Bars state (results only appear when user types in a search bar)
+  // Compact single search control with Subject / Tutor name toggle
+  const [searchBy, setSearchBy] = useState('subject'); // 'subject' | 'tutor'
   const [subjectQuery, setSubjectQuery] = useState('');
   const [tutorQuery, setTutorQuery] = useState('');
 
@@ -131,17 +138,25 @@ export default function LearnerWizard({ user, showToast }) {
   const [skipCourse, setSkipCourse] = useState(false);
   const [submittingBooking, setSubmittingBooking] = useState(false);
 
-  // Sync live subject & tutor UUIDs from backend while keeping src/data.js for instant search
-  useEffect(() => {
+  const loadDirectory = () => {
+    setSubjectsError(null);
     api
       .get('/subjects')
       .then(({ subjects }) => setLiveSubjects(subjects || []))
-      .catch(() => setLiveSubjects([]));
+      .catch((err) => {
+        setLiveSubjects([]);
+        setSubjectsError(friendlyError(err, "We couldn't load the live subject list. Try again."));
+      });
 
     api
       .get('/tutors')
       .then(({ tutors }) => setLiveTutors(tutors || []))
       .catch(() => {});
+  };
+
+  // Sync live subject & tutor UUIDs from backend while keeping src/data.js for instant search
+  useEffect(() => {
+    loadDirectory();
   }, []);
 
   // Merge src/data.js subjects with live DB IDs
@@ -393,96 +408,92 @@ export default function LearnerWizard({ user, showToast }) {
     }
   };
 
+  const questionSteps = steps.slice(0, steps.length - 1);
+  const activeQuery = searchBy === 'subject' ? subjectQuery : tutorQuery;
+  const setActiveQuery = (val) => {
+    if (searchBy === 'subject') {
+      setSubjectQuery(val);
+      if (val) setTutorQuery('');
+    } else {
+      setTutorQuery(val);
+      if (val) setSubjectQuery('');
+    }
+    if (searchFlowMode) setSearchFlowMode(null);
+  };
+
   return (
     <div className="mx-auto w-full max-w-[880px]">
       {/* Header */}
       <div className="section-head">
         <div>
           <h1 className="section-title">Find a tutor</h1>
-          <p className="section-subtitle">Six questions, then a live list of accredited peers.</p>
+          <p className="section-subtitle">6 quick questions, then your matches.</p>
         </div>
-        {!searchFlowMode && isQuestionStep && (
-          <span className="num text-[13px] text-muted-foreground">
-            {currentStep + 1} / {steps.length - 1}
-          </span>
-        )}
       </div>
 
-      {/* ─── TOP DUAL SEARCH BARS (Side by side on desktop, stacked on mobile) ─── */}
-      <div className="mb-7 grid grid-cols-1 gap-4 md:grid-cols-2">
-        {/* Search Bar 1: [ Search subject ] */}
-        <div className="panel border-2 border-ink bg-card p-3 shadow-[3px_3px_0_var(--color-ink)]">
-          <label
-            htmlFor="tutor-tab-search-subject"
-            className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-ink"
+      {/* Compact single search control with Subject / Tutor name toggle */}
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+          <div
+            role="radiogroup"
+            aria-label="Search by"
+            className="grid shrink-0 grid-cols-2 border-2 border-ink bg-paper sm:w-auto"
           >
-            <BookOpen className="h-3.5 w-3.5 text-ink" strokeWidth={2.2} />
-            Search subject
-          </label>
-          <div className="relative flex items-center">
-            <Search
-              className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground"
-              strokeWidth={2}
-            />
-            <input
-              id="tutor-tab-search-subject"
-              type="text"
-              value={subjectQuery}
-              onChange={(e) => {
-                setSubjectQuery(e.target.value);
-                if (e.target.value) setTutorQuery('');
-                if (searchFlowMode) setSearchFlowMode(null);
+            <button
+              type="button"
+              role="radio"
+              aria-checked={searchBy === 'subject'}
+              onClick={() => {
+                setSearchBy('subject');
+                setTutorQuery('');
               }}
-              placeholder='Search subject (e.g. "Programming", "Calculus")...'
-              aria-label="Search subject"
-              className="h-10 w-full border-2 border-ink bg-paper pl-9 pr-9 text-[13px] font-medium text-ink placeholder:text-muted-foreground focus-visible:outline-none focus-visible:shadow-[3px_3px_0_var(--color-gold)]"
-            />
-            {subjectQuery && (
-              <button
-                type="button"
-                onClick={() => setSubjectQuery('')}
-                aria-label="Clear subject search"
-                className="absolute right-2.5 grid h-6 w-6 place-items-center text-muted-foreground hover:text-ink"
-              >
-                <X className="h-4 w-4" strokeWidth={2.2} />
-              </button>
-            )}
+              className={cn(
+                'flex min-h-11 items-center justify-center gap-1.5 border-r-2 border-ink px-3 text-[13px] font-bold transition-colors',
+                searchBy === 'subject' ? 'bg-gold text-ink' : 'bg-paper text-muted-foreground hover:bg-surface-highlight hover:text-ink',
+              )}
+            >
+              <BookOpen className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
+              Subject
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={searchBy === 'tutor'}
+              onClick={() => {
+                setSearchBy('tutor');
+                setSubjectQuery('');
+              }}
+              className={cn(
+                'flex min-h-11 items-center justify-center gap-1.5 px-3 text-[13px] font-bold transition-colors',
+                searchBy === 'tutor' ? 'bg-gold text-ink' : 'bg-paper text-muted-foreground hover:bg-surface-highlight hover:text-ink',
+              )}
+            >
+              <UserCheck className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
+              Tutor name
+            </button>
           </div>
-        </div>
 
-        {/* Search Bar 2: [ Search tutor ] */}
-        <div className="panel border-2 border-ink bg-card p-3 shadow-[3px_3px_0_var(--color-ink)]">
-          <label
-            htmlFor="tutor-tab-search-tutor"
-            className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-ink"
-          >
-            <UserCheck className="h-3.5 w-3.5 text-ink" strokeWidth={2.2} />
-            Search tutor
-          </label>
-          <div className="relative flex items-center">
+          <div className="relative flex min-w-0 flex-1 items-center">
             <Search
               className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground"
               strokeWidth={2}
+              aria-hidden="true"
             />
             <input
-              id="tutor-tab-search-tutor"
-              type="text"
-              value={tutorQuery}
-              onChange={(e) => {
-                setTutorQuery(e.target.value);
-                if (e.target.value) setSubjectQuery('');
-                if (searchFlowMode) setSearchFlowMode(null);
-              }}
-              placeholder='Search tutor by name (e.g. "Angela", "Mark")...'
-              aria-label="Search tutor"
-              className="h-10 w-full border-2 border-ink bg-paper pl-9 pr-9 text-[13px] font-medium text-ink placeholder:text-muted-foreground focus-visible:outline-none focus-visible:shadow-[3px_3px_0_var(--color-gold)]"
+              id="tutor-tab-search"
+              type="search"
+              value={activeQuery}
+              onChange={(e) => setActiveQuery(e.target.value)}
+              placeholder={searchBy === 'subject' ? 'e.g. Calculus, PROG 201' : 'e.g. Angela, Mark'}
+              aria-label={searchBy === 'subject' ? 'Search by subject' : 'Search by tutor name'}
+              className="min-h-11 w-full border-2 border-ink bg-paper pl-9 pr-11 text-[14px] font-medium text-ink placeholder:text-muted-foreground focus-visible:outline-none focus-visible:shadow-[var(--nb-shadow-sm)_var(--nb-shadow-sm)_0_var(--color-gold)]"
             />
-            {tutorQuery && (
+            {activeQuery && (
               <button
                 type="button"
-                onClick={() => setTutorQuery('')}
-                aria-label="Clear tutor search"
-                className="absolute right-2.5 grid h-6 w-6 place-items-center text-muted-foreground hover:text-ink"
+                onClick={() => { setSubjectQuery(''); setTutorQuery(''); }}
+                aria-label="Clear search"
+                className="absolute right-0 grid h-11 w-11 min-h-[44px] min-w-[44px] place-items-center text-muted-foreground hover:text-ink"
               >
                 <X className="h-4 w-4" strokeWidth={2.2} />
               </button>
@@ -559,25 +570,25 @@ export default function LearnerWizard({ user, showToast }) {
 
       {/* ─── MAIN FRAME (DEFAULT): ORIGINAL 6-QUESTION MATCHMAKING WIZARD & BUTTON ─── */}
       {!searchFlowMode && (
-        <div className="relative min-h-[460px]">
+        <div className="relative">
           {/* ─── SEARCH RESULTS OVERLAY ON THE MATCH MAKING AREA ─── */}
           {(hasSubjectSearch || hasTutorSearch) && (
-            <div className="absolute inset-x-0 top-0 z-30 overflow-hidden border-2 border-ink bg-paper shadow-[6px_6px_0_var(--color-ink)] mm-ease-in">
+            <div className="absolute inset-x-0 top-0 z-30 overflow-hidden border-2 border-ink bg-paper shadow-[var(--nb-shadow)_var(--nb-shadow)_0_var(--color-ink)] mm-ease-in">
               {/* Header */}
-              <div className="flex items-center justify-between border-b-2 border-ink bg-surface-highlight px-4 py-3">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-ink bg-surface-highlight px-3.5 py-2.5 sm:px-4 sm:py-3">
+                <div className="flex min-w-0 items-center gap-2">
                   {hasSubjectSearch ? (
                     <>
-                      <BookOpen className="h-4 w-4 text-ink" strokeWidth={2.2} />
-                      <span className="font-display text-[14px] font-bold text-ink">
-                        Subject Results for &ldquo;{subjectQuery}&rdquo; ({filteredSubjects.length})
+                      <BookOpen className="h-4 w-4 shrink-0 text-ink" strokeWidth={2.2} />
+                      <span className="truncate font-display text-[14px] font-bold text-ink">
+                        Subjects for &ldquo;{subjectQuery}&rdquo; ({filteredSubjects.length})
                       </span>
                     </>
                   ) : (
                     <>
-                      <UserCheck className="h-4 w-4 text-ink" strokeWidth={2.2} />
-                      <span className="font-display text-[14px] font-bold text-ink">
-                        Tutor Results for &ldquo;{tutorQuery}&rdquo; ({filteredTutors.length})
+                      <UserCheck className="h-4 w-4 shrink-0 text-ink" strokeWidth={2.2} />
+                      <span className="truncate font-display text-[14px] font-bold text-ink">
+                        Tutors for &ldquo;{tutorQuery}&rdquo; ({filteredTutors.length})
                       </span>
                     </>
                   )}
@@ -589,25 +600,25 @@ export default function LearnerWizard({ user, showToast }) {
                     setSubjectQuery('');
                     setTutorQuery('');
                   }}
-                  className="min-h-[32px] gap-1 text-[11px] font-bold"
+                  className="gap-1 bg-paper font-bold"
                 >
                   <X className="h-3.5 w-3.5" />
-                  Close overlay
+                  Close
                 </Button>
               </div>
 
-              {/* Overlay Content */}
-              <div className="max-h-[500px] overflow-y-auto p-4 sm:p-5">
+              {/* Overlay Content (flat divided rows on mobile to avoid nested bordered boxes) */}
+              <div className="max-h-[65dvh] overflow-y-auto">
                 {hasSubjectSearch && (
                   filteredSubjects.length === 0 ? (
-                    <div className="py-10 text-center">
+                    <div className="px-4 py-8 text-center">
                       <p className="font-display text-[15px] font-bold text-ink">No subjects found</p>
                       <p className="mt-1 text-[13px] text-muted-foreground">
-                        Try searching for another subject code or name (e.g. &ldquo;Programming&rdquo;, &ldquo;Calculus&rdquo;).
+                        Try another code or name, like Calculus or PROG 201.
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="divide-y-2 divide-ink/15">
                       {filteredSubjects.map((sub) => {
                         const availableTutors = getAvailableTutorsForSubject(allTutors, sub.code);
                         return (
@@ -622,11 +633,11 @@ export default function LearnerWizard({ user, showToast }) {
                                 handleSelectSubjectFromSearch(sub);
                               }
                             }}
-                            className="cursor-pointer border-2 border-ink bg-card p-4 transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-surface-highlight hover:shadow-[4px_4px_0_var(--color-ink)]"
+                            className="cursor-pointer bg-card p-3.5 transition-colors hover:bg-surface-highlight sm:p-4"
                           >
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                              <div>
-                                <div className="flex items-center gap-1.5">
+                            <div className="flex flex-col justify-between gap-2.5 sm:flex-row sm:items-center">
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-1.5">
                                   <span className="border border-ink bg-gold px-2 py-0.5 font-display text-[12px] font-extrabold text-ink">
                                     {sub.code}
                                   </span>
@@ -645,32 +656,32 @@ export default function LearnerWizard({ user, showToast }) {
                                   e.stopPropagation();
                                   handleSelectSubjectFromSearch(sub);
                                 }}
-                                className="min-h-[36px] shrink-0 gap-1.5 px-4 font-bold shadow-[2px_2px_0_var(--color-ink)]"
+                                className="w-full shrink-0 gap-1.5 px-4 font-bold sm:w-auto"
                               >
                                 Find tutor
                                 <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} />
                               </Button>
                             </div>
 
-                            <div className="mt-3 border-t border-ink/15 pt-2.5">
+                            <div className="mt-2.5 pt-2">
                               <p className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
                                 Available Tutors ({availableTutors.length})
                               </p>
                               {availableTutors.length > 0 ? (
-                                <div className="mt-1.5 flex flex-wrap gap-2">
+                                <div className="mt-1.5 flex flex-wrap gap-1.5">
                                   {availableTutors.map((t) => (
                                     <span
                                       key={t.id}
                                       className="inline-flex items-center gap-1.5 border border-ink bg-paper px-2 py-1 text-[12px] font-semibold text-ink"
                                     >
-                                      <span className="h-2 w-2 rounded-full bg-emerald-600" />
+                                      <span className="h-2 w-2 rounded-full bg-emerald" />
                                       {t.name}
                                     </span>
                                   ))}
                                 </div>
                               ) : (
                                 <p className="mt-1 flex items-center gap-1 text-[12px] font-semibold text-muted-foreground">
-                                  <Sparkles className="h-3.5 w-3.5 text-gold" strokeWidth={2.2} />
+                                  <Sparkles className="h-3.5 w-3.5 shrink-0 text-gold" strokeWidth={2.2} />
                                   No peer tutors online — tap to match with a Faculty Specialist
                                 </p>
                               )}
@@ -684,18 +695,18 @@ export default function LearnerWizard({ user, showToast }) {
 
                 {hasTutorSearch && (
                   filteredTutors.length === 0 ? (
-                    <div className="py-10 text-center">
+                    <div className="px-4 py-8 text-center">
                       <p className="font-display text-[15px] font-bold text-ink">No tutors found</p>
                       <p className="mt-1 text-[13px] text-muted-foreground">
-                        Try searching for another tutor name or specialization.
+                        Try another tutor name or specialization.
                       </p>
                     </div>
                   ) : (
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="divide-y-2 divide-ink/15 sm:grid sm:grid-cols-2 sm:gap-3 sm:divide-y-0 sm:p-4">
                       {filteredTutors.map((tutor) => (
                         <div
                           key={tutor.id}
-                          className="flex flex-col justify-between border-2 border-ink bg-card p-4 transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:shadow-[4px_4px_0_var(--color-ink)]"
+                          className="flex flex-col justify-between bg-card p-3.5 sm:border-2 sm:border-ink sm:p-4"
                         >
                           <div className="flex items-start gap-3">
                             <button
@@ -709,7 +720,7 @@ export default function LearnerWizard({ user, showToast }) {
                               <button
                                 type="button"
                                 onClick={() => navigate(`/tutors/${tutor.custom_id || tutor.id}`)}
-                                className="truncate text-left font-display text-[15px] font-extrabold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
+                                className="block max-w-full truncate text-left font-display text-[15px] font-extrabold text-ink underline decoration-gold decoration-2 underline-offset-2 hover:decoration-ink"
                               >
                                 {tutor.name}
                               </button>
@@ -721,7 +732,7 @@ export default function LearnerWizard({ user, showToast }) {
                                   {tutor.subjects.map((s) => (
                                     <span
                                       key={s.code}
-                                      className="border border-ink/40 bg-paper px-1.5 py-0.5 text-[10px] font-bold text-ink"
+                                      className="border border-ink/40 bg-paper px-1.5 py-0.5 text-[11px] font-bold text-ink"
                                     >
                                       {s.code}
                                     </span>
@@ -731,12 +742,12 @@ export default function LearnerWizard({ user, showToast }) {
                             </div>
                           </div>
 
-                          <div className="mt-4 flex items-center justify-end gap-2 border-t border-ink/15 pt-2.5">
+                          <div className="mt-3 flex items-center gap-2 border-t border-ink/15 pt-2.5 sm:justify-end">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => navigate(`/tutors/${tutor.custom_id || tutor.id}`)}
-                              className="min-h-[32px] text-[11px] font-bold"
+                              className="flex-1 font-bold sm:flex-none"
                             >
                               View profile
                             </Button>
@@ -747,7 +758,7 @@ export default function LearnerWizard({ user, showToast }) {
                                 setSkipCourse(false);
                                 setSearchFlowMode('booking-form');
                               }}
-                              className="min-h-[32px] px-3 text-[11px] font-bold shadow-[2px_2px_0_var(--color-ink)]"
+                              className="flex-1 font-bold sm:flex-none"
                             >
                               Book
                             </Button>
@@ -762,16 +773,12 @@ export default function LearnerWizard({ user, showToast }) {
           )}
 
           {isQuestionStep && (
-            <div className="mb-8">
-              <div className="h-3 w-full border-2 border-ink bg-paper">
-                <motion.div
-                  className="h-full bg-gold"
-                  initial={false}
-                  animate={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
-                  transition={{ duration: 0.3 }}
-                />
-              </div>
-            </div>
+            <StepProgress
+              steps={questionSteps}
+              currentIndex={currentStep}
+              onStepClick={setCurrentStep}
+              className="mb-4 sm:mb-6"
+            />
           )}
 
           <AnimatePresence mode="wait">
@@ -784,20 +791,20 @@ export default function LearnerWizard({ user, showToast }) {
             >
               {isQuestionStep && (
                 <>
-                  <div className="mb-6">
-                    <p className="inline-block border-2 border-ink bg-ink px-2 py-0.5 text-[13px] font-bold text-paper">
-                      {steps[currentStep].title}
-                    </p>
-                    <h2 className="mt-3 font-display text-[26px] font-extrabold leading-tight tracking-[-0.035em]">
+                  <div className="mb-4 sm:mb-5">
+                    <h2
+                      id="wizard-question-title"
+                      className="font-display text-[clamp(20px,5vw+4px,26px)] font-extrabold leading-tight tracking-[-0.03em]"
+                    >
                       {questionTitle}
                     </h2>
-                    <p className="mt-2 max-w-[58ch] text-[14px] text-muted-foreground">
+                    <p className="mt-1 max-w-[58ch] text-[14px] text-muted-foreground">
                       {questionDetail}
                     </p>
                   </div>
 
                   {steps[currentStep].id === 'goal' && (
-                    <div className="grid gap-2.5 md:grid-cols-3">
+                    <div role="radiogroup" aria-labelledby="wizard-question-title" className="grid gap-2.5 md:grid-cols-3">
                       {GOALS.map((option) => (
                         <OptionRow
                           key={option.value}
@@ -810,7 +817,7 @@ export default function LearnerWizard({ user, showToast }) {
                   )}
 
                   {steps[currentStep].id === 'timeline' && (
-                    <div className="grid gap-2.5 md:grid-cols-3">
+                    <div role="radiogroup" aria-labelledby="wizard-question-title" className="grid gap-2.5 md:grid-cols-3">
                       {TIMELINES.map((option) => (
                         <OptionRow
                           key={option.value}
@@ -823,19 +830,31 @@ export default function LearnerWizard({ user, showToast }) {
                   )}
 
                   {steps[currentStep].id === 'course' && (
-                    <div>
-                      {subjectOptions.length === 0 && (
-                        <div className="panel empty">No subjects are available to match right now.</div>
+                    <LoadState
+                      loading={liveSubjects === null && subjectOptions.length === 0}
+                      error={subjectOptions.length === 0 ? subjectsError : null}
+                      empty={subjectOptions.length === 0}
+                      emptyText="No subjects are available to match right now."
+                      errorText="We couldn't load the subject list. Try again."
+                      onRetry={loadDirectory}
+                      skeleton={(
+                        <div className="flex flex-wrap gap-2">
+                          {Array.from({ length: 8 }).map((_, i) => (
+                            <div key={i} className="skeleton h-11 w-24" />
+                          ))}
+                        </div>
                       )}
-                      <div className="flex flex-wrap gap-2">
+                    >
+                      <div role="radiogroup" aria-labelledby="wizard-question-title" className="flex flex-wrap gap-2">
                         {subjectOptions.map((option) => (
                           <button
                             key={option.code}
                             type="button"
+                            role="radio"
+                            aria-checked={data.course === option.code}
                             onClick={() => selectOption('course', option.code)}
-                            aria-pressed={data.course === option.code}
                             className={cn(
-                              'h-10 border-2 border-ink px-4 text-[14px] font-bold shadow-[2px_2px_0_var(--color-ink)] transition-[background-color,transform,box-shadow]',
+                              'min-h-11 border-2 border-ink px-4 text-[14px] font-bold shadow-[var(--nb-shadow-sm)_var(--nb-shadow-sm)_0_var(--color-ink)] transition-[background-color,transform,box-shadow]',
                               data.course === option.code
                                 ? 'bg-gold text-ink'
                                 : 'bg-paper text-ink hover:-translate-y-0.5 hover:bg-surface-highlight',
@@ -845,11 +864,11 @@ export default function LearnerWizard({ user, showToast }) {
                           </button>
                         ))}
                       </div>
-                    </div>
+                    </LoadState>
                   )}
 
                   {steps[currentStep].id === 'level' && (
-                    <div className="grid gap-2.5 md:grid-cols-3">
+                    <div role="radiogroup" aria-labelledby="wizard-question-title" className="grid gap-2.5 md:grid-cols-3">
                       {LEVELS.map((option) => (
                         <OptionRow
                           key={option.value}
@@ -862,7 +881,7 @@ export default function LearnerWizard({ user, showToast }) {
                   )}
 
                   {steps[currentStep].id === 'language' && (
-                    <div className="grid gap-2.5 md:grid-cols-3">
+                    <div role="radiogroup" aria-labelledby="wizard-question-title" className="grid gap-2.5 md:grid-cols-3">
                       {LANGUAGES.map((option) => (
                         <OptionRow
                           key={option.value}
@@ -875,7 +894,7 @@ export default function LearnerWizard({ user, showToast }) {
                   )}
 
                   {steps[currentStep].id === 'availability' && (
-                    <div className="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3">
+                    <div role="radiogroup" aria-labelledby="wizard-question-title" className="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3">
                       {AVAILABILITY.map((option) => (
                         <OptionRow
                           key={option.value}
@@ -891,16 +910,16 @@ export default function LearnerWizard({ user, showToast }) {
 
               {steps[currentStep].id === 'match' && (
                 <div>
-                  <div className="mb-6">
+                  <div className="mb-5">
                     <p className="inline-block border-2 border-ink bg-ink px-2 py-0.5 text-[13px] font-bold text-paper">
                       Matching
                     </p>
-                    <h2 className="mt-3 font-display text-[26px] font-extrabold leading-tight tracking-[-0.035em]">
+                    <h2 className="mt-3 font-display text-[clamp(20px,5vw+4px,26px)] font-extrabold leading-tight tracking-[-0.03em]">
                       {getMatches().length > 0
                         ? `${getMatches().length} accredited ${data.course ? `for ${data.course}` : 'tutors'}`
                         : 'The match list'}
                     </h2>
-                    <p className="mt-2 max-w-[58ch] text-[14px] text-muted-foreground">
+                    <p className="mt-1.5 max-w-[58ch] text-[14px] text-muted-foreground">
                       Request a session and the tutor confirms the final time. Every tutor here passed the qualification exam.
                     </p>
                   </div>
@@ -924,12 +943,21 @@ export default function LearnerWizard({ user, showToast }) {
           </AnimatePresence>
 
           {isQuestionStep && (
-            <div className="mt-8 flex items-center justify-between gap-3">
-              <Button variant="ghost" onClick={prevStep} disabled={currentStep === 0}>
+            <div className="action-bar mt-6">
+              <Button
+                variant="outline"
+                onClick={prevStep}
+                disabled={currentStep === 0}
+                className="flex-1 bg-paper sm:flex-none"
+              >
                 <ArrowLeft className="h-4 w-4" strokeWidth={1.8} /> Back
               </Button>
-              <Button onClick={nextStep} disabled={!data[steps[currentStep].id]}>
-                {currentStep === steps.length - 2 ? 'Find matches' : 'Continue'}
+              <Button
+                onClick={nextStep}
+                disabled={!data[steps[currentStep].id]}
+                className="flex-1 whitespace-normal sm:flex-none"
+              >
+                {currentStep === steps.length - 2 ? 'Find matches' : 'Next'}
                 <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
               </Button>
             </div>
