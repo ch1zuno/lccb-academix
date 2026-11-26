@@ -3,9 +3,13 @@
  * - Negative validation: invalid mode, missing/inactive/fake venue, free-text location ignored
  * - Face to Face full flow: book -> notify -> tutor proposes new venue/time -> learner accepts ->
  *   venue double-booking blocked (409) -> reschedule -> notify -> QR double check-in -> wrap-up (+50/+25)
- * - Online full flow: book -> tutor accepts -> notify -> reschedule -> OTP double check-in -> wrap-up (+50/+25)
- * - Faculty CSV export includes Mode column
+ * - Online full flow: book -> tutor accepts -> notify -> reschedule -> OTP double check-in ->
+ *   tutor ends via POST /sessions/:id/end (+50/+25) -> learner posts rating via /wrap-up
+ * - Faculty CSV export includes Mode, Ended by, and Actual duration columns
  */
+import pg from 'pg';
+import { E2E_DATABASE_URL } from './e2e-db.js';
+
 const BASE = (process.env.E2E_API_BASE || 'http://localhost:4000').replace(/\/+$/, '') + '/api';
 
 async function request(path, { method = 'GET', token, body } = {}) {
@@ -29,6 +33,9 @@ const futureYmd = (offsetDays) => {
   d.setDate(d.getDate() + offsetDays);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
+
+const psql = new pg.Client({ connectionString: E2E_DATABASE_URL });
+await psql.connect();
 
 (async () => {
   const learnerA = (await login('TE-128')).data;
@@ -100,7 +107,7 @@ const futureYmd = (offsetDays) => {
   assert(fakeVenue.status === 400, `f2f with unknown venue should be 400, got ${fakeVenue.status}`);
   console.log('✓ negative mode & venue validation verified');
 
-  // 3. Face-to-Face full flow (book -> propose -> accept proposal -> venue conflict -> reschedule -> QR check-in -> wrap-up)
+  // 3. Face-to-Face full flow
   const f2fReq = await request('/session-requests', {
     method: 'POST', token: learnerA.token,
     body: {
@@ -119,18 +126,15 @@ const futureYmd = (offsetDays) => {
   assert(f2fReq.data.request.mode === 'face_to_face', 'mode not saved as face_to_face');
   assert(f2fReq.data.request.location === venueA.name, `server must derive venue name, got ${f2fReq.data.request.location}`);
 
-  // Tutor received notification with Face to Face
   const tutorNotifs = (await request('/notifications', { token: tutorA.token })).data.notifications || [];
   assert(tutorNotifs.some((n) => /Face to Face/i.test(n.title) || /Face to Face/i.test(n.message)), 'tutor notification missing mode');
 
-  // Tutor counter-proposes venueB + 11:00 AM
   const proposed = await request(`/session-requests/${f2fReq.data.request.id}/propose`, {
     method: 'POST', token: tutorA.token,
     body: { proposedDate: dayF2F, proposedTime: '11:00 AM', proposedVenueId: venueB.id, note: 'Room B is quieter' },
   });
   assert(proposed.status === 200 && proposed.data.request.status === 'counter_proposed', `propose failed: ${proposed.status} ${proposed.data.error ?? ''}`);
 
-  // Learner accepts proposal -> confirmed session at venueB 11:00 AM
   const f2fConfirmed = await request(`/session-requests/${f2fReq.data.request.id}/accept-proposal`, {
     method: 'POST', token: learnerA.token,
   });
@@ -138,16 +142,12 @@ const futureYmd = (offsetDays) => {
   const f2fSession = f2fConfirmed.data.session;
   assert(f2fSession.mode === 'face_to_face' && f2fSession.venue_id === venueB.id && f2fSession.location === venueB.name, 'confirmed f2f venue mismatch');
 
-  // Venue double-booking guard: second student + DIFFERENT tutor trying same venueB at 11:00 AM must be blocked on accept
+  // Venue double-booking guard: second student + DIFFERENT tutor trying same venueB at 11:00 AM blocked immediately (409)
   const clashReq = await request('/session-requests', {
     method: 'POST', token: learnerB.token,
     body: { tutorId: angela.id, subjectId: prog201.id, topic: 'Venue clash test', preferredDate: dayF2F, preferredTime: '11:00 AM', mode: 'face_to_face', venueId: venueB.id },
   });
-  assert(clashReq.status === 201, `second learner request failed: ${clashReq.status}`);
-  const clashAccept = await request(`/session-requests/${clashReq.data.request.id}/accept`, {
-    method: 'POST', token: tutorB.token,
-  });
-  assert(clashAccept.status === 409, `same-venue double-booking should be 409, got ${clashAccept.status}`);
+  assert(clashReq.status === 409, `same-venue double-booking should be 409, got ${clashReq.status}`);
   console.log('✓ face-to-face counter-proposal & venue double-booking guard verified');
 
   // Reschedule Face to Face to venueA at 2:00 PM
@@ -157,7 +157,7 @@ const futureYmd = (offsetDays) => {
   });
   assert(reschedF2F.status === 200 && reschedF2F.data.session.venue_id === venueA.id && reschedF2F.data.session.time === '2:00 PM', `f2f reschedule failed: ${reschedF2F.status}`);
 
-  // Face-to-Face double check-in (QR) + wrap-up
+  // Face-to-Face double check-in (QR) + wrap-up (backdate started_at past min duration for valid points)
   const st1 = await request(`/sessions/${f2fSession.id}/stage-token`, { method: 'POST', token: tutorA.token, body: { method: 'qr' } });
   assert(st1.status === 200, 'f2f stage-token 1 failed');
   const ciL = await request(`/sessions/${f2fSession.id}/check-in`, { method: 'POST', token: learnerA.token, body: { token: st1.data.token, method: 'qr' } });
@@ -166,6 +166,7 @@ const futureYmd = (offsetDays) => {
   const ciT = await request(`/sessions/${f2fSession.id}/check-in`, { method: 'POST', token: tutorA.token, body: { token: st2.data.token, method: 'qr' } });
   assert(ciT.status === 200 && ciT.data.sessionStarted === true, 'f2f tutor qr check-in failed');
 
+  await psql.query(`UPDATE sessions SET started_at = now() - interval '15 minutes' WHERE id = $1`, [f2fSession.id]);
   const wrapF2F = await request(`/sessions/${f2fSession.id}/wrap-up`, {
     method: 'POST', token: learnerA.token, body: { rating: 5 },
   });
@@ -173,7 +174,7 @@ const futureYmd = (offsetDays) => {
     `f2f wrap-up points mismatch: ${JSON.stringify(wrapF2F.data)}`);
   console.log('✓ face-to-face reschedule, QR check-in, and +50/+25 wrap-up verified');
 
-  // 4. Online full flow (book -> accept -> notify -> reschedule -> OTP check-in -> wrap-up)
+  // 4. Online full flow: tutor ends Online session via /end (+50/+25), learner rates via /wrap-up
   const onlineReq = await request('/session-requests', {
     method: 'POST', token: learnerA.token,
     body: {
@@ -210,19 +211,31 @@ const futureYmd = (offsetDays) => {
   const ociT = await request(`/sessions/${onlineSession.id}/check-in`, { method: 'POST', token: tutorA.token, body: { token: os2.data.token, method: 'otp' } });
   assert(ociT.status === 200 && ociT.data.sessionStarted === true, 'online tutor check-in failed');
 
-  const wrapOnline = await request(`/sessions/${onlineSession.id}/wrap-up`, {
+  // Learner cannot end Online session
+  const learnerTryEnd = await request(`/sessions/${onlineSession.id}/end`, { method: 'POST', token: learnerA.token });
+  assert(learnerTryEnd.status === 403, `learner ending Online session must be 403, got ${learnerTryEnd.status}`);
+
+  await psql.query(`UPDATE sessions SET started_at = now() - interval '15 minutes' WHERE id = $1`, [onlineSession.id]);
+  const tutorEnd = await request(`/sessions/${onlineSession.id}/end`, { method: 'POST', token: tutorA.token });
+  assert(tutorEnd.status === 200 && tutorEnd.data.points === 50 && tutorEnd.data.learnerPoints === 25,
+    `online tutor end points mismatch: ${JSON.stringify(tutorEnd.data)}`);
+
+  // Learner posts rating post-end without double-posting ledger
+  const learnerRate = await request(`/sessions/${onlineSession.id}/wrap-up`, {
     method: 'POST', token: learnerA.token, body: { rating: 5 },
   });
-  assert(wrapOnline.status === 200 && wrapOnline.data.points === 50 && wrapOnline.data.learnerPoints === 25,
-    `online wrap-up points mismatch: ${JSON.stringify(wrapOnline.data)}`);
-  console.log('✓ online accept, reschedule, OTP check-in, and +50/+25 wrap-up verified');
+  assert(learnerRate.status === 200 && learnerRate.data.alreadySettled === true && learnerRate.data.points === 0,
+    `learner post-end rating failed: ${JSON.stringify(learnerRate.data)}`);
+  console.log('✓ online accept, reschedule, OTP check-in, tutor-only end (+50/+25), and learner rating verified');
 
-  // 5. Faculty CSV export includes Mode column
+  // 5. Faculty CSV export includes Mode, Ended by, and Actual duration columns
   const csvRes = await request('/referrals/export.csv', { token: faculty.token });
   assert(csvRes.status === 200, `faculty CSV export failed: ${csvRes.status}`);
   const firstLine = String(csvRes.data.raw || '').replace(/^\uFEFF/, '').split(/\r?\n/)[0];
   assert(firstLine.includes('"Mode"'), `CSV export header missing Mode column: ${firstLine}`);
-  console.log('✓ faculty CSV export Mode column verified');
+  assert(firstLine.includes('"Ended by"'), `CSV export header missing Ended by column: ${firstLine}`);
+  assert(firstLine.includes('"Actual duration"'), `CSV export header missing Actual duration column: ${firstLine}`);
+  console.log('✓ faculty CSV export Mode, Ended by, and Actual duration columns verified');
 
   console.log('Session modes e2e passed.');
-})();
+})().finally(async () => { await psql.end(); });

@@ -41,6 +41,8 @@ export const config = {
   geminiApiKey: process.env.GEMINI_API_KEY || '',
   centrifugoSecret: process.env.CENTRIFUGO_SECRET || '',
   centrifugoProxySecret: process.env.CENTRIFUGO_PROXY_SECRET || '',
+  centrifugoApiUrl: process.env.CENTRIFUGO_API_URL || '',
+  centrifugoApiKey: process.env.CENTRIFUGO_API_KEY || '',
   jitsiRoomSecret: process.env.JITSI_ROOM_SECRET || process.env.JWT_SECRET || (isProd ? '' : 'dev-jitsi-room-secret-change-me'),
   jitsiDomain: process.env.VITE_JITSI_DOMAIN || process.env.JITSI_DOMAIN || 'meet.jit.si',
   googleClientId: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '',
@@ -48,6 +50,13 @@ export const config = {
     .split(',')
     .map((d) => d.trim().toLowerCase())
     .filter(Boolean),
+  // Anti-abuse minimum session duration before points/referral hours post:
+  // 300s (5m) in production; 10s in DEMO_MODE so live demos pass naturally while E2E still catches instant farming.
+  minSessionPointsSeconds: process.env.MIN_SESSION_POINTS_SECONDS != null
+    ? Math.max(0, Number(process.env.MIN_SESSION_POINTS_SECONDS) || 0)
+    : ((process.env.DEMO_MODE === '1' || (process.env.DEMO_MODE !== '0' && !isProd)) ? 10 : 300),
+  nowRequestTtlMinutes: Math.max(1, Number(process.env.NOW_REQUEST_TTL_MINUTES) || 5),
+  lifecycleSweepIntervalMs: Math.max(10_000, Number(process.env.LIFECYCLE_SWEEP_INTERVAL_MS) || 60_000),
   isProd,
 };
 

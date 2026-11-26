@@ -3,6 +3,7 @@ import { query, withTransaction } from '../db.js';
 import { requireAuth, requireRole, requireStepUp } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { audit, requestIp } from '../lib/audit.js';
+import { ensureFreshLifecycle } from '../lib/sessionLifecycle.js';
 
 const router = express.Router();
 
@@ -15,19 +16,23 @@ const SELECT_SQL = `
     f.name AS faculty, f.id AS faculty_id,
     t.name AS assigned_tutor, t.id AS tutor_id,
     s.code AS subject_code, s.name AS subject, s.department,
-    COALESCE(
-      (SELECT sess.mode FROM sessions sess
-        WHERE sess.referral_id = r.id AND sess.status <> 'cancelled'
-        ORDER BY sess.date DESC, sess.created_at DESC LIMIT 1),
-      (SELECT sess.mode FROM sessions sess
-        WHERE sess.learner_id = r.learner_id AND sess.subject_id = r.subject_id AND sess.status <> 'cancelled'
-        ORDER BY sess.date DESC, sess.created_at DESC LIMIT 1)
-    ) AS session_mode
+    ls.mode AS session_mode,
+    ls.ended_by AS session_ended_by,
+    ls.actual_duration_seconds AS session_actual_duration_seconds,
+    ls.needs_faculty_review AS session_needs_faculty_review
   FROM referrals r
   JOIN users c ON c.id = r.learner_id
   JOIN users f ON f.id = r.faculty_id
   LEFT JOIN users t ON t.id = r.assigned_tutor_id
-  JOIN subjects s ON s.id = r.subject_id`;
+  JOIN subjects s ON s.id = r.subject_id
+  LEFT JOIN LATERAL (
+    SELECT sess.mode, sess.ended_by, sess.actual_duration_seconds, sess.needs_faculty_review
+      FROM sessions sess
+     WHERE sess.status <> 'cancelled'
+       AND (sess.referral_id = r.id OR (sess.learner_id = r.learner_id AND sess.subject_id = r.subject_id))
+     ORDER BY (sess.referral_id = r.id) DESC NULLS LAST, sess.date DESC, sess.created_at DESC
+     LIMIT 1
+  ) ls ON true`;
 
 /** Role-scoped visibility: learners see their own, faculty theirs, tutors theirs, superadmin all. */
 function whereFor(user) {
@@ -72,6 +77,7 @@ router.delete('/referrals/:id', requireAuth, requireRole('superadmin'), requireS
 
 router.get('/referrals', requireAuth, async (req, res, next) => {
   try {
+    await ensureFreshLifecycle();
     const { sql, params } = whereFor(req.user);
     const { rows } = await query(`${SELECT_SQL} ${sql} ORDER BY r.created_at DESC`, params);
     res.json({ referrals: rows.map(reorder) });
@@ -81,6 +87,7 @@ router.get('/referrals', requireAuth, async (req, res, next) => {
 // GET /referrals/export.csv — faculty get their board, superadmin gets all.
 router.get('/referrals/export.csv', requireAuth, requireRole('faculty', 'superadmin'), requireStepUp, async (req, res, next) => {
   try {
+    await ensureFreshLifecycle({ force: true });
     const { sql, params } = whereFor(req.user);
     const { rows } = await query(`${SELECT_SQL} ${sql} ORDER BY r.created_at DESC`, params);
     const ymd = (value) => {
@@ -97,13 +104,21 @@ router.get('/referrals/export.csv', requireAuth, requireRole('faculty', 'superad
       return `"${text.replace(/"/g, '""')}"`;
     };
     const formatMode = (m) => (m === 'face_to_face' ? 'Face to Face' : m === 'online' ? 'Online' : 'Not scheduled');
-    const header = ['Referral', 'Learner', 'Learner ID', 'Subject', 'Topic', 'Mode', 'Urgency', 'Status',
+    const formatDuration = (sec) => {
+      const s = Number(sec);
+      if (!Number.isFinite(s) || s <= 0) return '';
+      const mins = Math.floor(s / 60);
+      const rem = s % 60;
+      return mins > 0 ? `${mins}m ${rem}s` : `${rem}s`;
+    };
+    const header = ['Referral', 'Learner', 'Learner ID', 'Subject', 'Topic', 'Mode', 'Ended by', 'Actual duration', 'Faculty review', 'Urgency', 'Status',
       'Date', 'Hours required', 'Hours remaining', 'Assigned tutor', 'Faculty', 'Notes'];
     const lines = [header.map(cell).join(',')];
     for (const row of rows) {
       lines.push([
         row.referral_code, row.learner, row.learner_code, row.subject_code, row.topic,
-        formatMode(row.session_mode), row.urgency, row.status, ymd(row.date), row.hours_required,
+        formatMode(row.session_mode), row.session_ended_by || '', formatDuration(row.session_actual_duration_seconds),
+        row.session_needs_faculty_review ? 'Flagged' : '', row.urgency, row.status, ymd(row.date), row.hours_required,
         row.hours_remaining, row.assigned_tutor, row.faculty, row.notes,
       ].map(cell).join(','));
     }

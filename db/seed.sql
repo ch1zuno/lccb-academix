@@ -73,6 +73,10 @@ UPDATE users SET certified_by_id = (SELECT id FROM users WHERE name = 'Sir Vince
 UPDATE users SET certified_by_id = (SELECT id FROM users WHERE name = 'Sir Charles Torres' LIMIT 1) WHERE custom_id IN ('TU-056', 'TU-068');
 UPDATE users SET certified_by_id = (SELECT id FROM users WHERE name = 'Prof. Antonio Lacson' LIMIT 1) WHERE custom_id = 'TU-065';
 
+-- Seed distinct offered languages on select tutors so language validation is testable
+UPDATE users SET languages = ARRAY['English', 'Tagalog'] WHERE custom_id IN ('TU-015', 'TU-031', 'TU-053');
+UPDATE users SET languages = ARRAY['English'] WHERE custom_id IN ('TU-023', 'TU-059');
+
 INSERT INTO users (custom_id, name, email, role, program, password_hash) VALUES
 ('TE-128', 'Julian Gemelo', 'j.gemelo@lccbacolod.edu.ph', 'learner', 'BSIT 2-B', '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
 ('TE-092', 'Maria Luisa Tan', 'ml.tan@lccbacolod.edu.ph', 'learner', 'BSA 1-A', '$2b$10$nthYix5Pzh3MQcOzsCmBg.DqyKeTKHM6DKfb1V/5DnTmQHtQ9VIOu'),
@@ -155,6 +159,18 @@ VALUES
 UPDATE sessions
 SET duration_hours = NULLIF(regexp_replace(duration, '[^0-9.]', '', 'g'), '')::numeric
 WHERE duration_hours IS NULL AND duration IS NOT NULL;
+
+-- Explicit Asia/Manila cutoffs and historical completion metadata
+UPDATE sessions
+SET cutoff_at = ((date + 1)::timestamp AT TIME ZONE 'Asia/Manila')
+WHERE cutoff_at IS NULL;
+
+UPDATE sessions
+SET points_posted = true,
+    ended_by = 'tutor',
+    ended_reason = 'tutor_ended',
+    actual_duration_seconds = GREATEST(1800, ROUND(COALESCE(duration_hours, 1) * 3600))::int
+WHERE status = 'completed';
 
 INSERT INTO session_check_ins (session_id, user_id, method)
 VALUES

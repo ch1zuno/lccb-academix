@@ -23,6 +23,7 @@ import { addDaysYmd } from '../lib/dates';
 import { friendlyError } from '../lib/ux';
 import MatchmakingAnimation from '../components/MatchmakingAnimation';
 import BookingQuestionsForm from '../components/BookingQuestionsForm';
+import { useBookingDraft } from '../context/BookingDraftContext';
 import {
   SUBJECTS as MOCK_SUBJECTS,
   TUTORS as MOCK_TUTORS,
@@ -111,6 +112,7 @@ export default function LearnerWizard({ user, showToast }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const { draft, clearDraft } = useBookingDraft();
   const prefilledTutor = location.state?.prefilledTutor;
   const prefilledTutorId = searchParams.get('tutorId') || prefilledTutor?.id;
 
@@ -132,9 +134,10 @@ export default function LearnerWizard({ user, showToast }) {
   // null = show the original main-frame 6-step wizard
   // 'subject-matchmaking' = Matchmaking screen opened by clicking a subject in [ Search subject ] results
   // 'booking-form' = Shared BookingQuestionsForm opened after picking a tutor from Subject Search (skipCourse=true) or Tutor Profile (skipCourse=false)
-  const [searchFlowMode, setSearchFlowMode] = useState(null);
+  const [searchFlowMode, setSearchFlowMode] = useState(() => (draft?.tutor && !prefilledTutor && !prefilledTutorId ? 'booking-form' : null));
   const [selectedSubject, setSelectedSubject] = useState(null);
-  const [selectedTutor, setSelectedTutor] = useState(null);
+  const [selectedTutor, setSelectedTutor] = useState(() => (draft?.tutor && !prefilledTutor && !prefilledTutorId ? draft.tutor : null));
+  const [fromWizardFlow, setFromWizardFlow] = useState(() => Boolean(draft?.fromWizard));
   const [skipCourse, setSkipCourse] = useState(false);
   const [submittingBooking, setSubmittingBooking] = useState(false);
 
@@ -195,6 +198,7 @@ export default function LearnerWizard({ user, showToast }) {
         custom_id: live.custom_id || mockTutor.custom_id,
         is_available: live.is_available ?? mockTutor.is_available,
         is_verified: live.is_verified ?? mockTutor.is_verified,
+        languages: Array.isArray(live.languages) && live.languages.length > 0 ? live.languages : mockTutor.languages,
         subjects:
           Array.isArray(live.subjects) && live.subjects.length > 0
             ? live.subjects
@@ -226,6 +230,7 @@ export default function LearnerWizard({ user, showToast }) {
     if (prefilledTutor) {
       const enriched = enrichTutor(prefilledTutor);
       setSelectedTutor(enriched);
+      setFromWizardFlow(false);
       setSkipCourse(false);
       setSearchFlowMode('booking-form');
     } else if (prefilledTutorId) {
@@ -240,17 +245,20 @@ export default function LearnerWizard({ user, showToast }) {
             role: profile.role,
             program: profile.program || profile.title || profile.department,
             specialization: profile.specialization,
+            languages: profile.languages,
             subjects: profile.subjects,
             avatar: profile.avatar,
             stats: profile.stats,
           });
           setSelectedTutor(enriched);
+          setFromWizardFlow(false);
           setSkipCourse(false);
           setSearchFlowMode('booking-form');
         })
         .catch(() => {
           if (localMatch) {
             setSelectedTutor(localMatch);
+            setFromWizardFlow(false);
             setSkipCourse(false);
             setSearchFlowMode('booking-form');
           }
@@ -330,16 +338,20 @@ export default function LearnerWizard({ user, showToast }) {
   };
 
   // Matchmaking screen (from Subject Search) -> Tapping "Book" opens Shared Booking Form with skipCourse={true}
-  const handleBookFromSubjectMatchmaking = (tutor) => {
+  const handleBookFromSubjectMatchmaking = (tutor, { viaWizard = false } = {}) => {
     const mockMatch = findMockMentorById(tutor.custom_id || tutor.id);
+    const liveMatch = liveTutors.find((lt) => lt.id === tutor.id || lt.custom_id === tutor.custom_id);
     setSelectedTutor({
       ...mockMatch,
+      ...liveMatch,
       ...tutor,
+      languages: liveMatch?.languages || tutor.languages || mockMatch?.languages,
       subjects:
         Array.isArray(tutor.subjects) && tutor.subjects.length > 0
           ? tutor.subjects
-          : mockMatch?.subjects || (selectedSubject ? [selectedSubject] : []),
+          : liveMatch?.subjects || mockMatch?.subjects || (selectedSubject ? [selectedSubject] : []),
     });
+    setFromWizardFlow(viaWizard);
     setSkipCourse(true);
     setSearchFlowMode('booking-form');
   };
@@ -388,8 +400,10 @@ export default function LearnerWizard({ user, showToast }) {
           mode: answers.mode,
           venueId: answers.mode === 'face_to_face' ? answers.venueId : undefined,
           topic: answers.topic || 'Concept Walkthrough',
-          preferredDate: answers.preferredDate || addDaysYmd(1),
-          preferredTime: answers.preferredTime || '3:00 PM',
+          language: answers.language || 'English',
+          isNow: Boolean(answers.isNow),
+          preferredDate: answers.isNow ? undefined : (answers.preferredDate || addDaysYmd(1)),
+          preferredTime: answers.isNow ? undefined : (answers.preferredTime || '3:00 PM'),
           durationHours: answers.durationHours || 1,
           note: answers.note || null,
         });
@@ -541,28 +555,40 @@ export default function LearnerWizard({ user, showToast }) {
         </div>
       )}
 
-      {/* ─── SEARCH-TRIGGERED VIEW 2: UNIFIED 5-STEP BOOKING FORM ─── */}
+      {/* ─── SEARCH-TRIGGERED VIEW 2: STREAMLINED 3-STEP BOOKING FORM ─── */}
       {searchFlowMode === 'booking-form' && selectedTutor && (
         <BookingQuestionsForm
           user={user}
           tutor={selectedTutor}
-          skipCourse={skipCourse}
           selectedCourse={selectedSubject?.code || data.course || ''}
+          wizardPrefill={fromWizardFlow ? {
+            course: data.course || selectedSubject?.code || '',
+            goal: data.goal || '',
+            language: data.language || '',
+            fromWizard: true,
+          } : null}
           subjects={selectedTutor.subjects || []}
           submitting={submittingBooking}
           onCancel={() => {
-            if (skipCourse && selectedSubject) {
+            clearDraft();
+            if (skipCourse && selectedSubject && !fromWizardFlow) {
               setSearchFlowMode('subject-matchmaking');
             } else {
               setSearchFlowMode(null);
               setSelectedTutor(null);
+              setFromWizardFlow(false);
             }
           }}
-          onDone={() => navigate('/dashboard')}
+          onDone={() => {
+            clearDraft();
+            navigate('/dashboard');
+          }}
           onBookAnother={() => {
+            clearDraft();
             setSearchFlowMode(null);
             setSelectedTutor(null);
             setSelectedSubject(null);
+            setFromWizardFlow(false);
           }}
           onSubmit={handleBookingQuestionsSubmit}
         />
@@ -932,7 +958,7 @@ export default function LearnerWizard({ user, showToast }) {
                     onRequestSession={(tutor) => {
                       const chosenSub = subjectOptions.find((s) => s.code === data.course) || null;
                       setSelectedSubject(chosenSub);
-                      handleBookFromSubjectMatchmaking(tutor);
+                      handleBookFromSubjectMatchmaking(tutor, { viaWizard: true });
                     }}
                     requestingId={requesting}
                     navigate={navigate}

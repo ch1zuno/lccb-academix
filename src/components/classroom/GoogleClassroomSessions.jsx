@@ -27,6 +27,8 @@ const STATUS_FILTERS = [
   { value: 'completed', label: 'Completed' },
   { value: 'upcoming', label: 'Upcoming' },
   { value: 'in-progress', label: 'In-progress' },
+  { value: 'auto-closed', label: 'Auto-closed' },
+  { value: 'missed', label: 'Missed' },
   { value: 'cancelled', label: 'Cancelled' },
 ];
 
@@ -56,6 +58,8 @@ function StatusBadge({ status }) {
     completed: 'bg-emerald text-white border-emerald',
     upcoming: 'bg-gold text-ink border-ink',
     'in-progress': 'bg-amber text-white border-amber',
+    'auto-closed': 'bg-ink text-gold border-ink',
+    missed: 'bg-crimson/80 text-white border-crimson',
     cancelled: 'bg-crimson text-white border-crimson',
   };
 

@@ -85,12 +85,8 @@ const preferredTime = '3:30 PM';
     method: 'POST', token: learner.token,
     body: { tutorId: mark.id, subjectId: prog.id, topic: 'Overlap probe', preferredDate, preferredTime: shiftTime(preferredTime, 30) },
   });
-  if (overlapping.status !== 201) throw new Error(`overlap request should be 201, got ${overlapping.status}`);
-  const overlapAccept = await request(`/session-requests/${overlapping.data.request.id}/accept`, {
-    method: 'POST', token: teacher.token,
-  });
-  console.log('overlapping accept ->', overlapAccept.status, overlapAccept.data.error);
-  if (overlapAccept.status !== 409) throw new Error(`overlapping accept should be 409, got ${overlapAccept.status}`);
+  console.log('overlapping request ->', overlapping.status, overlapping.data.error);
+  if (overlapping.status !== 409) throw new Error(`overlapping request should be 409, got ${overlapping.status}`);
 
   console.log('Matching e2e passed.');
 })();

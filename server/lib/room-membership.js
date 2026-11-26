@@ -1,4 +1,5 @@
 import { query } from '../db.js';
+import { ensureFreshLifecycle } from './sessionLifecycle.js';
 
 /**
  * Verify whether a user is an authorized participant or supervisor of a tutoring room.
@@ -11,6 +12,8 @@ export async function verifyRoomMembership(roomId, userId) {
   if (!roomId || !userId) {
     return { authorized: false, code: 103, message: 'Missing roomId or userId' };
   }
+
+  await ensureFreshLifecycle();
 
   const { rows: [session] } = await query(
     `SELECT s.id, s.session_code, s.tutor_id, s.learner_id, s.status

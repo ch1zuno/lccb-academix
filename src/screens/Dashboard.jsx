@@ -78,6 +78,9 @@ const STATUS_DOT = {
   upcoming: 'bg-ink/35',
   completed: 'bg-ink',
   cancelled: 'bg-crimson',
+  missed: 'bg-crimson',
+  'auto-closed': 'bg-amber',
+  expired: 'bg-ink/40',
 };
 
 const URGENCY_DOT = {
@@ -1157,6 +1160,11 @@ export default function Dashboard({ role, user, showToast }) {
                           {req.learner_name}
                         </button>
                         <SessionModeBadge mode={req.mode} compact />
+                        {req.is_now && (
+                          <span className="border border-ink bg-crimson px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-paper">
+                            NOW · Instant
+                          </span>
+                        )}
                         {req.status === 'counter_proposed' && (
                           <span className="border border-ink bg-surface-highlight px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-ink">
                             Proposal sent

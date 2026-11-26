@@ -17,20 +17,41 @@ export function ConfirmDialog({
   onCancel,
 }) {
   const cancelRef = useRef(null);
+  const dialogRef = useRef(null);
 
   useEffect(() => {
     if (!open) return undefined;
+    const prevFocus = document.activeElement;
     const timer = setTimeout(() => cancelRef.current?.focus(), 20);
     const onKeyDown = (e) => {
       if (e.key === 'Escape' && !busy) {
         e.stopPropagation();
         onCancel?.();
+        return;
+      }
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusables = dialogRef.current.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        );
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => {
       clearTimeout(timer);
       window.removeEventListener('keydown', onKeyDown);
+      if (prevFocus && typeof prevFocus.focus === 'function') {
+        try { prevFocus.focus(); } catch { /* ignore */ }
+      }
     };
   }, [open, busy, onCancel]);
 
@@ -46,6 +67,7 @@ export function ConfirmDialog({
           onClick={() => { if (!busy) onCancel?.(); }}
         >
           <motion.div
+            ref={dialogRef}
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="confirm-dialog-title"
@@ -79,13 +101,14 @@ export function ConfirmDialog({
                 </p>
               )}
 
-              <div className="mt-5 flex flex-wrap items-center justify-end gap-2.5">
+              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-2.5">
                 <Button
                   ref={cancelRef}
                   type="button"
                   variant="outline"
                   disabled={busy}
                   onClick={onCancel}
+                  className="min-h-[44px] w-full sm:w-auto"
                 >
                   {cancelLabel}
                 </Button>
@@ -94,6 +117,7 @@ export function ConfirmDialog({
                   variant={variant === 'destructive' ? 'destructive' : 'default'}
                   disabled={busy}
                   onClick={onConfirm}
+                  className="min-h-[44px] w-full sm:w-auto"
                 >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : null}
                   {confirmLabel}

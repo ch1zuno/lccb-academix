@@ -29,6 +29,9 @@ export function toPublicProfile(user, subjects = [], stats = null) {
     program: typeof user.program === 'string' ? user.program : undefined,
     is_available: typeof user.is_available === 'boolean' ? user.is_available : undefined,
     is_verified: typeof user.is_verified === 'boolean' ? user.is_verified : undefined,
+    languages: (user.role === 'tutor' || user.role === 'faculty') && Array.isArray(user.languages)
+      ? user.languages.filter((l) => typeof l === 'string')
+      : undefined,
     subjects: (user.role === 'tutor' || user.role === 'faculty')
       ? (Array.isArray(subjects) ? subjects : []).map(s => {
           const item = {

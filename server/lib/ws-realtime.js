@@ -2,6 +2,7 @@ import { WebSocketServer } from 'ws';
 import { authenticateRequest } from '../middleware/auth.js';
 import { verifyRoomMembership } from './room-membership.js';
 import { audit } from './audit.js';
+import { registerWsBroadcaster, recordRoomPresence } from './realtimeEvents.js';
 
 /**
  * Lightweight native WebSocket realtime server for peer tutoring rooms.
@@ -40,12 +41,25 @@ export function setupWebSocketServer(httpServer) {
       presence: presenceList,
     });
 
+    recordRoomPresence(roomId, presenceList);
+
     for (const client of clients) {
       if (client.readyState === 1 /* OPEN */) {
         client.send(payload);
       }
     }
   }
+
+  registerWsBroadcaster((roomId, event) => {
+    const clients = rooms.get(roomId);
+    if (!clients) return;
+    const payload = JSON.stringify({ ...event, roomId });
+    for (const client of clients) {
+      if (client.readyState === 1 /* OPEN */) {
+        client.send(payload);
+      }
+    }
+  });
 
   wss.on('connection', (ws, req) => {
     ws.isAlive = true;

@@ -2,10 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Copy, Check, Loader2, Star, Clock, Award, CheckCircle2, UserCheck, ShieldCheck, MapPin, QrCode } from 'lucide-react';
+import { Copy, Check, Loader2, Star, Clock, Award, CheckCircle2, UserCheck, ShieldCheck, MapPin, QrCode, ExternalLink, Video, PhoneOff } from 'lucide-react';
 import { cn } from '../lib/utils';
 import ErrorBanner from '../components/ui/ErrorBanner';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { SessionModeBadge } from '../components/SessionModeArtwork';
+import { useActiveSession } from '../context/ActiveSessionContext';
 import { buildQrMatrix } from '../lib/qrSvg';
 import { useDraftState } from '../lib/ux';
 import api from '../api';
@@ -89,6 +91,7 @@ function InPersonQrCode({ value }) {
 export default function SessionCheckIn({ role, user, showToast }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { openRoom, refreshLiveSession } = useActiveSession();
   const deepSessionId = searchParams.get('session') || '';
   const deepCode = searchParams.get('code') || '';
   const [active, setActive] = useState(false);
@@ -102,6 +105,8 @@ export default function SessionCheckIn({ role, user, showToast }) {
   const [checkingIn, setCheckingIn] = useState(false);
   const [confirmations, setConfirmations] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [confirmEndOpen, setConfirmEndOpen] = useState(false);
+  const [endingOnline, setEndingOnline] = useState(false);
   const [wrapRating, setWrapRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [wrapNotes, setWrapNotes, clearWrapNotes] = useDraftState('wrapup-notes', '');
@@ -110,15 +115,15 @@ export default function SessionCheckIn({ role, user, showToast }) {
 
   const loadSessions = () => {
     setSessionsError(null);
-    api.get('/sessions/mine')
+    // Check-in tab strictly loads today's upcoming and in-progress sessions only (never stale/expired)
+    api.get('/sessions/mine', { scope: 'checkin' })
       .then(({ sessions: rows }) => {
-        setSessions(rows);
-        const byParam = deepSessionId ? rows.find((s) => s.id === deepSessionId && (s.status === 'upcoming' || s.status === 'in-progress')) : null;
-        const next = byParam || rows.find(s => s.status === 'in-progress') || rows.find(s => s.status === 'upcoming');
-        if (next) {
-          setTarget(next);
-          setConfirmations(Number(next.check_in_count) || 0);
-        }
+        const list = (rows || []).filter((s) => s.status === 'upcoming' || s.status === 'in-progress');
+        setSessions(list);
+        const byParam = deepSessionId ? list.find((s) => s.id === deepSessionId) : null;
+        const next = byParam || list.find((s) => s.status === 'in-progress') || list.find((s) => s.status === 'upcoming') || null;
+        setTarget(next);
+        setConfirmations(next ? (Number(next.check_in_count) || 0) : 0);
       })
       .catch((e) => { setSessionsError(e.message || 'Failed to load sessions'); });
   };
@@ -204,13 +209,15 @@ export default function SessionCheckIn({ role, user, showToast }) {
       showToast(e.message || 'Invalid code', 'error');
     } finally {
       setCheckingIn(false);
-      api.get('/sessions/mine').then(({ sessions: rows }) => {
-        setSessions(rows);
-        const fresh = rows.find(s => s.id === target.id);
+      api.get('/sessions/mine', { scope: 'checkin' }).then(({ sessions: rows }) => {
+        const list = (rows || []).filter((s) => s.status === 'upcoming' || s.status === 'in-progress');
+        setSessions(list);
+        const fresh = list.find((s) => s.id === target.id);
         if (fresh) {
           setTarget(fresh);
           setConfirmations(Number(fresh.check_in_count) || 0);
         }
+        refreshLiveSession?.({ announceNew: false });
       }).catch(() => {});
     }
   };
@@ -456,90 +463,144 @@ export default function SessionCheckIn({ role, user, showToast }) {
     );
   }
 
-  // Active Live Session View (In-Person card for Face to Face; LiveClassroom video for Online)
+  // Active Live Session View: launch card for dedicated room tab / mobile CallLayer
   if ((active || target?.status === 'in-progress') && !finished && target) {
-    if (target.mode === 'face_to_face') {
-      const partnerName = role === 'tutor' ? target.learner_name : target.tutor_name;
-      const venueLine = [target.venue_name || target.location, target.venue_building, target.venue_room]
-        .filter(Boolean)
-        .join(' · ');
-      return (
-        <div className="mx-auto w-full max-w-[780px] py-4">
-          <div className="panel border-2 border-ink bg-card p-6 sm:p-8 shadow-[5px_5px_0_var(--color-ink)]">
-            <div className="flex flex-wrap items-start justify-between gap-3 border-b-2 border-ink pb-5">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <SessionModeBadge mode="face_to_face" />
-                  <span className="status-pill">
-                    <span className="status-dot bg-emerald" /> In progress
-                  </span>
-                </div>
-                <h1 className="mt-3 font-display text-[24px] font-extrabold leading-tight tracking-[-0.03em] text-ink">
-                  {target.subject} — {target.topic}
-                </h1>
-                <p className="mt-1 text-[13px] text-muted-foreground">
-                  {target.session_code} · With <strong className="text-ink">{partnerName}</strong>
-                </p>
-              </div>
-            </div>
+    const isSessionTutor = user?.id && target?.tutor_id
+      ? String(user.id) === String(target.tutor_id)
+      : role === 'tutor';
+    const partnerName = isSessionTutor ? target.learner_name : target.tutor_name;
+    const venueLine = [target.venue_name || target.location, target.venue_building, target.venue_room]
+      .filter(Boolean)
+      .join(' · ');
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="border-2 border-ink bg-surface-quiet p-5 text-center shadow-[3px_3px_0_var(--color-ink)]">
-                <p className="text-[12px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                  Elapsed session time
-                </p>
-                <p className="num mt-2 text-[48px] font-extrabold leading-none text-ink">
-                  {formatTime(seconds)}
-                </p>
-                <p className="mt-2 text-[12px] text-muted-foreground">
-                  Both devices verified in person (2/2)
-                </p>
-              </div>
+    const handleTutorEndFromCheckIn = async () => {
+      setEndingOnline(true);
+      try {
+        const res = await api.post(`/sessions/${target.id}/end`, {});
+        if (typeof res.actualDurationSeconds === 'number') setSeconds(res.actualDurationSeconds);
+        setConfirmEndOpen(false);
+        setFinished(true);
+        setActive(false);
+        refreshLiveSession?.({ announceNew: false });
+        showToast(
+          res.needsFacultyReview
+            ? 'Session ended below minimum duration — flagged for faculty review (0 pts).'
+            : 'Session ended. Add optional notes below.',
+          res.needsFacultyReview ? 'warning' : 'success',
+        );
+      } catch (e) {
+        showToast(e.message || 'Could not end session', 'error');
+      } finally {
+        setEndingOnline(false);
+      }
+    };
 
-              <div className="flex flex-col justify-between border-2 border-ink bg-surface-highlight p-5 shadow-[3px_3px_0_var(--color-ink)]">
-                <div>
-                  <p className="flex items-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wider text-ink">
-                    <MapPin className="h-4 w-4" aria-hidden="true" /> Confirmed campus venue
-                  </p>
-                  <p className="mt-2 font-display text-[18px] font-extrabold text-ink">
-                    {venueLine || 'Approved Campus Venue'}
-                  </p>
-                </div>
-                <p className="mt-3 text-[12px] text-ink/80">
-                  +50 tutor points and +25 learner attendance points post after wrap-up.
-                </p>
+    return (
+      <div className="mx-auto w-full max-w-[780px] py-4">
+        <div className="panel border-2 border-ink bg-card p-5 sm:p-8 shadow-[var(--nb-shadow)_var(--nb-shadow)_0_var(--color-ink)]">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b-2 border-ink pb-5">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <SessionModeBadge mode={target.mode} />
+                <span className="status-pill">
+                  <span className="status-dot bg-emerald" /> Live now
+                </span>
               </div>
-            </div>
-
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink/15 pt-5">
-              <p className="text-[13px] text-muted-foreground">
-                Either participant can finish the session when you are done reviewing.
+              <h1 className="mt-3 font-display text-[clamp(20px,5vw+4px,26px)] font-extrabold leading-tight tracking-[-0.03em] text-ink">
+                {target.subject} — {target.topic}
+              </h1>
+              <p className="mt-1 text-[13px] text-muted-foreground">
+                {target.session_code} · With <strong className="text-ink">{partnerName}</strong>
               </p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div className="border-2 border-ink bg-surface-quiet p-5 text-center shadow-[3px_3px_0_var(--color-ink)]">
+              <p className="text-[12px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                Elapsed session time
+              </p>
+              <p className="num mt-2 text-[44px] font-extrabold leading-none text-ink">
+                {formatTime(seconds)}
+              </p>
+              <p className="mt-2 text-[12px] text-muted-foreground">
+                2/2 devices verified
+              </p>
+            </div>
+
+            <div className="flex flex-col justify-between border-2 border-ink bg-surface-highlight p-5 shadow-[3px_3px_0_var(--color-ink)]">
+              <div>
+                <p className="flex items-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wider text-ink">
+                  {target.mode === 'face_to_face'
+                    ? <><MapPin className="h-4 w-4" aria-hidden="true" /> Confirmed campus venue</>
+                    : <><Video className="h-4 w-4" aria-hidden="true" /> Dedicated online room</>}
+                </p>
+                <p className="mt-2 font-display text-[17px] font-extrabold text-ink">
+                  {target.mode === 'face_to_face' ? (venueLine || 'Approved Campus Venue') : 'LCCB Live Classroom'}
+                </p>
+              </div>
+              <p className="mt-3 text-[12px] text-ink/80">
+                {target.mode === 'face_to_face'
+                  ? 'Open the dedicated session room to track time and finish wrap-up.'
+                  : 'Opens in a dedicated session room so you can browse other tabs without dropping the call.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-col gap-2.5 border-t-2 border-ink/15 pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <Button
+              type="button"
+              size="lg"
+              onClick={() => openRoom(target)}
+              className="min-h-[44px] w-full font-extrabold shadow-[3px_3px_0_var(--color-ink)] sm:w-auto"
+            >
+              <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              {target.mode === 'face_to_face' ? 'Open session room' : 'Join live room'}
+            </Button>
+
+            {target.mode === 'face_to_face' ? (
               <Button
+                type="button"
                 variant="destructive"
                 size="lg"
                 onClick={() => handleEnd(seconds)}
-                className="min-h-[44px] font-extrabold shadow-[3px_3px_0_var(--color-ink)]"
+                className="min-h-[44px] w-full font-extrabold sm:w-auto"
               >
                 End session &amp; wrap up
               </Button>
-            </div>
+            ) : isSessionTutor ? (
+              <Button
+                type="button"
+                variant="destructive"
+                size="lg"
+                disabled={endingOnline}
+                onClick={() => setConfirmEndOpen(true)}
+                className="min-h-[44px] w-full font-extrabold sm:w-auto"
+              >
+                <PhoneOff className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                End session
+              </Button>
+            ) : (
+              <p className="text-[12px] text-muted-foreground">
+                Your tutor will end the session when you finish. You can leave and rejoin anytime.
+              </p>
+            )}
           </div>
         </div>
-      );
-    }
 
-    return (
-      <React.Suspense fallback={<div className="panel empty p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-ink" />Opening classroom…</div>}>
-        <LiveClassroom
-          session={target}
-          user={user}
-          role={role}
-          seconds={seconds}
-          onEnd={handleEnd}
-          showToast={showToast}
+        <ConfirmDialog
+          open={confirmEndOpen}
+          title="End session"
+          description="Are you sure you want to end this session?"
+          warning="This ends the Online session for both participants and records the final duration."
+          cancelLabel="Cancel"
+          confirmLabel="End session"
+          variant="destructive"
+          busy={endingOnline}
+          onCancel={() => setConfirmEndOpen(false)}
+          onConfirm={handleTutorEndFromCheckIn}
         />
-      </React.Suspense>
+      </div>
     );
   }
 

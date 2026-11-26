@@ -8,6 +8,8 @@ import {
   rangesOverlap,
   formatModeLabel,
   formatDurationLabel,
+  validateTopic,
+  validateTutorLanguage,
 } from './booking.js';
 import { buildQrMatrix } from '../../src/lib/qrSvg.js';
 
@@ -63,4 +65,15 @@ test('buildQrMatrix builds a valid square QR matrix with 3 finder patterns', () 
   // Center of top-left finder (3,3) is dark; inner ring (1,1) is light
   assert.equal(qr.matrix[3][3], 1);
   assert.equal(qr.matrix[1][1], 0);
+});
+
+test('validateTopic and validateTutorLanguage enforce strict booking rules', () => {
+  assert.equal(validateTopic('  Linked Lists  '), 'Linked Lists');
+  assert.throws(() => validateTopic('a'), (e) => e.status === 400);
+  assert.throws(() => validateTopic('x'.repeat(121)), (e) => e.status === 400);
+
+  assert.equal(validateTutorLanguage('English', ['English', 'Tagalog']), 'English');
+  assert.equal(validateTutorLanguage(undefined, ['Tagalog']), 'Tagalog');
+  assert.throws(() => validateTutorLanguage('Hiligaynon', ['English', 'Tagalog']), (e) => e.status === 400);
+  assert.throws(() => validateTutorLanguage('Spanish', ['English', 'Tagalog']), (e) => e.status === 400);
 });

@@ -14,6 +14,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Pencil,
+  Zap,
+  ChevronDown,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar } from './ui/Avatar';
@@ -24,16 +26,15 @@ import {
   SessionModeBadge,
   formatModeLabel,
 } from './SessionModeArtwork';
+import { useBookingDraft } from '../context/BookingDraftContext';
 import { cn } from '../lib/utils';
 import { addDaysYmd, localYmd } from '../lib/dates';
 import api from '../api';
 
 const BOOKING_STEPS = [
   { id: 'mode', num: 1, short: 'Mode', title: 'Choose session mode' },
-  { id: 'subject', num: 2, short: 'Subject', title: 'Subject & topic' },
-  { id: 'schedule', num: 3, short: 'Date & time', title: 'Date & time' },
-  { id: 'details', num: 4, short: 'Details', title: 'Venue & notes' },
-  { id: 'review', num: 5, short: 'Review', title: 'Review & confirm' },
+  { id: 'details', num: 2, short: 'Details', title: 'Session details' },
+  { id: 'review', num: 3, short: 'Review', title: 'Review & confirm' },
 ];
 
 const TOPIC_CHIPS = [
@@ -51,11 +52,7 @@ const DURATIONS = [
   { value: 2, label: '2 hrs' },
 ];
 
-const LANGUAGES = [
-  { value: 'English', label: 'English' },
-  { value: 'Tagalog', label: 'Tagalog' },
-  { value: 'Hiligaynon', label: 'Hiligaynon' },
-];
+const ALL_LANGUAGES = ['English', 'Tagalog', 'Hiligaynon'];
 
 const NOTE_EXAMPLES = [
   'Reviewing for our upcoming quiz and need practice problems.',
@@ -83,25 +80,48 @@ function formatPrettyDate(ymd) {
   });
 }
 
-function nextMondayYmd() {
-  const now = new Date();
-  const days = ((8 - now.getDay()) % 7) || 7;
-  return addDaysYmd(days);
+function mapWizardGoalToTopic(goal) {
+  if (!goal) return '';
+  if (/exam/i.test(goal)) return 'Exam & Quiz Prep';
+  if (/topic/i.test(goal)) return 'Concept Walkthrough';
+  if (/catch/i.test(goal)) return 'Catch Up on Missed Lesson';
+  return goal;
+}
+
+function SummaryRow({ label, value, onEdit, editLabel }) {
+  return (
+    <div className="flex items-center justify-between gap-2 border-b border-ink/15 px-3 py-2.5 last:border-b-0">
+      <div className="min-w-0">
+        <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </span>
+        <p className="truncate text-[14px] font-bold text-ink">{value}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onEdit}
+        aria-label={editLabel || `Edit ${label.toLowerCase()}`}
+        className="inline-flex min-h-[36px] shrink-0 items-center gap-1 border-2 border-ink bg-paper px-2.5 text-[12px] font-bold text-ink hover:bg-gold"
+      >
+        <Pencil className="h-3 w-3" aria-hidden="true" />
+        Edit
+      </button>
+    </div>
+  );
 }
 
 /**
- * Unified 5-step mobile-first booking flow:
- * 1) Mode (nothing preselected — Face to Face vs Online)
- * 2) Subject & topic
- * 3) Date & time (live tutor availability)
- * 4) Details (approved campus venue picker for F2F, platform note for Online, language + help prompt)
- * 5) Review & confirm (plain-English summary with Edit links) -> Success screen
+ * 3-step mobile-first booking flow:
+ * 1) Mode (Face to Face vs Online — conscious choice, nothing preselected)
+ * 2) Compact Details (progressive disclosure: collapsed editable summary for wizard prefill,
+ *    Date & Time with instant "Now" chip when tutor is available, Venue for F2F, Language & help prompt)
+ * 3) Review & Confirm -> Success state
  */
 export default function BookingQuestionsForm({
   user,
   tutor,
-  skipCourse = false,
   selectedCourse = '',
+  wizardPrefill = null, // { course, goal, language, fromWizard }
   subjects = [],
   onSubmit,
   onCancel,
@@ -109,6 +129,8 @@ export default function BookingQuestionsForm({
   onBookAnother,
   submitting = false,
 }) {
+  const { draft, updateDraft, clearDraft } = useBookingDraft();
+
   const tutorSubjects = useMemo(() => {
     const raw = Array.isArray(subjects) && subjects.length > 0
       ? subjects
@@ -122,41 +144,87 @@ export default function BookingQuestionsForm({
     );
   }, [subjects, tutor?.subjects]);
 
-  const initialCourse = useMemo(() => {
-    if (selectedCourse) return selectedCourse;
+  const matchingDraft = useMemo(() => {
+    const tutorKey = tutor?.id || tutor?.custom_id;
+    if (!draft || !tutorKey) return null;
+    if (draft.tutorKey && draft.tutorKey === tutorKey) return draft;
+    return null;
+  }, [draft, tutor?.id, tutor?.custom_id]);
+
+  const prefilledCourse = useMemo(() => {
+    const candidate = matchingDraft?.course || wizardPrefill?.course || selectedCourse || '';
+    if (candidate && tutorSubjects.some((s) => String(s.code).toUpperCase() === String(candidate).toUpperCase())) {
+      return candidate;
+    }
     if (tutorSubjects.length === 1) return tutorSubjects[0].code;
     return '';
-  }, [selectedCourse, tutorSubjects]);
+  }, [matchingDraft?.course, wizardPrefill?.course, selectedCourse, tutorSubjects]);
 
+  const prefilledTopic = useMemo(() => {
+    if (matchingDraft?.topic) return matchingDraft.topic;
+    if (wizardPrefill?.goal) return mapWizardGoalToTopic(wizardPrefill.goal);
+    return '';
+  }, [matchingDraft?.topic, wizardPrefill?.goal]);
+
+  const tutorOfferedLanguagesInit = useMemo(() => {
+    if (Array.isArray(tutor?.languages) && tutor.languages.length > 0) {
+      return tutor.languages.filter((l) => ALL_LANGUAGES.includes(l));
+    }
+    return ALL_LANGUAGES;
+  }, [tutor?.languages]);
+
+  const prefilledLanguage = useMemo(() => {
+    const candidate = matchingDraft?.language || wizardPrefill?.language || '';
+    if (candidate && tutorOfferedLanguagesInit.includes(candidate)) return candidate;
+    return tutorOfferedLanguagesInit[0] || 'English';
+  }, [matchingDraft?.language, wizardPrefill?.language, tutorOfferedLanguagesInit]);
+
+  const isFromWizard = Boolean(matchingDraft?.fromWizard || wizardPrefill?.fromWizard);
   const today = useMemo(() => localYmd(), []);
   const quickDates = useMemo(() => [
+    { label: 'Today', value: today },
     { label: 'Tomorrow', value: addDaysYmd(1) },
     { label: 'In 2 days', value: addDaysYmd(2) },
-    { label: 'Next Mon', value: nextMondayYmd() },
-  ], []);
+  ], [today]);
 
-  // All inputs stay in memory across step changes and validation errors.
-  const [stepIndex, setStepIndex] = useState(0);
+  const [stepIndex, setStepIndex] = useState(() => {
+    if (matchingDraft?.mode && typeof matchingDraft?.stepIndex === 'number') {
+      return Math.min(1, Math.max(0, matchingDraft.stepIndex));
+    }
+    return 0;
+  });
+
   const [form, setForm] = useState(() => ({
-    mode: '', // Conscious choice: nothing preselected
-    course: initialCourse,
-    topic: 'Concept Walkthrough',
-    customTopic: '',
-    preferredDate: addDaysYmd(1),
-    preferredTime: '',
-    durationHours: 1,
-    venueId: '',
-    language: 'English',
-    helpNote: '',
+    mode: matchingDraft?.mode || '',
+    course: prefilledCourse,
+    topic: prefilledTopic || 'Concept Walkthrough',
+    customTopic: matchingDraft?.customTopic || '',
+    isNow: Boolean(matchingDraft?.isNow),
+    preferredDate: matchingDraft?.preferredDate || addDaysYmd(1),
+    preferredTime: matchingDraft?.preferredTime || '',
+    durationHours: matchingDraft?.durationHours || 1,
+    venueId: matchingDraft?.venueId || '',
+    language: prefilledLanguage,
+    helpNote: matchingDraft?.helpNote || '',
   }));
+
+  // Progressive disclosure toggles on Details screen:
+  // Prefilled fields start collapsed in an editable summary card; missing fields start expanded.
+  const [editingCourse, setEditingCourse] = useState(() => !prefilledCourse);
+  const [editingTopic, setEditingTopic] = useState(() => !(isFromWizard && prefilledTopic));
+  const [editingLanguage, setEditingLanguage] = useState(() => !(isFromWizard && (wizardPrefill?.language || matchingDraft?.language)));
+  const [showNoteInput, setShowNoteInput] = useState(() => Boolean(matchingDraft?.helpNote));
 
   const [stepError, setStepError] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [confirmed, setConfirmed] = useState(null);
 
-  // Live slots & campus venues
+  // Live slots, tutor Now availability, tutor languages, & campus venues
   const [slots, setSlots] = useState(null);
   const [slotsLoading, setSlotsLoading] = useState(false);
+  const [availableNow, setAvailableNow] = useState(false);
+  const [nowTtlMinutes, setNowTtlMinutes] = useState(5);
+  const [offeredLanguages, setOfferedLanguages] = useState(tutorOfferedLanguagesInit);
   const [venues, setVenues] = useState([]);
   const [venuesLoading, setVenuesLoading] = useState(false);
 
@@ -164,14 +232,28 @@ export default function BookingQuestionsForm({
   const onlineRadioRef = useRef(null);
   const stepHeadingRef = useRef(null);
 
-  // Keep course synced if tutor subjects resolve asynchronously
+  // Persist booking draft in BookingDraftContext (in-memory + sessionStorage fallback)
   useEffect(() => {
-    if (!form.course && initialCourse) {
-      setForm((prev) => ({ ...prev, course: initialCourse }));
-    }
-  }, [initialCourse, form.course]);
+    if (confirmed) return;
+    const tutorKey = tutor?.id || tutor?.custom_id;
+    if (!tutorKey) return;
+    updateDraft({
+      tutorKey,
+      tutor,
+      fromWizard: isFromWizard,
+      stepIndex,
+      ...form,
+    });
+  }, [tutor, isFromWizard, stepIndex, form, confirmed, updateDraft]);
 
-  // Fetch live tutor time slots when date, duration, or mode changes
+  // Sync course if tutor subjects resolve asynchronously
+  useEffect(() => {
+    if (!form.course && prefilledCourse) {
+      setForm((prev) => ({ ...prev, course: prefilledCourse }));
+    }
+  }, [prefilledCourse, form.course]);
+
+  // Fetch live tutor slots, availableNow flag, and offered languages
   useEffect(() => {
     const tutorKey = tutor?.id || tutor?.custom_id;
     if (!tutorKey || !form.preferredDate) return undefined;
@@ -183,14 +265,22 @@ export default function BookingQuestionsForm({
       mode: form.mode || 'online',
       ...(form.mode === 'face_to_face' && form.venueId ? { venueId: form.venueId } : {}),
     })
-      .then(({ slots: list }) => {
+      .then(({ slots: list, availableNow: canNow, nowTtlMinutes: ttl, languages }) => {
         if (!alive) return;
         const rows = Array.isArray(list) && list.length > 0
           ? list
           : DEFAULT_SLOTS.map((t) => ({ time: t, available: true, reason: null }));
         setSlots(rows);
-        // If current selected slot became unavailable, clear it with a clear message
-        if (form.preferredTime) {
+        setAvailableNow(Boolean(canNow));
+        if (ttl) setNowTtlMinutes(Number(ttl) || 5);
+        if (Array.isArray(languages) && languages.length > 0) {
+          setOfferedLanguages(languages);
+          setForm((prev) => (languages.includes(prev.language) ? prev : { ...prev, language: languages[0] }));
+        }
+        if (!canNow && form.isNow) {
+          setForm((prev) => ({ ...prev, isNow: false }));
+        }
+        if (form.preferredTime && !form.isNow) {
           const stillOpen = rows.find((s) => s.time === form.preferredTime && s.available);
           if (!stillOpen) {
             setForm((prev) => ({ ...prev, preferredTime: '' }));
@@ -198,19 +288,22 @@ export default function BookingQuestionsForm({
         }
       })
       .catch(() => {
-        if (alive) setSlots(DEFAULT_SLOTS.map((t) => ({ time: t, available: true, reason: null })));
+        if (alive) {
+          setSlots(DEFAULT_SLOTS.map((t) => ({ time: t, available: true, reason: null })));
+          setAvailableNow(false);
+        }
       })
       .finally(() => { if (alive) setSlotsLoading(false); });
     return () => { alive = false; };
   }, [tutor?.id, tutor?.custom_id, form.preferredDate, form.durationHours, form.mode, form.venueId]);
 
-  // Fetch approved campus venues (annotated with live slot availability) for Face to Face
+  // Fetch approved campus venues for Face to Face
   useEffect(() => {
     if (form.mode !== 'face_to_face') return undefined;
     let alive = true;
     setVenuesLoading(true);
     api.get('/venues', {
-      ...(form.preferredDate && form.preferredTime
+      ...(!form.isNow && form.preferredDate && form.preferredTime
         ? { date: form.preferredDate, time: form.preferredTime, durationHours: form.durationHours }
         : {}),
     })
@@ -227,7 +320,7 @@ export default function BookingQuestionsForm({
       .catch(() => { if (alive) setVenues([]); })
       .finally(() => { if (alive) setVenuesLoading(false); });
     return () => { alive = false; };
-  }, [form.mode, form.preferredDate, form.preferredTime, form.durationHours]);
+  }, [form.mode, form.isNow, form.preferredDate, form.preferredTime, form.durationHours]);
 
   const updateField = (key, value) => {
     setStepError('');
@@ -236,6 +329,13 @@ export default function BookingQuestionsForm({
       const next = { ...prev, [key]: value };
       if (key === 'mode' && value === 'online') {
         next.venueId = '';
+      }
+      if (key === 'isNow' && value === true) {
+        next.preferredDate = today;
+        next.preferredTime = '';
+      }
+      if (key === 'preferredDate' || key === 'preferredTime') {
+        next.isNow = false;
       }
       return next;
     });
@@ -253,16 +353,24 @@ export default function BookingQuestionsForm({
     if (id === 'mode') {
       if (!form.mode) return 'Choose Face to Face or Online before continuing.';
     }
-    if (id === 'subject') {
-      if (!form.course) return 'Pick one of this tutor’s subjects to continue.';
-      if (!resolvedTopic) return 'Choose a topic focus or type a short custom topic.';
-    }
-    if (id === 'schedule') {
-      if (!form.preferredDate) return 'Pick a date for your session.';
-      if (form.preferredDate < today) return 'Choose today or a future date.';
-      if (!form.preferredTime) return 'Tap an available time slot to continue.';
-    }
     if (id === 'details') {
+      if (!form.course) {
+        setEditingCourse(true);
+        return 'Pick one of this tutor’s subjects to continue.';
+      }
+      if (!resolvedTopic || resolvedTopic.length < 2) {
+        setEditingTopic(true);
+        return 'Choose a topic focus or enter at least 2 characters for a custom topic.';
+      }
+      if (!offeredLanguages.includes(form.language)) {
+        setEditingLanguage(true);
+        return `Pick a language this tutor offers (${offeredLanguages.join(', ')}).`;
+      }
+      if (!form.isNow) {
+        if (!form.preferredDate) return 'Pick a date for your session.';
+        if (form.preferredDate < today) return 'Choose today or a future date.';
+        if (!form.preferredTime) return 'Tap an available time slot (or choose Now) to continue.';
+      }
       if (form.mode === 'face_to_face' && !form.venueId) {
         return 'Choose an approved campus venue so both of you know where to meet.';
       }
@@ -292,28 +400,29 @@ export default function BookingQuestionsForm({
       return;
     }
 
-    // Final confirmation submit
     setSubmitError('');
-    const noteParts = [`Language: ${form.language}`];
-    if (form.helpNote.trim()) noteParts.unshift(form.helpNote.trim());
     const payload = {
       mode: form.mode,
       course: form.course,
       topic: resolvedTopic,
-      preferredDate: form.preferredDate,
-      preferredTime: form.preferredTime,
+      isNow: form.isNow,
+      preferredDate: form.isNow ? today : form.preferredDate,
+      preferredTime: form.isNow ? undefined : form.preferredTime,
       durationHours: form.durationHours,
       venueId: form.mode === 'face_to_face' ? form.venueId : null,
       venueName: form.mode === 'face_to_face' ? selectedVenueObj?.name : 'Online · LCCB Live Classroom',
       language: form.language,
-      note: noteParts.join(' · ').slice(0, 300),
+      note: form.helpNote.trim() ? form.helpNote.trim().slice(0, 300) : null,
     };
 
     try {
       const result = await onSubmit?.(payload);
+      clearDraft();
       setConfirmed({
         ...payload,
         requestId: result?.id || null,
+        expiresAt: result?.expires_at || null,
+        preferredTime: result?.preferred_time || payload.preferredTime || 'Right now',
         subjectName: selectedSubjectObj?.name || form.course,
         venueDetail: selectedVenueObj
           ? `${selectedVenueObj.name}${selectedVenueObj.building ? ` (${selectedVenueObj.building}${selectedVenueObj.room ? `, ${selectedVenueObj.room}` : ''})` : ''}`
@@ -348,68 +457,79 @@ export default function BookingQuestionsForm({
     }
   };
 
-  // ── Success State ────────────────────────────────────────────────────────
+  // ─── SUCCESS STATE ───
   if (confirmed) {
     return (
-      <div className="panel border-2 border-ink bg-card p-5 sm:p-7 shadow-[5px_5px_0_var(--color-ink)]">
-        <div className="flex flex-wrap items-start justify-between gap-3 border-b-2 border-ink pb-5">
-          <div className="flex items-start gap-3">
-            <span className="grid h-12 w-12 shrink-0 place-items-center border-2 border-ink bg-emerald text-white shadow-[3px_3px_0_var(--color-ink)]">
-              <CheckCircle2 className="h-6 w-6" strokeWidth={2.4} />
-            </span>
-            <div>
-              <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-emerald">
-                Booking request sent
+      <div className="panel border-2 border-ink bg-card p-5 sm:p-7 shadow-[var(--nb-shadow)_var(--nb-shadow)_0_var(--color-ink)]">
+        <div className="flex items-start gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center border-2 border-ink bg-emerald text-white shadow-[2px_2px_0_var(--color-ink)]">
+            <CheckCircle2 className="h-6 w-6" strokeWidth={2.4} />
+          </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-[12px] font-extrabold uppercase tracking-wider text-emerald">
+                {confirmed.isNow ? 'Instant request sent' : 'Request sent'}
               </p>
-              <h2 className="mt-1 font-display text-[24px] font-extrabold leading-tight tracking-[-0.03em] text-ink">
-                Waiting on {tutor?.name || 'your tutor'}
-              </h2>
+              {confirmed.isNow && (
+                <span className="inline-flex items-center gap-1 border border-ink bg-gold px-1.5 py-0.5 text-[11px] font-extrabold text-ink">
+                  <Zap className="h-3 w-3" /> {nowTtlMinutes}-min window
+                </span>
+              )}
             </div>
+            <h2 className="mt-1 font-display text-[clamp(20px,5vw+4px,26px)] font-extrabold leading-tight tracking-[-0.03em] text-ink">
+              Waiting for {tutor?.name} to respond
+            </h2>
+            <p className="mt-1 text-[14px] text-muted-foreground">
+              {confirmed.isNow
+                ? `${tutor?.name} received a high-priority alert and has ${nowTtlMinutes} minutes to accept. If it times out, we will notify you so you can pick a scheduled slot instead.`
+                : 'Your tutor can accept or propose another time/venue. You will get a notification as soon as they respond.'}
+            </p>
           </div>
-          <SessionModeBadge mode={confirmed.mode} />
         </div>
 
-        <div className="mt-5 border-2 border-ink bg-surface-quiet p-4 space-y-2 text-[14px]">
-          <p className="font-bold text-ink">
-            {confirmed.course} — {confirmed.topic}
-          </p>
-          <p className="text-muted-foreground">
-            {formatPrettyDate(confirmed.preferredDate)} · {confirmed.preferredTime} ({durationLabel})
-          </p>
-          <p className="font-semibold text-ink">
-            {confirmed.mode === 'face_to_face' ? 'Campus venue: ' : 'Platform: '}
-            {confirmed.venueDetail}
-          </p>
-        </div>
+        <dl className="mt-5 grid gap-3 border-2 border-ink bg-surface-quiet p-4 text-[13px] sm:grid-cols-2">
+          <div>
+            <dt className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">Session mode</dt>
+            <dd className="mt-1"><SessionModeBadge mode={confirmed.mode} /></dd>
+          </div>
+          <div>
+            <dt className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+              {confirmed.mode === 'face_to_face' ? 'Approved campus venue' : 'Online classroom'}
+            </dt>
+            <dd className="mt-1 font-bold text-ink">{confirmed.venueDetail}</dd>
+          </div>
+          <div>
+            <dt className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">Subject &amp; topic</dt>
+            <dd className="mt-1 font-bold text-ink">{confirmed.course} — {confirmed.topic}</dd>
+          </div>
+          <div>
+            <dt className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">When</dt>
+            <dd className="mt-1 font-bold text-ink">
+              {confirmed.isNow
+                ? `Now (starts on acceptance · ${durationLabel})`
+                : `${formatPrettyDate(confirmed.preferredDate)} · ${confirmed.preferredTime} (${durationLabel})`}
+            </dd>
+          </div>
+        </dl>
 
-        <div className="mt-5 border-2 border-ink bg-surface-highlight p-4 text-[13px] leading-relaxed text-ink">
-          <p className="font-bold">What happens next</p>
-          <p className="mt-1 text-ink/85">
-            {tutor?.name || 'Your tutor'} has been notified and can accept, decline, or propose another{' '}
-            {confirmed.mode === 'face_to_face' ? 'campus venue or time' : 'time'}. You will get a notification as soon as they respond.
-          </p>
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:justify-end">
+          {onBookAnother && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onBookAnother}
+              className="min-h-[44px] bg-paper font-bold"
+            >
+              Book another session
+            </Button>
+          )}
           <Button
             type="button"
-            onClick={() => onDone?.()}
-            className="min-h-[44px] flex-1 font-extrabold shadow-[3px_3px_0_var(--color-ink)]"
+            onClick={onDone || onCancel}
+            className="min-h-[44px] font-extrabold"
           >
-            Go to My progress
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setConfirmed(null);
-              setStepIndex(0);
-              setForm((prev) => ({ ...prev, mode: '', preferredTime: '', venueId: '', helpNote: '' }));
-              onBookAnother?.();
-            }}
-            className="min-h-[44px] font-bold"
-          >
-            Book another session
+            Go to my dashboard
+            <ArrowRight className="ml-1.5 h-4 w-4" strokeWidth={2.2} />
           </Button>
         </div>
       </div>
@@ -417,720 +537,690 @@ export default function BookingQuestionsForm({
   }
 
   const currentStep = BOOKING_STEPS[stepIndex];
-  const isLastStep = stepIndex === BOOKING_STEPS.length - 1;
+  const hasCollapsedSummary = !editingCourse || !editingTopic || !editingLanguage;
 
   return (
-    <div className="panel panel-pad sm:p-7">
-      {/* Prefilled context strip (flattened callout — no nested bordered card on mobile) */}
-      <div className="callout mb-4 flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-4">
+      {/* Compact tutor context bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-2 border-ink bg-surface-highlight px-3.5 py-2.5 shadow-[var(--nb-shadow-sm)_var(--nb-shadow-sm)_0_var(--color-ink)]">
         <div className="flex min-w-0 items-center gap-3">
-          <Avatar name={tutor?.name || 'Tutor'} avatarUrl={tutor?.avatar_url || tutor?.avatar} size="md" />
+          <Avatar name={tutor?.name} src={tutor?.avatar} size="md" />
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="font-display text-[16px] font-extrabold text-ink">
-                {tutor?.name || 'Tutor'}
-              </span>
-              {tutor?.role === 'faculty' ? (
-                <span className="inline-flex items-center gap-1 border border-ink bg-ink px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-gold">
-                  <Award className="h-3 w-3 text-gold" /> Faculty
-                </span>
-              ) : (
-                <span className="border border-ink bg-gold px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-ink">
-                  Verified Tutor
-                </span>
-              )}
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="truncate font-display text-[15px] font-extrabold text-ink">
+                Booking with {tutor?.name}
+              </p>
               {form.mode && <SessionModeBadge mode={form.mode} compact />}
             </div>
-            <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
-              Booking as <strong className="text-ink">{user?.name || 'Student'}</strong>
-              {user?.program ? ` · ${user.program}` : ''}
-              {form.course ? ` · ${form.course}` : ''}
+            <p className="truncate text-[12px] font-semibold text-ink/75">
+              {tutor?.specialization || tutor?.program || 'Accredited Peer Tutor'}
+              {user?.name ? ` · For ${user.name}${user.program ? ` (${user.program})` : ''}` : ''}
             </p>
           </div>
         </div>
-
-        <span className="num border-2 border-ink bg-paper px-2.5 py-1 text-[12px] font-extrabold text-ink">
-          Step {stepIndex + 1} of {BOOKING_STEPS.length}
-        </span>
+        {onCancel && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onCancel}
+            className="min-h-[44px] bg-paper text-[12px] font-bold"
+          >
+            <ArrowLeft className="mr-1 h-3.5 w-3.5" strokeWidth={2.2} />
+            Change tutor
+          </Button>
+        )}
       </div>
 
-      {/* Visible 5-step progress indicator */}
+      {/* 3-Step Progress Indicator */}
       <StepProgress
-        interactive
         steps={BOOKING_STEPS}
         currentIndex={stepIndex}
-        onStepClick={goToStep}
-        className="mb-5"
+        interactive
+        onStepClick={(idx) => {
+          if (idx < stepIndex) goToStep(idx);
+        }}
       />
 
-      {/* Step Content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentStep.id}
-          initial={{ opacity: 0, x: 8 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -6 }}
-          transition={{ duration: 0.14 }}
-        >
-          {/* ── STEP 1: MODE ─────────────────────────────────────────────── */}
-          {currentStep.id === 'mode' && (
-            <div>
-              <h2
-                ref={stepHeadingRef}
-                tabIndex={-1}
-                id="mode-step-heading"
-                className="font-display text-[22px] sm:text-[25px] font-extrabold leading-tight tracking-[-0.03em] text-ink focus:outline-none"
-              >
-                How do you want to meet?
-              </h2>
-              <p className="mt-1.5 text-[14px] text-muted-foreground">
-                Pick one first — this decides whether you choose a campus venue or join the online classroom.
-              </p>
+      {/* Main Step Card */}
+      <div className="panel panel-pad border-2 border-ink bg-card shadow-[var(--nb-shadow)_var(--nb-shadow)_0_var(--color-ink)]">
+        <div className="mb-4">
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-muted-foreground">
+            Step {currentStep.num} of {BOOKING_STEPS.length}
+          </p>
+          <h2
+            ref={stepHeadingRef}
+            tabIndex={-1}
+            className="mt-1 font-display text-[clamp(20px,5vw+4px,24px)] font-extrabold leading-tight tracking-[-0.03em] text-ink focus:outline-none"
+          >
+            {currentStep.title}
+          </h2>
+        </div>
 
-              <div
-                role="radiogroup"
-                aria-labelledby="mode-step-heading"
-                aria-required="true"
-                onKeyDown={handleModeRadioKeyDown}
-                className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2"
-              >
-                {/* Face to Face card */}
-                <button
-                  ref={f2fRadioRef}
-                  type="button"
-                  role="radio"
-                  aria-checked={form.mode === 'face_to_face'}
-                  tabIndex={form.mode === 'online' ? -1 : 0}
-                  onClick={() => updateField('mode', 'face_to_face')}
-                  className={cn(
-                    'group flex min-h-[168px] sm:min-h-[210px] w-full flex-col items-start justify-between border-2 border-ink p-4 sm:p-5 text-left transition-[transform,box-shadow,background-color] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold',
-                    form.mode === 'face_to_face'
-                      ? 'bg-gold text-ink shadow-[5px_5px_0_var(--color-ink)] -translate-y-0.5'
-                      : 'bg-paper text-ink shadow-[3px_3px_0_var(--color-ink)] hover:-translate-y-0.5 hover:bg-surface-highlight hover:shadow-[5px_5px_0_var(--color-ink)]',
-                  )}
-                >
-                  <div className="flex w-full items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1.5 border-2 border-ink bg-paper px-2 py-0.5 text-[11px] font-extrabold uppercase text-ink">
-                      <Users className="h-3.5 w-3.5" strokeWidth={2.2} aria-hidden="true" />
-                      On campus
-                    </span>
-                    <span
-                      aria-hidden="true"
-                      className={cn(
-                        'grid h-6 w-6 place-items-center border-2 border-ink',
-                        form.mode === 'face_to_face' ? 'bg-ink text-paper' : 'bg-paper',
-                      )}
-                    >
-                      {form.mode === 'face_to_face' && <Check className="h-3.5 w-3.5" strokeWidth={2.8} />}
-                    </span>
-                  </div>
-
-                  <div className="my-4 flex w-full justify-center">
-                    <FaceToFaceIllustration />
-                  </div>
-
-                  <div>
-                    <span className="font-display block text-[19px] font-extrabold leading-tight text-ink">
-                      Face to Face
-                    </span>
-                    <span className={cn(
-                      'mt-1 block text-[13px] leading-snug',
-                      form.mode === 'face_to_face' ? 'text-ink/90 font-medium' : 'text-muted-foreground',
-                    )}>
-                      Meet in person at an approved LCCB campus venue.
-                    </span>
-                  </div>
-                </button>
-
-                {/* Online card */}
-                <button
-                  ref={onlineRadioRef}
-                  type="button"
-                  role="radio"
-                  aria-checked={form.mode === 'online'}
-                  tabIndex={form.mode === 'online' ? 0 : form.mode === '' ? 0 : -1}
-                  onClick={() => updateField('mode', 'online')}
-                  className={cn(
-                    'group flex min-h-[168px] sm:min-h-[210px] w-full flex-col items-start justify-between border-2 border-ink p-4 sm:p-5 text-left transition-[transform,box-shadow,background-color] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold',
-                    form.mode === 'online'
-                      ? 'bg-gold text-ink shadow-[5px_5px_0_var(--color-ink)] -translate-y-0.5'
-                      : 'bg-paper text-ink shadow-[3px_3px_0_var(--color-ink)] hover:-translate-y-0.5 hover:bg-surface-highlight hover:shadow-[5px_5px_0_var(--color-ink)]',
-                  )}
-                >
-                  <div className="flex w-full items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1.5 border-2 border-ink bg-paper px-2 py-0.5 text-[11px] font-extrabold uppercase text-ink">
-                      <Video className="h-3.5 w-3.5" strokeWidth={2.2} aria-hidden="true" />
-                      Video call
-                    </span>
-                    <span
-                      aria-hidden="true"
-                      className={cn(
-                        'grid h-6 w-6 place-items-center border-2 border-ink',
-                        form.mode === 'online' ? 'bg-ink text-paper' : 'bg-paper',
-                      )}
-                    >
-                      {form.mode === 'online' && <Check className="h-3.5 w-3.5" strokeWidth={2.8} />}
-                    </span>
-                  </div>
-
-                  <div className="my-4 flex w-full justify-center">
-                    <OnlineIllustration />
-                  </div>
-
-                  <div>
-                    <span className="font-display block text-[19px] font-extrabold leading-tight text-ink">
-                      Online
-                    </span>
-                    <span className={cn(
-                      'mt-1 block text-[13px] leading-snug',
-                      form.mode === 'online' ? 'text-ink/90 font-medium' : 'text-muted-foreground',
-                    )}>
-                      Join a live video classroom and shared chat from anywhere.
-                    </span>
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ── STEP 2: SUBJECT & TOPIC ──────────────────────────────────── */}
-          {currentStep.id === 'subject' && (
-            <div className="space-y-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep.id}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -8 }}
+            transition={{ duration: 0.16 }}
+            className="space-y-5"
+          >
+            {/* ─── STEP 1: MODE ─── */}
+            {currentStep.id === 'mode' && (
               <div>
-                <h2
-                  ref={stepHeadingRef}
-                  tabIndex={-1}
-                  className="font-display text-[22px] sm:text-[25px] font-extrabold leading-tight tracking-[-0.03em] text-ink focus:outline-none"
-                >
-                  Subject and topic
-                </h2>
-                <p className="mt-1 text-[14px] text-muted-foreground">
-                  Only subjects {tutor?.name || 'this tutor'} is accredited to teach are shown.
+                <p className="mb-4 text-[14px] text-muted-foreground">
+                  Pick how you want to meet. Your choice decides whether you select a campus room or join the online classroom.
                 </p>
-              </div>
 
-              <div>
-                <label htmlFor="booking-subject-select" className="field-label">
-                  Subject
-                </label>
-                {tutorSubjects.length > 6 ? (
-                  <select
-                    id="booking-subject-select"
-                    value={form.course}
-                    onChange={(e) => updateField('course', e.target.value)}
-                    className="select-field mt-1 min-h-[44px]"
-                  >
-                    <option value="">Select a subject…</option>
-                    {tutorSubjects.map((s) => (
-                      <option key={s.code} value={s.code}>
-                        {s.code} — {s.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="mt-2 grid grid-cols-1 gap-2.5 sm:grid-cols-2" role="group" aria-label="Choose subject">
-                    {tutorSubjects.map((sub) => {
-                      const active = String(form.course).toUpperCase() === String(sub.code).toUpperCase();
-                      return (
-                        <button
-                          key={sub.code}
-                          type="button"
-                          aria-pressed={active}
-                          onClick={() => updateField('course', sub.code)}
-                          className={cn(
-                            'flex min-h-[60px] items-center justify-between gap-3 border-2 border-ink p-3.5 text-left transition-all',
-                            active
-                              ? 'bg-gold text-ink shadow-[3px_3px_0_var(--color-ink)]'
-                              : 'bg-paper text-ink hover:bg-surface-highlight',
-                          )}
-                        >
-                          <div className="min-w-0">
-                            <span className="font-display block text-[14px] font-extrabold leading-tight">
-                              {sub.code}
-                            </span>
-                            <span className="mt-0.5 block truncate text-[12px] text-ink/80">
-                              {sub.name}
-                            </span>
-                          </div>
-                          {active && <Check className="h-4 w-4 shrink-0" strokeWidth={2.6} />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                {skipCourse && selectedCourse && (
-                  <p className="mt-1.5 text-[12px] text-muted-foreground">
-                    Pre-filled from your subject search ({selectedCourse}). Tap another if you want to switch.
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <p className="field-label">What kind of help do you need?</p>
-                <p className="text-[12px] text-muted-foreground">
-                  Pick the closest focus so your tutor knows how to prepare.
-                </p>
-                <div className="mt-2.5 flex flex-wrap gap-2" role="group" aria-label="Topic focus">
-                  {TOPIC_CHIPS.map((chip) => {
-                    const active = form.topic === chip.value;
-                    return (
-                      <button
-                        key={chip.value}
-                        type="button"
-                        aria-pressed={active}
-                        onClick={() => updateField('topic', chip.value)}
-                        className={cn(
-                          'min-h-[44px] border-2 border-ink px-3.5 py-2 text-[13px] font-bold transition-all',
-                          active
-                            ? 'bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]'
-                            : 'bg-paper text-ink hover:bg-surface-highlight',
-                        )}
-                      >
-                        {chip.label}
-                      </button>
-                    );
-                  })}
+                <div
+                  role="radiogroup"
+                  aria-label="Session mode"
+                  onKeyDown={handleModeRadioKeyDown}
+                  className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                >
                   <button
+                    ref={f2fRadioRef}
                     type="button"
-                    aria-pressed={form.topic === '__custom__'}
-                    onClick={() => updateField('topic', '__custom__')}
+                    role="radio"
+                    aria-checked={form.mode === 'face_to_face'}
+                    onClick={() => updateField('mode', 'face_to_face')}
                     className={cn(
-                      'min-h-[44px] border-2 border-ink px-3.5 py-2 text-[13px] font-bold transition-all',
-                      form.topic === '__custom__'
-                        ? 'bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]'
-                        : 'bg-paper text-ink hover:bg-surface-highlight',
+                      'group flex min-h-[168px] w-full flex-col justify-between border-2 border-ink p-4 text-left transition-[transform,box-shadow,background-color] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold',
+                      form.mode === 'face_to_face'
+                        ? 'bg-gold text-ink shadow-[var(--nb-shadow)_var(--nb-shadow)_0_var(--color-ink)] -translate-y-0.5'
+                        : 'bg-paper text-ink shadow-[var(--nb-shadow-sm)_var(--nb-shadow-sm)_0_var(--color-ink)] hover:bg-surface-highlight hover:-translate-y-0.5',
                     )}
                   >
-                    Specific topic…
+                    <div className="flex items-start justify-between gap-3">
+                      <FaceToFaceIllustration />
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          'grid h-7 w-7 shrink-0 place-items-center border-2 border-ink',
+                          form.mode === 'face_to_face' ? 'bg-ink text-paper' : 'bg-paper',
+                        )}
+                      >
+                        {form.mode === 'face_to_face' && <Check className="h-4 w-4" strokeWidth={2.6} />}
+                      </span>
+                    </div>
+                    <div className="mt-3">
+                      <span className="flex items-center gap-1.5 font-display text-[17px] font-extrabold leading-tight text-ink">
+                        <Users className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        Face to Face
+                      </span>
+                      <p className="mt-1 text-[13px] leading-snug text-ink/80">
+                        Meet in person at an approved LCCB campus venue with QR code check-in.
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    ref={onlineRadioRef}
+                    type="button"
+                    role="radio"
+                    aria-checked={form.mode === 'online'}
+                    onClick={() => updateField('mode', 'online')}
+                    className={cn(
+                      'group flex min-h-[168px] w-full flex-col justify-between border-2 border-ink p-4 text-left transition-[transform,box-shadow,background-color] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-gold',
+                      form.mode === 'online'
+                        ? 'bg-gold text-ink shadow-[var(--nb-shadow)_var(--nb-shadow)_0_var(--color-ink)] -translate-y-0.5'
+                        : 'bg-paper text-ink shadow-[var(--nb-shadow-sm)_var(--nb-shadow-sm)_0_var(--color-ink)] hover:bg-surface-highlight hover:-translate-y-0.5',
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <OnlineIllustration />
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          'grid h-7 w-7 shrink-0 place-items-center border-2 border-ink',
+                          form.mode === 'online' ? 'bg-ink text-paper' : 'bg-paper',
+                        )}
+                      >
+                        {form.mode === 'online' && <Check className="h-4 w-4" strokeWidth={2.6} />}
+                      </span>
+                    </div>
+                    <div className="mt-3">
+                      <span className="flex items-center gap-1.5 font-display text-[17px] font-extrabold leading-tight text-ink">
+                        <Video className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        Online
+                      </span>
+                      <p className="mt-1 text-[13px] leading-snug text-ink/80">
+                        Join the built-in live video classroom and shared chat from any device.
+                      </p>
+                    </div>
                   </button>
                 </div>
-
-                {form.topic === '__custom__' && (
-                  <div className="mt-3">
-                    <label htmlFor="booking-custom-topic" className="field-label">
-                      Specific topic name
-                    </label>
-                    <input
-                      id="booking-custom-topic"
-                      type="text"
-                      maxLength={120}
-                      value={form.customTopic}
-                      onChange={(e) => updateField('customTopic', e.target.value)}
-                      placeholder="e.g., Linked Lists & Pointers or SQL Joins"
-                      className="input-field mt-1 min-h-[44px]"
-                    />
-                  </div>
-                )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* ── STEP 3: DATE & TIME ──────────────────────────────────────── */}
-          {currentStep.id === 'schedule' && (
-            <div className="space-y-6">
-              <div>
-                <h2
-                  ref={stepHeadingRef}
-                  tabIndex={-1}
-                  className="font-display text-[22px] sm:text-[25px] font-extrabold leading-tight tracking-[-0.03em] text-ink focus:outline-none"
-                >
-                  Pick a date and time
-                </h2>
-                <p className="mt-1 text-[14px] text-muted-foreground">
-                  Open slots reflect {tutor?.name || 'your tutor'}’s live schedule.
-                </p>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="booking-date" className="field-label">
-                    Date
-                  </label>
-                  <input
-                    id="booking-date"
-                    type="date"
-                    min={today}
-                    value={form.preferredDate}
-                    onChange={(e) => updateField('preferredDate', e.target.value)}
-                    className="input-field mt-1 min-h-[44px]"
-                  />
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {quickDates.map((qd) => (
-                      <button
-                        key={qd.label}
-                        type="button"
-                        onClick={() => updateField('preferredDate', qd.value)}
-                        className={cn(
-                          'min-h-[34px] border-2 border-ink px-2.5 text-[12px] font-bold',
-                          form.preferredDate === qd.value
-                            ? 'bg-gold text-ink'
-                            : 'bg-paper text-ink hover:bg-surface-highlight',
-                        )}
-                      >
-                        {qd.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="field-label">Session length</p>
-                  <div className="mt-1 grid grid-cols-2 gap-2" role="group" aria-label="Session duration">
-                    {DURATIONS.map((d) => {
-                      const active = form.durationHours === d.value;
-                      return (
-                        <button
-                          key={d.value}
-                          type="button"
-                          aria-pressed={active}
-                          onClick={() => updateField('durationHours', d.value)}
-                          className={cn(
-                            'min-h-[44px] border-2 border-ink px-3 text-[13px] font-bold',
-                            active
-                              ? 'bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]'
-                              : 'bg-paper text-ink hover:bg-surface-highlight',
-                          )}
-                        >
-                          {d.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="mt-1.5 text-[12px] text-muted-foreground">
-                    1 hour is the standard LCCB session length.
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="field-label">Available time slots</p>
-                  {slotsLoading && (
-                    <span className="inline-flex items-center gap-1 text-[12px] text-muted-foreground">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Checking schedule…
-                    </span>
-                  )}
-                </div>
-                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3" role="group" aria-label="Time slots">
-                  {(slots || DEFAULT_SLOTS.map((t) => ({ time: t, available: true }))).map((slot) => {
-                    const active = form.preferredTime === slot.time;
-                    return (
-                      <button
-                        key={slot.time}
-                        type="button"
-                        disabled={!slot.available}
-                        aria-pressed={active}
-                        onClick={() => updateField('preferredTime', slot.time)}
-                        className={cn(
-                          'flex min-h-[46px] items-center justify-between gap-2 border-2 px-3 py-2 text-[13px] font-bold transition-all',
-                          !slot.available
-                            ? 'cursor-not-allowed border-ink/25 bg-surface-quiet text-muted-foreground line-through'
-                            : active
-                              ? 'border-ink bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]'
-                              : 'border-ink bg-paper text-ink hover:bg-surface-highlight',
-                        )}
-                      >
-                        <span className="num">{slot.time}</span>
-                        {!slot.available ? (
-                          <span className="text-[10px] font-extrabold uppercase no-underline">Booked</span>
-                        ) : active ? (
-                          <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={2.6} />
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="mt-2 text-[12px] text-muted-foreground">
-                  Your tutor confirms the final slot (or can suggest another time).
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* ── STEP 4: DETAILS (MODE-SPECIFIC) ──────────────────────────── */}
-          {currentStep.id === 'details' && (
-            <div className="space-y-6">
-              <div>
-                <h2
-                  ref={stepHeadingRef}
-                  tabIndex={-1}
-                  className="font-display text-[22px] sm:text-[25px] font-extrabold leading-tight tracking-[-0.03em] text-ink focus:outline-none"
-                >
-                  {form.mode === 'face_to_face' ? 'Choose a campus venue & notes' : 'Classroom details & notes'}
-                </h2>
-                <p className="mt-1 text-[14px] text-muted-foreground">
-                  {form.mode === 'face_to_face'
-                    ? 'Pick an approved campus space for your meeting and tell your tutor what to focus on.'
-                    : 'Your online classroom opens automatically once both of you check in.'}
-                </p>
-              </div>
-
-              {form.mode === 'face_to_face' ? (
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="field-label flex items-center gap-1.5">
-                      <MapPin className="h-4 w-4" aria-hidden="true" /> Campus meeting venue
-                    </p>
-                    {venuesLoading && (
-                      <span className="inline-flex items-center gap-1 text-[12px] text-muted-foreground">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Checking rooms…
-                      </span>
+            {/* ─── STEP 2: COMPACT DETAILS (PROGRESSIVE DISCLOSURE) ─── */}
+            {currentStep.id === 'details' && (
+              <div className="space-y-5">
+                {/* Collapsed summary rows for anything already prefilled (always editable) */}
+                {hasCollapsedSummary && (
+                  <div className="border-2 border-ink bg-surface-quiet">
+                    <div className="border-b border-ink/20 bg-surface-highlight px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-ink">
+                      {isFromWizard ? 'Prefilled from your matches' : 'Selected details'}
+                    </div>
+                    {!editingCourse && form.course && (
+                      <SummaryRow
+                        label="Course"
+                        value={`${form.course}${selectedSubjectObj?.name && selectedSubjectObj.name !== form.course ? ` · ${selectedSubjectObj.name}` : ''}`}
+                        onEdit={() => setEditingCourse(true)}
+                      />
+                    )}
+                    {!editingTopic && resolvedTopic && (
+                      <SummaryRow
+                        label="Topic focus"
+                        value={resolvedTopic}
+                        onEdit={() => setEditingTopic(true)}
+                      />
+                    )}
+                    {!editingLanguage && form.language && (
+                      <SummaryRow
+                        label="Language"
+                        value={form.language}
+                        onEdit={() => setEditingLanguage(true)}
+                      />
                     )}
                   </div>
-                  <p className="text-[12px] text-muted-foreground">
-                    Only faculty-approved campus spaces are allowed for student safety.
-                  </p>
+                )}
 
-                  {!venuesLoading && venues.length === 0 ? (
-                    <div className="mt-2 border-2 border-ink bg-surface-alert p-4 text-[13px] font-semibold text-destructive">
-                      No approved campus venues are currently active. Ask faculty or switch to Online mode.
+                {/* Course picker (expanded if missing or editing; limited to tutor's subjects) */}
+                {editingCourse && (
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="field-label">Course</p>
+                      {form.course && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingCourse(false)}
+                          className="text-[12px] font-bold text-ink underline decoration-gold decoration-2"
+                        >
+                          Done
+                        </button>
+                      )}
                     </div>
-                  ) : (
-                    <div className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2" role="radiogroup" aria-label="Campus venue">
-                      {venues.map((v) => {
-                        const active = form.venueId === v.id;
-                        const disabled = !v.available;
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">
+                      Limited to courses {tutor?.name} is accredited to teach.
+                    </p>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Course">
+                      {tutorSubjects.map((sub) => {
+                        const selected = String(form.course).toUpperCase() === String(sub.code).toUpperCase();
                         return (
                           <button
-                            key={v.id}
+                            key={sub.code}
                             type="button"
                             role="radio"
-                            aria-checked={active}
-                            disabled={disabled}
-                            onClick={() => updateField('venueId', v.id)}
+                            aria-checked={selected}
+                            onClick={() => updateField('course', sub.code)}
                             className={cn(
-                              'flex min-h-[68px] items-start justify-between gap-3 border-2 p-3.5 text-left transition-all',
-                              disabled
-                                ? 'cursor-not-allowed border-ink/25 bg-surface-quiet text-muted-foreground'
-                                : active
-                                  ? 'border-ink bg-gold text-ink shadow-[3px_3px_0_var(--color-ink)]'
-                                  : 'border-ink bg-paper text-ink hover:bg-surface-highlight',
+                              'flex min-h-[48px] items-center justify-between gap-2 border-2 border-ink px-3.5 py-2 text-left transition-colors',
+                              selected ? 'bg-gold font-bold text-ink shadow-[2px_2px_0_var(--color-ink)]' : 'bg-paper text-ink hover:bg-surface-highlight',
                             )}
                           >
-                            <div className="min-w-0">
-                              <span className="font-display block text-[14px] font-extrabold leading-tight">
-                                {v.name}
-                              </span>
-                              <span className="mt-0.5 block text-[12px] opacity-80">
-                                {[v.building, v.room, `Cap ${v.capacity}`].filter(Boolean).join(' · ')}
-                              </span>
-                            </div>
-                            {disabled ? (
-                              <span className="shrink-0 border border-ink/30 bg-paper px-1.5 py-0.5 text-[10px] font-extrabold uppercase">
-                                Booked
-                              </span>
-                            ) : active ? (
-                              <Check className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.6} />
-                            ) : null}
+                            <span className="min-w-0">
+                              <span className="block font-display text-[14px] font-extrabold">{sub.code}</span>
+                              {sub.name && sub.name !== sub.code && (
+                                <span className="block truncate text-[12px] text-ink/75">{sub.name}</span>
+                              )}
+                            </span>
+                            {selected && <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} />}
                           </button>
                         );
                       })}
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-start gap-3 border-2 border-ink bg-surface-highlight p-4">
-                  <Video className="mt-0.5 h-5 w-5 shrink-0 text-ink" strokeWidth={2.2} aria-hidden="true" />
-                  <div className="text-[13px]">
-                    <p className="font-bold text-ink">Platform: LCCB Live Classroom</p>
-                    <p className="mt-0.5 text-ink/80">
-                      Includes Direct WebRTC / Jitsi Meet video and live chat. Both devices confirm a one-time code to start the session.
-                    </p>
                   </div>
-                </div>
-              )}
+                )}
 
-              <div>
-                <p className="field-label">Preferred language</p>
-                <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Preferred language">
-                  {LANGUAGES.map((lang) => {
-                    const active = form.language === lang.value;
-                    return (
+                {/* Topic picker (expanded if missing or editing) */}
+                {editingTopic && (
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="field-label">Topic focus</p>
+                      {resolvedTopic && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingTopic(false)}
+                          className="text-[12px] font-bold text-ink underline decoration-gold decoration-2"
+                        >
+                          Done
+                        </button>
+                      )}
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Topic focus">
+                      {TOPIC_CHIPS.map((chip) => {
+                        const active = form.topic === chip.value;
+                        return (
+                          <button
+                            key={chip.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            onClick={() => updateField('topic', chip.value)}
+                            className={cn(
+                              'min-h-[44px] border-2 border-ink px-3 py-1.5 text-[13px] font-bold transition-colors',
+                              active ? 'bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]' : 'bg-paper text-ink hover:bg-surface-highlight',
+                            )}
+                          >
+                            {chip.label}
+                          </button>
+                        );
+                      })}
                       <button
-                        key={lang.value}
                         type="button"
-                        aria-pressed={active}
-                        onClick={() => updateField('language', lang.value)}
+                        role="radio"
+                        aria-checked={form.topic === '__custom__'}
+                        onClick={() => updateField('topic', '__custom__')}
                         className={cn(
-                          'min-h-[44px] border-2 border-ink px-4 text-[13px] font-bold',
-                          active
-                            ? 'bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]'
-                            : 'bg-paper text-ink hover:bg-surface-highlight',
+                          'min-h-[44px] border-2 border-ink px-3 py-1.5 text-[13px] font-bold transition-colors',
+                          form.topic === '__custom__' ? 'bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]' : 'bg-paper text-ink hover:bg-surface-highlight',
                         )}
                       >
-                        {lang.label}
+                        Other topic…
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
+                    </div>
+                    {form.topic === '__custom__' && (
+                      <div className="mt-2.5">
+                        <label htmlFor="booking-custom-topic" className="sr-only">Custom topic</label>
+                        <input
+                          id="booking-custom-topic"
+                          type="text"
+                          maxLength={120}
+                          value={form.customTopic}
+                          onChange={(e) => updateField('customTopic', e.target.value)}
+                          placeholder="e.g. Recursion & binary trees"
+                          className="input-field"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
 
-              <div>
-                <div className="flex items-baseline justify-between gap-2">
-                  <label htmlFor="booking-help-note" className="field-label">
-                    What do you need help with? <span className="font-normal text-muted-foreground">(optional)</span>
-                  </label>
-                  <span className="num text-[12px] text-muted-foreground">
-                    {form.helpNote.length} / {MAX_NOTE_LEN}
-                  </span>
-                </div>
-                <p className="text-[12px] text-muted-foreground">
-                  One or two sentences helps your tutor bring the right examples. Tap an example to start:
-                </p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {NOTE_EXAMPLES.map((example) => (
-                    <button
-                      key={example}
-                      type="button"
-                      onClick={() => updateField('helpNote', example.slice(0, MAX_NOTE_LEN))}
-                      className="min-h-[34px] border border-ink/50 bg-surface-quiet px-2.5 py-1 text-left text-[12px] font-semibold text-ink hover:border-ink hover:bg-surface-highlight"
-                    >
-                      + {example.slice(0, 42)}…
-                    </button>
-                  ))}
-                </div>
-                <textarea
-                  id="booking-help-note"
-                  rows={3}
-                  maxLength={MAX_NOTE_LEN}
-                  value={form.helpNote}
-                  onChange={(e) => updateField('helpNote', e.target.value)}
-                  placeholder="e.g., I'm stuck on deleting the middle node of a linked list before Friday's lab."
-                  className="textarea-field mt-2"
-                />
-              </div>
-            </div>
-          )}
+                {/* Date & Time section (with instant "Now" chip first when available) */}
+                <div>
+                  <p className="field-label flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4" aria-hidden="true" />
+                    Date &amp; time
+                  </p>
+                  <p className="mt-0.5 text-[12px] text-muted-foreground">
+                    All times are in Philippine Time (Asia/Manila).
+                  </p>
 
-          {/* ── STEP 5: REVIEW & CONFIRM ─────────────────────────────────── */}
-          {currentStep.id === 'review' && (
-            <div className="space-y-4">
-              <div>
-                <h2
-                  ref={stepHeadingRef}
-                  tabIndex={-1}
-                  className="font-display text-[22px] sm:text-[25px] font-extrabold leading-tight tracking-[-0.03em] text-ink focus:outline-none"
-                >
-                  Review your booking
-                </h2>
-                <p className="mt-1 text-[14px] text-muted-foreground">
-                  Check every detail below. Tap Edit next to any line to change it without losing your work.
-                </p>
-              </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {availableNow && (
+                      <button
+                        type="button"
+                        aria-pressed={form.isNow}
+                        onClick={() => updateField('isNow', true)}
+                        className={cn(
+                          'inline-flex min-h-[44px] items-center gap-1.5 border-2 border-ink px-3.5 text-[13px] font-extrabold transition-colors',
+                          form.isNow
+                            ? 'bg-emerald text-white shadow-[2px_2px_0_var(--color-ink)]'
+                            : 'bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)] hover:brightness-95',
+                        )}
+                      >
+                        <Zap className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        Now
+                      </button>
+                    )}
+                    {quickDates.map((q) => {
+                      const active = !form.isNow && form.preferredDate === q.value;
+                      return (
+                        <button
+                          key={q.value}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => updateField('preferredDate', q.value)}
+                          className={cn(
+                            'min-h-[44px] border-2 border-ink px-3 text-[13px] font-bold transition-colors',
+                            active ? 'bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]' : 'bg-paper text-ink hover:bg-surface-highlight',
+                          )}
+                        >
+                          {q.label}
+                        </button>
+                      );
+                    })}
+                    <input
+                      id="booking-date"
+                      type="date"
+                      min={today}
+                      aria-label="Pick a specific date"
+                      value={form.preferredDate}
+                      onChange={(e) => updateField('preferredDate', e.target.value)}
+                      className="input-field min-h-[44px] w-full sm:w-auto"
+                    />
+                  </div>
 
-              <div className="divide-y-2 divide-ink/15 border-2 border-ink bg-paper">
-                {/* Mode */}
-                <div className="flex items-center justify-between gap-3 p-4">
-                  <div>
-                    <p className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">Session mode</p>
-                    <div className="mt-1.5 flex items-center gap-2">
-                      <SessionModeBadge mode={form.mode} />
-                      <span className="text-[13px] text-muted-foreground">
-                        {form.mode === 'face_to_face' ? 'In person on campus' : 'Video call + live chat'}
-                      </span>
+                  {/* Duration chips */}
+                  <div className="mt-3">
+                    <p className="text-[12px] font-bold text-muted-foreground">Duration</p>
+                    <div className="mt-1.5 flex flex-wrap gap-2" role="radiogroup" aria-label="Session duration">
+                      {DURATIONS.map((d) => {
+                        const active = form.durationHours === d.value;
+                        return (
+                          <button
+                            key={d.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            onClick={() => updateField('durationHours', d.value)}
+                            className={cn(
+                              'min-h-[44px] border-2 border-ink px-3 text-[13px] font-bold',
+                              active ? 'bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]' : 'bg-paper text-ink hover:bg-surface-highlight',
+                            )}
+                          >
+                            {d.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => goToStep(0)}
-                    className="inline-flex min-h-[40px] items-center gap-1 px-2 text-[13px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-4 hover:decoration-ink"
-                  >
-                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Edit
-                  </button>
+
+                  {/* Now notice OR scheduled slot picker */}
+                  {form.isNow ? (
+                    <div className="mt-3 border-l-4 border-emerald bg-surface-highlight px-3.5 py-3 text-[13px] text-ink">
+                      <p className="font-bold">Instant session request</p>
+                      <p className="mt-0.5 text-ink/80">
+                        {tutor?.name} is available right now. They get a high-priority alert and have{' '}
+                        <strong>{nowTtlMinutes} minutes</strong> to accept
+                        {form.mode === 'face_to_face' ? ' once you pick a campus venue below.' : '.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[12px] font-bold text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                          Available slots for {formatPrettyDate(form.preferredDate)}
+                        </p>
+                        {slotsLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Time slot">
+                        {(slots || []).map((slot) => {
+                          const active = form.preferredTime === slot.time;
+                          return (
+                            <button
+                              key={slot.time}
+                              type="button"
+                              role="radio"
+                              aria-checked={active}
+                              disabled={!slot.available}
+                              onClick={() => updateField('preferredTime', slot.time)}
+                              className={cn(
+                                'min-h-[44px] border-2 px-2.5 text-[13px] font-bold transition-colors',
+                                !slot.available
+                                  ? 'cursor-not-allowed border-ink/20 bg-surface-quiet text-muted-foreground line-through'
+                                  : active
+                                    ? 'border-ink bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]'
+                                    : 'border-ink bg-paper text-ink hover:bg-surface-highlight',
+                              )}
+                            >
+                              {slot.time}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {slots && slots.every((s) => !s.available) && (
+                        <p className="mt-2 text-[13px] font-semibold text-destructive">
+                          No open slots left on this day. Pick another date above.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {/* Tutor & Student */}
-                <div className="flex items-center justify-between gap-3 p-4">
+                {/* Face to Face Approved Campus Venue picker */}
+                {form.mode === 'face_to_face' && (
                   <div>
-                    <p className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">Tutor & Student</p>
-                    <p className="mt-1 text-[14px] font-bold text-ink">
-                      {tutor?.name || 'Tutor'} with {user?.name || 'You'}
-                      {user?.program ? ` (${user.program})` : ''}
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="field-label flex items-center gap-1.5">
+                        <MapPin className="h-4 w-4" aria-hidden="true" />
+                        Approved campus venue
+                      </p>
+                      {venuesLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+                    </div>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">
+                      For student safety, Face to Face sessions must meet at an approved campus space.
                     </p>
+                    {venues.length === 0 && !venuesLoading ? (
+                      <p className="mt-2 border-l-4 border-crimson bg-surface-alert px-3 py-2 text-[13px] font-semibold text-destructive">
+                        No approved campus venues are currently active. Ask faculty or switch to Online mode.
+                      </p>
+                    ) : (
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Campus venue">
+                        {venues.map((v) => {
+                          const selected = form.venueId === v.id;
+                          const unavailable = v.available === false;
+                          return (
+                            <button
+                              key={v.id}
+                              type="button"
+                              role="radio"
+                              aria-checked={selected}
+                              disabled={unavailable}
+                              onClick={() => updateField('venueId', v.id)}
+                              className={cn(
+                                'flex min-h-[52px] items-start justify-between gap-2 border-2 px-3 py-2 text-left',
+                                unavailable
+                                  ? 'cursor-not-allowed border-ink/20 bg-surface-quiet text-muted-foreground'
+                                  : selected
+                                    ? 'border-ink bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]'
+                                    : 'border-ink bg-paper text-ink hover:bg-surface-highlight',
+                              )}
+                            >
+                              <span className="min-w-0">
+                                <span className="block text-[13px] font-extrabold leading-tight">{v.name}</span>
+                                <span className="mt-0.5 block text-[11px] text-ink/70">
+                                  {[v.building, v.room].filter(Boolean).join(' · ') || 'LCCB Campus'}
+                                  {unavailable ? ' · Booked at this time' : ''}
+                                </span>
+                              </span>
+                              {selected && <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
 
-                {/* Subject & Topic */}
-                <div className="flex items-center justify-between gap-3 p-4">
+                {/* Language picker (expanded if missing or editing; limited to tutor's offered languages) */}
+                {editingLanguage && (
                   <div>
-                    <p className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">Subject & Topic</p>
-                    <p className="mt-1 text-[14px] font-bold text-ink">
-                      {form.course}{selectedSubjectObj?.name ? ` · ${selectedSubjectObj.name}` : ''}
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="field-label">Preferred language</p>
+                      {form.language && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingLanguage(false)}
+                          className="text-[12px] font-bold text-ink underline decoration-gold decoration-2"
+                        >
+                          Done
+                        </button>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">
+                      Languages offered by {tutor?.name}.
                     </p>
-                    <p className="text-[13px] text-muted-foreground">{resolvedTopic}</p>
+                    <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Preferred language">
+                      {offeredLanguages.map((lang) => {
+                        const active = form.language === lang;
+                        return (
+                          <button
+                            key={lang}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            onClick={() => updateField('language', lang)}
+                            className={cn(
+                              'min-h-[44px] border-2 border-ink px-3.5 text-[13px] font-bold',
+                              active ? 'bg-gold text-ink shadow-[2px_2px_0_var(--color-ink)]' : 'bg-paper text-ink hover:bg-surface-highlight',
+                            )}
+                          >
+                            {lang}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => goToStep(1)}
-                    className="inline-flex min-h-[40px] items-center gap-1 px-2 text-[13px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-4 hover:decoration-ink"
-                  >
-                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Edit
-                  </button>
-                </div>
+                )}
 
-                {/* Date & Time */}
-                <div className="flex items-center justify-between gap-3 p-4">
-                  <div>
-                    <p className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">Date & Time</p>
-                    <p className="mt-1 flex items-center gap-1.5 text-[14px] font-bold text-ink">
-                      <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                      {formatPrettyDate(form.preferredDate)} · {form.preferredTime} ({durationLabel})
-                    </p>
-                  </div>
+                {/* Progressive disclosure: optional note */}
+                <div className="border-t border-ink/15 pt-3">
                   <button
                     type="button"
-                    onClick={() => goToStep(2)}
-                    className="inline-flex min-h-[40px] items-center gap-1 px-2 text-[13px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-4 hover:decoration-ink"
+                    aria-expanded={showNoteInput}
+                    onClick={() => setShowNoteInput((v) => !v)}
+                    className="flex min-h-[44px] w-full items-center justify-between gap-2 text-left text-[13px] font-bold text-ink"
                   >
-                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Edit
+                    <span>
+                      What do you need help with?{' '}
+                      <span className="font-normal text-muted-foreground">(optional)</span>
+                    </span>
+                    <ChevronDown className={cn('h-4 w-4 transition-transform', showNoteInput && 'rotate-180')} />
                   </button>
-                </div>
-
-                {/* Place / Platform & Notes */}
-                <div className="flex items-center justify-between gap-3 p-4">
-                  <div className="min-w-0">
-                    <p className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
-                      {form.mode === 'face_to_face' ? 'Campus venue' : 'Online platform'}
-                    </p>
-                    <p className="mt-1 text-[14px] font-bold text-ink">
-                      {form.mode === 'face_to_face'
-                        ? (selectedVenueObj
-                          ? `${selectedVenueObj.name}${selectedVenueObj.building ? ` · ${selectedVenueObj.building}` : ''}${selectedVenueObj.room ? ` (${selectedVenueObj.room})` : ''}`
-                          : 'Selected campus venue')
-                        : 'Online · LCCB Live Classroom'}
-                    </p>
-                    <p className="mt-0.5 text-[13px] text-muted-foreground">
-                      Language: {form.language}
-                      {form.helpNote.trim() ? ` · “${form.helpNote.trim()}”` : ''}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => goToStep(3)}
-                    className="inline-flex min-h-[40px] shrink-0 items-center gap-1 px-2 text-[13px] font-bold text-ink underline decoration-gold decoration-2 underline-offset-4 hover:decoration-ink"
-                  >
-                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Edit
-                  </button>
+                  {showNoteInput && (
+                    <div className="mt-2 space-y-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        {NOTE_EXAMPLES.map((ex, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => updateField('helpNote', ex)}
+                            className="border border-ink/40 bg-surface-quiet px-2.5 py-1 text-[11px] font-semibold text-ink hover:bg-gold"
+                          >
+                            + {ex.slice(0, 36)}…
+                          </button>
+                        ))}
+                      </div>
+                      <label htmlFor="booking-help-note" className="sr-only">What you need help with</label>
+                      <textarea
+                        id="booking-help-note"
+                        rows={2}
+                        maxLength={MAX_NOTE_LEN}
+                        value={form.helpNote}
+                        onChange={(e) => updateField('helpNote', e.target.value)}
+                        placeholder="One or two sentences so your tutor can prepare."
+                        className="textarea-field"
+                      />
+                      <p className="text-right text-[11px] font-semibold text-muted-foreground">
+                        {form.helpNote.length}/{MAX_NOTE_LEN}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
+            )}
 
-      {/* Inline validation or server error (never clears form state) */}
-      {(stepError || submitError) && (
-        <div
-          role="alert"
-          className="mt-5 flex items-start gap-2.5 border-2 border-ink bg-surface-alert p-3.5 text-[13px] font-bold text-destructive"
-        >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>{submitError || stepError}</span>
-        </div>
-      )}
+            {/* ─── STEP 3: REVIEW & CONFIRM ─── */}
+            {currentStep.id === 'review' && (
+              <div className="space-y-4">
+                <p className="text-[14px] text-muted-foreground">
+                  Double-check your booking details before sending the request.
+                </p>
 
-      {/* Navigation Footer (sticky above keyboard on mobile) */}
-      <div className="action-bar mt-6">
+                <div className="divide-y-2 divide-ink/15 border-2 border-ink bg-surface-quiet">
+                  <div className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div>
+                      <p className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">Session mode</p>
+                      <div className="mt-1"><SessionModeBadge mode={form.mode} /></div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => goToStep(0)}
+                      className="inline-flex min-h-[36px] items-center gap-1 border-2 border-ink bg-paper px-2.5 text-[12px] font-bold text-ink hover:bg-gold"
+                    >
+                      <Pencil className="h-3 w-3" /> Edit
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">Subject &amp; topic</p>
+                      <p className="mt-0.5 font-bold text-ink">
+                        {form.course}{selectedSubjectObj?.name && selectedSubjectObj.name !== form.course ? ` — ${selectedSubjectObj.name}` : ''}
+                      </p>
+                      <p className="text-[13px] text-muted-foreground">{resolvedTopic}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setEditingCourse(true); setEditingTopic(true); goToStep(1); }}
+                      className="inline-flex min-h-[36px] shrink-0 items-center gap-1 border-2 border-ink bg-paper px-2.5 text-[12px] font-bold text-ink hover:bg-gold"
+                    >
+                      <Pencil className="h-3 w-3" /> Edit
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">Date &amp; time</p>
+                      <p className="mt-0.5 font-bold text-ink">
+                        {form.isNow
+                          ? `Now · Instant request (${nowTtlMinutes}m accept window) · ${durationLabel}`
+                          : `${formatPrettyDate(form.preferredDate)} · ${form.preferredTime} · ${durationLabel}`}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => goToStep(1)}
+                      className="inline-flex min-h-[36px] shrink-0 items-center gap-1 border-2 border-ink bg-paper px-2.5 text-[12px] font-bold text-ink hover:bg-gold"
+                    >
+                      <Pencil className="h-3 w-3" /> Edit
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                        {form.mode === 'face_to_face' ? 'Campus venue' : 'Online platform'}
+                      </p>
+                      <p className="mt-0.5 font-bold text-ink">
+                        {form.mode === 'face_to_face'
+                          ? (selectedVenueObj?.name || 'Approved Campus Venue')
+                          : 'Online · LCCB Live Classroom'}
+                      </p>
+                      <p className="text-[12px] text-muted-foreground">Language: {form.language}</p>
+                      {form.helpNote.trim() && (
+                        <p className="mt-1 text-[12px] italic text-ink/80">“{form.helpNote.trim()}”</p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setEditingLanguage(true); goToStep(1); }}
+                      className="inline-flex min-h-[36px] shrink-0 items-center gap-1 border-2 border-ink bg-paper px-2.5 text-[12px] font-bold text-ink hover:bg-gold"
+                    >
+                      <Pencil className="h-3 w-3" /> Edit
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 border-l-4 border-gold bg-surface-highlight px-3.5 py-2.5 text-[12px] text-ink">
+                  <Award className="h-4 w-4 shrink-0 text-gold-ink" aria-hidden="true" />
+                  <span>
+                    Complete the session to earn <strong>+25 attendance points</strong> (tutor earns <strong>+50 pts</strong>).
+                  </span>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Inline validation / submit error — never wipes form */}
+        {(stepError || submitError) && (
+          <div
+            role="alert"
+            className="mt-4 flex items-start gap-2 border-l-4 border-crimson bg-surface-alert px-3.5 py-2.5 text-[13px] font-semibold text-destructive"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{stepError || submitError}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Sticky mobile bottom action bar */}
+      <div className="action-bar">
         <Button
           type="button"
           variant="outline"
@@ -1138,29 +1228,22 @@ export default function BookingQuestionsForm({
           disabled={submitting}
           className="flex-1 bg-paper font-bold sm:flex-none"
         >
-          <ArrowLeft className="mr-1.5 h-4 w-4 shrink-0" strokeWidth={2} />
+          <ArrowLeft className="h-4 w-4" strokeWidth={2} />
           {stepIndex === 0 ? 'Cancel' : 'Back'}
         </Button>
-
         <Button
           type="button"
           onClick={handleNext}
           disabled={submitting}
-          className="flex-1 whitespace-normal px-4 font-extrabold sm:flex-none sm:px-5"
+          className="flex-1 font-extrabold sm:flex-none"
         >
-          {submitting ? (
-            <>
-              <Loader2 className="mr-1.5 h-4 w-4 shrink-0 animate-spin" /> Sending…
-            </>
-          ) : isLastStep ? (
-            <>
-              <Clock className="mr-1.5 h-4 w-4 shrink-0" /> Confirm booking
-            </>
-          ) : (
-            <>
-              Continue <ArrowRight className="ml-1.5 h-4 w-4 shrink-0" strokeWidth={2} />
-            </>
-          )}
+          {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+          {stepIndex === BOOKING_STEPS.length - 1
+            ? (submitting ? 'Sending request…' : form.isNow ? 'Send instant request' : 'Confirm booking')
+            : stepIndex === 0
+              ? 'Continue to details'
+              : 'Review booking'}
+          {!submitting && <ArrowRight className="h-4 w-4" strokeWidth={2.2} />}
         </Button>
       </div>
     </div>

@@ -12,7 +12,7 @@ $$ LANGUAGE plpgsql;
 CREATE TYPE user_role AS ENUM ('superadmin', 'faculty', 'tutor', 'learner');
 CREATE TYPE referral_urgency AS ENUM ('low', 'medium', 'high');
 CREATE TYPE referral_status AS ENUM ('flagged', 'assigned', 'in-progress', 'resolved', 'rejected');
-CREATE TYPE session_status AS ENUM ('upcoming', 'in-progress', 'completed', 'cancelled');
+CREATE TYPE session_status AS ENUM ('upcoming', 'in-progress', 'completed', 'cancelled', 'missed', 'auto-closed');
 CREATE TYPE application_status AS ENUM ('pending', 'approved', 'rejected');
 CREATE TYPE check_in_method AS ENUM ('qr', 'fingerprint', 'otp');
 
@@ -30,6 +30,7 @@ CREATE TABLE users (
   bio text,
   is_verified boolean DEFAULT false,
   is_available boolean DEFAULT true,
+  languages text[] NOT NULL DEFAULT ARRAY['English', 'Tagalog', 'Hiligaynon'],
   hourly_rate numeric,
   certified_by_id uuid REFERENCES users(id) ON DELETE SET NULL,
   token_version int NOT NULL DEFAULT 0,
@@ -115,6 +116,14 @@ CREATE TABLE sessions (
   mode text NOT NULL DEFAULT 'online' CHECK (mode IN ('face_to_face', 'online')),
   venue_id uuid REFERENCES campus_venues(id) ON DELETE SET NULL,
   location text NOT NULL,
+  language text NOT NULL DEFAULT 'English',
+  is_now boolean NOT NULL DEFAULT false,
+  cutoff_at timestamptz,
+  ended_by text CHECK (ended_by IN ('tutor', 'system', 'participant')),
+  ended_reason text,
+  needs_faculty_review boolean NOT NULL DEFAULT false,
+  points_posted boolean NOT NULL DEFAULT false,
+  both_present_seconds integer NOT NULL DEFAULT 0,
   rating numeric CHECK (rating >= 1 AND rating <= 5),
   cancel_reason text,
   ai_summary text,
@@ -368,6 +377,7 @@ CREATE UNIQUE INDEX uq_sessions_active_venue_slot
   WHERE venue_id IS NOT NULL AND mode = 'face_to_face' AND status IN ('upcoming', 'in-progress');
 CREATE INDEX idx_sessions_mode ON sessions(mode);
 CREATE INDEX idx_sessions_venue_date ON sessions(venue_id, date) WHERE venue_id IS NOT NULL;
+CREATE INDEX idx_sessions_active_cutoff ON sessions(cutoff_at) WHERE status IN ('upcoming', 'in-progress');
 CREATE INDEX idx_sessions_date_desc ON sessions(date DESC);
 CREATE INDEX idx_check_in_tokens_session_id ON check_in_tokens(session_id);
 CREATE INDEX idx_check_in_tokens_expires_at ON check_in_tokens(expires_at);
@@ -389,6 +399,9 @@ CREATE TABLE session_requests (
   duration_hours numeric NOT NULL DEFAULT 1 CHECK (duration_hours IN (0.5, 1, 1.5, 2)),
   mode text NOT NULL DEFAULT 'online' CHECK (mode IN ('face_to_face', 'online')),
   venue_id uuid REFERENCES campus_venues(id) ON DELETE SET NULL,
+  language text NOT NULL DEFAULT 'English',
+  is_now boolean NOT NULL DEFAULT false,
+  expires_at timestamptz,
   note text,
   location text NOT NULL,
   proposed_date date,
@@ -397,13 +410,14 @@ CREATE TABLE session_requests (
   proposed_location text,
   proposal_note text,
   status text NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending','counter_proposed','accepted','declined','cancelled')),
+    CHECK (status IN ('pending','counter_proposed','accepted','declined','cancelled','expired')),
   session_id uuid REFERENCES sessions(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_session_requests_tutor_id ON session_requests(tutor_id);
 CREATE INDEX idx_session_requests_learner_id ON session_requests(learner_id);
 CREATE INDEX idx_session_requests_status ON session_requests(status);
+CREATE INDEX idx_session_requests_expiry ON session_requests(expires_at) WHERE status IN ('pending', 'counter_proposed');
 
 -- ── Real-time session chat & Antigravity AI assistant logs ──
 CREATE TABLE session_messages (

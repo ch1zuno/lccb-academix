@@ -1,4 +1,4 @@
-/* Wrap-up e2e: validates single-transaction session wrap (notes + rating + hours + points). */
+/* Wrap-up e2e: validates single-transaction session end + wrap-up (notes + rating + hours + points). */
 import pg from 'pg';
 import { E2E_DATABASE_URL } from './e2e-db.js';
 const BASE = (process.env.E2E_API_BASE || 'http://localhost:4000').replace(/\/+$/, '') + '/api';
@@ -23,7 +23,6 @@ await psql.connect();
     throw new Error('Direct SQL target does not match the API database — set E2E_DATABASE_URL or run the API against the same local database.');
   }
   const mine = (await request('/sessions/mine', { token: tutor.token })).data.sessions;
-  // Negative control: booked-but-unconfirmed sessions must not be farmable.
   const unconfirmed = mine.find((s) => s.status === 'upcoming' && Number(s.check_in_count) === 0);
   if (unconfirmed) {
     const cheat = await request(`/sessions/${unconfirmed.id}/wrap-up`, {
@@ -36,25 +35,36 @@ await psql.connect();
   if (!inProgress) { console.log('no in-progress session; abort — run e2e-checkin first'); process.exit(0); }
   console.log('wrapping', inProgress.session_code, 'learner:', inProgress.learner_name);
 
-  // find a referral the learner belongs to (REF-001 latest learner assignment on TU-042)
   const refRow = (await psql.query(
     `SELECT r.id FROM referrals r
      WHERE r.learner_id = (SELECT learner_id FROM sessions WHERE id = $1) LIMIT 1`, [inProgress.id])).rows[0];
-  // attach a referral to the session so the update path is exercised?
   if (!refRow) console.log('learner has no referral; skipping decay');
   else await psql.query(`UPDATE sessions SET referral_id = $1 WHERE id = $2`, [refRow.id, inProgress.id]);
 
-  // validate before wrap
+  // Backdate started_at past minimum duration threshold for legitimate wrap-up test
+  await psql.query(`UPDATE sessions SET started_at = now() - interval '15 minutes' WHERE id = $1`, [inProgress.id]);
+
   const bad = await request(`/sessions/${inProgress.id}/wrap-up`, { method: 'POST', token: tutor.token, body: { notes: 'no rating!' } });
   console.log('missing rating:', bad.status, bad.data.error);
 
   const out = await request(`/sessions/${inProgress.id}/wrap-up`, {
     method: 'POST', token: tutor.token, body: { notes: 'Great progress on linked lists today', rating: 5 },
   });
-  console.log('wrap-up:', out.status, JSON.stringify(out.data));
+  console.log('wrap-up:', out.status, JSON.stringify({ points: out.data.points, learnerPoints: out.data.learnerPoints, status: out.data.session?.status }));
+  if (out.status !== 200) throw new Error(`wrap-up failed: ${out.status} ${out.data.error ?? ''}`);
+
+  // Idempotent double-end on Online session must not re-post points
+  if (inProgress.mode === 'online') {
+    const endAgain = await request(`/sessions/${inProgress.id}/end`, { method: 'POST', token: tutor.token });
+    console.log('post-wrap end (idempotent):', endAgain.status, endAgain.data.alreadyEnded);
+    if (endAgain.status !== 200 || endAgain.data.alreadyEnded !== true || endAgain.data.points !== 0) {
+      throw new Error(`idempotent double-end failed: ${JSON.stringify(endAgain.data)}`);
+    }
+  }
 
   const again = await request(`/sessions/${inProgress.id}/wrap-up`, {
-    method: 'POST', token: tutor.token, body: { notes: 'repeat', rating: 3 },
+    method: 'POST', token: tutor.token, body: {},
   });
   console.log('second wrap <= conflict:', again.status, again.data.error);
+  if (again.status !== 409) throw new Error(`second wrap should be 409, got ${again.status}`);
 })().finally(async () => { await psql.end(); });

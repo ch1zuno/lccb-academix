@@ -159,6 +159,14 @@ export function useRealtime(sessionId, options = {}) {
     [sessionId, service]
   );
 
+  const onRoomEvent = useCallback(
+    (cb) => {
+      if (!sessionId) return () => {};
+      return service.onRoomEvent?.(sessionId, cb) || (() => {});
+    },
+    [sessionId, service]
+  );
+
   return {
     service,
     status,
@@ -173,6 +181,7 @@ export function useRealtime(sessionId, options = {}) {
     pushIdeState,
     sendSignal,
     onSignal,
+    onRoomEvent,
     onMessage,
     onIdeState,
     onPresence,

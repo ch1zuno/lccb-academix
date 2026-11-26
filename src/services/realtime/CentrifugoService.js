@@ -236,6 +236,7 @@ export class CentrifugoService {
       ideListeners: new Set(),
       presenceListeners: new Set(),
       accessListeners: new Set(),
+      eventListeners: new Set(),
     };
 
     // Publication listener (Chat & IDE messages)
@@ -308,6 +309,7 @@ export class CentrifugoService {
     entry.ideListeners.clear();
     entry.presenceListeners.clear();
     entry.accessListeners.clear();
+    entry.eventListeners.clear();
     this.roomSubscriptions.delete(roomId);
   }
 
@@ -402,6 +404,14 @@ export class CentrifugoService {
           });
         } catch (err) {
           console.warn('Realtime IDE listener error:', err);
+        }
+      }
+    } else if (typeof payload.type === 'string' && payload.type.startsWith('session.')) {
+      for (const listener of entry.eventListeners) {
+        try {
+          listener(payload);
+        } catch (err) {
+          console.warn('Realtime room event listener error:', err);
         }
       }
     }
@@ -585,6 +595,17 @@ export class CentrifugoService {
     cb(entry.accessDenied);
     return () => {
       entry.accessListeners.delete(cb);
+    };
+  }
+
+  /**
+   * Listen for server-broadcast room lifecycle events (session.ended, session.auto_closed, session.started).
+   */
+  onRoomEvent(roomId, cb) {
+    const entry = this.subscribeToRoom(roomId);
+    entry.eventListeners.add(cb);
+    return () => {
+      entry.eventListeners.delete(cb);
     };
   }
 

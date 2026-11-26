@@ -356,8 +356,12 @@ async function completeDemoSession() {
   });
   if (tutorCheck.status !== 200) throw new Error(tutorCheck.data.error || 'tutor check-in failed');
 
-  const wrapped = await request(`/sessions/${sessionId}/wrap-up`, {
-    method: 'POST', token: tutor.token, body: { notes: 'Staged demo session — attendance verified.', rating: 5 },
+  // Respect the server's anti-abuse minimum session duration before ending for points
+  const minWaitMs = Number(process.env.DEMO_MIN_SESSION_MS ?? 10500);
+  if (minWaitMs > 0) await new Promise((r) => setTimeout(r, minWaitMs));
+
+  const ended = await request(`/sessions/${sessionId}/end`, {
+    method: 'POST', token: tutor.token, body: { notes: 'Staged demo session — attendance verified.' },
   });
-  if (wrapped.status !== 200) throw new Error(wrapped.data.error || 'wrap-up failed');
+  if (ended.status !== 200) throw new Error(ended.data.error || 'end session failed');
 }

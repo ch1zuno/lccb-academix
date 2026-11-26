@@ -7,6 +7,7 @@ import { ensurePostgres } from './pg-embed.js';
 import { config } from './config.js';
 import { app, warnPendingMigrations } from './app.js';
 import { setupWebSocketServer } from './lib/ws-realtime.js';
+import { startLifecycleScheduler } from './lib/sessionLifecycle.js';
 
 ensurePostgres()
   .then(() => {
@@ -15,6 +16,7 @@ ensurePostgres()
     server.listen(config.port, () => {
       console.log('API and Realtime WebSocket ready on port', config.port);
       warnPendingMigrations().catch(() => {});
+      startLifecycleScheduler();
     });
   })
   .catch(e => { console.error('Failed to start database:', e.message); process.exit(1); });

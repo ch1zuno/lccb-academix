@@ -128,6 +128,12 @@ export class WsRealtimeService {
               cb(msg.signal, msg.sender);
             }
           }
+        } else if (typeof type === 'string' && type.startsWith('session.')) {
+          if (entry.eventListeners) {
+            for (const cb of entry.eventListeners) {
+              cb(msg);
+            }
+          }
         }
       } catch (err) {
         console.warn('Realtime WS parse error:', err);
@@ -170,6 +176,7 @@ export class WsRealtimeService {
         presenceListeners: new Set(),
         accessListeners: new Set(),
         signalListeners: new Set(),
+        eventListeners: new Set(),
         presence: [],
         ideState: {
           code: '// Start collaborating on code here\n',
@@ -292,6 +299,12 @@ export class WsRealtimeService {
     const entry = this._ensureRoom(roomId);
     entry.accessListeners.add(cb);
     return () => entry.accessListeners.delete(cb);
+  }
+
+  onRoomEvent(roomId, cb) {
+    const entry = this._ensureRoom(roomId);
+    entry.eventListeners.add(cb);
+    return () => entry.eventListeners.delete(cb);
   }
 
   getPresence(roomId) {

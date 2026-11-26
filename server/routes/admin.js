@@ -10,6 +10,7 @@ import { query, withTransaction } from '../db.js';
 import { requireAuth, requireRole, requireStepUp } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { audit, requestIp } from '../lib/audit.js';
+import { ensureFreshLifecycle } from '../lib/sessionLifecycle.js';
 
 const router = express.Router();
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -23,6 +24,7 @@ function assertUuid(raw, label = 'id') {
 /** GET /admin/tutors — superadmin tutor governance roster. */
 router.get('/admin/tutors', requireAuth, requireRole('superadmin'), async (_req, res, next) => {
   try {
+    await ensureFreshLifecycle();
     const { rows } = await query(
       `SELECT u.id, u.custom_id, u.name, u.email, u.program, u.is_verified, u.is_available,
               u.totp_enabled, u.suspended_at, u.suspended_reason, u.created_at,

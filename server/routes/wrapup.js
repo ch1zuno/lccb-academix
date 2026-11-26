@@ -4,59 +4,136 @@ import { config } from '../config.js';
 import { requireAuth } from '../middleware/auth.js';
 import { httpError } from '../middleware/errors.js';
 import { audit, requestIp } from '../lib/audit.js';
+import { ensureFreshLifecycle } from '../lib/sessionLifecycle.js';
+import { settleSessionRow } from '../lib/sessionSettlement.js';
 import {
-  awardWithinCap,
-  SESSION_POINTS_EARNED_SQL,
-  WEEKLY_LEARNER_SESSION_CAP,
-  WEEKLY_TUTOR_SESSION_CAP,
-} from '../lib/points.js';
+  publishRoomEvent,
+  getRoomPresenceStats,
+  clearRoomPresence,
+} from '../lib/realtimeEvents.js';
 
 const router = express.Router();
-export const MIN_PRODUCTION_SESSION_SECONDS = 15 * 60; // 15m minimum in non-demo production before awarding points
+export const MIN_PRODUCTION_SESSION_SECONDS = 300; // Kept as named export; runtime uses config.minSessionPointsSeconds
 
 /**
- * POST /sessions/:id/wrap-up  (session participant)
- * body: { notes, rating (1-5) }
- * ONE transaction:
- *   1. end session (in-progress|upcoming → completed) + save tutor notes
- *   2. store the learner's 1-5 rating
- *   3. decrement referral hours_remaining (when the session has one)
- *   4. auto-resolve referral at 0
- *   5. credit points_ledger for the tutor (+50 pts default)
- *   6. award badges (First Session at 1st completed; Rising Star at 10+)
- * Anything failing rolls back entirely.
+ * POST /sessions/:id/wrap-up (session participant)
+ *
+ * Behavior by mode:
+ * - Online:
+ *   - While `in-progress`: ONLY the assigned tutor can end it (learners get 403).
+ *   - Once `completed` or `auto-closed`: participants can record post-session rating (learner)
+ *     or notes (tutor) without re-posting points or decrementing referral hours.
+ * - Face to Face:
+ *   - Keeps the existing wrap-up flow (both checked in -> completed + ledger settlement in one tx).
  */
 router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
   try {
+    await ensureFreshLifecycle();
     const sessionId = req.params.id;
-    const isTutor = req.user.role === 'tutor';
-    const notes = isTutor ? (String(req.body?.notes ?? '').slice(0, 500) || null) : null;
+    const isTutorRole = req.user.role === 'tutor' || req.user.role === 'faculty';
+    const notesProvided = req.body?.notes !== undefined;
+    const notes = isTutorRole && notesProvided ? (String(req.body?.notes ?? '').slice(0, 500) || null) : undefined;
     const rawRating = req.body?.rating;
-    // In production (DEMO_MODE off), tutors cannot self-assign their own star rating.
-    const tutorSelfRatingBlocked = isTutor && !config.demoMode;
-    const rating = tutorSelfRatingBlocked
-      ? null
-      : Number(rawRating);
-    if (!tutorSelfRatingBlocked && (!Number.isInteger(rating) || rating < 1 || rating > 5)) {
-      throw httpError(400, 'rating (integer 1-5) is required');
-    }
+    const ratingProvided = rawRating !== undefined && rawRating !== null && rawRating !== '';
+
+    let broadcastPayload = null;
+    let broadcastKeys = [];
 
     const wrap = await withTransaction(async (client) => {
-      // lock row for safe transitions
       const { rows: live } = await client.query(
-        `SELECT id, tutor_id, learner_id, subject_id, referral_id, status, started_at, COALESCE(duration_hours, 1) AS duration_hours
-         FROM sessions WHERE id = $1 FOR UPDATE`,
-        [sessionId]);
+        `SELECT * FROM sessions WHERE id = $1 FOR UPDATE`,
+        [sessionId],
+      );
       const session = live[0];
       if (!session) throw httpError(404, 'Session not found');
       if (session.tutor_id !== req.user.id && session.learner_id !== req.user.id) {
         throw httpError(403, 'Not your session');
       }
-      if (session.status === 'completed') throw httpError(409, 'Session already completed');
-      if (session.status === 'cancelled') throw httpError(409, 'Cancelled sessions cannot be wrap-up');
 
-      // A session is only real after both parties check in. Without this gate
-      // a tutor could create a booking and immediately wrap it up for points.
+      const isSessionTutor = session.tutor_id === req.user.id;
+      const isSessionLearner = session.learner_id === req.user.id;
+      const tutorSelfRatingBlocked = isSessionTutor && !config.demoMode;
+
+      // Validate rating when provided or required
+      let parsedRating = undefined;
+      if (ratingProvided && !tutorSelfRatingBlocked) {
+        const n = Number(rawRating);
+        if (!Number.isInteger(n) || n < 1 || n > 5) {
+          throw httpError(400, 'rating (integer 1-5) is required');
+        }
+        parsedRating = n;
+      }
+
+      // ── Online post-end feedback (session already ended by tutor or auto-closed by system) ──
+      if (session.mode === 'online' && (session.status === 'completed' || session.status === 'auto-closed')) {
+        if (isSessionLearner) {
+          if (parsedRating === undefined) throw httpError(400, 'rating (integer 1-5) is required');
+          if (session.rating != null) throw httpError(409, 'Session already rated');
+        } else if (isSessionTutor) {
+          if (!notesProvided && parsedRating === undefined) {
+            throw httpError(409, 'Session already completed');
+          }
+          if (session.notes != null && !notesProvided) {
+            throw httpError(409, 'Session already completed');
+          }
+        }
+
+        const { rows: [saved] } = await client.query(
+          `UPDATE sessions
+              SET notes = CASE WHEN $1::boolean THEN $2 ELSE notes END,
+                  rating = CASE WHEN $3::boolean THEN $4 ELSE rating END
+            WHERE id = $5
+            RETURNING *`,
+          [isSessionTutor && notesProvided, notes ?? null, parsedRating !== undefined, parsedRating ?? null, session.id],
+        );
+
+        await audit({
+          actorId: req.user.id,
+          actorRole: req.user.role,
+          action: 'session.wrap_up_feedback',
+          entity: 'session',
+          entityId: session.id,
+          detail: { rating: parsedRating ?? null, hasNotes: Boolean(notes) },
+          ip: requestIp(req),
+        }, client);
+
+        const tutorBalance = (await client.query(
+          `SELECT COALESCE(SUM(amount), 0)::int AS balance FROM points_ledger WHERE user_id = $1`,
+          [session.tutor_id],
+        )).rows[0].balance;
+
+        return {
+          session: saved,
+          alreadySettled: true,
+          actualDurationSeconds: Number(saved.actual_duration_seconds) || 0,
+          tutorBalance,
+          referralResolved: null,
+          points: 0,
+          learnerPoints: 0,
+          pointsPosted: Boolean(saved.points_posted),
+          needsFacultyReview: Boolean(saved.needs_faculty_review),
+          capped: false,
+          badges: [],
+        };
+      }
+
+      // ── Reject non-in-progress states for initial wrap-up ──
+      if (session.status === 'completed' || session.status === 'auto-closed') {
+        throw httpError(409, 'Session already completed');
+      }
+      if (session.status === 'cancelled' || session.status === 'missed') {
+        throw httpError(409, `${session.status} sessions cannot be wrapped up`);
+      }
+
+      // Online sessions in-progress can ONLY be ended by their tutor.
+      if (session.mode === 'online' && !isSessionTutor) {
+        throw httpError(403, 'Only the assigned tutor can end an Online session');
+      }
+
+      if (!tutorSelfRatingBlocked && parsedRating === undefined) {
+        throw httpError(400, 'rating (integer 1-5) is required');
+      }
+
       const confirmations = (await client.query(
         `SELECT count(DISTINCT user_id)::int AS n FROM session_check_ins WHERE session_id = $1`,
         [sessionId],
@@ -65,122 +142,42 @@ router.post('/sessions/:id/wrap-up', requireAuth, async (req, res, next) => {
         throw httpError(409, 'Both the tutor and the learner must check in before wrap-up');
       }
 
-      // Always compute elapsed duration server-side (ignore client durationSeconds).
-      const actualDuration = session.started_at
-        ? Math.max(1, Math.round((Date.now() - new Date(session.started_at).getTime()) / 1000))
-        : 0;
-      const meetsMinDuration = config.demoMode || actualDuration >= MIN_PRODUCTION_SESSION_SECONDS;
-
-      const { rows: updatedRows } = await client.query(
-        `UPDATE sessions
-            SET status = 'completed',
-                notes = $1,
-                rating = $2,
-                ended_at = CURRENT_TIMESTAMP,
-                actual_duration_seconds = $3
-          WHERE id = $4
-          RETURNING id, status, notes, rating, started_at, ended_at, actual_duration_seconds`,
-        [notes, rating, actualDuration, sessionId],
-      );
-      const updatedSession = updatedRows[0];
-
-      let referralResolved = null;
-      if (session.referral_id) {
-        const { rows: dec } = await client.query(
-          `UPDATE referrals
-             SET hours_remaining = GREATEST(COALESCE(hours_remaining, hours_required) - $2, 0)
-           WHERE id = $1 RETURNING id, status, hours_remaining, hours_required`,
-          [session.referral_id, session.duration_hours]);
-        const ref = dec[0];
-        if (ref && ref.hours_remaining <= 0 && ref.status !== 'resolved') {
-          const { rows: resolved } = await client.query(
-            `UPDATE referrals SET status = 'resolved' WHERE id = $1 RETURNING id, status`,
-            [ref.id]);
-          referralResolved = resolved[0]?.status ?? null;
-          await client.query(
-            `INSERT INTO notifications (user_id, title, message, type)
-             SELECT learner_id, 'Referral complete', $2, 'success' FROM referrals WHERE id = $1`,
-            [ref.id, `All mandatory hours completed — your referral is resolved.`]);
-        }
-      }
-
-      // Rolling weekly caps limit self-dealing without blocking the academic
-      // record: the session still completes, only the ledger credit is capped.
-      const tutorEarned = (await client.query(SESSION_POINTS_EARNED_SQL, [session.tutor_id])).rows[0].earned;
-      const learnerEarned = (await client.query(SESSION_POINTS_EARNED_SQL, [session.learner_id])).rows[0].earned;
-      const pointsToAward = meetsMinDuration ? awardWithinCap(50, tutorEarned, WEEKLY_TUTOR_SESSION_CAP) : 0;
-      const learnerPoints = meetsMinDuration ? awardWithinCap(25, learnerEarned, WEEKLY_LEARNER_SESSION_CAP) : 0;
-
-      const ratingText = rating != null ? `rated ${rating}/5` : 'completed';
-      await client.query(
-        `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, 'Session wrapped up', $2, 'success')`,
-        [session.learner_id, `Your session was ${ratingText}${learnerPoints ? ` and earned ${learnerPoints} attendance points` : ''}.`]);
-      await client.query(
-        `INSERT INTO notifications (user_id, title, message, type) VALUES ($1, 'Session wrapped up', $2, 'success')`,
-        [session.tutor_id, `${pointsToAward} points posted for session ${session.id.slice(0, 8)}.`]);
-
-      if (pointsToAward > 0) {
-        await client.query(
-          `INSERT INTO points_ledger (user_id, amount, description)
-           VALUES ($1, $2, $3)`,
-          [session.tutor_id, pointsToAward, `Session wrap-up — ${session.id.slice(0, 8)}${rating != null ? ` (${rating}★)` : ''}`]);
-      }
-
-      // learner attendance credit (same transaction)
-      if (learnerPoints > 0) {
-        await client.query(
-          `INSERT INTO points_ledger (user_id, amount, description)
-           VALUES ($1, $2, $3)`,
-          [session.learner_id, learnerPoints, `Attendance credit — ${session.id.slice(0, 8)}`]);
-      }
-
-      // badge unlocks (safe idempotent)
-      const { rows: completedCount } = await client.query(
-        `SELECT count(*)::int AS n FROM sessions WHERE tutor_id = $1 AND status = 'completed'`, [session.tutor_id]);
-      const totalDone = completedCount[0].n;
-      const unlocks = [];
-      const pushBadge = async (code) => {
-        const { rows: b } = await client.query(
-          `INSERT INTO user_badges (user_id, badge_id)
-           SELECT $1, id FROM badges WHERE badge_code = $2
-           ON CONFLICT (user_id, badge_id) DO NOTHING
-           RETURNING (SELECT name FROM badges WHERE badge_code = $2) AS name`,
-          [session.tutor_id, code]);
-        if (b[0]) unlocks.push(b[0].name);
-      };
-      if (totalDone >= 1) await pushBadge('BG-001');
-      if (totalDone >= 10) await pushBadge('BG-003');
-
-      await audit({
+      const isOnline = session.mode === 'online';
+      const presenceStats = isOnline ? getRoomPresenceStats(session.id) : null;
+      const settled = await settleSessionRow(client, session, {
+        targetStatus: 'completed',
+        endedBy: isOnline ? 'tutor' : 'participant',
+        endedReason: isOnline ? 'tutor_ended' : 'wrap_up',
+        notes,
+        rating: parsedRating,
+        presenceStats,
         actorId: req.user.id,
         actorRole: req.user.role,
-        action: 'session.wrap_up',
-        entity: 'session',
-        entityId: sessionId,
-        detail: {
-          rating,
-          durationSeconds: actualDuration,
-          tutorPoints: pointsToAward,
-          learnerPoints,
-          referralResolved,
-          capped: pointsToAward < 50 || learnerPoints < 25,
-        },
         ip: requestIp(req),
-      }, client);
+        auditAction: 'session.wrap_up',
+      });
 
-      return {
-        session: updatedSession || { id: sessionId, status: 'completed', notes, rating, actual_duration_seconds: actualDuration },
-        actualDurationSeconds: actualDuration,
-        tutorBalance: (await client.query(
-          `SELECT COALESCE(SUM(amount),0)::int AS balance FROM points_ledger WHERE user_id = $1`,
-        [session.tutor_id])).rows[0].balance,
-        referralResolved,
-        points: pointsToAward,
-        learnerPoints,
-        capped: pointsToAward < 50 || learnerPoints < 25,
-        badges: unlocks,
-      };
+      if (isOnline) {
+        broadcastKeys = [session.id, session.session_code].filter(Boolean);
+        broadcastPayload = {
+          type: 'session.ended',
+          sessionId: session.id,
+          endedBy: 'tutor',
+          reason: settled.session.ended_reason,
+          actualDurationSeconds: settled.actualDurationSeconds,
+          pointsPosted: settled.pointsPosted,
+          needsFacultyReview: settled.needsFacultyReview,
+        };
+      }
+
+      return settled;
     });
+
+    if (broadcastPayload) {
+      clearRoomPresence(sessionId);
+      await publishRoomEvent(broadcastKeys, broadcastPayload);
+    }
+
     res.json(wrap);
   } catch (e) { next(e); }
 });

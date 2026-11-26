@@ -19,6 +19,8 @@ import AccountDialog from './components/AccountDialog';
 import Avatar from './components/ui/Avatar';
 import Logo2D from './components/Logo2D';
 import SplashScreen from './components/SplashScreen';
+import { BookingDraftProvider } from './context/BookingDraftContext';
+import { ActiveSessionProvider } from './context/ActiveSessionContext';
 
 /* Route-level code splitting keeps the landing bundle small; each role only
  * downloads the workspace it can enter. */
@@ -29,6 +31,7 @@ const TutorExam = React.lazy(() => import('./screens/TutorExam'));
 const TutorApplicant = React.lazy(() => import('./screens/TutorApplicant'));
 const FacultyReferral = React.lazy(() => import('./screens/FacultyReferral'));
 const SessionCheckIn = React.lazy(() => import('./screens/SessionCheckIn'));
+const SessionRoom = React.lazy(() => import('./screens/SessionRoom'));
 const RewardCatalog = React.lazy(() => import('./screens/RewardCatalog'));
 const Messages = React.lazy(() => import('./screens/Messages'));
 const TutorProfile = React.lazy(() => import('./screens/TutorProfile'));
@@ -143,6 +146,7 @@ export default function App() {
       '/approvals': 'Tutor Approvals',
     };
     if (/^\/tasks\/[^/]+$/.test(location.pathname)) return 'Task Details';
+    if (/^\/session\/[^/]+$/.test(location.pathname)) return 'Live Session Room';
     if (/^\/(profile|users|tutors)\//.test(location.pathname)) return 'Public Profile';
     return map[location.pathname] ?? '404 Not Found';
   })();
@@ -491,6 +495,17 @@ export default function App() {
           <SplashScreen onComplete={() => setShowSplash(false)} duration={2000} />
         )}
       </AnimatePresence>
+      <BookingDraftProvider>
+      <ActiveSessionProvider user={user} role={role} showToast={showToast}>
+      {location.pathname.startsWith('/session/') ? (
+        <div className={cn('min-h-dvh bg-stone text-ink', showSplash && 'hidden')}>
+          <React.Suspense fallback={<div className="flex min-h-dvh items-center justify-center"><span className="text-sm font-bold">Opening session room…</span></div>}>
+            <Routes>
+              <Route path="/session/:id" element={<SessionRoom user={user} role={role} showToast={showToast} />} />
+            </Routes>
+          </React.Suspense>
+        </div>
+      ) : (
       <div className={cn("min-h-dvh bg-stone text-ink", showSplash && 'hidden')}>
         {!isOnline && (
           <div role="status" aria-live="polite" className="flex items-center justify-center gap-2 border-b-2 border-ink bg-surface-alert px-4 py-2 text-center text-[13px] font-bold text-destructive">
@@ -962,6 +977,9 @@ export default function App() {
         )}
       </AnimatePresence>
     </div>
+      )}
+      </ActiveSessionProvider>
+      </BookingDraftProvider>
     </>
   );
 }

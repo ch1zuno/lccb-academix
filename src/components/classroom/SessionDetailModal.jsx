@@ -94,6 +94,8 @@ export default function SessionDetailModal({
     completed: { label: 'Completed', color: 'bg-emerald text-white border-emerald' },
     upcoming: { label: 'Upcoming', color: 'bg-gold text-ink border-ink' },
     'in-progress': { label: 'In-Progress', color: 'bg-amber text-white border-amber' },
+    'auto-closed': { label: 'Auto-Closed', color: 'bg-ink text-gold border-ink' },
+    missed: { label: 'Missed', color: 'bg-crimson/80 text-white border-crimson' },
     cancelled: { label: 'Cancelled', color: 'bg-crimson text-white border-crimson' },
   };
 
